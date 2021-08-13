@@ -13,8 +13,8 @@ using AD.Api.Services;
 
 namespace AD.Api.Controllers
 {
-    //[Route("user/[controller]")]
     [SupportedOSPlatform("windows")]
+    [Authorize]
     [ApiController]
     public class EditController : ControllerBase
     {

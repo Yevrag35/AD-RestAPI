@@ -17,7 +17,7 @@ namespace AD.Api.Controllers
     [SupportedOSPlatform("windows")]
     //[Route("[controller]")]
     [Produces("application/json")]
-    //[Authorize]
+    [Authorize]
     [ApiController]
     public class QueryController : ControllerBase
     {
