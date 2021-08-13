@@ -57,9 +57,10 @@ namespace AD.Api
 
             services.AddCors();
 
-            services.AddScoped<IADUserService, ADUserService>(service =>
+            services.AddScoped<IADEditService, ADEditService>();
+            services.AddScoped<IADQueryService, ADQueryService>(service =>
             {
-                return new ADUserService(
+                return new ADQueryService(
                     service.GetService<IMapper>(),
                     domains
                 );

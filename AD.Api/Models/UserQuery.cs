@@ -130,9 +130,9 @@ namespace AD.Api.Models
             }
         }
 
-        public async Task<string> AsFilterAsync()
+        public Task<string> AsFilterAsync()
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 if (_compiled)
                     return _builder.ToString();
