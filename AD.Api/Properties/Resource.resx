@@ -135,6 +135,12 @@
   <data name="LDAPQuery_User_ObjectClass" xml:space="preserve">
     <value>objectClass=user</value>
   </data>
+  <data name="LDAP_Format_WKO_Computers" xml:space="preserve">
+    <value>LDAP://&lt;WKGUID=AA312825768811D1ADED00C04FD8D5CD,{0}&gt;</value>
+  </data>
+  <data name="LDAP_Format_WKO_Users" xml:space="preserve">
+    <value>LDAP://&lt;WKGUID=A9D1CA15768811D1ADED00C04FD8D5CD,{0}&gt;</value>
+  </data>
   <data name="LDAP_Prefix" xml:space="preserve">
     <value>LDAP://</value>
   </data>

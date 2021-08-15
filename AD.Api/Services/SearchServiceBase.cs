@@ -17,13 +17,12 @@ using Strings = AD.Api.Properties.Resource;
 namespace AD.Api.Services
 {
     [SupportedOSPlatform("windows")]
-    public abstract class SearchServiceBase<T> : IDisposable
+    public abstract class SearchServiceBase<T> : ADServiceBase, IDisposable
         where T : IEntry, new()
     {
         private bool _disposed;
         private Searcher<T> _searcher;
 
-        protected SearchDomains Domains { get; }
         protected Searcher<T> Searcher
         {
             get => _searcher;
@@ -35,8 +34,8 @@ namespace AD.Api.Services
         }
 
         public SearchServiceBase(SearchDomains domains)
+            : base(domains)
         {
-            this.Domains = domains;
             _searcher = new Searcher<T>(this.Domains);
         }
         public void Dispose()

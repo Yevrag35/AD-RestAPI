@@ -57,6 +57,7 @@ namespace AD.Api
 
             services.AddCors();
 
+            services.AddScoped<IADCreateService, ADCreateService>();
             services.AddScoped<IADEditService, ADEditService>();
             services.AddScoped<IADQueryService, ADQueryService>(service =>
             {

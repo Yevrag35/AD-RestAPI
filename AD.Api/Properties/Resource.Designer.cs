@@ -70,6 +70,24 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to LDAP://&lt;WKGUID=AA312825768811D1ADED00C04FD8D5CD,{0}&gt;.
+        /// </summary>
+        internal static string LDAP_Format_WKO_Computers {
+            get {
+                return ResourceManager.GetString("LDAP_Format_WKO_Computers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LDAP://&lt;WKGUID=A9D1CA15768811D1ADED00C04FD8D5CD,{0}&gt;.
+        /// </summary>
+        internal static string LDAP_Format_WKO_Users {
+            get {
+                return ResourceManager.GetString("LDAP_Format_WKO_Users", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to LDAP://.
         /// </summary>
         internal static string LDAP_Prefix {
