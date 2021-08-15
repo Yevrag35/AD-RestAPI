@@ -106,6 +106,10 @@ namespace AD.Api.Models.Entries
         [PropertyValue(AddMethod.Set)]
         public string Office { get; set; }
 
+        [Ldap("proxyaddresses")]
+        [PropertyValue(AddMethod.Add)]
+        public LdapStringList ProxyAddresses { get; set; }
+
         [Ldap("samaccountname")]
         [PropertyValue(AddMethod.Set)]
         public string SamAccountName { get; set; }

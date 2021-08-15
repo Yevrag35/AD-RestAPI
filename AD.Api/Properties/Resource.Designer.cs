@@ -70,6 +70,69 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An &apos;Add&apos; operation requires &apos;newValues&apos; to be defined..
+        /// </summary>
+        internal static string Exception_IllegalOp_Add {
+            get {
+                return ResourceManager.GetString("Exception_IllegalOp_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid parameters for an AD modifications were specified:{0}{0}{1}.
+        /// </summary>
+        internal static string Exception_IllegalOp_Format {
+            get {
+                return ResourceManager.GetString("Exception_IllegalOp_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A &apos;Remove&apos; operation requires &apos;oldValues&apos; to be defined..
+        /// </summary>
+        internal static string Exception_IllegalOp_Remove {
+            get {
+                return ResourceManager.GetString("Exception_IllegalOp_Remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A &apos;Replace&apos; operation requires both &apos;newValues&apos; and &apos;oldValues&apos; to be defined..
+        /// </summary>
+        internal static string Exception_IllegalOp_Replace {
+            get {
+                return ResourceManager.GetString("Exception_IllegalOp_Replace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A &apos;Set&apos; operation requires &apos;newValues&apos; to be defined..
+        /// </summary>
+        internal static string Exception_IllegalOp_Set {
+            get {
+                return ResourceManager.GetString("Exception_IllegalOp_Set", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unknown error occurred..
+        /// </summary>
+        internal static string Exception_UnknownError {
+            get {
+                return ResourceManager.GetString("Exception_UnknownError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System.Collections.Generic.IEnumerable`1[{0}].
+        /// </summary>
+        internal static string IEnumerableT_Format {
+            get {
+                return ResourceManager.GetString("IEnumerableT_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to LDAP://&lt;WKGUID=AA312825768811D1ADED00C04FD8D5CD,{0}&gt;.
         /// </summary>
         internal static string LDAP_Format_WKO_Computers {

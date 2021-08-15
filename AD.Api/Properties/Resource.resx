@@ -120,6 +120,27 @@
   <data name="Error_InvalidDomainName" xml:space="preserve">
     <value>{0} is not a valid domain name or is not configured.</value>
   </data>
+  <data name="Exception_IllegalOp_Add" xml:space="preserve">
+    <value>An 'Add' operation requires 'newValues' to be defined.</value>
+  </data>
+  <data name="Exception_IllegalOp_Format" xml:space="preserve">
+    <value>Invalid parameters for an AD modifications were specified:{0}{0}{1}</value>
+  </data>
+  <data name="Exception_IllegalOp_Remove" xml:space="preserve">
+    <value>A 'Remove' operation requires 'oldValues' to be defined.</value>
+  </data>
+  <data name="Exception_IllegalOp_Replace" xml:space="preserve">
+    <value>A 'Replace' operation requires both 'newValues' and 'oldValues' to be defined.</value>
+  </data>
+  <data name="Exception_IllegalOp_Set" xml:space="preserve">
+    <value>A 'Set' operation requires 'newValues' to be defined.</value>
+  </data>
+  <data name="Exception_UnknownError" xml:space="preserve">
+    <value>An unknown error occurred.</value>
+  </data>
+  <data name="IEnumerableT_Format" xml:space="preserve">
+    <value>System.Collections.Generic.IEnumerable`1[{0}]</value>
+  </data>
   <data name="LDAPQuery_And" xml:space="preserve">
     <value>and</value>
   </data>

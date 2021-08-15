@@ -1,9 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.DirectoryServices;
+using System.Runtime.Serialization;
 using System.Runtime.Versioning;
 using AD.Api.Attributes;
 using AD.Api.Extensions;
+using AD.Api.Models.Collections;
+using AD.Api.Models.Converters;
 
 using Strings = AD.Api.Properties.Resource;
 
@@ -43,6 +46,11 @@ namespace AD.Api.Models
         [JsonProperty("givenName", Order = 5)]
         public string GivenName { get; set; }
 
+        [Ldap("proxyaddresses")]
+        [JsonProperty("proxyAddresses", Order = 7)]
+        [JsonConverter(typeof(PropertyMethodConverter<string, ADSortedValueList<string>>))]
+        public PropertyMethod<string> ProxyAddresses { get; set; }
+
         [Ldap("sn")]
         [JsonProperty("surname", Order = 6)]
         public string Surname { get; set; }
@@ -62,6 +70,13 @@ namespace AD.Api.Models
 
             string ldapPath = this.DistinguishedName.ToLdapPath(domainController);
             return new DirectoryEntry(ldapPath);
+        }
+
+        [OnSerializing]
+        private void OnSerializing(StreamingContext ctx)
+        {
+            if (null == this.ProxyAddresses)
+                this.ProxyAddresses = new PropertyMethod<string>();
         }
     }
 }
