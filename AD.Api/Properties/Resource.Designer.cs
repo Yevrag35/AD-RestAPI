@@ -79,7 +79,7 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid parameters for an AD modifications were specified:{0}{0}{1}.
+        ///   Looks up a localized string similar to Invalid parameters for an AD modification were specified.  {0}.
         /// </summary>
         internal static string Exception_IllegalOp_Format {
             get {

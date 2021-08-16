@@ -124,7 +124,7 @@
     <value>An 'Add' operation requires 'newValues' to be defined.</value>
   </data>
   <data name="Exception_IllegalOp_Format" xml:space="preserve">
-    <value>Invalid parameters for an AD modifications were specified:{0}{0}{1}</value>
+    <value>Invalid parameters for an AD modification were specified.  {0}</value>
   </data>
   <data name="Exception_IllegalOp_Remove" xml:space="preserve">
     <value>A 'Remove' operation requires 'oldValues' to be defined.</value>

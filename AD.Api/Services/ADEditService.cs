@@ -49,8 +49,8 @@ namespace AD.Api.Services
                         action(dirEntry.Properties, (item.Item2, item.Item3));
                     }
 
-                    dirEntry.CommitChanges();
-                    dirEntry.RefreshCache();
+                    //dirEntry.CommitChanges();
+                    //dirEntry.RefreshCache();
 
                     return _mapper.Map<JsonUser>(dirEntry);
                 }

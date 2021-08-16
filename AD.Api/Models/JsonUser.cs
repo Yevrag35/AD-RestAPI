@@ -4,6 +4,7 @@ using System.DirectoryServices;
 using System.Runtime.Serialization;
 using System.Runtime.Versioning;
 using AD.Api.Attributes;
+using AD.Api.Exceptions;
 using AD.Api.Extensions;
 using AD.Api.Models.Collections;
 using AD.Api.Models.Converters;
@@ -62,6 +63,15 @@ namespace AD.Api.Models
         [Ldap("userprincipalname")]
         [JsonProperty("userPrincipalName", Order = 3)]
         public string UserPrincipalName { get; set; }
+
+        public bool IsRequestValid(out IllegalADOperationException e)
+        {
+            e = null;
+            if (this.ProxyAddresses.IsInvalid)
+                e = this.ProxyAddresses.GetException();
+
+            return null == e;
+        }
 
         public DirectoryEntry GetDirectoryEntry(string domainController = null)
         {

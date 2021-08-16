@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
+using AD.Api.Exceptions;
 using AD.Api.Models;
 using AD.Api.Services;
 
@@ -32,6 +33,11 @@ namespace AD.Api.Controllers
         [Route("user/[controller]")]
         public async Task<IActionResult> EditUserAsync([FromBody] JsonUser editRequest)
         {
+            if (!editRequest.IsRequestValid(out IllegalADOperationException e))
+            {
+                return BadRequest(e);
+            }
+
             var editedUser = await _editService.EditUserAsync(editRequest);
             if (null != editedUser)
             {
