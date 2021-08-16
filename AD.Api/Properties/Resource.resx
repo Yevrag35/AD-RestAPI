@@ -171,4 +171,13 @@
   <data name="LDAP_RootDSE" xml:space="preserve">
     <value>LDAP://RootDSE</value>
   </data>
+  <data name="SMTP_Prefix_Primary" xml:space="preserve">
+    <value>SMTP:</value>
+  </data>
+  <data name="SMTP_Prefix_PrimaryRegex" xml:space="preserve">
+    <value>^SMTP\:</value>
+  </data>
+  <data name="STMP_Prefix" xml:space="preserve">
+    <value>smtp:</value>
+  </data>
 </root>

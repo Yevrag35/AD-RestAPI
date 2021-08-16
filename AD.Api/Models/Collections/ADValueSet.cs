@@ -14,7 +14,7 @@ namespace AD.Api.Models.Collections
         /// <summary>
         /// The internal, backing <see cref="List{T}"/> collection that all methods invoke against.
         /// </summary>
-        private List<T> InnerList;
+        protected private List<T> InnerList;
         /// <summary>
         /// The internal, backing <see cref="HashSet{T}"/> set that determines uniqueness in the <see cref="ADValueSet{T}"/>.
         /// </summary>
@@ -143,28 +143,36 @@ namespace AD.Api.Models.Collections
         /// Adds an item to the end of the collection.
         /// </summary>
         /// <param name="item">The object to be added to the end of the collection.</param>
-        public void Add(T item)
+        public virtual void Add(T item)
         {
             _ = this.Add(item, true);
         }
 
-        public int AddInitial(IEnumerable<T> items)
+        public void AddRange(IEnumerable<T> items)
         {
-            if (InnerList.Count > 0 || InnerSet.Count > 0)
-                return 0;
-
-            int added = 0;
-            foreach (T item in items)
+            foreach (T value in items)
             {
-                if (InnerSet.Add(item))
-                {
-                    InnerList.Add(item);
-                    added++;
-                }
+                _ = this.Add(value, true);
             }
-
-            return added;
         }
+
+        //public int AddInitial(IEnumerable<T> items)
+        //{
+        //    if (InnerList.Count > 0 || InnerSet.Count > 0)
+        //        return 0;
+
+        //    int added = 0;
+        //    foreach (T item in items)
+        //    {
+        //        if (InnerSet.Add(item))
+        //        {
+        //            InnerList.Add(item);
+        //            added++;
+        //        }
+        //    }
+
+        //    return added;
+        //}
         /// <summary>
         /// Removes all elements from the <see cref="ADValueSet{T}"/>.
         /// </summary>
@@ -178,7 +186,10 @@ namespace AD.Api.Models.Collections
         /// <param name="item">
         /// The object to locate in the <see cref="ADValueSet{T}"/>.  The value can be null for reference types.
         /// </param>
-        public bool Contains(T item) => InnerSet.Contains(item);
+        public bool Contains(T item)
+        {
+            return this.Contains(item, true);
+        }
         /// <summary>
         /// Copies the entire <see cref="ADValueSet{T}"/> to a compatible one-dimensional array, starting at
         /// the specified index of the target array.
@@ -197,21 +208,14 @@ namespace AD.Api.Models.Collections
         /// within the entire <see cref="ADValueSet{T}"/>.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ADValueSet{T}"/>.  The value can be null for reference types.</param>
-        public int IndexOf(T item) => InnerList.IndexOf(item);
-
-        public virtual void Insert(int index, T item)
+        public int IndexOf(T item)
         {
-            if (InnerSet.Add(item))
-            {
-                try
-                {
-                    InnerList.Insert(index, item);
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    InnerSet.Remove(item);
-                }
-            }
+            return this.IndexOf(item, true);
+        }
+
+        public void Insert(int index, T item)
+        {
+            this.Insert(index, item, true);
         }
 
         /// <summary>
@@ -343,9 +347,40 @@ namespace AD.Api.Models.Collections
             }
         }
 
+        protected virtual bool Contains(T item, bool querying)
+        {
+            return querying && this.InnerSet.Contains(item);
+        }
+        
+        protected virtual int IndexOf(T item, bool querying)
+        {
+            int index = -1;
+            if (querying)
+            {
+                index = this.InnerList.IndexOf(item);
+            }
+
+            return index;
+        }
+
+        protected virtual void Insert(int index, T item, bool inserting)
+        {
+            if (inserting && InnerSet.Add(item))
+            {
+                try
+                {
+                    InnerList.Insert(index, item);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    InnerSet.Remove(item);
+                }
+            }
+        }
+
         protected virtual bool Remove(T item, bool removing)
         {
-            return InnerSet.Remove(item)
+            return removing && InnerSet.Remove(item)
                 ? InnerList.Remove(item)
                 : false;
         }
@@ -354,6 +389,7 @@ namespace AD.Api.Models.Collections
         {
             bool result = false;
             T item = InnerList[index];
+
             if (InnerSet.Add(newValue))
             {
                 result = InnerSet.Remove(item);

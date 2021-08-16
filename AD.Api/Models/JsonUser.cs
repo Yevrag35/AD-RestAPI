@@ -49,7 +49,7 @@ namespace AD.Api.Models
 
         [Ldap("proxyaddresses")]
         [JsonProperty("proxyAddresses", Order = 7)]
-        [JsonConverter(typeof(PropertyMethodConverter<string, ADSortedValueList<string>>))]
+        [JsonConverter(typeof(PropertyMethodConverter<string, ProxyAddressCollection>))]
         public PropertyMethod<string> ProxyAddresses { get; set; }
 
         [Ldap("sn")]

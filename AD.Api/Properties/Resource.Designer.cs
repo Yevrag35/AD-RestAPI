@@ -221,5 +221,32 @@ namespace AD.Api.Properties {
                 return ResourceManager.GetString("LDAPQuery_User_ObjectClass", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SMTP:.
+        /// </summary>
+        internal static string SMTP_Prefix_Primary {
+            get {
+                return ResourceManager.GetString("SMTP_Prefix_Primary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ^SMTP\:.
+        /// </summary>
+        internal static string SMTP_Prefix_PrimaryRegex {
+            get {
+                return ResourceManager.GetString("SMTP_Prefix_PrimaryRegex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to smtp:.
+        /// </summary>
+        internal static string STMP_Prefix {
+            get {
+                return ResourceManager.GetString("STMP_Prefix", resourceCulture);
+            }
+        }
     }
 }

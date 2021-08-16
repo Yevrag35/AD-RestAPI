@@ -14,6 +14,8 @@ namespace AD.Api.Models.Entries
     [SupportedOSPlatform("windows")]
     public class User : EntryBase<User>
     {
+        public Dictionary<string, PropertyMethod<string>> EditOperations { get; internal set; }
+
         [Ldap("postaladdress")]
         [PropertyValue(AddMethod.Set)]
         public string Address { get; set; }

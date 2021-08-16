@@ -7,5 +7,7 @@ namespace AD.Api.Models
     {
         bool EnforcesUnique { get; }
         bool SortsAlways { get; }
+
+        void AddRange(IEnumerable<T> items);
     }
 }

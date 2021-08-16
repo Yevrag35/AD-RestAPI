@@ -88,7 +88,7 @@ namespace AD.Api.Models.Collections
             }
         }
 
-        public void Add(T item)
+        public virtual void Add(T item)
         {
             object key = _keySelector(item);
             if (this.InnerList.ContainsKey(key))
@@ -96,11 +96,18 @@ namespace AD.Api.Models.Collections
 
             this.InnerList.Add(key, item);
         }
+        public virtual void AddRange(IEnumerable<T> values)
+        {
+            foreach (T value in values)
+            {
+                this.Add(value);
+            }
+        }
         public void Clear()
         {
             this.InnerList.Clear();
         }
-        public bool Contains(T item)
+        public virtual bool Contains(T item)
         {
             object key = _keySelector(item);
             return this.InnerList.ContainsKey(key);
@@ -117,20 +124,20 @@ namespace AD.Api.Models.Collections
         {
             return this.GetEnumerator();
         }
-        public int IndexOf(T item)
+        public virtual int IndexOf(T item)
         {
             return this.InnerList.IndexOfValue(item);
         }
-        public void Insert(int index, T item)
+        public virtual void Insert(int index, T item)
         {
             this.Add(item);
         }
-        public bool Remove(T item)
+        public virtual bool Remove(T item)
         {
             object key = _keySelector(item);
             return this.InnerList.Remove(key);
         }
-        public void RemoveAt(int index)
+        public virtual void RemoveAt(int index)
         {
             this.InnerList.RemoveAt(index);
         }
