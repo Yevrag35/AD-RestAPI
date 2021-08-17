@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.DirectoryServices;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
@@ -50,16 +53,6 @@ namespace AD.Api.Models
         [JsonProperty("surname", Order = 7)]
         public string Surname { get; set; }
 
-        //public string GetCommonName()
-        //{
-        //    if (!string.IsNullOrWhiteSpace(this.CommonName))
-        //        return FormatName(this.CommonName);
-
-        //    else if (!string.IsNullOrWhiteSpace(this.Name))
-        //        return FormatName(this.Name);
-
-        //    else if (!string.IsNullOrWhiteSpace(this.GivenName))
-        //}
         public DirectoryEntry GetDirectoryEntry(string domainController)
         {
             return new DirectoryEntry(this.OUPath.ToLdapPath());
@@ -77,19 +70,70 @@ namespace AD.Api.Models
 
             return this.GetDirectoryEntry(domainController);
         }
-        private static string FormatName(string name)
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext ctx)
         {
-            return Strings.CommonName_Format.Format(
-                Regex.Replace(
-                    name, Strings.Escape_Commas, Strings.Escape_Commas
-                )
-            );
+            if (null != this.ExtraData && this.ExtraData.Count > 0)
+                this.ExtraData = new Dictionary<string, JToken>(this.ExtraData, StringComparer.CurrentCultureIgnoreCase);
+
+            else
+                return;
+
+            this.CheckValue(x => x.CommonName, "commonName");
+            this.CheckValue(x => x.EmailAddress, "email", "emailAddress");
+            this.CheckValue(x => x.GivenName, "firstName");
+            this.CheckValue(x => x.OUPath, "ou");
+            this.CheckValue(x => x.Surname, "sn", "lastName");
         }
+        private bool ShouldSerializeOUPath() => false;
         public bool UseDefaultOU()
         {
             return string.IsNullOrWhiteSpace(this.OUPath);
         }
 
-        private bool ShouldSerializeOUPath() => false;
+        private void CheckValue<T>(Expression<Func<JsonCreateUser, T>> expression, params string[] additionalNames)
+        {
+            if (null == additionalNames || additionalNames.Length <= 0)
+                return;
+
+            PropertyInfo memInfo = null;
+            if (expression.Body is MemberExpression memEx && memEx.Member.MemberType == MemberTypes.Property)
+                memInfo = memEx.Member as PropertyInfo;
+
+            else if (expression.Body is UnaryExpression unEx && unEx.Operand is MemberExpression unExMem)
+                memInfo = unExMem.Member as PropertyInfo;
+
+            if (null == memInfo)
+                return;
+
+            SetValuesIfTheyExist(
+                additionalNames,
+                this,
+                expression.Compile(),
+                (user, token) => memInfo.SetValue(user, token.ToObject<T>())
+            );
+        }
+
+        private static void SetValuesIfTheyExist<T>(string[] names, JsonCreateUser user, Func<JsonCreateUser, T> function, 
+            Action<JsonCreateUser, JToken> action)
+        {
+            if (null != function(user))
+                return;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (user.ExtraData.TryGetValue(names[i], out JToken token))
+                {
+                    action(user, token);
+                    for (int i2 = 0; i2 < names.Length; i2++)
+                    {
+                        user.ExtraData.Remove(names[i2]);
+                    }
+                    
+                    break;
+                }
+            }
+        }
     }
 }
