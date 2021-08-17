@@ -68,7 +68,7 @@ namespace AD.Api.Services
             });
         }
 
-        private static void ProcessProxyAddresses(string ldapAtt, DirectoryEntry dirEntry, PropertyMethod<string> propertyMethod)
+        protected static void ProcessProxyAddresses(string ldapAtt, DirectoryEntry dirEntry, PropertyMethod<string> propertyMethod)
         {
             PropertyValueCollection propValCol = dirEntry.Properties[ldapAtt];
             var newCol = new ProxyAddressCollection(propValCol.Cast<string>());
@@ -81,7 +81,7 @@ namespace AD.Api.Services
                 propValCol.Add(address);
             });
         }
-        private static void ProcessEditOperations<T>(DirectoryEntry dirEntry, IDictionary<string, PropertyMethod<T>> operations)
+        protected static void ProcessEditOperations<T>(DirectoryEntry dirEntry, IDictionary<string, PropertyMethod<T>> operations)
         {
             foreach (var kvp in operations)
             {

@@ -23,6 +23,7 @@ namespace AD.Api.Controllers
     {
         private IMapper _mapper;
         private IADQueryService _userService;
+        private INewNameService _nameService;
 
         public QueryController(IADQueryService userService, IMapper mapper)
         {

@@ -117,11 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CommonName_Format" xml:space="preserve">
+    <value>CN={0}</value>
+  </data>
   <data name="DN_DomainCapture" xml:space="preserve">
     <value>(DC\=.+)$</value>
   </data>
   <data name="Error_InvalidDomainName" xml:space="preserve">
     <value>{0} is not a valid domain name or is not configured.</value>
+  </data>
+  <data name="Escape_Commas" xml:space="preserve">
+    <value>\,</value>
   </data>
   <data name="Exception_IllegalOp_Add" xml:space="preserve">
     <value>An 'Add' operation requires 'newValues' to be defined.</value>
@@ -176,6 +182,12 @@
   </data>
   <data name="LDAP_RootDSE" xml:space="preserve">
     <value>LDAP://RootDSE</value>
+  </data>
+  <data name="NameCtor_Regex" xml:space="preserve">
+    <value>(\{.+?\})</value>
+  </data>
+  <data name="NameCtor_RegexReplace" xml:space="preserve">
+    <value>\{.+?\}</value>
   </data>
   <data name="SMTP_Prefix_Primary" xml:space="preserve">
     <value>SMTP:</value>

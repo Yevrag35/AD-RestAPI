@@ -4,6 +4,7 @@ using System;
 using System.DirectoryServices;
 using System.Runtime.Serialization;
 using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
 using AD.Api.Attributes;
 using AD.Api.Components;
 using AD.Api.Extensions;
@@ -42,10 +43,23 @@ namespace AD.Api.Models
         [JsonProperty("ouPath", Order = 6)]
         public string OUPath { get; set; }
 
+        [JsonProperty("password")]
+        public string Password { get; set; }
+
         [Ldap("sn")]
         [JsonProperty("surname", Order = 7)]
         public string Surname { get; set; }
 
+        //public string GetCommonName()
+        //{
+        //    if (!string.IsNullOrWhiteSpace(this.CommonName))
+        //        return FormatName(this.CommonName);
+
+        //    else if (!string.IsNullOrWhiteSpace(this.Name))
+        //        return FormatName(this.Name);
+
+        //    else if (!string.IsNullOrWhiteSpace(this.GivenName))
+        //}
         public DirectoryEntry GetDirectoryEntry(string domainController)
         {
             return new DirectoryEntry(this.OUPath.ToLdapPath());
@@ -62,6 +76,14 @@ namespace AD.Api.Models
             this.OUPath = Strings.LDAP_Format_WKO.Format(guid, domain);
 
             return this.GetDirectoryEntry(domainController);
+        }
+        private static string FormatName(string name)
+        {
+            return Strings.CommonName_Format.Format(
+                Regex.Replace(
+                    name, Strings.Escape_Commas, Strings.Escape_Commas
+                )
+            );
         }
         public bool UseDefaultOU()
         {

@@ -61,6 +61,15 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CN={0}.
+        /// </summary>
+        internal static string CommonName_Format {
+            get {
+                return ResourceManager.GetString("CommonName_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (DC\=.+)$.
         /// </summary>
         internal static string DN_DomainCapture {
@@ -75,6 +84,15 @@ namespace AD.Api.Properties {
         internal static string Error_InvalidDomainName {
             get {
                 return ResourceManager.GetString("Error_InvalidDomainName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to \,.
+        /// </summary>
+        internal static string Escape_Commas {
+            get {
+                return ResourceManager.GetString("Escape_Commas", resourceCulture);
             }
         }
         
@@ -237,6 +255,24 @@ namespace AD.Api.Properties {
         internal static string LDAPQuery_User_ObjectClass {
             get {
                 return ResourceManager.GetString("LDAPQuery_User_ObjectClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (\{.+?\}).
+        /// </summary>
+        internal static string NameCtor_Regex {
+            get {
+                return ResourceManager.GetString("NameCtor_Regex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to \{.+?\}.
+        /// </summary>
+        internal static string NameCtor_RegexReplace {
+            get {
+                return ResourceManager.GetString("NameCtor_RegexReplace", resourceCulture);
             }
         }
         

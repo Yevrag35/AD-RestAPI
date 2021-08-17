@@ -39,6 +39,9 @@ namespace AD.Api
             IConfigurationSection domainsSection = this.Configuration.GetSection("Domains");
             var domains = new SearchDomains(GetSearchDomains(domainsSection.GetChildren()));
 
+            // Construct Name Reader
+            services.Configure<CreationOptions>(this.Configuration.GetSection("CreationOptions"));
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
 
@@ -60,6 +63,7 @@ namespace AD.Api
 
             //services.AddScoped<IADCreateService, ADCreateService>();
             services.AddScoped<IADEditService, ADEditService>();
+            services.AddScoped<INewNameService, NewNameService>();
             services.AddScoped<IADQueryService, ADQueryService>(service =>
             {
                 return new ADQueryService(

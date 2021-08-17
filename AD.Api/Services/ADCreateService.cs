@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AD.Api.Attributes;
 using AD.Api.Components;
+using AD.Api.Extensions;
 using AD.Api.Models;
 using AD.Api.Models.Entries;
 
@@ -30,32 +31,48 @@ namespace AD.Api.Services
     {
         private IMapper _mapper;
         private SearchDomains _domains;
+        private INewNameService _nameReader;
 
-        public ADCreateService(IMapper mapper, SearchDomains searchDomains)
+        public ADCreateService(IMapper mapper, INewNameService nameReader, SearchDomains searchDomains)
         {
             _domains = searchDomains;
             _mapper = mapper;
+            _nameReader = nameReader;
         }
 
-        //public JsonUser CreateUser(JsonCreateUser userDefinition)
-        //{
-        //    DirectoryEntry dirEntry = null;
-        //    if (userDefinition.UseDefaultOU())
-        //    {
-        //        SearchDomain defDom = _domains.GetDefaultDomain();
-        //        dirEntry = userDefinition.GetDirectoryEntry(defDom.StaticDomainController, defDom.DistinguishedName);
-        //    }
-        //    else
-        //    {
-        //        dirEntry = userDefinition.GetDirectoryEntry(
-        //            GetDomainControllerFromDefinition(userDefinition, _domains));
-        //    }
+        private string ConstructName(JsonCreateUser user)
+        {
+            string constructedName = _nameReader.Construct(user);
+            string replaced = Regex.Replace(constructedName, Strings.Escape_Commas, Strings.Escape_Commas);
+            return Strings.CommonName_Format.Format(replaced);
+        }
 
-        //    using (dirEntry)
-        //    {
+        public JsonUser CreateUser(JsonCreateUser userDefinition)
+        {
+            DirectoryEntry ouEntry = null;
+            if (userDefinition.UseDefaultOU())
+            {
+                SearchDomain defDom = _domains.GetDefaultDomain();
+                ouEntry = userDefinition.GetDirectoryEntry(defDom.StaticDomainController, defDom.DistinguishedName);
+            }
+            else
+            {
+                ouEntry = userDefinition.GetDirectoryEntry(
+                    GetDomainControllerFromDefinition(userDefinition, _domains));
+            }
 
-        //    }
-        //}
+            using (ouEntry)
+            {
+                string cn = this.ConstructName(userDefinition);
+                using (DirectoryEntry dirEntry = ouEntry.Children.Add(cn, "user"))
+                {
+                    dirEntry.CommitChanges();
+                    dirEntry.RefreshCache();
+
+                    return _mapper.Map<JsonUser>(dirEntry);
+                }
+            }
+        }
 
         private static string GetDomainControllerFromDefinition(JsonCreateUser definition, SearchDomains domains)
         {
