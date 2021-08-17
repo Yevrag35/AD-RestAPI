@@ -206,6 +206,9 @@ namespace AD.Api.Models.Collections
 
         public void ExceptWith(IEnumerable<T> items)
         {
+            if (null == items)
+                return;
+
             foreach (T item in items)
             {
                 _ = this.Remove(item);

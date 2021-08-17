@@ -21,7 +21,7 @@ namespace AD.Api.Components
             : base()
         {
             //this.AddAttributes();
-            this.DefaultDomain = domains.GetDefault();
+            this.DefaultDomain = domains.GetDefaultFQDN();
 
             _domainEntries = new ReadOnlyDictionary<string, DirectoryEntry>(
                 domains.ToDictionary(

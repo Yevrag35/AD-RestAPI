@@ -16,54 +16,77 @@ namespace AD.Api.Components
     public class SearchDomains : IReadOnlyDictionary<string, SearchDomain>
     {
         private OrderedDictionary _d;
+        private SortedList<string, SearchDomain> _byFQDNs;
+        private Dictionary<string, SearchDomain> _byDNs;
+        private SearchDomain _registeredDefault;
 
         public static readonly StringComparer KeyComparer = StringComparer.CurrentCultureIgnoreCase;
 
+        public SearchDomain this[int index]
+        {
+            get => _byFQDNs.Values[index];
+        }
         public SearchDomain this[string key]
         {
-            get => _d[key] as SearchDomain;
+            get => _byFQDNs[key];
         }
 
-        public int Count => _d.Count;
-        public IEnumerable<string> Keys => _d.Keys.Cast<string>();
-        public IEnumerable<SearchDomain> Values => _d.Values.Cast<SearchDomain>();
+        public int Count => _byFQDNs.Count;
+        IEnumerable<string> IReadOnlyDictionary<string, SearchDomain>.Keys => this.FQDNs;
+        public ICollection<string> DNs => _byDNs.Keys;
+        public IList<string> FQDNs => _byFQDNs.Keys;
+        public ICollection<SearchDomain> Values => _byFQDNs.Values;
+        IEnumerable<SearchDomain> IReadOnlyDictionary<string, SearchDomain>.Values => this.Values;
 
         public SearchDomains(IEnumerable<SearchDomain> domainsToAdd)
         {
-
             if (null == domainsToAdd)
                 throw new ArgumentNullException(nameof(domainsToAdd));
 
-            _d = new OrderedDictionary(KeyComparer);
-            foreach (SearchDomain sd in domainsToAdd)
+            //_d = new OrderedDictionary(1, KeyComparer);
+            _byFQDNs = new SortedList<string, SearchDomain>(1, KeyComparer);
+            _byDNs = new Dictionary<string, SearchDomain>(1, KeyComparer);
+            foreach (SearchDomain sd in domainsToAdd.OrderByDescending(x => x.IsDefault).ThenBy(x => x.FQDN))
             {
-                _d.Add(sd.FQDN, sd);
+                if (sd.IsDefault && null == _registeredDefault)
+                    _registeredDefault = sd;
+
+                //_d.Add(sd.FQDN, sd);
+                _byFQDNs.Add(sd.FQDN, sd);
+                _byDNs.Add(sd.DistinguishedName, sd);
             }
         }
         public bool ContainsKey(string key)
         {
-            return _d.Contains(key);
+            return this.ContainsFQDN(key) || this.ContainsDN(key);
         }
-        public string GetDefault()
+        public bool ContainsFQDN(string fqdn)
         {
-            if (_d.Count <= 0)
+            return _byFQDNs.ContainsKey(fqdn);
+        }
+        public bool ContainsDN(string distinguishedName)
+        {
+            return _byDNs.ContainsKey(distinguishedName);
+        }
+        public string GetDefaultFQDN()
+        {
+            return this.GetDefaultDomain()?.FQDN;
+        }
+        public SearchDomain GetDefaultDomain()
+        {
+            if (this.Values.Count <= 0)
                 return null;
 
-            string def = this.Values.FirstOrDefault(x => x.IsDefault)?.FQDN;
-            if (string.IsNullOrWhiteSpace(def))
+            else if (null == _registeredDefault)
             {
-                def = ((SearchDomain)_d[0]).FQDN;
+                _registeredDefault = this[0];
             }
 
-            return def;
+            return _registeredDefault;
         }
         public IEnumerator<KeyValuePair<string, SearchDomain>> GetEnumerator()
         {
-            foreach (string key in _d.Keys)
-            {
-                SearchDomain sd = _d[key] as SearchDomain;
-                yield return new KeyValuePair<string, SearchDomain>(key, sd);
-            }
+            return _byFQDNs.GetEnumerator();
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -73,10 +96,11 @@ namespace AD.Api.Components
         public bool TryGetValue(string key, out SearchDomain domain)
         {
             domain = null;
-            if (_d.Contains(key))
-            {
-                domain = _d[key] as SearchDomain;
-            }
+            if (_byFQDNs.ContainsKey(key))
+                domain = _byFQDNs[key];
+
+            else if (_byDNs.ContainsKey(key))
+                domain = _byDNs[key];
 
             return null != domain;
         }

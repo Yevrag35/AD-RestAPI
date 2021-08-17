@@ -61,6 +61,15 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (DC\=.+)$.
+        /// </summary>
+        internal static string DN_DomainCapture {
+            get {
+                return ResourceManager.GetString("DN_DomainCapture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a valid domain name or is not configured..
         /// </summary>
         internal static string Error_InvalidDomainName {
@@ -129,6 +138,15 @@ namespace AD.Api.Properties {
         internal static string IEnumerableT_Format {
             get {
                 return ResourceManager.GetString("IEnumerableT_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;WKGUID={0},{1}&gt;.
+        /// </summary>
+        internal static string LDAP_Format_WKO {
+            get {
+                return ResourceManager.GetString("LDAP_Format_WKO", resourceCulture);
             }
         }
         

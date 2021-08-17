@@ -5,6 +5,7 @@ namespace AD.Api.Components.Exchange
     [Flags]
     public enum RecipientTypeDetails : long
     {
+        Clear = -2147483648L,
         UserMailbox = 1L,
         LinkedMailbox = 2L,
         SharedMailbox = 4L,

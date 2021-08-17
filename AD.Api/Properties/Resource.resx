@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="DN_DomainCapture" xml:space="preserve">
+    <value>(DC\=.+)$</value>
+  </data>
   <data name="Error_InvalidDomainName" xml:space="preserve">
     <value>{0} is not a valid domain name or is not configured.</value>
   </data>
@@ -155,6 +158,9 @@
   </data>
   <data name="LDAPQuery_User_ObjectClass" xml:space="preserve">
     <value>objectClass=user</value>
+  </data>
+  <data name="LDAP_Format_WKO" xml:space="preserve">
+    <value>&lt;WKGUID={0},{1}&gt;</value>
   </data>
   <data name="LDAP_Format_WKO_Computers" xml:space="preserve">
     <value>LDAP://&lt;WKGUID=AA312825768811D1ADED00C04FD8D5CD,{0}&gt;</value>

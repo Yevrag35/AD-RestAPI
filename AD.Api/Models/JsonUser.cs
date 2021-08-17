@@ -84,7 +84,7 @@ namespace AD.Api.Models
         }
 
         [OnSerializing]
-        protected private virtual void OnSerializing(StreamingContext ctx)
+        private void OnSerializing(StreamingContext ctx)
         {
             if (null == this.ProxyAddresses)
                 this.ProxyAddresses = new PropertyMethod<string>();

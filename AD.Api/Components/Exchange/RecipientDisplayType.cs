@@ -7,6 +7,7 @@ namespace AD.Api.Components.Exchange
 {
     public enum RecipientDisplayType
     {
+        Clear = -2147483648,
         MailUserRemoteUserMailbox = -2147483642,
         MailUserRemoteRoomMailbox = -2147481850,
         MailUserRemoteEquipmentMailbox = -2147481594,
