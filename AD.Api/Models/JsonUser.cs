@@ -17,6 +17,7 @@ namespace AD.Api.Models
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class JsonUser : JsonRequestBase, IDirObject
     {
+        [JsonIgnore]
         private string _dn;
 
         [Ldap("distinguishedname")]
@@ -83,7 +84,7 @@ namespace AD.Api.Models
         }
 
         [OnSerializing]
-        private void OnSerializing(StreamingContext ctx)
+        protected private virtual void OnSerializing(StreamingContext ctx)
         {
             if (null == this.ProxyAddresses)
                 this.ProxyAddresses = new PropertyMethod<string>();

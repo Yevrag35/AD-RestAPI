@@ -203,6 +203,20 @@ namespace AD.Api.Models.Collections
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="ArgumentException"/>
         public void CopyTo(T[] array, int arrayIndex) => InnerList.CopyTo(array, arrayIndex);
+
+        public void ExceptWith(IEnumerable<T> items)
+        {
+            foreach (T item in items)
+            {
+                _ = this.Remove(item);
+            }
+        }
+
+        public void ForEach(Action<T> action)
+        {
+            this.InnerList.ForEach(action);
+        }
+
         /// <summary>
         /// Searches for the specified object and returns the zero-based index of the first occurrence
         /// within the entire <see cref="ADValueSet{T}"/>.

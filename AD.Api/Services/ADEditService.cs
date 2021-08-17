@@ -70,8 +70,16 @@ namespace AD.Api.Services
 
         private static void ProcessProxyAddresses(string ldapAtt, DirectoryEntry dirEntry, PropertyMethod<string> propertyMethod)
         {
-            var newCol = new ProxyAddressCollection(dirEntry.Properties[ldapAtt].Cast<string>());
+            PropertyValueCollection propValCol = dirEntry.Properties[ldapAtt];
+            var newCol = new ProxyAddressCollection(propValCol.Cast<string>());
+            newCol.ExceptWith(propertyMethod.OldValues);
+            newCol.AddRange(propertyMethod.NewValues);
+            propValCol.Clear();
 
+            newCol.ForEach((address) =>
+            {
+                propValCol.Add(address);
+            });
         }
         private static void ProcessEditOperations<T>(DirectoryEntry dirEntry, IDictionary<string, PropertyMethod<T>> operations)
         {
