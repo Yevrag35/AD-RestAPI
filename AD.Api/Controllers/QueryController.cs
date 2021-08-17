@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using AD.Api.Models;
 using AD.Api.Services;
 
-
 namespace AD.Api.Controllers
 {
     [SupportedOSPlatform("windows")]

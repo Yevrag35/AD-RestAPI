@@ -23,7 +23,7 @@ namespace AD.Api.Services
 {
     public interface IADCreateService
     {
-
+        JsonUser CreateUser(JsonCreateUser user, string constructedName);
     }
 
     [SupportedOSPlatform("windows")]
@@ -31,23 +31,20 @@ namespace AD.Api.Services
     {
         private IMapper _mapper;
         private SearchDomains _domains;
-        private INewNameService _nameReader;
-
-        public ADCreateService(IMapper mapper, INewNameService nameReader, SearchDomains searchDomains)
+        
+        public ADCreateService(IMapper mapper, SearchDomains searchDomains)
         {
             _domains = searchDomains;
             _mapper = mapper;
-            _nameReader = nameReader;
         }
 
-        private string ConstructName(JsonCreateUser user)
+        public static string ProduceCName(JsonCreateUser user, string constructedName)
         {
-            string constructedName = _nameReader.Construct(user);
             string replaced = Regex.Replace(constructedName, Strings.Escape_Commas, Strings.Escape_Commas);
             return Strings.CommonName_Format.Format(replaced);
         }
 
-        public JsonUser CreateUser(JsonCreateUser userDefinition)
+        public JsonUser CreateUser(JsonCreateUser userDefinition, string constructedName)
         {
             DirectoryEntry ouEntry = null;
             if (userDefinition.UseDefaultOU())
@@ -63,7 +60,7 @@ namespace AD.Api.Services
 
             using (ouEntry)
             {
-                string cn = this.ConstructName(userDefinition);
+                string cn = ProduceCName(userDefinition, constructedName);
                 using (DirectoryEntry dirEntry = ouEntry.Children.Add(cn, "user"))
                 {
                     dirEntry.CommitChanges();

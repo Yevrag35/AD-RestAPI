@@ -60,10 +60,16 @@ namespace AD.Api
             });
 
             services.AddCors();
-
-            //services.AddScoped<IADCreateService, ADCreateService>();
+            
             services.AddScoped<IADEditService, ADEditService>();
             services.AddScoped<INewNameService, NewNameService>();
+            services.AddScoped<IADCreateService, ADCreateService>(service =>
+            {
+                return new ADCreateService(
+                    service.GetService<IMapper>(),
+                    domains
+                );
+            });
             services.AddScoped<IADQueryService, ADQueryService>(service =>
             {
                 return new ADQueryService(
