@@ -5,20 +5,28 @@ using System.Linq;
 using System.Text;
 using AD.Api.Ldap.Path;
 
-namespace AD.Api.Ldap.Live
+namespace AD.Api.Ldap
 {
     public class LiveLdapObject : IDisposable
     {
         private bool _disposed;
+        private readonly PathValue _path;
         private readonly DirectoryEntry _dirEntry;
 
-        public LiveLdapObject(IPathBuilder builder)
-            : this(builder.ToPath())
+        public PathValue Path => _path;
+
+        public LiveLdapObject(DirectoryEntry entry)
         {
+            _dirEntry = entry;
+            _path = PathValue.FromDirectoryEntry(entry);
         }
-        public LiveLdapObject(string path)
+
+        #region IDISPOSABLE IMPLEMENTATION
+        public void Dispose()
         {
-            _dirEntry = new DirectoryEntry(path);
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -27,6 +35,7 @@ namespace AD.Api.Ldap.Live
             {
                 if (disposing)
                 {
+                    _path.Clear();
                     _dirEntry.Dispose();
                 }
 
@@ -35,11 +44,7 @@ namespace AD.Api.Ldap.Live
                 _disposed = true;
             }
         }
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
+
+        #endregion
     }
 }
