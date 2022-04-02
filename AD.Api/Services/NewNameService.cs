@@ -73,7 +73,6 @@ namespace AD.Api.Services
         private string Replace(Match match)
         {
             string output = "{{{0}}}".Format(_count);
-            _count++;
             return output;
         }
 

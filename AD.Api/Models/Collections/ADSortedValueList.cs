@@ -1,11 +1,12 @@
-﻿using System;
+﻿using MG.Collections;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace AD.Api.Models.Collections
 {
-    public class ADSortedValueList<T> : IValueCollection<T>
+    public class ADSortedValueList<T> : ManagedKeySortedList<object, T>, IValueCollection<T>
     {
         private Func<T, object> _keySelector;
         private SortedList<object, T> InnerList;
@@ -14,22 +15,9 @@ namespace AD.Api.Models.Collections
             return StringComparer.CurrentCultureIgnoreCase.Compare(str1, str2);
         };
 
-        public T this[int index]
-        {
-            get => this.InnerList.Values[index];
-            set
-            {
-                if (this.InnerList.ContainsKey(value))
-                    return;
-
-                T item = this[index];
-                this.InnerList.Add(value, value);
-            }
-        }
-
-        public int Count => this.InnerList.Count;
+        //public int Count => this.InnerList.Count;
         public bool EnforcesUnique => true;
-        public bool IsReadOnly => false;
+        //public bool IsReadOnly => false;
         public bool SortsAlways => true;
 
         public ADSortedValueList()
@@ -57,13 +45,8 @@ namespace AD.Api.Models.Collections
         {
         }
         public ADSortedValueList(int capacity, Func<T, object> keySelector, Func<T, T, int> comparer)
+            : base(keySelector)
         {
-            _keySelector = keySelector;
-            if (typeof(T).Equals(typeof(string)))
-                this.InnerList = new SortedList<object, T>(capacity, new GenericKeyComparer(_func));
-
-            else
-                this.InnerList = new SortedList<object, T>(capacity, new GenericKeyComparer(comparer));
         }
 
         private class GenericKeyComparer : IComparer<object>
