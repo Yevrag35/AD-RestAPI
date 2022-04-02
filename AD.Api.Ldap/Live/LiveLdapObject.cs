@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Linq;
 using System.Text;
+using AD.Api.Extensions;
+using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Path;
 
 namespace AD.Api.Ldap
@@ -14,11 +17,30 @@ namespace AD.Api.Ldap
         private readonly DirectoryEntry _dirEntry;
 
         public PathValue Path => _path;
+        public DirectoryEntry DirEntry => _dirEntry;
+
+        [LdapProperty("objectClass")]
+        public string ObjectClass { get; set; }
 
         public LiveLdapObject(DirectoryEntry entry)
+            : this(entry, PathValue.FromDirectoryEntry(entry))
+        {
+        }
+        internal LiveLdapObject(DirectoryEntry entry, PathValue path)
         {
             _dirEntry = entry;
-            _path = PathValue.FromDirectoryEntry(entry);
+            _path = path;
+            this.ObjectClass = TryGetObjectClass(_dirEntry, out string? objectClass)
+                ? objectClass
+                : "RootDSE";
+        }
+
+        private static bool TryGetObjectClass(DirectoryEntry? entry, [NotNullWhen(true)] out string? objectClass)
+        {
+            objectClass = null;
+            return entry is not null && entry
+                .Properties
+                    .TryGetAsSingle(nameof(objectClass), out objectClass, col => col.LastOrDefault());
         }
 
         #region IDISPOSABLE IMPLEMENTATION
@@ -35,7 +57,7 @@ namespace AD.Api.Ldap
             {
                 if (disposing)
                 {
-                    _path.Clear();
+                    //_path.Clear();
                     _dirEntry.Dispose();
                 }
 

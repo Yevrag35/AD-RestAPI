@@ -70,6 +70,10 @@ $myDesktop = [System.Environment]::GetFolderPath("Desktop")
 
 Push-Location $myDesktop
 
+$builder = [AD.Api.Ldap.LdapConnectionBuilder]::new().UsingHost("GARVDC06.yevrag35.com").UsingSearchBase("DC=yevrag35,DC=com").UsingSSL()
+$con = $builder.Build()
+
+<#
 $sb = new-object System.Text.StringBuilder
 $pe = [AD.Api.Ldap.Filter.PropertyEqual]::BitwiseAnd("groupType", 8)
 $ocu = New-Object AD.Api.Ldap.Filter.PropertyEqual('objectClass', 'user')
@@ -86,3 +90,4 @@ $and.Statements.Add($not)
 
 $or.Statements.Add($and)
 $or.Statements.Add((New-Object AD.Api.Ldap.Filter.PropertyEqual('mailNickname', $null)))
+#>
