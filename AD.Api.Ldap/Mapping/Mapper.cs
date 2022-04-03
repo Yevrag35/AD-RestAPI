@@ -30,11 +30,9 @@ namespace AD.Api.Ldap.Mapping
         [return: NotNullIfNotNull("objToMap")]
         public static T? MapFromDirectoryEntry<T>(T? objToMap, DirectoryEntry directoryEntry)
         {
-            if (objToMap is null)
-                return default;
-
-
-            return Reflect(objToMap, directoryEntry.Properties);
+            return objToMap is not null
+                ? Reflect(objToMap, directoryEntry.Properties)
+                : default;
         }
 
         [return: NotNull]

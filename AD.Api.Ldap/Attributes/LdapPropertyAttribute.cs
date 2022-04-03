@@ -2,18 +2,17 @@ using System;
 
 namespace AD.Api.Ldap.Attributes
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public class LdapPropertyAttribute : Attribute
     {
-        public string? ShortName { get; }
-        public string? DisplayName { get; }
         public string? LdapName { get; }
 
-        public LdapPropertyAttribute(string? ldapName = null, string? displayName = null, string? shortHandName = null)
+        //public LdapPropertyAttribute(string? ldapName = null, string? displayName = null, string? shortHandName = null)
+        public LdapPropertyAttribute(string? ldapName = null)
         {
-            this.ShortName = shortHandName;
-            this.DisplayName = displayName;
             this.LdapName = ldapName;
+            //this.ShortName = shortHandName;
+            //this.DisplayName = displayName;
         }
     }
 }
