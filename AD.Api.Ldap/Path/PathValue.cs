@@ -96,6 +96,11 @@ namespace AD.Api.Ldap.Path
             _builder?.Clear();
         }
 
+        public DirectoryEntry GetDirectoryEntry()
+        {
+            return new DirectoryEntry(this.GetValue());
+        }
+
         /// <summary>
         /// Generates a new <see cref="PathValue"/> of the parent path above the current record.
         /// </summary>

@@ -1,4 +1,5 @@
 using AD.Api.Ldap.Connection;
+using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Path;
 using System;
 using System.Collections.Generic;
@@ -12,31 +13,43 @@ namespace AD.Api.Ldap
     {
         private bool _disposed;
         private readonly ILdapConnectionOptions _options;
-        private readonly LiveLdapObject _baseEntry;
-        private readonly LiveLdapObject _rootDse;
+        //private readonly LiveLdapObject _baseEntry;
+        //private readonly LiveLdapObject _rootDse;
 
-        public LiveLdapObject RootDSE => _rootDse;
-        public LiveLdapObject SearchBase => _baseEntry;
+        //public LiveLdapObject RootDSE => _rootDse;
+        //public LiveLdapObject SearchBase => _baseEntry;
 
         public LdapConnection(ILdapConnectionOptions options)
         {
             _options = options;
-            var path = new PathValue(options.Protocol)
-            {
-                DistinguishedName = options.DistinguishedName,
-                Host = options.Host,
-                UseSsl = options.UseSSL
-            };
+            //var path = new PathValue(options.Protocol)
+            //{
+            //    DistinguishedName = options.DistinguishedName,
+            //    Host = options.Host,
+            //    UseSsl = options.UseSSL
+            //};
 
-            var rootDse = new PathValue(options.Protocol)
-            {
-                DistinguishedName = "RootDSE",
-                Host = options.Host,
-                UseSsl = options.UseSSL
-            };
+            //var rootDse = new PathValue(options.Protocol)
+            //{
+            //    DistinguishedName = "RootDSE",
+            //    Host = options.Host,
+            //    UseSsl = options.UseSSL
+            //};
 
             //_baseEntry = new LiveLdapObject(CreateEntry(path, options), path);
             //_rootDse = new LiveLdapObject(CreateEntry(rootDse, options), rootDse);
+        }
+
+        public DirectoryEntry? GetDirectoryEntry(IPathed? pathedObject)
+        {
+            return pathedObject is not null && pathedObject.Path is not null 
+                ? this.GetDirectoryEntry(pathedObject.Path)
+                : null;
+        }
+
+        public DirectoryEntry GetDirectoryEntry(PathValue path)
+        {
+            return CreateEntry(path, _options);
         }
 
         private static DirectoryEntry CreateEntry(PathValue path, ILdapConnectionOptions options)
@@ -58,8 +71,8 @@ namespace AD.Api.Ldap
             if (_disposed)
                 return;
 
-            _baseEntry.Dispose();
-            _rootDse.Dispose();
+            //_baseEntry.Dispose();
+            //_rootDse.Dispose();
 
             _disposed = true;
             GC.SuppressFinalize(this);

@@ -1,5 +1,6 @@
 using AD.Api.Ldap.Mapping;
 using AD.Api.Ldap.Models;
+using AD.Api.Ldap.Path;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -23,7 +24,10 @@ namespace AD.Api.Ldap.Extensions
 
         public static LdapUser AsLdapUser(this DirectoryEntry directoryEntry)
         {
-            return AsModel<LdapUser>(directoryEntry);
+            LdapUser user = AsModel<LdapUser>(directoryEntry);
+            user.Path = PathValue.FromDirectoryEntry(directoryEntry);
+
+            return user;
         }
     }
 }
