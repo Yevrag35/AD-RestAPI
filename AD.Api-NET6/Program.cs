@@ -1,6 +1,12 @@
 using AD.Api.Domains;
 using AD.Api.Ldap.Converters.Json;
 using AD.Api.Services;
+using AD.Api.Settings;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -12,7 +18,7 @@ static IEnumerable<SearchDomain> GetSearchDomains(IEnumerable<IConfigurationSect
 {
     foreach (IConfigurationSection section in sections)
     {
-        var dom = section.Get<SearchDomain>();
+        SearchDomain dom = section.Get<SearchDomain>();
         dom.FQDN = section.Key;
         yield return dom;
     }
@@ -20,6 +26,10 @@ static IEnumerable<SearchDomain> GetSearchDomains(IEnumerable<IConfigurationSect
 
 IConfigurationSection section = builder.Configuration.GetSection("Domains");
 builder.Services.AddSingleton(new SearchDomains(GetSearchDomains(section.GetChildren())));
+builder.Services.Configure<SearchSettings>(options =>
+{
+    builder.Configuration.GetSection("Settings").GetSection("Search").Bind(options);
+});
 
 // Add services to the container.
 

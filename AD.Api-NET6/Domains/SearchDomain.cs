@@ -108,19 +108,13 @@ namespace AD.Api.Domains
         }
     }
 
-    public class SearchDomain// : IDirObject
+    public class SearchDomain
     {
         public string? DistinguishedName { get; set; }
         public bool IsDefault { get; set; }
-        public string? FQDN { get; set; }
+        public string FQDN { get; set; } = string.Empty;
         public string? StaticDomainController { get; set; }
-
-        //public DirectoryEntry GetDirectoryEntry(string domainController = null)
-        //{
-        //    if (string.IsNullOrWhiteSpace(domainController))
-        //        domainController = this.StaticDomainController;
-
-        //    return new DirectoryEntry(this.DistinguishedName.ToLdapPath(domainController));
-        //}
+        public bool UseGlobalCatalog { get; set; }
+        public bool UseSSL { get; set; }
     }
 }

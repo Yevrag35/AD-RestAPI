@@ -45,8 +45,8 @@ namespace AD.Api.Services
             return new LdapConnectionBuilder()
                 .UsingHost(host)
                 .UsingSearchBase(defDom.DistinguishedName)
-                .UsingGlobalCatalog()
-                .UsingSSL()
+                .UsingGlobalCatalog(defDom.UseGlobalCatalog)
+                .UsingSSL(defDom.UseSSL)
                 .Build();
         }
     }

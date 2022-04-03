@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using AD.Api.Services;
 using AD.Api.Ldap.Filters;
+using AD.Api.Settings;
+using Microsoft.Extensions.Options;
+using AD.Api.Ldap.Search;
 
 namespace AD.Api.Controllers
 {
@@ -8,10 +11,12 @@ namespace AD.Api.Controllers
     [Produces("application/json")]
     public class SearchController : ControllerBase
     {
+        private SearchSettings SearchSettings { get; }
         private IConnectionService Connections { get; }
 
-        public SearchController(IConnectionService connectionService)
+        public SearchController(IConnectionService connectionService, IOptions<SearchSettings> settings)
         {
+            this.SearchSettings = settings.Value;
             this.Connections = connectionService;
         }
 
@@ -21,7 +26,13 @@ namespace AD.Api.Controllers
         {
             using (var connection = this.Connections.GetDefaultConnection())
             {
-                using (var searcher = connection.CreateSearcher(filter))
+                SearchOptions opts = new SearchOptions
+                {
+                    Filter = filter,
+                    PropertiesToLoad = this.SearchSettings.DefaultProperties
+                };
+
+                using (var searcher = connection.CreateSearcher(opts))
                 {
                     var list = searcher.FindAll();
 
@@ -29,7 +40,7 @@ namespace AD.Api.Controllers
                         ? Ok(new
                         {
                             Host = connection.RootDSE.Host ?? "AutoDCLookup",
-                            Count = list.Count,
+                            list.Count,
                             Results = list
                         })
                         : NotFound();
@@ -43,11 +54,22 @@ namespace AD.Api.Controllers
         {
             using (var connection = this.Connections.GetConnection(domain))
             {
-                using (var searcher = connection.CreateSearcher(filter))
+                SearchOptions opts = new SearchOptions
+                {
+                    Filter = filter,
+                    PropertiesToLoad = this.SearchSettings.DefaultProperties
+                };
+
+                using (var searcher = connection.CreateSearcher(opts))
                 {
                     var list = searcher.FindAll();
                     return list.Count > 0
-                        ? Ok(list)
+                        ? Ok(new
+                        {
+                            Host = connection.RootDSE.Host ?? "AutoDCLookup",
+                            list.Count,
+                            Results = list
+                        })
                         : NotFound();
                 }
             }
