@@ -1,3 +1,4 @@
+using AD.Api.Ldap.Filters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -7,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AD.Api.Ldap.Filters.Json
+namespace AD.Api.Ldap.Converters.Json
 {
     public class FilterConverter : JsonConverter<IFilterStatement>
     {

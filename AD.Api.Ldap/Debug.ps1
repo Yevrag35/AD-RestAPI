@@ -70,12 +70,13 @@ $myDesktop = [System.Environment]::GetFolderPath("Desktop")
 
 Push-Location $myDesktop
 
-#$builder = [AD.Api.Ldap.LdapConnectionBuilder]::new().UsingHost("GARVDC06.yevrag35.com").UsingSearchBase("DC=yevrag35,DC=com").UsingSSL()
-#$con = $builder.Build()
+$builder = [AD.Api.Ldap.LdapConnectionBuilder]::new().UsingHost("GARVDC06.yevrag35.com").UsingSearchBase("DC=yevrag35,DC=com").UsingSSL()
+$con = $builder.Build()
 
 $user = [adsi]"LDAP://CN=Mike Garvey,OU=Real Users,DC=yevrag35,DC=com"
 $uu = [AD.Api.Ldap.Extensions.DirectoryEntryExtensions]::AsLdapUser($user)
-$converter = [AD.Api.Ldap.Filters.Json.FilterConverter]::new()
+
+$converter = [AD.Api.Ldap.Converters.Json.FilterConverter]::new()
 
 $json = @"
 {
@@ -90,7 +91,12 @@ $json = @"
 "@
 
 $o = [Newtonsoft.Json.JsonConvert]::DeserializeObject[AD.Api.Ldap.Filters.IFilterStatement]($json, $converter)
-$o
+#$o
+
+$searcher = $con.CreateSearcher((New-Object AD.Api.Ldap.Search.SearchOptions -Property @{
+	Filter = $o
+	PropertiesToLoad = [string[]]@("mail", "name", "userPrincipalName")
+}))
 
 <#
 $sb = new-object System.Text.StringBuilder

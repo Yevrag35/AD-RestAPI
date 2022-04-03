@@ -1,6 +1,7 @@
 using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Connection;
 using AD.Api.Ldap.Converters;
+using AD.Api.Ldap.Converters.Json;
 using AD.Api.Ldap.Exceptions;
 using System;
 using System.Collections;
@@ -61,103 +62,121 @@ namespace AD.Api.Ldap.Mapping
             setAcc.Invoke(obj, new object[1] { value });
         }
 
-        private static object? ConvertEnumerable(MemberInfo memInfo, Type toType, object? value, object? existingValue)
+        private static IEnumerable? ConvertEnumerable(MemberInfo memInfo, LdapPropertyAttribute attribute, Type toType, IEnumerable? value, IEnumerable? existingValue)
         {
-            if (value is not Array arr || arr.Length <= 0)
+            if (value is null)
                 return existingValue;
 
             if (toType.IsArray)
             {
-                return CreateArray(toType, arr, existingValue);
+                IEnumerable? createdArray = CreateArray(toType, value);
+                return createdArray is not null || existingValue is not IEnumerable arr
+                    ? createdArray
+                    : arr;
             }
 
             if (existingValue is null)
             {
-                existingValue = Activator.CreateInstance(toType);
+                existingValue = (IEnumerable?)Activator.CreateInstance(toType);
                 if (existingValue is null)
-                    return existingValue;
+                    return null;
             }
 
-            Type[] genericArguments = toType.GetGenericArguments();
-            Func<object?, object?> func;
-            switch (genericArguments.Length)
-            {
-                case 0:
-                    func = (incoming) => incoming;
-                    break;
-
-                default:
-                    func = (incoming) => ConvertObject(memInfo, genericArguments[0], incoming, null);
-                    break;
-            }
-
+            Type genericArgument = toType.GetGenericArguments().FirstOrDefault() ?? typeof(object);
             if (!TryFindAddMethod(toType, out MethodInfo? addMethod))
-                return existingValue;
-
-            for (int i = 0; i < arr.Length; i++)
             {
-                object? converted = func(arr.GetValue(i));
+                return existingValue;
+            }
+
+            foreach (object obj in value)
+            {
+                object? converted = obj;
+                if (obj is not string && obj is IEnumerable eo)
+                    converted = ConvertObject(memInfo, attribute, genericArgument, eo, null);
+                
+                else
+                    converted = ConvertSingleObject(converted, genericArgument);
+
                 ExecuteAddMethod(addMethod, existingValue, converted);
             }
 
             return existingValue;
         }
 
-        private static object? ConvertObject(MemberInfo? memberInfo, Type valueType, object? rawValue, object? existingValue)
+        private static object? ConvertObject(MemberInfo? memberInfo, LdapPropertyAttribute attribute, Type valueType, IEnumerable? rawValue, object? existingValue)
         {
             Type enumerableType = typeof(IEnumerable);
             if (memberInfo is not null && (valueType.IsArray || (!valueType.IsValueType && !valueType.Equals(typeof(string)) &&
                 enumerableType.IsAssignableTo(valueType))))
             {
-                return ConvertEnumerable(memberInfo, valueType, rawValue, existingValue);
+                IEnumerable? existingCol = null;
+
+                if (existingValue is IEnumerable isCol)
+                    existingCol = isCol;
+
+                return ConvertEnumerable(memberInfo, attribute, valueType, rawValue, existingCol);
+            }
+            else if (rawValue is not null)
+            {
+                IEnumerable<object> objs = rawValue.Cast<object>();
+                object? single;
+                if (attribute.WantsLast)
+                    single = objs.LastOrDefault();
+                
+                else
+                    single = objs.ElementAt(attribute.Index);
+
+                if (!valueType.Equals(typeof(object)))
+                    single = Convert.ChangeType(single, valueType);
+
+                return single;
+
+                //return Convert.ChangeType(rawValue, valueType);
             }
             else
-            {
-                if (rawValue is not null)
-                {
-                    var type = rawValue.GetType();
-                    if (!type.Equals(typeof(string)) && rawValue is IEnumerable objs)
-                    {
-                        rawValue = objs.Cast<object>().LastOrDefault();
-                    }
-                }
-
-                return Convert.ChangeType(rawValue, valueType);
-            }
+                return existingValue;
         }
 
-        private static object? ConvertValue<T>([DisallowNull] T obj, MemberInfo memberInfo, LdapPropertyAttribute attribute, object? rawValue)
+        private static object? ConvertSingleObject(object? value, Type toType)
+        {
+            if (toType.Equals(typeof(object)))
+                return value;
+
+            return Convert.ChangeType(value, toType);
+        }
+
+        private static object? ConvertValue<T>([DisallowNull] T obj, MemberInfo memberInfo, LdapPropertyAttribute attribute, IEnumerable? rawValue)
         {
             _ = TryGetExistingValue(obj, memberInfo, out object? existingValue, out Type valueType);
 
+            if (rawValue is null)
+                return existingValue;
+
             return TryGetConverter(memberInfo, out LdapPropertyConverter? converter) && converter.CanConvert(valueType)
-                ? converter.Convert(attribute, rawValue, existingValue)
-                : ConvertObject(memberInfo, valueType, rawValue, existingValue);
+                ? converter.Convert(attribute, rawValue.Cast<object>().ToArray(), existingValue)
+                : ConvertObject(memberInfo, attribute, valueType, rawValue, existingValue);
         }
 
-        private static object CreateArray(Type arrayType, Array list, object? existingValue)
+        private static IEnumerable? CreateArray(Type arrayType, IEnumerable? rawValue)
         {
-            Type? elementType = arrayType.GetElementType() ?? typeof(object);
+            if (rawValue is null)
+                return rawValue;
 
-            if (existingValue is not Array existingArray)
+            Type eType = typeof(Enumerable);
+
+            Type elementType = arrayType.GetElementType() ?? typeof(object);
+
+            MethodInfo? castMethod = eType.GetMethod(nameof(Enumerable.Cast))?.MakeGenericMethod(elementType);
+            MethodInfo? toArrayMethod = eType.GetMethod(nameof(Enumerable.ToArray))?.MakeGenericMethod(elementType);
+
+            object? castedObj = castMethod?.Invoke(null, new object[] { rawValue });
+            if (castedObj is not null)
             {
-                existingArray = Array.CreateInstance(elementType, 0);
+                object? toArrayObj = toArrayMethod?.Invoke(null, new object[] { castedObj });
+                return toArrayObj as IEnumerable;
             }
 
-            Array arr = Array.CreateInstance(elementType, list.Length + existingArray.Length);
-
-            if (existingArray.Length > 0)
-            {
-                existingArray.CopyTo(arr, 0);
-            }
-
-            for (int i = existingArray.Length; i < list.Length + existingArray.Length; i++)
-            {
-                object? converted = ConvertObject(null, elementType, list.GetValue(i - existingArray.Length), null);
-                arr.SetValue(converted, i);
-            }
-
-            return arr;
+            return rawValue;
         }
 
         private static void ExecuteAddMethod(MethodInfo addMethod, object collection, object? toBeAdded)

@@ -305,15 +305,26 @@ namespace AD.Api.Ldap.Path
                 .ToArray();
         }
 
-        public static PathValue FromDirectoryEntry(DirectoryEntry directoryEntry)
+        public static PathValue? FromDirectoryEntry(DirectoryEntry? directoryEntry)
         {
+            if (directoryEntry is null)
+                return null;
+
+            return FromPath(directoryEntry.Path);
+        }
+
+        public static PathValue? FromPath(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return null;
+
             Match regexMatch = Regex.Match(
-                directoryEntry.Path,
+                path,
                 @"^(?'Protocol'(?:LDAP|GC))\:\/\/((?'Host'[a-zA-Z\.0-9]{1,})(?:\:|)(?'Port'\d{3,4}|)\/(?'DistinguishedName'.+)|(?'DistinguishedName'.+))$",
                 RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
             if (!regexMatch.Success)
-                throw new InvalidDataException(nameof(directoryEntry));
+                throw new InvalidDataException(nameof(path));
 
             Protocol protocol = Protocol.Ldap;
             if (regexMatch.Groups.TryGetValue(nameof(Protocol), out Group? protoGroup) && protoGroup.Success)

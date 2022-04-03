@@ -1,6 +1,8 @@
 using AD.Api.Ldap.Connection;
+using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Path;
+using AD.Api.Ldap.Search;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
@@ -13,43 +15,69 @@ namespace AD.Api.Ldap
     {
         private bool _disposed;
         private readonly ILdapConnectionOptions _options;
-        //private readonly LiveLdapObject _baseEntry;
-        //private readonly LiveLdapObject _rootDse;
 
-        //public LiveLdapObject RootDSE => _rootDse;
-        //public LiveLdapObject SearchBase => _baseEntry;
+        public PathValue RootDSE { get; }
+        public PathValue SearchBase { get; }
 
         public LdapConnection(ILdapConnectionOptions options)
         {
             _options = options;
-            //var path = new PathValue(options.Protocol)
-            //{
-            //    DistinguishedName = options.DistinguishedName,
-            //    Host = options.Host,
-            //    UseSsl = options.UseSSL
-            //};
+            this.RootDSE = new PathValue(options.Protocol)
+            {
+                DistinguishedName = "RootDSE",
+                Host = options.Host,
+                UseSsl = options.UseSSL
+            };
 
-            //var rootDse = new PathValue(options.Protocol)
-            //{
-            //    DistinguishedName = "RootDSE",
-            //    Host = options.Host,
-            //    UseSsl = options.UseSSL
-            //};
-
-            //_baseEntry = new LiveLdapObject(CreateEntry(path, options), path);
-            //_rootDse = new LiveLdapObject(CreateEntry(rootDse, options), rootDse);
-        }
-
-        public DirectoryEntry? GetDirectoryEntry(IPathed? pathedObject)
-        {
-            return pathedObject is not null && pathedObject.Path is not null 
-                ? this.GetDirectoryEntry(pathedObject.Path)
-                : null;
+            this.SearchBase = new PathValue(options.Protocol)
+            {
+                DistinguishedName = options.DistinguishedName,
+                Host = options.Host,
+                UseSsl = options.UseSSL
+            };
         }
 
         public DirectoryEntry GetDirectoryEntry(PathValue path)
         {
             return CreateEntry(path, _options);
+        }
+
+        public DirectoryEntry? GetDirectoryEntry(IPathed? pathedObject)
+        {
+            return pathedObject is not null && pathedObject.Path is not null
+                ? this.GetDirectoryEntry(pathedObject.Path)
+                : null;
+        }
+
+        public DirectoryEntry GetRootDSE()
+        {
+            return this.GetDirectoryEntry(this.RootDSE);
+        }
+
+        public DirectoryEntry GetSearchBase()
+        {
+            return this.GetDirectoryEntry(this.SearchBase);
+        }
+
+        public Searcher CreateSearcher(PathValue searchBase, IFilterStatement? filter = null)
+        {
+            return new Searcher(this.GetDirectoryEntry(searchBase))
+            {
+                Filter = filter
+            };
+        }
+
+        public Searcher CreateSearcher(IFilterStatement filter)
+        {
+            return new Searcher(this)
+            {
+                Filter = filter
+            };
+        }
+
+        public Searcher CreateSearcher(ISearchOptions? options = null)
+        {
+            return new Searcher(this, options);
         }
 
         private static DirectoryEntry CreateEntry(PathValue path, ILdapConnectionOptions options)

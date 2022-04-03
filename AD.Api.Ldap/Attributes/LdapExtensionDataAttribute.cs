@@ -9,5 +9,15 @@ namespace AD.Api.Ldap.Attributes
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class LdapExtensionDataAttribute : Attribute
     {
+        public bool IncludeComObjects { get; }
+
+        public LdapExtensionDataAttribute()
+        {
+        }
+
+        public LdapExtensionDataAttribute(bool includeCOMObjects)
+        {
+            this.IncludeComObjects = includeCOMObjects;
+        }
     }
 }

@@ -1,13 +1,7 @@
 using AD.Api.Ldap.Attributes;
-using AD.Api.Ldap.Connection;
-using AD.Api.Ldap.Converters;
-using AD.Api.Ldap.Exceptions;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
-using System.Linq;
 using System.Reflection;
 
 namespace AD.Api.Ldap.Mapping
@@ -26,6 +20,10 @@ namespace AD.Api.Ldap.Mapping
         {
             return MapFromDirectoryEntry(new T(), directoryEntry);
         }
+        public static T MapFromSearchResult<T>(SearchResult searchResult) where T : new()
+        {
+            return MapFromSearchResult(new T(), searchResult);
+        }
 
         [return: NotNullIfNotNull("objToMap")]
         public static T? MapFromDirectoryEntry<T>(T? objToMap, DirectoryEntry directoryEntry)
@@ -35,8 +33,16 @@ namespace AD.Api.Ldap.Mapping
                 : default;
         }
 
+        [return: NotNullIfNotNull("objToMap")]
+        public static T? MapFromSearchResult<T>(T? objToMap, SearchResult searchResult)
+        {
+            return objToMap is not null
+                ? Reflect(objToMap, searchResult.Properties)
+                : default;
+        }
+
         [return: NotNull]
-        private static T Reflect<T>([DisallowNull] T obj, PropertyCollection collection)
+        private static T Reflect<T>([DisallowNull] T obj, IDictionary collection)
         {
             HashSet<string> namesUsed = new(StringComparer.CurrentCultureIgnoreCase);
             List<(MemberInfo Member, LdapPropertyAttribute Attribute)> bindables = GetBindableMembers<T>();
@@ -45,8 +51,8 @@ namespace AD.Api.Ldap.Mapping
             {
                 string? key = null;
 
-                if (collection.Contains(bindable.Member.Name))
-                    key = bindable.Member.Name;
+                if (collection.Contains(bindable.Member.Name.ToLower()))
+                    key = bindable.Member.Name.ToLower();
                 
                 else if (!string.IsNullOrWhiteSpace(bindable.Attribute.LdapName) && collection.Contains(bindable.Attribute.LdapName))
                     key = bindable.Attribute.LdapName;
@@ -54,7 +60,7 @@ namespace AD.Api.Ldap.Mapping
                 else
                     return;
 
-                object? convertedValue = ConvertValue(obj, bindable.Member, bindable.Attribute, collection[key].Value);
+                object? convertedValue = ConvertValue(obj, bindable.Member, bindable.Attribute, collection[key] as IEnumerable);
 
                 if (convertedValue is not null)
                 {
@@ -67,15 +73,32 @@ namespace AD.Api.Ldap.Mapping
                 .Where(x => x.CustomAttributes.Any(att => att.AttributeType.IsAssignableTo(typeof(LdapExtensionDataAttribute))));
 
             MemberInfo? extDataMem = extDataMems.FirstOrDefault();
-            if (extDataMem is not null)
-            {
-                var dict = new Dictionary<string, object[]?>(collection.Count, StringComparer.CurrentCultureIgnoreCase);
+            LdapExtensionDataAttribute? att = extDataMem?.GetCustomAttribute<LdapExtensionDataAttribute>();
 
-                foreach (string propertyName in collection.PropertyNames.Cast<string>()
+            if (extDataMem is not null && att is not null)
+            {
+                var dict = new SortedDictionary<string, object[]?>(StringComparer.CurrentCultureIgnoreCase);
+
+                foreach (string propertyName in collection.Keys.Cast<string>()
                     .Where(x => !namesUsed.Contains(x)))
                 {
-                    var prop = collection[propertyName];
-                    dict.Add(propertyName, prop?.Cast<object>().ToArray());
+                    IEnumerable<object>? enumerable = (collection[propertyName] as IEnumerable)?.Cast<object>();
+                    if (enumerable is null)
+                    {
+                        dict.Add(propertyName, Array.Empty<object>());
+                        continue;
+                    }
+
+                    if (!att.IncludeComObjects
+                        && 
+                        enumerable.OfType<MarshalByRefObject>().Any())
+                    {
+                        continue;
+                    }
+
+                    object[] prop = enumerable.ToArray();
+
+                    dict.Add(propertyName, prop);
                 }
 
                 if (extDataMem is FieldInfo fi)
