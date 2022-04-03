@@ -32,6 +32,8 @@ namespace AD.Api.Attributes
             new AttributeValuator<JsonPropertyAttribute, string>(
                 x => x.PropertyName);
 
+        private static readonly AttributeValuator EnumEvaluator = new AttributeValuator();
+
         public static Action<PropertyCollection, (string, object)> GetAction(PropertyInfo propertyInfo)
         {
             return Evaluator.GetValue(propertyInfo);
@@ -40,6 +42,10 @@ namespace AD.Api.Attributes
             where T : IEntry
         {
             return Evaluator.GetValue(propertyExpression);
+        }
+        public static T GetAdditionalValue<T>(Enum enumeration)
+        {
+            return EnumEvaluator.GetAttributeValue<T, AdditionalValueAttribute>(enumeration);
         }
         public static MemberInfo[] GetJsonProperties<T>(bool includeFields = false)
             where T : class

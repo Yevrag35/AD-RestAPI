@@ -19,33 +19,38 @@ namespace AD.Api.Services
 {
     public interface IADQueryService
     {
-        Task<List<JsonUser>> QueryAsync(string domain, string ldapFilter);
+        //Task<List<JsonUser>> QueryAsync(string domain, string ldapFilter);
     }
 
-    [SupportedOSPlatform("windows")]
-    public class ADQueryService : SearchServiceBase<User>, IADQueryService, IDisposable
+    public class ADQueryService : IADQueryService, IDisposable
     {
-        private IMapper _mapper;
-
-        public ADQueryService(IMapper mapper, SearchDomains searchDomains)
-            : base(searchDomains)
-        {
-            _mapper = mapper;
-        }
-
-        private JsonUser ConvertFromAD(User user)
-        {
-            return _mapper.Map<JsonUser>(user);
-        }
-        public Task<List<JsonUser>> QueryAsync(string domain, string ldapFilter)
-        {
-            this.ValidateDomain(domain);
-            this.Searcher.RawFilter = ldapFilter;
-            return Task.Run(() =>
-            {
-                var list = this.Searcher.FindAll().ToList();
-                return list.ConvertAll(new Converter<User, JsonUser>(ConvertFromAD));
-            });
-        }
+        //private 
     }
+
+    //[SupportedOSPlatform("windows")]
+    //public class ADQueryService : SearchServiceBase<User>, IADQueryService, IDisposable
+    //{
+    //    private IMapper _mapper;
+
+    //    public ADQueryService(IMapper mapper, SearchDomains searchDomains)
+    //        : base(searchDomains)
+    //    {
+    //        _mapper = mapper;
+    //    }
+
+    //    private JsonUser ConvertFromAD(User user)
+    //    {
+    //        return _mapper.Map<JsonUser>(user);
+    //    }
+    //    public Task<List<JsonUser>> QueryAsync(string domain, string ldapFilter)
+    //    {
+    //        this.ValidateDomain(domain);
+    //        this.Searcher.RawFilter = ldapFilter;
+    //        return Task.Run(() =>
+    //        {
+    //            var list = this.Searcher.FindAll().ToList();
+    //            return list.ConvertAll(new Converter<User, JsonUser>(ConvertFromAD));
+    //        });
+    //    }
+    //}
 }

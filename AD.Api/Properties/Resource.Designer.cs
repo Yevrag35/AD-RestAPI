@@ -61,11 +61,38 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CN={0}.
+        /// </summary>
+        internal static string CommonName_Format {
+            get {
+                return ResourceManager.GetString("CommonName_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (DC\=.+)$.
+        /// </summary>
+        internal static string DN_DomainCapture {
+            get {
+                return ResourceManager.GetString("DN_DomainCapture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a valid domain name or is not configured..
         /// </summary>
         internal static string Error_InvalidDomainName {
             get {
                 return ResourceManager.GetString("Error_InvalidDomainName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to \,.
+        /// </summary>
+        internal static string Escape_Commas {
+            get {
+                return ResourceManager.GetString("Escape_Commas", resourceCulture);
             }
         }
         
@@ -79,7 +106,7 @@ namespace AD.Api.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid parameters for an AD modifications were specified:{0}{0}{1}.
+        ///   Looks up a localized string similar to Invalid parameters for an AD modification were specified.  {0}.
         /// </summary>
         internal static string Exception_IllegalOp_Format {
             get {
@@ -129,6 +156,15 @@ namespace AD.Api.Properties {
         internal static string IEnumerableT_Format {
             get {
                 return ResourceManager.GetString("IEnumerableT_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;WKGUID={0},{1}&gt;.
+        /// </summary>
+        internal static string LDAP_Format_WKO {
+            get {
+                return ResourceManager.GetString("LDAP_Format_WKO", resourceCulture);
             }
         }
         
@@ -219,6 +255,51 @@ namespace AD.Api.Properties {
         internal static string LDAPQuery_User_ObjectClass {
             get {
                 return ResourceManager.GetString("LDAPQuery_User_ObjectClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (\{.+?\}).
+        /// </summary>
+        internal static string NameCtor_Regex {
+            get {
+                return ResourceManager.GetString("NameCtor_Regex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to \{.+?\}.
+        /// </summary>
+        internal static string NameCtor_RegexReplace {
+            get {
+                return ResourceManager.GetString("NameCtor_RegexReplace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SMTP:.
+        /// </summary>
+        internal static string SMTP_Prefix_Primary {
+            get {
+                return ResourceManager.GetString("SMTP_Prefix_Primary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ^SMTP\:.
+        /// </summary>
+        internal static string SMTP_Prefix_PrimaryRegex {
+            get {
+                return ResourceManager.GetString("SMTP_Prefix_PrimaryRegex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to smtp:.
+        /// </summary>
+        internal static string STMP_Prefix {
+            get {
+                return ResourceManager.GetString("STMP_Prefix", resourceCulture);
             }
         }
     }

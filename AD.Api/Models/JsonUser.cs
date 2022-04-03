@@ -4,6 +4,7 @@ using System.DirectoryServices;
 using System.Runtime.Serialization;
 using System.Runtime.Versioning;
 using AD.Api.Attributes;
+using AD.Api.Exceptions;
 using AD.Api.Extensions;
 using AD.Api.Models.Collections;
 using AD.Api.Models.Converters;
@@ -16,6 +17,7 @@ namespace AD.Api.Models
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class JsonUser : JsonRequestBase, IDirObject
     {
+        [JsonIgnore]
         private string _dn;
 
         [Ldap("distinguishedname")]
@@ -48,7 +50,7 @@ namespace AD.Api.Models
 
         [Ldap("proxyaddresses")]
         [JsonProperty("proxyAddresses", Order = 7)]
-        [JsonConverter(typeof(PropertyMethodConverter<string, ADSortedValueList<string>>))]
+        [JsonConverter(typeof(PropertyMethodConverter<string, ProxyAddressCollection>))]
         public PropertyMethod<string> ProxyAddresses { get; set; }
 
         [Ldap("sn")]
@@ -62,6 +64,15 @@ namespace AD.Api.Models
         [Ldap("userprincipalname")]
         [JsonProperty("userPrincipalName", Order = 3)]
         public string UserPrincipalName { get; set; }
+
+        public bool IsRequestValid(out IllegalADOperationException e)
+        {
+            e = null;
+            if (this.ProxyAddresses.IsInvalid)
+                e = this.ProxyAddresses.GetException();
+
+            return null == e;
+        }
 
         public DirectoryEntry GetDirectoryEntry(string domainController = null)
         {

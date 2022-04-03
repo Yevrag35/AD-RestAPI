@@ -14,6 +14,8 @@ namespace AD.Api.Models.Entries
     [SupportedOSPlatform("windows")]
     public class User : EntryBase<User>
     {
+        public Dictionary<string, PropertyMethod<string>> EditOperations { get; internal set; }
+
         [Ldap("postaladdress")]
         [PropertyValue(AddMethod.Set)]
         public string Address { get; set; }
@@ -24,11 +26,11 @@ namespace AD.Api.Models.Entries
 
         [Ldap("c")]
         [PropertyValue(AddMethod.Set)]
-        public string Country { get; set; } = "US";
+        public string Country { get; set; }// = "US";
 
         [Ldap("co")]
         [PropertyValue(AddMethod.Set)]
-        public string Co { get; set; } = "United States";
+        public string Co { get; set; }// = "United States";
 
         [Ldap("cn")]
         [PropertyValue(AddMethod.Set)]
@@ -36,7 +38,7 @@ namespace AD.Api.Models.Entries
 
         [Ldap("countrycode")]
         [PropertyValue(AddMethod.Set)]
-        public int? CountryCode { get; set; } = 840;
+        public int? CountryCode { get; set; }// = 840;
 
         [Ldap("description")]
         [PropertyValue(AddMethod.Set)]
