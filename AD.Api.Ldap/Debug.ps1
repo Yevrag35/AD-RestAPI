@@ -70,8 +70,12 @@ $myDesktop = [System.Environment]::GetFolderPath("Desktop")
 
 Push-Location $myDesktop
 
-$builder = [AD.Api.Ldap.LdapConnectionBuilder]::new().UsingHost("GARVDC06.yevrag35.com").UsingSearchBase("DC=yevrag35,DC=com").UsingSSL()
-$con = $builder.Build()
+#$builder = [AD.Api.Ldap.LdapConnectionBuilder]::new().UsingHost("GARVDC06.yevrag35.com").UsingSearchBase("DC=yevrag35,DC=com").UsingSSL()
+#$con = $builder.Build()
+
+$user = [adsi]"LDAP://CN=Mike Garvey,OU=Real Users,DC=yevrag35,DC=com"
+$uu = [AD.Api.Ldap.Extensions.DirectoryEntryExtensions]::AsLdapUser($user)
+$uu
 
 <#
 $sb = new-object System.Text.StringBuilder

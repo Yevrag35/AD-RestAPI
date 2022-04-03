@@ -10,7 +10,7 @@ using AD.Api.Ldap.Path;
 
 namespace AD.Api.Ldap
 {
-    public class LiveLdapObject : IDisposable
+    public abstract class LiveLdapObject : IDisposable
     {
         private bool _disposed;
         private readonly PathValue _path;
@@ -19,8 +19,8 @@ namespace AD.Api.Ldap
         public PathValue Path => _path;
         public DirectoryEntry DirEntry => _dirEntry;
 
-        [LdapProperty("objectClass")]
-        public string ObjectClass { get; set; }
+        [LdapProperty]
+        public string? ObjectClass { get; set; }
 
         public LiveLdapObject(DirectoryEntry entry)
             : this(entry, PathValue.FromDirectoryEntry(entry))
@@ -30,18 +30,15 @@ namespace AD.Api.Ldap
         {
             _dirEntry = entry;
             _path = path;
-            this.ObjectClass = TryGetObjectClass(_dirEntry, out string? objectClass)
-                ? objectClass
-                : "RootDSE";
         }
 
-        private static bool TryGetObjectClass(DirectoryEntry? entry, [NotNullWhen(true)] out string? objectClass)
-        {
-            objectClass = null;
-            return entry is not null && entry
-                .Properties
-                    .TryGetAsSingle(nameof(objectClass), out objectClass, col => col.LastOrDefault());
-        }
+        //private static bool TryGetObjectClass(DirectoryEntry? entry, [NotNullWhen(true)] out string? objectClass)
+        //{
+        //    objectClass = null;
+        //    return entry is not null && entry
+        //        .Properties
+        //            .TryGetAsSingle(nameof(objectClass), out objectClass, col => col.LastOrDefault());
+        //}
 
         #region IDISPOSABLE IMPLEMENTATION
         public void Dispose()

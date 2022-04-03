@@ -63,12 +63,12 @@ namespace AD.Api.Ldap.Mapping
 
         private static object? ConvertEnumerable(MemberInfo memInfo, Type toType, object? value, object? existingValue)
         {
-            if (value is not List<object> list || list.Count <= 0)
+            if (value is not Array arr || arr.Length <= 0)
                 return existingValue;
 
             if (toType.IsArray)
             {
-                return CreateArray(toType, list, existingValue);
+                return CreateArray(toType, arr, existingValue);
             }
 
             if (existingValue is null)
@@ -79,7 +79,7 @@ namespace AD.Api.Ldap.Mapping
             }
 
             Type[] genericArguments = toType.GetGenericArguments();
-            Func<object, object?> func;
+            Func<object?, object?> func;
             switch (genericArguments.Length)
             {
                 case 0:
@@ -94,11 +94,11 @@ namespace AD.Api.Ldap.Mapping
             if (!TryFindAddMethod(toType, out MethodInfo? addMethod))
                 return existingValue;
 
-            list.ForEach(o =>
+            for (int i = 0; i < arr.Length; i++)
             {
-                object? converted = func(o);
+                object? converted = func(arr.GetValue(i));
                 ExecuteAddMethod(addMethod, existingValue, converted);
-            });
+            }
 
             return existingValue;
         }
@@ -135,7 +135,7 @@ namespace AD.Api.Ldap.Mapping
                 : ConvertObject(memberInfo, valueType, rawValue, existingValue);
         }
 
-        private static object CreateArray(Type arrayType, List<object> list, object? existingValue)
+        private static object CreateArray(Type arrayType, Array list, object? existingValue)
         {
             Type? elementType = arrayType.GetElementType() ?? typeof(object);
 
@@ -144,16 +144,16 @@ namespace AD.Api.Ldap.Mapping
                 existingArray = Array.CreateInstance(elementType, 0);
             }
 
-            Array arr = Array.CreateInstance(elementType, list.Count + existingArray.Length);
+            Array arr = Array.CreateInstance(elementType, list.Length + existingArray.Length);
 
             if (existingArray.Length > 0)
             {
                 existingArray.CopyTo(arr, 0);
             }
 
-            for (int i = existingArray.Length; i < list.Count + existingArray.Length; i++)
+            for (int i = existingArray.Length; i < list.Length + existingArray.Length; i++)
             {
-                object? converted = ConvertObject(null, elementType, list[i - existingArray.Length], null);
+                object? converted = ConvertObject(null, elementType, list.GetValue(i - existingArray.Length), null);
                 arr.SetValue(converted, i);
             }
 

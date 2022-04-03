@@ -7,9 +7,9 @@ namespace AD.Api.Ldap.Attributes
     {
         public string? ShortName { get; }
         public string? DisplayName { get; }
-        public string LdapName { get; }
+        public string? LdapName { get; }
 
-        public LdapPropertyAttribute(string ldapName, string? displayName = null, string? shortHandName = null)
+        public LdapPropertyAttribute(string? ldapName = null, string? displayName = null, string? shortHandName = null)
         {
             this.ShortName = shortHandName;
             this.DisplayName = displayName;

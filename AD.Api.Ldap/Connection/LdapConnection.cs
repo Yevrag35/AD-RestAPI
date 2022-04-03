@@ -35,8 +35,8 @@ namespace AD.Api.Ldap
                 UseSsl = options.UseSSL
             };
 
-            _baseEntry = new LiveLdapObject(CreateEntry(path, options), path);
-            _rootDse = new LiveLdapObject(CreateEntry(rootDse, options), rootDse);
+            //_baseEntry = new LiveLdapObject(CreateEntry(path, options), path);
+            //_rootDse = new LiveLdapObject(CreateEntry(rootDse, options), rootDse);
         }
 
         private static DirectoryEntry CreateEntry(PathValue path, ILdapConnectionOptions options)
