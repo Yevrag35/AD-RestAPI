@@ -10,6 +10,8 @@ namespace AD.Api.Ldap.Filters
     {
         protected List<IFilterStatement> Clauses { get; }
 
+        public int Count => this.Clauses.Count;
+
         public FilterContainer()
             : this(0)
         {
@@ -19,7 +21,11 @@ namespace AD.Api.Ldap.Filters
             this.Clauses = new List<IFilterStatement>(capacity);
         }
 
-        public void Add(IFilterStatement statement) => this.Clauses.Add(statement);
+        public void Add(IFilterStatement? statement)
+        {
+            if (statement is not null)
+                this.Clauses.Add(statement);
+        }
         public bool Contains<T>() where T : IFilterStatement
         {
             return this.Clauses.Exists(statement => statement is T);

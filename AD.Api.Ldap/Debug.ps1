@@ -75,7 +75,22 @@ Push-Location $myDesktop
 
 $user = [adsi]"LDAP://CN=Mike Garvey,OU=Real Users,DC=yevrag35,DC=com"
 $uu = [AD.Api.Ldap.Extensions.DirectoryEntryExtensions]::AsLdapUser($user)
-$uu
+$converter = [AD.Api.Ldap.Filters.Json.FilterConverter]::new()
+
+$json = @"
+{
+	"or": {
+		"mail": "mike.garvey@yevrag35.com",
+		"and": {
+			"name": "Administrator",
+			"userPrincipalName": null
+		}
+	}
+}
+"@
+
+$o = [Newtonsoft.Json.JsonConvert]::DeserializeObject[AD.Api.Ldap.Filters.IFilterStatement]($json, $converter)
+$o
 
 <#
 $sb = new-object System.Text.StringBuilder

@@ -27,6 +27,5 @@ namespace AD.Api.Ldap.Search
 
             Console.WriteLine(builder.ToString());
         }
-
     }
 }
