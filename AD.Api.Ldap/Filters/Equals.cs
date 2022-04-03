@@ -12,7 +12,7 @@ namespace AD.Api.Ldap.Filters
     public sealed record Equal : EqualityStatement
     {
         public sealed override string Property { get; }
-        public string? Value { get; }
+        public string? Value { get; init; }
 
         public Equal(string propertyName, IConvertible? value)
         {
@@ -23,6 +23,19 @@ namespace AD.Api.Ldap.Filters
         }
 
         protected sealed override string? GetValue() => this.Value;
+
+        public Equal Any()
+        {
+            return new Equal(this)
+            {
+                Value = STAR.ToString()
+            };
+        }
+
+        protected sealed override EqualityStatement ToAny()
+        {
+            return this.Any();
+        }
 
         public static Equal Create<T, TMember>(T obj, Expression<Func<T, TMember?>> expression) where TMember : IConvertible
         {

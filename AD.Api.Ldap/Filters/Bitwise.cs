@@ -25,6 +25,11 @@ namespace AD.Api.Ldap.Filters
 
         protected sealed override string? GetValue() => Convert.ToString(this.Value);
 
+        protected override EqualityStatement ToAny()
+        {
+            return this;
+        }
+
         public static BitwiseAnd Create<T, TMember>(T obj, Expression<Func<T, TMember>> expression) where TMember : IConvertible
         {
             if (!TryAsMemberExpression(expression, out MemberExpression? memberExpression))
@@ -73,6 +78,11 @@ namespace AD.Api.Ldap.Filters
         }
 
         protected sealed override string? GetValue() => Convert.ToString(this.Value);
+
+        protected sealed override EqualityStatement ToAny()
+        {
+            return this;
+        }
 
         public static BitwiseOr Create<T, TMember>(T obj, Expression<Func<T, TMember>> expression) where TMember : IConvertible
         {

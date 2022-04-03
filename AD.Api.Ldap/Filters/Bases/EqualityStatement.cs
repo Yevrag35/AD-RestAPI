@@ -21,20 +21,32 @@ namespace AD.Api.Ldap.Filters
 
         protected abstract string? GetValue();
 
+        protected abstract EqualityStatement ToAny();
+
         public override StringBuilder WriteTo(StringBuilder builder)
         {
             string? strValue = this.GetValue();
 
             Func<StringBuilder, StringBuilder> writeValue = string.IsNullOrWhiteSpace(strValue)
-                ? sb => sb.Append(STAR)
-                : sb => sb.Append(strValue);
-
-            builder
-                .Append((char)40) //  (
+                ? sb =>
+                {
+                    var not = new Not
+                    {
+                        this.ToAny()
+                    };
+                    return not.WriteTo(sb);
+                }
+                : sb =>
+                {
+                    return sb
+                    .Append((char)40) //  (
                     .Append(this.Property)
-                    .Append((char)61); // =
-            return writeValue(builder)
-                .Append((char)41); // )
+                    .Append((char)61) // =
+                    .Append(strValue)
+                    .Append((char)41);
+                };
+
+            return writeValue(builder);
         }
 
         protected static bool TryGetLdapName(MemberExpression expression, [NotNullWhen(true)] out string? ldapPropertyName)
