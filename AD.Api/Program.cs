@@ -7,7 +7,6 @@ using System.Runtime.Versioning;
 
 namespace AD.Api
 {
-    [SupportedOSPlatform("windows")]
     public class Program
     {
         public static void Main(string[] args)

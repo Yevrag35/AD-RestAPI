@@ -23,7 +23,6 @@ using AD.Api.Services;
 
 namespace AD.Api
 {
-    [SupportedOSPlatform("windows")]
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -61,22 +60,22 @@ namespace AD.Api
 
             services.AddCors();
             
-            services.AddScoped<IADEditService, ADEditService>();
-            services.AddScoped<INewNameService, NewNameService>();
-            services.AddScoped<IADCreateService, ADCreateService>(service =>
-            {
-                return new ADCreateService(
-                    service.GetService<IMapper>(),
-                    domains
-                );
-            });
-            services.AddScoped<IADQueryService, ADQueryService>(service =>
-            {
-                return new ADQueryService(
-                    service.GetService<IMapper>(),
-                    domains
-                );
-            });
+            //services.AddScoped<IADEditService, ADEditService>();
+            services.AddSingleton<INewNameService, NewNameService>();
+            //services.AddScoped<IADCreateService, ADCreateService>(service =>
+            //{
+            //    return new ADCreateService(
+            //        service.GetService<IMapper>(),
+            //        domains
+            //    );
+            //});
+            //services.AddScoped<IADQueryService, ADQueryService>(service =>
+            //{
+            //    return new ADQueryService(
+            //        service.GetService<IMapper>(),
+            //        domains
+            //    );
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

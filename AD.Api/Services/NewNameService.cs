@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Microsoft.Extensions.Options;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using AD.Api.Components;
 using AD.Api.Extensions;
 using AD.Api.Models;
-using Microsoft.Extensions.Options;
+
 using Strings = AD.Api.Properties.Resource;
 
 namespace AD.Api.Services
@@ -18,7 +18,6 @@ namespace AD.Api.Services
         string Construct(JsonCreateUser user);
     }
 
-    [SupportedOSPlatform("windows")]
     public class NewNameService : INewNameService
     {
         private string _format;

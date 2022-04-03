@@ -70,6 +70,9 @@ namespace AD.Api.Ldap.Search
 
         public List<FindResult> FindAll()
         {
+            _builder.Clear();
+            _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
+
             var list = new List<FindResult>();
 
             using (SearchResultCollection resultCol = _searcher.FindAll())

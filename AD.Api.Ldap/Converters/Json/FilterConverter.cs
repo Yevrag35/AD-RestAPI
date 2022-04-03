@@ -79,16 +79,24 @@ namespace AD.Api.Ldap.Converters.Json
 
         private IFilterStatement? ReadOr(JToken? token, JsonReader reader, JsonSerializer serializer)
         {
-            if (token is null || token.Type != JTokenType.Object)
+            if (token is null || token.Type != JTokenType.Array)
                 return null;
 
-            JObject job = (JObject)token;
+            JArray jar = (JArray)token;
 
             var or = new Or();
-            foreach (var kvp in job)
+            foreach (var tok in jar)
             {
-                var filter = this.ReadToken(kvp, reader, serializer);
-                or.Add(filter);
+                if (tok.Type != JTokenType.Object)
+                    continue;
+
+                JObject job = (JObject)tok;
+
+                foreach (var kvp in job)
+                {
+                    var filter = this.ReadToken(kvp, reader, serializer);
+                    or.Add(filter);
+                }
             }
 
             return or;

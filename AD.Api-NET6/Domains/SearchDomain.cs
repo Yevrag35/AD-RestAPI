@@ -6,20 +6,17 @@ using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using AD.Api.Extensions;
-using AD.Api.Models;
 
-namespace AD.Api.Components
+namespace AD.Api.Domains
 {
-    [SupportedOSPlatform("windows")]
     public class SearchDomains : IReadOnlyDictionary<string, SearchDomain>
     {
-        private OrderedDictionary _d;
-        private SortedList<string, SearchDomain> _byFQDNs;
-        private Dictionary<string, SearchDomain> _byDNs;
-        private SearchDomain _registeredDefault;
+        //private OrderedDictionary _d;
+        private readonly SortedList<string, SearchDomain> _byFQDNs;
+        private readonly Dictionary<string, SearchDomain> _byDNs;
+        private SearchDomain? _registeredDefault;
 
         public static readonly StringComparer KeyComparer = StringComparer.CurrentCultureIgnoreCase;
 
@@ -39,17 +36,18 @@ namespace AD.Api.Components
         public ICollection<SearchDomain> Values => _byFQDNs.Values;
         IEnumerable<SearchDomain> IReadOnlyDictionary<string, SearchDomain>.Values => this.Values;
 
-        public SearchDomains(IEnumerable<SearchDomain> domainsToAdd)
+        public SearchDomains(IEnumerable<SearchDomain>? domainsToAdd)
         {
-            if (null == domainsToAdd)
+            if (domainsToAdd is null)
                 throw new ArgumentNullException(nameof(domainsToAdd));
 
             //_d = new OrderedDictionary(1, KeyComparer);
             _byFQDNs = new SortedList<string, SearchDomain>(1, KeyComparer);
             _byDNs = new Dictionary<string, SearchDomain>(1, KeyComparer);
+
             foreach (SearchDomain sd in domainsToAdd.OrderByDescending(x => x.IsDefault).ThenBy(x => x.FQDN))
             {
-                if (sd.IsDefault && null == _registeredDefault)
+                if (sd.IsDefault && _registeredDefault is null)
                     _registeredDefault = sd;
 
                 //_d.Add(sd.FQDN, sd);
@@ -69,16 +67,16 @@ namespace AD.Api.Components
         {
             return _byDNs.ContainsKey(distinguishedName);
         }
-        public string GetDefaultFQDN()
+        public string? GetDefaultFQDN()
         {
             return this.GetDefaultDomain()?.FQDN;
         }
-        public SearchDomain GetDefaultDomain()
+        public SearchDomain? GetDefaultDomain()
         {
             if (this.Values.Count <= 0)
                 return null;
 
-            else if (null == _registeredDefault)
+            else if (_registeredDefault is null)
             {
                 _registeredDefault = this[0];
             }
@@ -110,20 +108,19 @@ namespace AD.Api.Components
         }
     }
 
-    [SupportedOSPlatform("windows")]
-    public class SearchDomain : IDirObject
+    public class SearchDomain// : IDirObject
     {
-        public string DistinguishedName { get; set; }
+        public string? DistinguishedName { get; set; }
         public bool IsDefault { get; set; }
-        public string FQDN { get; set; }
-        public string StaticDomainController { get; set; }
+        public string? FQDN { get; set; }
+        public string? StaticDomainController { get; set; }
 
-        public DirectoryEntry GetDirectoryEntry(string domainController = null)
-        {
-            if (string.IsNullOrWhiteSpace(domainController))
-                domainController = this.StaticDomainController;
+        //public DirectoryEntry GetDirectoryEntry(string domainController = null)
+        //{
+        //    if (string.IsNullOrWhiteSpace(domainController))
+        //        domainController = this.StaticDomainController;
 
-            return new DirectoryEntry(this.DistinguishedName.ToLdapPath(domainController));
-        }
+        //    return new DirectoryEntry(this.DistinguishedName.ToLdapPath(domainController));
+        //}
     }
 }

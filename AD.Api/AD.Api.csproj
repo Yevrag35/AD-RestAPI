@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UserSecretsId>aspnet-AD.Api-A6D03E00-F606-40F9-A083-3D09DEDC404E</UserSecretsId>
   </PropertyGroup>
 
@@ -19,27 +19,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="10.1.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    <PackageReference Include="AutoMapper" Version="11.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Linq2Ldap" Version="0.5.2.118" />
-    <PackageReference Include="MG.Collections" Version="1.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.9" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.9" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="1.15.2" />
-    <PackageReference Include="Microsoft.Identity.Web.UI" Version="1.15.2" />
+    <PackageReference Include="MG.Collections" Version="1.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.3" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="1.23.1" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="1.23.1" />
 	<PackageReference Include="MG.Attributes" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.5" />
-    <PackageReference Include="System.DirectoryServices" Version="5.0.0" />
-    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="5.0.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.0" />
+	  <PackageReference Include="System.DirectoryServices" Version="6.0.0" />
+	  <PackageReference Include="System.DirectoryServices.AccountManagement" Version="6.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="6.0.0" />
     <PackageReference Include="System.Security.Principal" Version="4.3.0" />
-    <PackageReference Include="System.Text.Json" Version="5.0.2" />
+    <PackageReference Include="System.Text.Json" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="Components\LdapPath.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AD.Api.Ldap\AD.Api.Ldap.csproj">
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
