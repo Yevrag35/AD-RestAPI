@@ -2,6 +2,7 @@
 {
     public class SearchSettings
     {
-        public string[]? DefaultProperties { get; set; }
+        public int Size { get; set; }
+        public string[]? Properties { get; set; }
     }
 }

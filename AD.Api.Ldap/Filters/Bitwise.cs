@@ -7,7 +7,7 @@ namespace AD.Api.Ldap.Filters
 {
     public sealed record BitwiseAnd : EqualityStatement
     {
-        private const string BITWISE_AND = "{0}:1.2.840.113556.1.4.804:";
+        private const string BITWISE_AND = "{0}:1.2.840.113556.1.4.803:";
 
         public sealed override string Property { get; }
         public long Value { get; }
@@ -62,7 +62,7 @@ namespace AD.Api.Ldap.Filters
 
     public sealed record BitwiseOr : EqualityStatement
     {
-        private const string BITWISE_OR = "{0}:1.2.840.113556.1.4.803:";
+        private const string BITWISE_OR = "{0}:1.2.840.113556.1.4.804:";
 
         public sealed override string Property { get; }
         public long Value { get; }

@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using AD.Api.Services;
-using AD.Api.Ldap.Filters;
-using AD.Api.Settings;
-using Microsoft.Extensions.Options;
+﻿using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Search;
+using AD.Api.Services;
+using AD.Api.Settings;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using System.DirectoryServices;
+using System.Web;
 
 namespace AD.Api.Controllers
 {
@@ -22,14 +24,24 @@ namespace AD.Api.Controllers
 
         [HttpPost]
         [Route("{controller}")]
-        public IActionResult PerformSearch([FromBody] IFilterStatement filter)
+        public IActionResult PerformSearch([FromBody] IFilterStatement filter, [FromQuery] int limit = 0, 
+            [FromQuery] SearchScope scope = SearchScope.Subtree,
+            [FromQuery] SortDirection sortDir = SortDirection.Ascending,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? properties = null)
         {
+            string[]? propertiesToAdd = SplitProperties(properties) ?? this.SearchSettings.Properties;
+
             using (var connection = this.Connections.GetDefaultConnection())
             {
                 SearchOptions opts = new SearchOptions
                 {
                     Filter = filter,
-                    PropertiesToLoad = this.SearchSettings.DefaultProperties
+                    SizeLimit = limit,
+                    SearchScope = scope,
+                    SortDirection = sortDir,
+                    SortProperty = sortBy,
+                    PropertiesToLoad = propertiesToAdd
                 };
 
                 using (var searcher = connection.CreateSearcher(opts))
@@ -57,7 +69,7 @@ namespace AD.Api.Controllers
                 SearchOptions opts = new SearchOptions
                 {
                     Filter = filter,
-                    PropertiesToLoad = this.SearchSettings.DefaultProperties
+                    PropertiesToLoad = this.SearchSettings.Properties
                 };
 
                 using (var searcher = connection.CreateSearcher(opts))
@@ -73,6 +85,11 @@ namespace AD.Api.Controllers
                         : NotFound();
                 }
             }
+        }
+
+        private static string[]? SplitProperties(string? propertiesStr)
+        {
+            return propertiesStr?.Split(new char[2] { (char)32, (char)43 }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

@@ -33,16 +33,30 @@ namespace AD.Api.Ldap.Converters.Json
         {
             IFilterStatement? statement = null;
 
-            switch (kvp.Key)
+            FilterKeyword? keyword = null;
+            if (Enum.TryParse(kvp.Key, true, out FilterKeyword result))
+                keyword = result;
+
+            switch (keyword)
             {
-                case "And":
-                case "and":
+                case FilterKeyword.And:
                     statement = this.ReadAnd(kvp.Value, reader, serializer);
                     break;
 
-                case "Or":
-                case "or":
+                case FilterKeyword.Or:
                     statement = this.ReadOr(kvp.Value, reader, serializer);
+                    break;
+
+                case FilterKeyword.Not:
+                    statement = this.ReadNot(kvp.Value, reader, serializer);
+                    break;
+
+                case FilterKeyword.Band:
+                    statement = this.ReadBand(kvp.Value, reader, serializer);
+                    break;
+
+                case FilterKeyword.Bor:
+                    statement = this.ReadBor(kvp.Value, reader, serializer);
                     break;
 
                 default:
@@ -75,6 +89,55 @@ namespace AD.Api.Ldap.Converters.Json
             }
 
             return and;
+        }
+
+        private IFilterStatement? ReadBand(JToken? token, JsonReader reader, JsonSerializer serializer)
+        {
+            if (token is null || token.Type != JTokenType.Object)
+                return null;
+
+            if (token is JObject job && job.Count == 1 && job.First is JProperty jprop)
+                return new BitwiseAnd(jprop.Name, jprop.Value.ToObject<long>());
+
+            else
+                return null;
+        }
+
+        private IFilterStatement? ReadBor(JToken? token, JsonReader reader, JsonSerializer serializer)
+        {
+            if (token is null || token.Type != JTokenType.Object)
+                return null;
+
+            if (token is JObject job && job.Count == 1 && job.First is JProperty jprop)
+                return new BitwiseOr(jprop.Name, jprop.Value.ToObject<long>());
+
+            else
+                return null;
+        }
+
+        private IFilterStatement? ReadNot(JToken? token, JsonReader reader, JsonSerializer serializer)
+        {
+            if (token is null || token.Type != JTokenType.Array)
+                return null;
+
+            JArray jar = (JArray)token;
+            var not = new Not();
+
+            foreach (var tok in jar)
+            {
+                if (tok.Type != JTokenType.Object)
+                    continue;
+
+                JObject job = (JObject)tok;
+
+                foreach (var kvp in job)
+                {
+                    var filter = this.ReadToken(kvp, reader, serializer);
+                    not.Add(filter);
+                }
+            }
+
+            return not;
         }
 
         private IFilterStatement? ReadOr(JToken? token, JsonReader reader, JsonSerializer serializer)

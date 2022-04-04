@@ -28,7 +28,7 @@ IConfigurationSection section = builder.Configuration.GetSection("Domains");
 builder.Services.AddSingleton(new SearchDomains(GetSearchDomains(section.GetChildren())));
 builder.Services.Configure<SearchSettings>(options =>
 {
-    builder.Configuration.GetSection("Settings").GetSection("Search").Bind(options);
+    builder.Configuration.GetSection("Settings").GetSection("SearchDefaults").Bind(options);
 });
 
 // Add services to the container.

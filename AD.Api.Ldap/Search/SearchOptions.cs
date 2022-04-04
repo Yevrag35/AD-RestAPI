@@ -50,7 +50,11 @@ namespace AD.Api.Ldap.Search
         public string? SortProperty
         {
             get => _sortOption.PropertyName;
-            init => _sortOption.PropertyName = value;
+            init
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                    _sortOption.PropertyName = value;
+            }
         }
 
         public SortOption GetSortOption() => _sortOption;
