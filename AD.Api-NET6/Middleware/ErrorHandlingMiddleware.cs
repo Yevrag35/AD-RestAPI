@@ -26,7 +26,7 @@ namespace AD.Api.Middleware
                 using (var jsonWriter = new JsonTextWriter(writer))
                 {
                     jsonWriter.Formatting = Formatting.Indented;
-                    jsonWriter.WriteRaw(JsonConvert.SerializeObject(error));
+                    jsonWriter.WriteRaw(JsonConvert.SerializeObject(error, Formatting.Indented));
                     await jsonWriter.FlushAsync().ConfigureAwait(false);
                 }
             }

@@ -83,6 +83,8 @@ namespace AD.Api.Ldap.Search
                 }
             }
 
+            list.TrimExcess();
+
             return list;
         }
         public List<FindResult> FindAll(ISearchOptions oneOffOptions)
