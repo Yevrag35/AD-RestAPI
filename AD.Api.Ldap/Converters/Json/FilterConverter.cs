@@ -1,3 +1,4 @@
+using AD.Api.Ldap.Exceptions;
 using AD.Api.Ldap.Filters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -61,11 +62,14 @@ namespace AD.Api.Ldap.Converters.Json
 
                 default:
                 {
-                    if (kvp.Value?.Type == JTokenType.Null)
+                    if (kvp.Value is not null && kvp.Value.Type == JTokenType.Null)
                         statement = new Equal(kvp.Key, null);
 
                     else if (kvp.Value is IConvertible icon)
                         statement = new Equal(kvp.Key, icon);
+
+                    else
+                        throw new LdapFilterParsingException($"When not using a {nameof(FilterKeyword)}, the only valid JSON is a Name/Value property.");
 
                     break;
                 }
@@ -77,7 +81,7 @@ namespace AD.Api.Ldap.Converters.Json
         private IFilterStatement? ReadAnd(JToken? token, JsonReader reader, JsonSerializer serializer)
         {
             if (token is null || token.Type != JTokenType.Object)
-                return null;
+                throw new LdapFilterParsingException($"'{nameof(FilterKeyword.And)}' must be followed by a JSON object.", FilterKeyword.And);
 
             JObject job = (JObject)token;
             var and = new And();
@@ -94,7 +98,7 @@ namespace AD.Api.Ldap.Converters.Json
         private IFilterStatement? ReadBand(JToken? token, JsonReader reader, JsonSerializer serializer)
         {
             if (token is null || token.Type != JTokenType.Object)
-                return null;
+                throw new LdapFilterParsingException($"'{nameof(FilterKeyword.Band)}' must be followed by a JSON object.", FilterKeyword.Band);
 
             if (token is JObject job && job.Count == 1 && job.First is JProperty jprop)
                 return new BitwiseAnd(jprop.Name, jprop.Value.ToObject<long>());
@@ -106,7 +110,7 @@ namespace AD.Api.Ldap.Converters.Json
         private IFilterStatement? ReadBor(JToken? token, JsonReader reader, JsonSerializer serializer)
         {
             if (token is null || token.Type != JTokenType.Object)
-                return null;
+                throw new LdapFilterParsingException($"'{nameof(FilterKeyword.Bor)}' must be followed by a JSON object.", FilterKeyword.Bor);
 
             if (token is JObject job && job.Count == 1 && job.First is JProperty jprop)
                 return new BitwiseOr(jprop.Name, jprop.Value.ToObject<long>());
@@ -118,7 +122,7 @@ namespace AD.Api.Ldap.Converters.Json
         private IFilterStatement? ReadNot(JToken? token, JsonReader reader, JsonSerializer serializer)
         {
             if (token is null || token.Type != JTokenType.Array)
-                return null;
+                throw new LdapFilterParsingException($"'{nameof(FilterKeyword.Not)}' must be followed by a JSON array.", FilterKeyword.Not);
 
             JArray jar = (JArray)token;
             var not = new Not();
@@ -143,7 +147,7 @@ namespace AD.Api.Ldap.Converters.Json
         private IFilterStatement? ReadOr(JToken? token, JsonReader reader, JsonSerializer serializer)
         {
             if (token is null || token.Type != JTokenType.Array)
-                return null;
+                throw new LdapFilterParsingException($"'{nameof(FilterKeyword.Or)}' must be followed by a JSON array.", FilterKeyword.Or);
 
             JArray jar = (JArray)token;
 

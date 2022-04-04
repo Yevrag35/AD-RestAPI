@@ -1,5 +1,6 @@
 using AD.Api.Domains;
 using AD.Api.Ldap.Converters.Json;
+using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Settings;
 using Microsoft.AspNetCore.Builder;
@@ -53,6 +54,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IConnectionService, ConnectionService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    ExceptionHandler = new ErrorHandlingMiddleware().Invoke
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -30,6 +30,13 @@ namespace AD.Api.Controllers
             [FromQuery] string? sortBy = null,
             [FromQuery] string? properties = null)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.SelectMany(x => x.Value.Errors, (y, z) => z.Exception?.Message);
+
+                return BadRequest(errors);
+            }
+
             string[]? propertiesToAdd = SplitProperties(properties) ?? this.SearchSettings.Properties;
 
             using (var connection = this.Connections.GetDefaultConnection())
