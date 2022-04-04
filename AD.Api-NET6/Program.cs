@@ -25,14 +25,15 @@ static IEnumerable<SearchDomain> GetSearchDomains(IEnumerable<IConfigurationSect
     }
 }
 
+// Add services to the container.
+
 IConfigurationSection section = builder.Configuration.GetSection("Domains");
 builder.Services.AddSingleton(new SearchDomains(GetSearchDomains(section.GetChildren())));
-builder.Services.Configure<SearchSettings>(options =>
-{
-    builder.Configuration.GetSection("Settings").GetSection("SearchDefaults").Bind(options);
-});
-
-// Add services to the container.
+SearchDefaults defaults = builder.Configuration.GetSection("Settings").GetSection("SearchDefaults").Get<SearchDefaults>();
+builder.Services.AddSingleton(defaults);
+builder.Services.AddSingleton<IUserSettings>(x => x.GetRequiredService<SearchDefaults>().User);
+builder.Services.AddSingleton<IComputerSettings>(x => x.GetRequiredService<SearchDefaults>().Computer);
+builder.Services.AddSingleton<IGenericSettings>(x => x.GetRequiredService<SearchDefaults>().Generic);
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
