@@ -121,7 +121,7 @@ namespace AD.Api.Ldap.Search
             if (options.PropertiesToLoad is not null)
             {
                 searcher.PropertiesToLoad.Clear();
-                foreach (string prop in options.PropertiesToLoad)
+                foreach (string prop in options.PropertiesToLoad.Where(x => !string.IsNullOrWhiteSpace(x)))
                 {
                     _ = searcher.PropertiesToLoad.Add(prop);
                 }

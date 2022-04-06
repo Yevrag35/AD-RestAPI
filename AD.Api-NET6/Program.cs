@@ -4,6 +4,7 @@ using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Settings;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,12 +35,13 @@ builder.Services.AddSingleton(defaults);
 builder.Services.AddSingleton<IUserSettings>(x => x.GetRequiredService<SearchDefaults>().User);
 builder.Services.AddSingleton<IComputerSettings>(x => x.GetRequiredService<SearchDefaults>().Computer);
 builder.Services.AddSingleton<IGenericSettings>(x => x.GetRequiredService<SearchDefaults>().Generic);
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.Converters.Add(new FilterConverter());
     options.SerializerSettings.Converters.Add(new PathValueJsonConverter());
-    options.SerializerSettings.Converters.Add(new StringEnumConverter(new CamelCaseNamingStrategy()));
+    options.SerializerSettings.Converters.Add(new StringEnumConverter());
 
     options.SerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -53,8 +55,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IConnectionService, ConnectionService>();
+builder.Services.AddSingleton<ISerializationService, SerializationService>();
 
 var app = builder.Build();
+
+app.Services.GetService<IOptions<MvcNewtonsoftJsonOptions>>();
 
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {

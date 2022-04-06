@@ -62,6 +62,34 @@ namespace AD.Api.Ldap.Mapping
             setAcc.Invoke(obj, new object[1] { value });
         }
 
+        private static object? ConvertEnum(object? singleObjToConvert, Type enumType)
+        {
+            if (!enumType.IsEnum 
+                || 
+                singleObjToConvert is null)
+            {
+                return singleObjToConvert;  // Return as is.
+            }
+            else if (singleObjToConvert is string stringEnumVal
+                     &&
+                     Enum.TryParse(enumType, stringEnumVal, out object? parsedResult))
+            {
+                return parsedResult;
+            }
+
+            try
+            {
+                return Enum.ToObject(enumType, singleObjToConvert);
+            }
+            catch (ArgumentException e)
+            {
+                throw new LdapMappingException(
+                    e, 
+                    $"Unable to convert object of type '{singleObjToConvert.GetType().FullName}' to enumeration of type '{enumType.FullName}'."
+                );
+            }
+        }
+
         private static IEnumerable? ConvertEnumerable(MemberInfo memInfo, LdapPropertyAttribute attribute, Type toType, IEnumerable? value, IEnumerable? existingValue)
         {
             if (value is null)
@@ -93,9 +121,10 @@ namespace AD.Api.Ldap.Mapping
                 object? converted = obj;
                 if (obj is not string && obj is IEnumerable eo)
                     converted = ConvertObject(memInfo, attribute, genericArgument, eo, null);
-                
+
                 else
-                    converted = ConvertSingleObject(converted, genericArgument);
+                    converted = ConvertToType(converted, genericArgument);
+                    //converted = ConvertSingleObject(converted, genericArgument);
 
                 ExecuteAddMethod(addMethod, existingValue, converted);
             }
@@ -106,6 +135,8 @@ namespace AD.Api.Ldap.Mapping
         private static object? ConvertObject(MemberInfo? memberInfo, LdapPropertyAttribute attribute, Type valueType, IEnumerable? rawValue, object? existingValue)
         {
             Type enumerableType = typeof(IEnumerable);
+            valueType = GetNullTypeOrDefault(valueType);
+
             if (memberInfo is not null && (valueType.IsArray || (!valueType.IsValueType && !valueType.Equals(typeof(string)) &&
                 enumerableType.IsAssignableTo(valueType))))
             {
@@ -127,7 +158,12 @@ namespace AD.Api.Ldap.Mapping
                     single = objs.ElementAt(attribute.Index);
 
                 if (!valueType.Equals(typeof(object)))
-                    single = Convert.ChangeType(single, valueType);
+                {
+                    if (valueType.IsEnum)
+                        single = ConvertEnum(single, valueType);
+
+                    single = ConvertToType(single, valueType);
+                }
 
                 return single;
 
@@ -137,12 +173,42 @@ namespace AD.Api.Ldap.Mapping
                 return existingValue;
         }
 
+        [Obsolete($"Use {nameof(ConvertToType)} instead.")]
         private static object? ConvertSingleObject(object? value, Type toType)
         {
             if (toType.Equals(typeof(object)))
                 return value;
 
             return Convert.ChangeType(value, toType);
+        }
+
+        private static object? ConvertToType(object? singleObjToConvert, Type changeToType)
+        {
+            if (singleObjToConvert is null && changeToType.IsValueType)
+            {
+                throw new LdapMappingException(
+                    new InvalidCastException(
+                        $"Invalid cast from 'Null' to '{changeToType.FullName}'."
+                    ), $"When the reflected property type is non-nullable, the mapped object's value cannot be null.");
+            }
+
+            try
+            {
+                return Convert.ChangeType(singleObjToConvert, changeToType);
+            }
+            catch (Exception caughtException)
+            {
+                Type? soType = singleObjToConvert?.GetType();
+
+                throw new LdapMappingException(
+                    caughtException, 
+                    "An exception occurred when attempting to map a value of type '{0}' to type '{1}'.",
+                    soType is not null
+                        ? soType.FullName ?? soType.Name
+                        : "null",
+                    changeToType.FullName ?? changeToType.Name
+                );
+            }
         }
 
         private static object? ConvertValue<T>([DisallowNull] T obj, MemberInfo memberInfo, LdapPropertyAttribute attribute, IEnumerable? rawValue)
@@ -201,6 +267,15 @@ namespace AD.Api.Ldap.Mapping
             }
 
             return list;
+        }
+
+        private static Type GetNullTypeOrDefault(Type valueType)
+        {
+            Type? tempType = Nullable.GetUnderlyingType(valueType);
+
+            return tempType is null
+                ? valueType
+                : tempType;
         }
 
         private static bool TryFindAddMethod(Type collectionType, [NotNullWhen(true)] out MethodInfo? addMethod)
