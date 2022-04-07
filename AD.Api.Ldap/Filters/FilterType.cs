@@ -6,14 +6,16 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Filters
 {
+    [Flags]
     public enum FilterType
     {
-        Equal,
-        And,
-        Or,
-        Not,
-        Nor,
-        Band,
-        Bor
+        Equal = 1,
+        And = 2,
+        Or = 4,
+        Not = 8,
+        Nor = 16,
+        Band = 32,
+        Bor = 64,
+        Recurse = 128
     }
 }

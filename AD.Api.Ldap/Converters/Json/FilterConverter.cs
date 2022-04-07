@@ -23,7 +23,7 @@ namespace AD.Api.Ldap.Converters.Json
             IFilterStatement? statement = null;
             foreach (var kvp in job)
             {
-                statement = this.ReadToken(kvp, reader, serializer, out bool doContinue, true);
+                statement = this.ReadToken(kvp, out bool doContinue, true);
                 if (statement?.Type == FilterType.Equal)
                 {
                     statement = new And
@@ -38,7 +38,7 @@ namespace AD.Api.Ldap.Converters.Json
             return statement;
         }
 
-        private IFilterStatement? ReadToken(KeyValuePair<string, JToken?> kvp, JsonReader reader, JsonSerializer serializer, out bool doContinue, bool start = false)
+        private IFilterStatement? ReadToken(KeyValuePair<string, JToken?> kvp, out bool doContinue, bool start = false)
         {
             doContinue = false;
             IFilterStatement? statement = null;
@@ -50,27 +50,40 @@ namespace AD.Api.Ldap.Converters.Json
             switch (keyword)
             {
                 case FilterType.And:
-                    statement = this.ReadAnd(kvp.Value, reader, serializer);
+                    statement = this.ReadAnd(kvp.Value);
                     break;
 
                 case FilterType.Or:
-                    statement = this.ReadOr(kvp.Value, reader, serializer);
+                    statement = this.ReadArray<Or>(kvp.Value, FilterType.Or);
                     break;
 
                 case FilterType.Not:
-                    statement = this.ReadNot(kvp.Value, reader, serializer);
+                    statement = this.ReadNot(kvp.Value);
                     break;
 
                 case FilterType.Nor:
-                    statement = this.ReadNor(kvp.Value, reader, serializer);
+                    statement = this.ReadArray<Nor>(kvp.Value, FilterType.Nor);
                     break;
 
                 case FilterType.Band:
-                    statement = this.ReadBand(kvp.Value, reader, serializer);
+                    statement = this.ReadEquals(kvp.Value, FilterType.Band, prop =>
+                    {
+                        return new BitwiseAnd(prop.Name, prop.Value.ToObject<long>());
+                    });
                     break;
 
                 case FilterType.Bor:
-                    statement = this.ReadBor(kvp.Value, reader, serializer);
+                    statement = this.ReadEquals(kvp.Value, FilterType.Bor, prop =>
+                    {
+                        return new BitwiseOr(prop.Name, prop.Value.ToObject<long>());
+                    });
+                    break;
+
+                case FilterType.Recurse:
+                    statement = this.ReadEquals(kvp.Value, FilterType.Recurse, prop =>
+                    {
+                        return new Recurs(prop.Name, prop.Value.ToObject<string>() ?? string.Empty);
+                    });
                     break;
 
                 default:
@@ -94,7 +107,7 @@ namespace AD.Api.Ldap.Converters.Json
             return statement;
         }
 
-        private IFilterStatement? ReadAnd(JToken? token, JsonReader reader, JsonSerializer serializer)
+        private IFilterStatement? ReadAnd(JToken? token)
         {
             if (token is null || token.Type != JTokenType.Object)
                 throw new LdapFilterParsingException($"'{nameof(FilterType.And)}' must be followed by a JSON object.", FilterType.And);
@@ -104,38 +117,49 @@ namespace AD.Api.Ldap.Converters.Json
 
             foreach (var kvp in job)
             {
-                var filter = this.ReadToken(kvp, reader, serializer, out bool throwAway);
+                var filter = this.ReadToken(kvp, out bool throwAway);
                 and.Add(filter);
             }
 
             return and;
         }
 
-        private IFilterStatement? ReadBand(JToken? token, JsonReader reader, JsonSerializer serializer)
+        private T? ReadEquals<T>(JToken? token, FilterType type, Func<JProperty, T> newEqualFunction)
+            where T : EqualityStatement
         {
             if (token is null || token.Type != JTokenType.Object)
-                throw new LdapFilterParsingException($"'{nameof(FilterType.Band)}' must be followed by a JSON object.", FilterType.Band);
+                throw new LdapFilterParsingException($"'{typeof(T).Name}' must be followed by a JSON object.", type);
 
-            if (token is JObject job && job.Count == 1 && job.First is JProperty jprop)
-                return new BitwiseAnd(jprop.Name, jprop.Value.ToObject<long>());
-
-            else
-                return null;
+            return token is JObject job && job.Count == 1 && job.First is JProperty jProp
+                ? newEqualFunction(jProp)
+                : null;
         }
 
-        private IFilterStatement? ReadBor(JToken? token, JsonReader reader, JsonSerializer serializer)
+        private T? ReadArray<T>(JToken? token, FilterType type) where T : FilterContainer, new()
         {
-            if (token is null || token.Type != JTokenType.Object)
-                throw new LdapFilterParsingException($"'{nameof(FilterType.Bor)}' must be followed by a JSON object.", FilterType.Bor);
+            if (token is null || token.Type != JTokenType.Array)
+                throw new LdapFilterParsingException($"'{typeof(T).Name}' must be followed by a JSON array of objects.", type);
 
-            if (token is JObject job && job.Count == 1 && job.First is JProperty jprop)
-                return new BitwiseOr(jprop.Name, jprop.Value.ToObject<long>());
+            var jar = (JArray)token;
 
-            else
-                return null;
+            T container = new T();
+
+            foreach (JToken? tok in jar)
+            {
+                if (tok is null || tok.Type != JTokenType.Object)
+                    continue;
+
+                foreach (var kvp in (JObject)tok)
+                {
+                    var filter = this.ReadToken(kvp, out bool throwAway);
+                    container.Add(filter);
+                }
+            }
+
+            return container;
         }
 
-        private IFilterStatement? ReadNot(JToken? token, JsonReader reader, JsonSerializer serializer)
+        private IFilterStatement? ReadNot(JToken? token)
         {
             if (token is null || token.Type != JTokenType.Object)
                 return null;
@@ -151,7 +175,7 @@ namespace AD.Api.Ldap.Converters.Json
                             jar.Add(kvp.Value);
                     }
 
-                    return this.ReadToken(new KeyValuePair<string, JToken?>("nor", jar), reader, serializer, out bool throwAway);
+                    return this.ReadToken(new KeyValuePair<string, JToken?>("nor", jar), out bool throwAway);
                 }
 
                 if (job.First is JProperty jProp)
@@ -163,7 +187,8 @@ namespace AD.Api.Ldap.Converters.Json
             return null;
         }
 
-        private IFilterStatement? ReadNor(JToken? token, JsonReader reader, JsonSerializer serializer)
+        [Obsolete("Use ReadArray<T>")]
+        private IFilterStatement? ReadNor(JToken? token)
         {
             if (token is null || token.Type != JTokenType.Array)
                 throw new LdapFilterParsingException($"'{nameof(FilterType.Nor)}' must be followed by a JSON array of objects.", FilterType.Nor);
@@ -181,7 +206,7 @@ namespace AD.Api.Ldap.Converters.Json
 
                 foreach (var kvp in job)
                 {
-                    var filter = this.ReadToken(kvp, reader, serializer, out bool throwAway);
+                    var filter = this.ReadToken(kvp, out bool throwAway);
                     nor.Add(filter);
                 }
             }
@@ -189,7 +214,8 @@ namespace AD.Api.Ldap.Converters.Json
             return nor;
         }
 
-        private IFilterStatement? ReadOr(JToken? token, JsonReader reader, JsonSerializer serializer)
+        [Obsolete("Use ReadArray<T>")]
+        private IFilterStatement? ReadOr(JToken? token)
         {
             if (token is null || token.Type != JTokenType.Array)
                 throw new LdapFilterParsingException($"'{nameof(FilterType.Or)}' must be followed by a JSON array.", FilterType.Or);
@@ -206,7 +232,7 @@ namespace AD.Api.Ldap.Converters.Json
 
                 foreach (var kvp in job)
                 {
-                    var filter = this.ReadToken(kvp, reader, serializer, out bool throwAway);
+                    var filter = this.ReadToken(kvp, out bool throwAway);
                     or.Add(filter);
                 }
             }
