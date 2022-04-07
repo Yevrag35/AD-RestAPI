@@ -10,7 +10,9 @@ I took extra time to make sure that the LDAP filters can be built on the fly and
 
 Next step is to add bitwise operators into the mix.
 
-* EXAMPLE
+* EXAMPLE -
+
+_See more examples [in the wiki](https://github.com/Yevrag35/AD-RestAPI/wiki/LDAP-Filters---JSON-Body-syntax)_
 
 Sample JSON body
 ```JSON
