@@ -15,6 +15,27 @@ namespace AD.Api.Controllers
         {
         }
 
+        protected static IFilterStatement AddCriteria<T>(IList<T> criteria, IFilterStatement? existingFilter)
+            where T : IFilterStatement
+        {
+            if (existingFilter is not And and)
+            {
+                and = new And
+                {
+                    existingFilter
+                };
+            }
+
+            for (int i = 0; i < criteria.Count; i++)
+            {
+                IFilterStatement criterion = criteria[i];
+                if (!and.Contains(criterion))
+                    and.Add(criterion);
+            }
+
+            return and;
+        }
+
         protected IActionResult GetReply(List<FindResult> list, LdapConnection? connection = null, string? ldapFilter = null)
         {
             return Ok(new

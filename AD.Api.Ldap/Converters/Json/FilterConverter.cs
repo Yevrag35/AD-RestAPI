@@ -187,59 +187,6 @@ namespace AD.Api.Ldap.Converters.Json
             return null;
         }
 
-        [Obsolete("Use ReadArray<T>")]
-        private IFilterStatement? ReadNor(JToken? token)
-        {
-            if (token is null || token.Type != JTokenType.Array)
-                throw new LdapFilterParsingException($"'{nameof(FilterType.Nor)}' must be followed by a JSON array of objects.", FilterType.Nor);
-
-            var jar = (JArray)token;
-
-            var nor = new Nor();
-
-            foreach (JToken? tok in jar)
-            {
-                if (tok is null || tok.Type != JTokenType.Object)
-                    continue;
-                
-                JObject job = (JObject)tok;
-
-                foreach (var kvp in job)
-                {
-                    var filter = this.ReadToken(kvp, out bool throwAway);
-                    nor.Add(filter);
-                }
-            }
-
-            return nor;
-        }
-
-        [Obsolete("Use ReadArray<T>")]
-        private IFilterStatement? ReadOr(JToken? token)
-        {
-            if (token is null || token.Type != JTokenType.Array)
-                throw new LdapFilterParsingException($"'{nameof(FilterType.Or)}' must be followed by a JSON array.", FilterType.Or);
-
-            JArray jar = (JArray)token;
-
-            var or = new Or();
-            foreach (var tok in jar)
-            {
-                if (tok.Type != JTokenType.Object)
-                    continue;
-
-                JObject job = (JObject)tok;
-
-                foreach (var kvp in job)
-                {
-                    var filter = this.ReadToken(kvp, out bool throwAway);
-                    or.Add(filter);
-                }
-            }
-
-            return or;
-        }
-
         public override void WriteJson(JsonWriter writer, IFilterStatement? value, JsonSerializer serializer)
         {
             throw new NotImplementedException();

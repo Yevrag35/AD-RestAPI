@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Live\SearcherFactory.cs" />
+    <Compile Remove="Live\EntryFactory.cs" />
+    <Compile Remove="Live\LiveLdapObject.cs" />
     <Compile Remove="Path\PathFactory.cs" />
   </ItemGroup>
 
@@ -22,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Live\SearcherFactory.cs" />
+    <None Include="Live\EntryFactory.cs" />
+    <None Include="Live\LiveLdapObject.cs" />
     <None Include="Path\PathFactory.cs" />
   </ItemGroup>
 

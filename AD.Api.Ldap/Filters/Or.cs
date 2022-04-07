@@ -11,6 +11,7 @@ namespace AD.Api.Ldap.Filters
         public sealed override FilterType Type => FilterType.Or;
 
         public Or()
+            : base(2)
         {
         }
 

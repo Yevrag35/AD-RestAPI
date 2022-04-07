@@ -16,8 +16,9 @@ namespace AD.Api.Controllers
     [Route("search/user")]
     public class UserQueryController : ADQueryController
     {
-        private static readonly Equal UserObjectClass = new Equal("objectClass", "user");
-        private static readonly Equal UserObjectCategory = new Equal("objectCategory", "person");
+        private static readonly Equal UserObjectClass = new("objectClass", "user");
+        private static readonly Equal UserObjectCategory = new("objectCategory", "person");
+        private static readonly Equal[] _criteria = new Equal[2] { UserObjectClass, UserObjectCategory };
 
         private IGenericSettings GenericSettings { get; }
         private IUserSettings UserSettings { get; }
@@ -98,33 +99,35 @@ namespace AD.Api.Controllers
 
         private static IFilterStatement AddUserCriteria(IFilterStatement? statement = null)
         {
-            if (statement?.Type != FilterType.And)
-            {
-                return new And
-                {
-                    UserObjectClass,
-                    UserObjectCategory,
-                    statement
-                };
-            }
-            else if (statement is And and)
-            {
-                if (!and.Contains(UserObjectClass))
-                    and.Add(UserObjectClass);
+            return AddCriteria(_criteria, statement);
 
-                if (!and.Contains(UserObjectCategory))
-                    and.Add(UserObjectCategory);
+            //if (statement?.Type != FilterType.And)
+            //{
+            //    return new And
+            //    {
+            //        UserObjectClass,
+            //        UserObjectCategory,
+            //        statement
+            //    };
+            //}
+            //else if (statement is And and)
+            //{
+            //    if (!and.Contains(UserObjectClass))
+            //        and.Add(UserObjectClass);
 
-                return and;
-            }
-            else
-            {
-                return new And
-                {
-                    UserObjectClass,
-                    UserObjectCategory
-                };
-            }
+            //    if (!and.Contains(UserObjectCategory))
+            //        and.Add(UserObjectCategory);
+
+            //    return and;
+            //}
+            //else
+            //{
+            //    return new And
+            //    {
+            //        UserObjectClass,
+            //        UserObjectCategory
+            //    };
+            //}
         }
     }
 }
