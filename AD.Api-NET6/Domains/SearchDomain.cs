@@ -45,14 +45,21 @@ namespace AD.Api.Domains
             _byFQDNs = new SortedList<string, SearchDomain>(1, KeyComparer);
             _byDNs = new Dictionary<string, SearchDomain>(1, KeyComparer);
 
-            foreach (SearchDomain sd in domainsToAdd.OrderByDescending(x => x.IsDefault).ThenBy(x => x.FQDN))
+            foreach (SearchDomain domain in domainsToAdd.OrderByDescending(x => x.IsDefault).ThenBy(x => x.FQDN))
             {
-                if (sd.IsDefault && _registeredDefault is null)
-                    _registeredDefault = sd;
+                if (domain.IsDefault && _registeredDefault is null)
+                    _registeredDefault = domain;
 
-                //_d.Add(sd.FQDN, sd);
-                _byFQDNs.Add(sd.FQDN, sd);
-                _byDNs.Add(sd.DistinguishedName, sd);
+                _byFQDNs.Add(domain.FQDN, domain);
+
+                if (!TryValidateDomain(domain, out string? domainNamingContext))
+                {
+                    throw new InvalidOperationException($"Unable to find the default naming context for domain '{domain.FQDN}.");
+                }
+
+                domain.DistinguishedName = domainNamingContext;
+
+                _byDNs.Add(domainNamingContext, domain);
             }
         }
         public bool ContainsKey(string key)
@@ -105,6 +112,29 @@ namespace AD.Api.Domains
                 domain = _byDNs[key];
 
             return null != domain;
+        }
+
+        private static bool TryValidateDomain(SearchDomain domain, [NotNullWhen(true)] out string? distinguishedName)
+        {
+            distinguishedName = domain.DistinguishedName;
+            if (!string.IsNullOrWhiteSpace(distinguishedName))
+                return true;
+
+            using DirectoryEntry tempEntry = new($"LDAP://{domain.FQDN}/RootDSE");
+            try
+            {
+                tempEntry.RefreshCache();
+                if (tempEntry.Properties.TryGetFirstValue("defaultNamingContext", out string? defNamingContext))
+                {
+                    distinguishedName = defNamingContext;
+                }
+            }
+            finally
+            {
+                tempEntry.Dispose();
+            }
+
+            return !string.IsNullOrWhiteSpace(distinguishedName);
         }
     }
 

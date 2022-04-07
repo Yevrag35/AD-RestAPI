@@ -30,11 +30,14 @@ static IEnumerable<SearchDomain> GetSearchDomains(IEnumerable<IConfigurationSect
 
 IConfigurationSection section = builder.Configuration.GetSection("Domains");
 builder.Services.AddSingleton(new SearchDomains(GetSearchDomains(section.GetChildren())));
+
 SearchDefaults defaults = builder.Configuration.GetSection("Settings").GetSection("SearchDefaults").Get<SearchDefaults>();
 builder.Services.AddSingleton(defaults);
 builder.Services.AddSingleton<IUserSettings>(x => x.GetRequiredService<SearchDefaults>().User);
 builder.Services.AddSingleton<IComputerSettings>(x => x.GetRequiredService<SearchDefaults>().Computer);
 builder.Services.AddSingleton<IGenericSettings>(x => x.GetRequiredService<SearchDefaults>().Generic);
+builder.Services.AddSingleton<IGroupSettings>(x => x.GetRequiredService<SearchDefaults>().Group);
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>

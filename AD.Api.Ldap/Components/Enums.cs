@@ -2,6 +2,16 @@ using System;
 
 namespace AD.Api.Ldap
 {
+    [Flags]
+    public enum GroupType : uint
+    {
+        BuiltIn = 1u,
+        Global = 2u,
+        DomainLocal = 4u,
+        Universal = 8u,
+        Security = 2147483648
+    }
+
     public enum Protocol
     {
         Ldap,

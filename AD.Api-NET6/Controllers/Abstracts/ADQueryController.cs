@@ -36,12 +36,18 @@ namespace AD.Api.Controllers
             return and;
         }
 
-        protected IActionResult GetReply(List<FindResult> list, LdapConnection? connection = null, string? ldapFilter = null)
+        protected IActionResult GetReply(List<FindResult> list, int limitedTo, IList<string>? propertiesRequested,
+            LdapConnection? connection = null, string? ldapFilter = null)
         {
             return Ok(new
             {
                 Host = connection?.RootDSE.Host ?? "AutoDCLookup",
-                FilterUsed = ldapFilter,
+                Request = new {
+                    FilterUsed = ldapFilter,
+                    Limit = limitedTo,
+                    PropertyCount = propertiesRequested?.Count ?? 0,
+                    PropertiesRequested = propertiesRequested ?? Array.Empty<string>()
+                },
                 list.Count,
                 Results = list
             });

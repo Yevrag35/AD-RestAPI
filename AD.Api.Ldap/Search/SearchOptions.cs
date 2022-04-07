@@ -24,39 +24,40 @@ namespace AD.Api.Ldap.Search
 
     public record SearchOptions : ISearchOptions
     {
-        private readonly SortOption _sortOption = new();
+        protected readonly SortOption SortOption = new();
 
         [DefaultValue(null)]
-        public IFilterStatement? Filter { get; init; }
+        public virtual IFilterStatement? Filter { get; init; }
 
         [DefaultValue(0)]
-        public int PageSize { get; init; }
+        public virtual int PageSize { get; init; }
 
-        public IEnumerable<string>? PropertiesToLoad { get; init; }
+        public virtual IList<string>? PropertiesToLoad { get; init; }
+        IEnumerable<string>? ISearchOptions.PropertiesToLoad => this.PropertiesToLoad;
 
         [DefaultValue(SearchScope.Subtree)]
         public SearchScope SearchScope { get; init; } = SearchScope.Subtree;
 
         [DefaultValue(0)]
-        public int SizeLimit { get; init; }
+        public virtual int SizeLimit { get; init; }
 
         [DefaultValue(SortDirection.Ascending)]
         public SortDirection SortDirection
         {
-            get => _sortOption.Direction;
-            init => _sortOption.Direction = value;
+            get => SortOption.Direction;
+            init => SortOption.Direction = value;
         }
         [DefaultValue(null)]
         public string? SortProperty
         {
-            get => _sortOption.PropertyName;
+            get => SortOption.PropertyName;
             init
             {
                 if (!string.IsNullOrWhiteSpace(value))
-                    _sortOption.PropertyName = value;
+                    SortOption.PropertyName = value;
             }
         }
 
-        public SortOption GetSortOption() => _sortOption;
+        public SortOption GetSortOption() => SortOption;
     }
 }
