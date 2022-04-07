@@ -8,6 +8,8 @@ namespace AD.Api.Ldap.Filters
 {
     public sealed record Or : FilterContainer
     {
+        public sealed override FilterType Type => FilterType.Or;
+
         public Or()
         {
         }

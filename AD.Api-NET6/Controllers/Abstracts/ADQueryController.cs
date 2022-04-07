@@ -15,21 +15,23 @@ namespace AD.Api.Controllers
         {
         }
 
-        protected IActionResult GetReply(List<FindResult> list, LdapConnection? connection = null)
+        protected IActionResult GetReply(List<FindResult> list, LdapConnection? connection = null, string? ldapFilter = null)
         {
             return Ok(new
             {
                 Host = connection?.RootDSE.Host ?? "AutoDCLookup",
+                FilterUsed = ldapFilter,
                 list.Count,
                 Results = list
             });
         }
 
-        protected List<FindResult> PerformSearch(LdapConnection connection, SearchOptions options)
+        protected List<FindResult> PerformSearch(LdapConnection connection, SearchOptions options, out string ldapFilter)
         {
+            ldapFilter = string.Empty;
             using (var searcher = connection.CreateSearcher())
             {
-                var list = searcher.FindAll(options);
+                var list = searcher.FindAll(options, out ldapFilter);
                 this.SerializationService.PrepareMany(list);
 
                 return list;
@@ -45,7 +47,7 @@ namespace AD.Api.Controllers
             }
             else
             {
-                return split ?? Array.Empty<string>();
+                return split ?? options.Properties ?? Array.Empty<string>();
             }
         }
 

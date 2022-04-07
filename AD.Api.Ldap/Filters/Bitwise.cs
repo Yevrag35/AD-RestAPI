@@ -10,6 +10,7 @@ namespace AD.Api.Ldap.Filters
         private const string BITWISE_AND = "{0}:1.2.840.113556.1.4.803:";
 
         public sealed override string Property { get; }
+        public sealed override FilterType Type => FilterType.Band;
         public long Value { get; }
 
         public BitwiseAnd(string propertyName, long flagValues)
@@ -23,7 +24,7 @@ namespace AD.Api.Ldap.Filters
         {
         }
 
-        protected sealed override string? GetValue() => Convert.ToString(this.Value);
+        protected internal sealed override string? GetValue() => Convert.ToString(this.Value);
 
         protected override EqualityStatement ToAny()
         {
@@ -65,6 +66,7 @@ namespace AD.Api.Ldap.Filters
         private const string BITWISE_OR = "{0}:1.2.840.113556.1.4.804:";
 
         public sealed override string Property { get; }
+        public sealed override FilterType Type => FilterType.Bor;
         public long Value { get; }
 
         public BitwiseOr(string propertyName, long flagValues)
@@ -77,7 +79,7 @@ namespace AD.Api.Ldap.Filters
         {
         }
 
-        protected sealed override string? GetValue() => Convert.ToString(this.Value);
+        protected internal sealed override string? GetValue() => Convert.ToString(this.Value);
 
         protected sealed override EqualityStatement ToAny()
         {

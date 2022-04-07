@@ -90,20 +90,41 @@ namespace AD.Api.Controllers
 
             using (var connection = this.GetConnection(domain))
             {
-                var list = base.PerformSearch(connection, opts);
+                var list = base.PerformSearch(connection, opts, out string ldapFilter);
 
-                return base.GetReply(list, connection);
+                return base.GetReply(list, connection, ldapFilter);
             }
         }
 
         private static IFilterStatement AddUserCriteria(IFilterStatement? statement = null)
         {
-            return new And
+            if (statement?.Type != FilterType.And)
             {
-                UserObjectClass,
-                UserObjectCategory,
-                statement
-            };
+                return new And
+                {
+                    UserObjectClass,
+                    UserObjectCategory,
+                    statement
+                };
+            }
+            else if (statement is And and)
+            {
+                if (!and.Contains(UserObjectClass))
+                    and.Add(UserObjectClass);
+
+                if (!and.Contains(UserObjectCategory))
+                    and.Add(UserObjectCategory);
+
+                return and;
+            }
+            else
+            {
+                return new And
+                {
+                    UserObjectClass,
+                    UserObjectCategory
+                };
+            }
         }
     }
 }

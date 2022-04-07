@@ -21,7 +21,7 @@ namespace AD.Api.Ldap.Filters
             this.Clauses = new List<IFilterStatement>(capacity);
         }
 
-        public void Add(IFilterStatement? statement)
+        public virtual void Add(IFilterStatement? statement)
         {
             if (statement is not null)
                 this.Clauses.Add(statement);
@@ -53,6 +53,24 @@ namespace AD.Api.Ldap.Filters
         public int RemoveAll<T>(Predicate<T> predicate) where T : IFilterStatement
         {
             return this.RemoveAll(clause => clause is T tClause && predicate(tClause));
+        }
+
+        public sealed override bool Equals(IFilterStatement? other)
+        {
+            if (base.Equals(other) && other is FilterContainer filCon && this.Count == filCon.Count)
+            {
+                for (int i = 0; i < this.Clauses.Count; i++)
+                {
+                    if (!this.Clauses[i].Equals(filCon.Clauses[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public override StringBuilder WriteTo(StringBuilder builder)

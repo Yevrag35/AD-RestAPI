@@ -16,10 +16,19 @@ namespace AD.Api.Ldap.Filters
 
         public abstract string Property { get; }
 
-        //[DisallowNull]
-        //protected abstract IConvertible EqualsValue { get; }
+        public sealed override bool Equals(IFilterStatement? other)
+        {
+            return
+                base.Equals(other)
+                &&
+                other is EqualityStatement eqState
+                &&
+                StringComparer.CurrentCultureIgnoreCase.Equals(this.Property, eqState.Property)
+                &&
+                StringComparer.CurrentCultureIgnoreCase.Equals(this.GetValue(), eqState.GetValue());
+        }
 
-        protected abstract string? GetValue();
+        protected internal abstract string? GetValue();
 
         protected abstract EqualityStatement ToAny();
 
@@ -30,10 +39,7 @@ namespace AD.Api.Ldap.Filters
             Func<StringBuilder, StringBuilder> writeValue = string.IsNullOrWhiteSpace(strValue)
                 ? sb =>
                 {
-                    var not = new Not
-                    {
-                        this.ToAny()
-                    };
+                    var not = new Not(this.ToAny());
                     return not.WriteTo(sb);
                 }
                 : sb =>

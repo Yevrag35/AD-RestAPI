@@ -8,6 +8,8 @@ namespace AD.Api.Ldap.Filters
 {
     public sealed record And : FilterContainer
     {
+        public override FilterType Type => FilterType.And;
+
         public And()
             : base(2)
         {

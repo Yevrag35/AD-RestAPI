@@ -87,14 +87,17 @@ namespace AD.Api.Ldap.Search
 
             return list;
         }
-        public List<FindResult> FindAll(ISearchOptions oneOffOptions)
+        public List<FindResult> FindAll(ISearchOptions oneOffOptions, out string ldapFilter)
         {
+            ldapFilter = string.Empty;
             List<FindResult> list = new();
+            var sb = new StringBuilder(_builder.Capacity);
             using (DirectorySearcher oneOffSearcher = new(_searcher.SearchRoot))
             {
-                using (var resultCol = SetSearcher(oneOffOptions, new StringBuilder(_builder.Capacity), oneOffSearcher)
+                using (var resultCol = SetSearcher(oneOffOptions, sb, oneOffSearcher)
                                        .FindAll())
                 {
+                    ldapFilter = sb.ToString();
                     foreach (SearchResult result in resultCol)
                     {
                         FindResult findResult = Mapper.MapFromSearchResult<FindResult>(result);

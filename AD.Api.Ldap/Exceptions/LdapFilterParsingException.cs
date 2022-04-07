@@ -11,7 +11,7 @@ namespace AD.Api.Ldap.Exceptions
     {
         private const string COMMENT = "Unable to parse the specified LDAP filter.";
 
-        public FilterKeyword? OffendingKeyword { get; }
+        public FilterType? OffendingKeyword { get; }
 
         public LdapFilterParsingException()
             : base(COMMENT)
@@ -23,7 +23,7 @@ namespace AD.Api.Ldap.Exceptions
         {
         }
 
-        public LdapFilterParsingException(string message, FilterKeyword keyword)
+        public LdapFilterParsingException(string message, FilterType keyword)
             : base(message)
         {
             this.OffendingKeyword = keyword;

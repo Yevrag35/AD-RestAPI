@@ -6,8 +6,9 @@ namespace AD.Api.Services
 {
     public interface IConnectionService
     {
-        LdapConnection GetDefaultConnection();
+        LdapConnection GetDefaultConnection(string? searchBase = null);
         LdapConnection GetConnection(string? domain = null);
+        LdapConnection GetConnection(string? domain, string? searchBase);
     }
 
     public class ConnectionService : IConnectionService
@@ -19,32 +20,43 @@ namespace AD.Api.Services
             this.Domains = searchDomains;
         }
 
-        public LdapConnection GetDefaultConnection()
+        public LdapConnection GetDefaultConnection(string? searchBase = null)
         {
             SearchDomain? defDom = this.Domains.GetDefaultDomain();
             if (defDom is null)
                 throw new ArgumentNullException("Default Domain");
 
-            return GetConnection(defDom);
+            return GetConnection(defDom, searchBase);
         }
 
         public LdapConnection GetConnection(string? domain = null)
         {
             if (string.IsNullOrWhiteSpace(domain) || !this.Domains.TryGetValue(domain, out SearchDomain? searchDomain))
-                return this.GetConnection();
+                return this.GetDefaultConnection();
 
-            return GetConnection(searchDomain);
+            return GetConnection(searchDomain, null);
         }
 
-        private static LdapConnection GetConnection(SearchDomain defDom)
+        public LdapConnection GetConnection(string? domain, string? searchBase)
+        {
+            if (string.IsNullOrWhiteSpace(domain) || !this.Domains.TryGetValue(domain, out SearchDomain? searchDomain))
+                return this.GetDefaultConnection(searchBase);
+
+            return GetConnection(searchDomain, searchBase);
+        }
+
+        private static LdapConnection GetConnection(SearchDomain defDom, string? searchBase)
         {
             string? host = !string.IsNullOrWhiteSpace(defDom.StaticDomainController)
                 ? defDom.StaticDomainController
                 : defDom.FQDN;
 
+            if (string.IsNullOrWhiteSpace(searchBase))
+                searchBase = defDom.DistinguishedName;
+
             return new LdapConnectionBuilder()
                 .UsingHost(host)
-                .UsingSearchBase(defDom.DistinguishedName)
+                .UsingSearchBase(searchBase)
                 .UsingGlobalCatalog(defDom.UseGlobalCatalog)
                 .UsingSSL(defDom.UseSSL)
                 .Build();
