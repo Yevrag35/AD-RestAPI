@@ -34,4 +34,9 @@
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AD.Api.Ldap.Attributes\AD.Api.Ldap.Attributes.csproj" />
+    <ProjectReference Include="..\AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj" />
+  </ItemGroup>
+
 </Project>

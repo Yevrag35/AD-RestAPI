@@ -1,17 +1,13 @@
 using AD.Api.Ldap.Exceptions;
 using AD.Api.Ldap.Filters;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace AD.Api.Ldap.Converters.Json
+namespace AD.Api.Ldap.Converters
 {
-    public partial class FilterConverter : JsonConverter<IFilterStatement>
+    public partial class FilterConverter
     {
         public override IFilterStatement? ReadJson(JsonReader reader, Type objectType, IFilterStatement? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {

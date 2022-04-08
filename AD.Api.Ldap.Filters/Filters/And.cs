@@ -8,12 +8,27 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Filters
 {
-    public sealed record And : FilterContainer
+    /// <summary>
+    /// A filter class which indicates all statements contained must be <see langword="true"/>.
+    /// </summary>
+    public sealed class And : FilterContainer
     {
         public override FilterType Type => FilterType.And;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="And"/> with the default capacity of 2.
+        /// </summary>
         public And()
             : base(2)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="And"/> with the specified capacity.
+        /// </summary>
+        /// <param name="capacity">The number of statements the instance of <see cref="And"/> can initially hold.</param>
+        public And(int capacity)
+            : base(capacity)
         {
         }
 

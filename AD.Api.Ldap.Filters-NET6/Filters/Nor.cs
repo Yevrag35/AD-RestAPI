@@ -8,12 +8,26 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Filters
 {
+    /// <summary>
+    /// A filter class which indicates all statements contained must NOT be <see langword="true"/>.
+    /// </summary>
     public sealed record Nor : FilterContainer
     {
         public sealed override FilterType Type => FilterType.Nor;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="Nor"/> with the default capacity of 2.
+        /// </summary>
         public Nor()
             : base(2)
+        {
+        }
+        /// <summary>
+        /// Initializes a new instance of <see cref="Nor"/> with the specified capacity.
+        /// </summary>
+        /// <param name="capacity">The number of statements the instance of <see cref="Nor"/> can initially hold.</param>
+        public Nor(int capacity)
+            : base(capacity)
         {
         }
 

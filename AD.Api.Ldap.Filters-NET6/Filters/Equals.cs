@@ -9,14 +9,25 @@ using System.Text;
 
 namespace AD.Api.Ldap.Filters
 {
+    /// <summary>
+    /// A filter record that represents an LDAP equal statement using a given property/value.
+    /// </summary>
     public sealed record Equal : EqualityStatement
     {
         public sealed override string Property { get; }
         public sealed override Type? PropertyType { get; }
         public sealed override string RawProperty => this.Property;
         public sealed override FilterType Type => FilterType.Equal;
+        /// <summary>
+        /// The converted <see cref="string"/> value the property must equal.
+        /// </summary>
         public string? Value { get; init; }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="Equal"/> with the specified property name and value.
+        /// </summary>
+        /// <param name="propertyName">The LDAP property name.</param>
+        /// <param name="value">The value to equal when converted to a <see cref="string"/>.</param>
         public Equal(string propertyName, IConvertible? value)
         {
             this.Property = propertyName;
@@ -32,6 +43,13 @@ namespace AD.Api.Ldap.Filters
         protected sealed override object? GetRawValue() => this.Value;
         protected internal sealed override string? GetValue() => this.Value;
 
+        /// <summary>
+        /// Returns a new <see cref="Equal"/> instance with the same property name, but with a value of '*'
+        /// to indicate an ALL wildcard.
+        /// </summary>
+        /// <returns>
+        ///     A new instance of <see cref="Equal"/>.
+        /// </returns>
         public Equal Any()
         {
             return new Equal(this)

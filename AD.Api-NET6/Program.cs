@@ -1,4 +1,5 @@
 using AD.Api.Domains;
+using AD.Api.Ldap.Converters;
 using AD.Api.Ldap.Converters.Json;
 using AD.Api.Middleware;
 using AD.Api.Services;
@@ -42,7 +43,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
-    options.SerializerSettings.Converters.Add(new FilterConverter(new CamelCaseNamingStrategy()));
+    options.SerializerSettings.Converters.Add(new FilterConverter());
     options.SerializerSettings.Converters.Add(new PathValueJsonConverter());
     options.SerializerSettings.Converters.Add(new StringEnumConverter());
 

@@ -12,14 +12,45 @@ using System.Text;
 
 namespace AD.Api.Ldap.Filters
 {
+    /// <summary>
+    /// An <see langword="abstract"/> base statement record that specifies equality in an LDAP filter.
+    /// </summary>
     public abstract record EqualityStatement : FilterStatementBase
     {
         protected const char STAR = (char)42;
 
+        /// <summary>
+        /// The property name without any transformations.
+        /// </summary>
+        /// <example>
+        ///     If Property equals 'memberOf:1.2.840.113556.1.4.1941:',
+        ///     then RawProperty will equal 'memberOf'
+        /// </example>
         public abstract string RawProperty { get; }
+
+        /// <summary>
+        /// The property name used in the LDAP filter.
+        /// </summary>
         public abstract string Property { get; }
+
+        /// <summary>
+        /// The underlying type of the property value prior to converting to a <see cref="string"/>.
+        /// </summary>
         public abstract Type? PropertyType { get; }
 
+        /// <summary>
+        /// Determines if the current <see cref="EqualityStatement"/> equals the specified <see cref="IFilterStatement"/> 
+        /// implementation.
+        /// </summary>
+        /// <remarks>
+        ///     Checks for equality based on <see cref="FilterStatementBase.Type"/>, <see cref="Property"/>,
+        ///     and the result of <see cref="GetValue"/> are all equal.
+        /// </remarks>
+        /// <param name="other">The implementation to check equality against.</param>
+        /// <returns>
+        ///     <see langword="true"/> if <paramref name="other"/> is equal to the current instance of <see cref="EqualityStatement"/>;
+        ///     otherwise, <see langword="false"/>.
+        /// </returns>
         public sealed override bool Equals(IFilterStatement? other)
         {
             return
@@ -37,6 +68,12 @@ namespace AD.Api.Ldap.Filters
 
         protected abstract EqualityStatement ToAny();
 
+        /// <summary>
+        /// Serializes the <see cref="EqualityStatement"/> into JSON and writes it to the specified <see cref="JsonWriter"/>.
+        /// </summary>
+        /// <param name="writer">The writer to write the JSON to.</param>
+        /// <param name="strategy">The naming strategy for property names.</param>
+        /// <param name="serializer">The serializer used when serializing values.</param>
         public override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
         {
             string name = strategy.GetPropertyName(this.RawProperty, false);
