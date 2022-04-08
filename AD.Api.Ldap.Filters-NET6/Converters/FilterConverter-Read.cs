@@ -87,7 +87,7 @@ namespace AD.Api.Ldap.Converters
                     if (start)
                         doContinue = true;
 
-                    if (kvp.Value is not null && kvp.Value.Type == JTokenType.Null)
+                    if (!(kvp.Value is null) && kvp.Value.Type == JTokenType.Null)
                         statement = new Equal(kvp.Key, null);
 
                     else if (kvp.Value is IConvertible icon)
@@ -120,7 +120,7 @@ namespace AD.Api.Ldap.Converters
             return and;
         }
 
-        private T? ReadEquals<T>(JToken? token, FilterType type, Func<JProperty, T> newEqualFunction)
+        private T ReadEquals<T>(JToken? token, FilterType type, Func<JProperty, T> newEqualFunction)
             where T : EqualityStatement
         {
             if (token is null || token.Type != JTokenType.Object)
@@ -131,7 +131,7 @@ namespace AD.Api.Ldap.Converters
                 : null;
         }
 
-        private T? ReadArray<T>(JToken? token, FilterType type) where T : FilterContainer, new()
+        private T ReadArray<T>(JToken? token, FilterType type) where T : FilterContainer, new()
         {
             if (token is null || token.Type != JTokenType.Array)
                 throw new LdapFilterParsingException($"'{typeof(T).Name}' must be followed by a JSON array of objects.", type);
@@ -167,7 +167,7 @@ namespace AD.Api.Ldap.Converters
                     var jar = new JArray();
                     foreach (var kvp in job)
                     {
-                        if (kvp.Value is not null)
+                        if (!(kvp.Value is null))
                             jar.Add(kvp.Value);
                     }
 

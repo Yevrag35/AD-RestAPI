@@ -15,7 +15,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// An <see langword="abstract"/> base statement record that specifies equality in an LDAP filter.
     /// </summary>
+#if OLDCODE
+    public abstract class EqualityStatement : FilterStatementBase
+#else
     public abstract record EqualityStatement : FilterStatementBase
+#endif
     {
         protected const char STAR = (char)42;
 
@@ -79,7 +83,7 @@ namespace AD.Api.Ldap.Filters
             string name = strategy.GetPropertyName(this.RawProperty, false);
             writer.WritePropertyName(name);
             object? rawValue = this.GetRawValue();
-            JToken token = rawValue is not null
+            JToken token = !(rawValue is null)
                 ? JToken.FromObject(rawValue)
                 : JValue.CreateNull();
 
@@ -96,21 +100,27 @@ namespace AD.Api.Ldap.Filters
         {
             string? strValue = this.GetValue();
 
-            Func<StringBuilder, StringBuilder> writeValue = string.IsNullOrWhiteSpace(strValue)
-                ? sb =>
+            Func<StringBuilder, StringBuilder> writeValue;
+            if (!string.IsNullOrWhiteSpace(strValue))
+            {
+                writeValue = stringBuilder =>
+                {
+                    return stringBuilder
+                        .Append((char)40) //  (
+                        .Append(this.Property)
+                        .Append((char)61) // =
+                        .Append(strValue)
+                        .Append((char)41); // )
+                };
+            }
+            else
+            {
+                writeValue = stringBuilder =>
                 {
                     var not = new Not(this.ToAny());
-                    return not.WriteTo(sb);
-                }
-                : sb =>
-                {
-                    return sb
-                    .Append((char)40) //  (
-                    .Append(this.Property)
-                    .Append((char)61) // =
-                    .Append(strValue)
-                    .Append((char)41);
+                    return not.WriteTo(stringBuilder);
                 };
+            }
 
             return writeValue(builder);
         }
@@ -119,8 +129,8 @@ namespace AD.Api.Ldap.Filters
         {
             ldapPropertyName = null;
 
-            if (expression.Member.CustomAttributes.Any(att => att.AttributeType.IsAssignableTo(typeof(LdapPropertyAttribute))
-                && att.ConstructorArguments.Any(ca => ca.Value is not null)))
+            if (expression.Member.CustomAttributes.Any(att => typeof(LdapPropertyAttribute).IsAssignableFrom(att.AttributeType)
+                && att.ConstructorArguments.Any(ca => !(ca.Value is null))))
             {
                 ldapPropertyName = expression.Member.GetCustomAttribute<LdapPropertyAttribute>()?.LdapName;
             }

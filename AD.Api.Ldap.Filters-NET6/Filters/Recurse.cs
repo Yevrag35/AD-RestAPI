@@ -13,7 +13,11 @@ namespace AD.Api.Ldap.Filters
     /// A filter that represents an LDAP_MATCHING_RULE_IN_CHAIN extensible match against
     /// a given distinguishedName.
     /// </summary>
+#if OLDCODE
+    public sealed class Recurse : EqualityStatement
+#else
     public sealed record Recurse : EqualityStatement
+#endif
     {
         private const string TRANSITIVE_EVAL = "{0}:1.2.840.113556.1.4.1941:";
 

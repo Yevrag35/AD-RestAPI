@@ -1,13 +1,35 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);OLDCODE</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);OLDCODE</DefineConstants>
+	</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Nullable" Version="1.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Old\**\*.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\AD.Api.Ldap.Filters-NET6\**\*.cs" Exclude="..\AD.Api.Ldap.Filters-NET6\obj\**\*.cs;..\AD.Api.Ldap.Filters-NET6\bin\**\*.cs" />
+		<None Include="Old\**\*.cs" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AD.Api.Ldap.Attributes\AD.Api.Ldap.Attributes.csproj" />

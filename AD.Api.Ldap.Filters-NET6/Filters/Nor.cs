@@ -11,7 +11,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// A filter class which indicates all statements contained must NOT be <see langword="true"/>.
     /// </summary>
+#if OLDCODE
+    public sealed class Nor : FilterContainer
+#else
     public sealed record Nor : FilterContainer
+#endif
     {
         public sealed override FilterType Type => FilterType.Nor;
 

@@ -11,7 +11,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// The <see langword="abstract"/> base record for LDAP filter statements.
     /// </summary>
+#if OLDCODE
+    public abstract class FilterStatementBase : IFilterStatement
+#else
     public abstract record FilterStatementBase : IFilterStatement
+#endif
     {
         public abstract FilterType Type { get; }
 

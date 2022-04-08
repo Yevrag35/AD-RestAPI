@@ -13,7 +13,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// A filter record which indicates that the provided equality statement must be <see langword="false"/>.
     /// </summary>
+#if OLDCODE
+    public sealed class Not : FilterStatementBase
+#else
     public sealed record Not : FilterStatementBase
+#endif
     {
         private readonly EqualityStatement _equalStatement;
 

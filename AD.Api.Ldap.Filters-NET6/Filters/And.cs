@@ -11,7 +11,12 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// A filter record which indicates all statements contained must be <see langword="true"/>.
     /// </summary>
+#if OLDCODE
+    public sealed class And : FilterContainer
+#else
     public sealed record And : FilterContainer
+#endif
+
     {
         public override FilterType Type => FilterType.And;
 

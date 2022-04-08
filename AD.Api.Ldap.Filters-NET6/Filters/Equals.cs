@@ -12,7 +12,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// A filter record that represents an LDAP equal statement using a given property/value.
     /// </summary>
+#if OLDCODE
+    public sealed class Equal : EqualityStatement
+#else
     public sealed record Equal : EqualityStatement
+#endif
     {
         public sealed override string Property { get; }
         public sealed override Type? PropertyType { get; }
@@ -21,7 +25,7 @@ namespace AD.Api.Ldap.Filters
         /// <summary>
         /// The converted <see cref="string"/> value the property must equal.
         /// </summary>
-        public string? Value { get; init; }
+        public string? Value { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="Equal"/> with the specified property name and value.
@@ -52,10 +56,7 @@ namespace AD.Api.Ldap.Filters
         /// </returns>
         public Equal Any()
         {
-            return new Equal(this)
-            {
-                Value = STAR.ToString()
-            };
+            return new Equal(this.RawProperty, STAR);
         }
 
         protected sealed override EqualityStatement ToAny()
@@ -63,7 +64,7 @@ namespace AD.Api.Ldap.Filters
             return this.Any();
         }
 
-        public static Equal Create<T, TMember>(T obj, Expression<Func<T, TMember?>> expression) where TMember : IConvertible
+        public static Equal Create<T, TMember>(T obj, Expression<Func<T, TMember>> expression) where TMember : IConvertible
         {
             if (!TryAsMemberExpression(expression, out MemberExpression? memberExpression))
                 throw new ArgumentException($"{nameof(expression)} is not a valid {nameof(MemberExpression)}.");
@@ -72,11 +73,11 @@ namespace AD.Api.Ldap.Filters
                 ? ldapName
                 : memberExpression.Member.Name;
 
-            Func<T, TMember?> function = expression.Compile();
+            Func<T, TMember> function = expression.Compile();
 
             return new Equal(propertyName, function(obj));
         }
-        public static Equal CreateWithValue<T, TMember>(IConvertible? value, Expression<Func<T, TMember?>> expression)
+        public static Equal CreateWithValue<T, TMember>(IConvertible? value, Expression<Func<T, TMember>> expression)
         {
             if (!TryAsMemberExpression(expression, out MemberExpression? memberExpression))
                 throw new ArgumentException($"{nameof(expression)} is not a valid {nameof(MemberExpression)}.");

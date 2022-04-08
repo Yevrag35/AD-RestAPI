@@ -11,7 +11,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// A filter record which indicates any statements contained must be <see langword="true"/>.
     /// </summary>
+#if OLDCODE
+    public sealed class Or : FilterContainer
+#else
     public sealed record Or : FilterContainer
+#endif
     {
         public sealed override FilterType Type => FilterType.Or;
 

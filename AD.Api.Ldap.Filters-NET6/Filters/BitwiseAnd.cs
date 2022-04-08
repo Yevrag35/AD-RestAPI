@@ -9,7 +9,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// A filter record that represents an LDAP bitwise AND operation.
     /// </summary>
+#if OLDCODE
+    public sealed class BitwiseAnd : EqualityStatement
+#else
     public sealed record BitwiseAnd : EqualityStatement
+#endif
     {
         private const string BITWISE_AND = "{0}:1.2.840.113556.1.4.803:";
 

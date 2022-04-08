@@ -11,7 +11,11 @@ namespace AD.Api.Ldap.Filters
     /// <summary>
     /// The <see langword="abstract"/> base record for LDAP filter statements that contain sub-statements.
     /// </summary>
+#if OLDCODE
+    public abstract class FilterContainer : FilterStatementBase, IEnumerable<IFilterStatement>
+#else
     public abstract record FilterContainer : FilterStatementBase, IEnumerable<IFilterStatement>
+#endif
     {
         private static readonly Type _filterStatementType = typeof(IFilterStatement);
 
@@ -54,7 +58,7 @@ namespace AD.Api.Ldap.Filters
         /// <param name="statement">The filter statement to add.</param>
         public virtual void Add(IFilterStatement? statement)
         {
-            if (statement is not null)
+            if (!(statement is null))
                 this.Clauses.Add(statement);
         }
         /// <summary>
