@@ -12,6 +12,7 @@ namespace AD.Api.Ldap.Filters
     public sealed record Equal : EqualityStatement
     {
         public sealed override string Property { get; }
+        public sealed override Type? PropertyType { get; }
         public sealed override string RawProperty => this.Property;
         public sealed override FilterType Type => FilterType.Equal;
         public string? Value { get; init; }
@@ -19,11 +20,16 @@ namespace AD.Api.Ldap.Filters
         public Equal(string propertyName, IConvertible? value)
         {
             this.Property = propertyName;
-            this.Value = value is string strValue
+            this.PropertyType = value?.GetType();
+            string? v = value is string strValue
                 ? strValue
                 : Convert.ToString(value);
+
+            this.Value = !string.IsNullOrWhiteSpace(v)
+                ? v : null;
         }
 
+        protected sealed override object? GetRawValue() => this.Value;
         protected internal sealed override string? GetValue() => this.Value;
 
         public Equal Any()

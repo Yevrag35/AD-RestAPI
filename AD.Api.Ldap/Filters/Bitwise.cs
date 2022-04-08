@@ -1,5 +1,8 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -10,6 +13,8 @@ namespace AD.Api.Ldap.Filters
         private const string BITWISE_AND = "{0}:1.2.840.113556.1.4.803:";
 
         public sealed override string Property { get; }
+        [NotNull]
+        public sealed override Type? PropertyType => typeof(long);
         public sealed override string RawProperty { get; }
         public sealed override FilterType Type => FilterType.Band;
         public long Value { get; }
@@ -26,11 +31,24 @@ namespace AD.Api.Ldap.Filters
         {
         }
 
+        protected sealed override object? GetRawValue() => this.Value;
         protected internal sealed override string? GetValue() => Convert.ToString(this.Value);
 
         protected override EqualityStatement ToAny()
         {
             return this;
+        }
+
+        public sealed override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
+        {
+            string name = strategy.GetPropertyName(nameof(FilterType.Band), false);
+            writer.WritePropertyName(name);
+
+            writer.WriteStartObject();
+
+            base.WriteTo(writer, strategy, serializer);
+
+            writer.WriteEndObject();
         }
 
         public static BitwiseAnd Create<T, TMember>(T obj, Expression<Func<T, TMember>> expression) where TMember : IConvertible
@@ -68,6 +86,8 @@ namespace AD.Api.Ldap.Filters
         private const string BITWISE_OR = "{0}:1.2.840.113556.1.4.804:";
 
         public sealed override string Property { get; }
+        [NotNull]
+        public sealed override Type? PropertyType => typeof(long);
         public sealed override string RawProperty { get; }
         public sealed override FilterType Type => FilterType.Bor;
         public long Value { get; }
@@ -83,11 +103,24 @@ namespace AD.Api.Ldap.Filters
         {
         }
 
+        protected sealed override object? GetRawValue() => this.Value;
         protected internal sealed override string? GetValue() => Convert.ToString(this.Value);
 
         protected sealed override EqualityStatement ToAny()
         {
             return this;
+        }
+
+        public sealed override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
+        {
+            string name = strategy.GetPropertyName(nameof(FilterType.Bor), false);
+            writer.WritePropertyName(name);
+
+            writer.WriteStartObject();
+
+            base.WriteTo(writer, strategy, serializer);
+
+            writer.WriteEndObject();
         }
 
         public static BitwiseOr Create<T, TMember>(T obj, Expression<Func<T, TMember>> expression) where TMember : IConvertible

@@ -1,5 +1,6 @@
 using AD.Api.Ldap.Attributes;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Filters
 {
@@ -18,6 +18,7 @@ namespace AD.Api.Ldap.Filters
 
         public abstract string RawProperty { get; }
         public abstract string Property { get; }
+        public abstract Type? PropertyType { get; }
 
         public sealed override bool Equals(IFilterStatement? other)
         {
@@ -32,6 +33,7 @@ namespace AD.Api.Ldap.Filters
         }
 
         protected internal abstract string? GetValue();
+        protected abstract object? GetRawValue();
 
         protected abstract EqualityStatement ToAny();
 
@@ -39,7 +41,18 @@ namespace AD.Api.Ldap.Filters
         {
             string name = strategy.GetPropertyName(this.RawProperty, false);
             writer.WritePropertyName(name);
-            serializer.Serialize(writer, this.GetValue());
+            object? rawValue = this.GetRawValue();
+            JToken token = rawValue is not null
+                ? JToken.FromObject(rawValue)
+                : JValue.CreateNull();
+
+            if (token.Type == JTokenType.Null || this.PropertyType is null)
+            {
+                writer.WriteNull();
+                return;
+            }
+
+            serializer.Serialize(writer, token);
         }
 
         public override StringBuilder WriteTo(StringBuilder builder)

@@ -53,6 +53,7 @@ namespace AD.Api.Ldap.Filters
                 {
                     clause.WriteTo(writer, strategy, serializer);
                 }
+
                 writer.WriteEndObject();
             });
 
