@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +33,30 @@ namespace AD.Api.Ldap.Filters
                 default:
                     break;
             }
+        }
+
+        public override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
+        {
+            string name = strategy.GetPropertyName(nameof(Nor), false);
+            writer.WritePropertyName(name);
+
+            writer.WriteStartArray();
+
+            this.Clauses.ForEach(clause =>
+            {
+                writer.WriteStartObject();
+                if (clause is Not not)
+                {
+                    not.EqualStatement.WriteTo(writer, strategy, serializer);
+                }
+                else
+                {
+                    clause.WriteTo(writer, strategy, serializer);
+                }
+                writer.WriteEndObject();
+            });
+
+            writer.WriteEndArray();
         }
 
         public sealed override StringBuilder WriteTo(StringBuilder builder)

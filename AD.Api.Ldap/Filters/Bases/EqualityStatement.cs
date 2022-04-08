@@ -1,4 +1,6 @@
 using AD.Api.Ldap.Attributes;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -14,6 +16,7 @@ namespace AD.Api.Ldap.Filters
     {
         protected const char STAR = (char)42;
 
+        public abstract string RawProperty { get; }
         public abstract string Property { get; }
 
         public sealed override bool Equals(IFilterStatement? other)
@@ -31,6 +34,13 @@ namespace AD.Api.Ldap.Filters
         protected internal abstract string? GetValue();
 
         protected abstract EqualityStatement ToAny();
+
+        public override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
+        {
+            string name = strategy.GetPropertyName(this.RawProperty, false);
+            writer.WritePropertyName(name);
+            serializer.Serialize(writer, this.GetValue());
+        }
 
         public override StringBuilder WriteTo(StringBuilder builder)
         {

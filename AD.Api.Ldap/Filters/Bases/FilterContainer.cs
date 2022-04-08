@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -73,6 +75,13 @@ namespace AD.Api.Ldap.Filters
             return false;
         }
 
+        public override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
+        {
+            this.Clauses.ForEach(clause =>
+            {
+                clause.WriteTo(writer, strategy, serializer);
+            });
+        }
         public override StringBuilder WriteTo(StringBuilder builder)
         {
             this.Clauses.ForEach(clause =>

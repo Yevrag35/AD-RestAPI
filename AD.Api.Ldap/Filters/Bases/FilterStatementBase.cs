@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,8 @@ namespace AD.Api.Ldap.Filters
         {
             return this.Type == other?.Type;
         }
+
+        public abstract void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer);
         public abstract StringBuilder WriteTo(StringBuilder builder);
     }
 }

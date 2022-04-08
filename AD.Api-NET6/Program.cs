@@ -42,7 +42,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
-    options.SerializerSettings.Converters.Add(new FilterConverter());
+    options.SerializerSettings.Converters.Add(new FilterConverter(new CamelCaseNamingStrategy()));
     options.SerializerSettings.Converters.Add(new PathValueJsonConverter());
     options.SerializerSettings.Converters.Add(new StringEnumConverter());
 

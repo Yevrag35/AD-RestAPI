@@ -10,7 +10,6 @@ namespace AD.Api.Controllers.Search
 {
     [ApiController]
     [Produces("application/json")]
-    [Route("search")]
     public class GenericQueryController : ADQueryController
     {
         private IGenericSettings GenericSettings { get; }
@@ -22,7 +21,15 @@ namespace AD.Api.Controllers.Search
             this.GenericSettings = genericSettings;
         }
 
+        [HttpPost]
+        [Route("search/test")]
+        public IActionResult SendBodyBack([FromBody] IFilterStatement statement)
+        {
+            return Ok(statement);
+        }
+
         [HttpGet]
+        [Route("search")]
         public IActionResult GetGenericSearch(
                 [FromQuery] string? sortDir = null,
                 [FromQuery] string? domain = null,
@@ -42,6 +49,7 @@ namespace AD.Api.Controllers.Search
         }
 
         [HttpPost]
+        [Route("search")]
         public IActionResult PostGenericSearch(
             [FromBody] IFilterStatement filter,
             [FromQuery] string? sortDir = null,

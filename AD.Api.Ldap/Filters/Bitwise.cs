@@ -10,11 +10,13 @@ namespace AD.Api.Ldap.Filters
         private const string BITWISE_AND = "{0}:1.2.840.113556.1.4.803:";
 
         public sealed override string Property { get; }
+        public sealed override string RawProperty { get; }
         public sealed override FilterType Type => FilterType.Band;
         public long Value { get; }
 
         public BitwiseAnd(string propertyName, long flagValues)
         {
+            this.RawProperty = propertyName;
             this.Property = string.Format(BITWISE_AND, propertyName);
             this.Value = flagValues;
         }
@@ -66,11 +68,13 @@ namespace AD.Api.Ldap.Filters
         private const string BITWISE_OR = "{0}:1.2.840.113556.1.4.804:";
 
         public sealed override string Property { get; }
+        public sealed override string RawProperty { get; }
         public sealed override FilterType Type => FilterType.Bor;
         public long Value { get; }
 
         public BitwiseOr(string propertyName, long flagValues)
         {
+            this.RawProperty = propertyName;
             this.Property = string.Format(BITWISE_OR, propertyName);
             this.Value = flagValues;
         }
