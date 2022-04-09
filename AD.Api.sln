@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api-NET6", "AD.Api-NET6\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Ldap.Filters", "AD.Api.Ldap.Filters\AD.Api.Ldap.Filters.csproj", "{A8300F31-2C1E-4D3B-97D6-3CE1E067503F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Ldap.Attributes", "AD.Api.Ldap.Attributes\AD.Api.Ldap.Attributes.csproj", "{A96C6B00-4032-4EE7-B2A0-7B051A04061A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Ldap.Attributes", "AD.Api.Ldap.Attributes\AD.Api.Ldap.Attributes.csproj", "{A96C6B00-4032-4EE7-B2A0-7B051A04061A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Ldap.Filters-NET6", "AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj", "{E219405B-8032-46ED-A3EC-591E847F9C70}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Ldap.Filters-NET6", "AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj", "{E219405B-8032-46ED-A3EC-591E847F9C70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Ldap.Operations", "AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj", "{A34207DA-504A-4BAF-B5ED-DF478CB44F32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{E219405B-8032-46ED-A3EC-591E847F9C70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E219405B-8032-46ED-A3EC-591E847F9C70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E219405B-8032-46ED-A3EC-591E847F9C70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
