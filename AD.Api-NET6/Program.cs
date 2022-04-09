@@ -40,7 +40,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     //{
     //    options.Audience = "myCustomJwt";
     //    options.Authority = "https://doesnotexist.com";
-    //    options.TokenValidationParameters.
     //})
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
 

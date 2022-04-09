@@ -33,7 +33,7 @@ namespace AD.Api.Ldap.Search
         [LdapProperty]
         public UserAccountControl? UserAccountControl { get; private set; }
 
-        private void AddExpressionsToJsonData<T>(T obj, JsonSerializerSettings settings, params Expression<Func<T, object?>>[] expressions)
+        protected void AddExpressionsToJsonData<T>(T obj, JsonSerializerSettings settings, params Expression<Func<T, object?>>[] expressions)
             where T : FindResult
         {
             if (expressions is null || expressions.Length <= 0)
