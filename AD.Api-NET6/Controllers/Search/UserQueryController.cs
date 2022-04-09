@@ -18,7 +18,7 @@ namespace AD.Api.Controllers
     [ApiController]
     [Produces("application/json")]
     [Route("search/user")]
-    [Authorize(AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}")]
+    //[Authorize(AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}")]
     public class UserQueryController : ADQueryController
     {
         private static readonly Equal UserObjectClass = new("objectClass", "user");

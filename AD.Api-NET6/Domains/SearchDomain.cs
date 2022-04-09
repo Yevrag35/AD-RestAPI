@@ -62,6 +62,7 @@ namespace AD.Api.Domains
                 _byDNs.Add(domainNamingContext, domain);
             }
         }
+
         public bool ContainsKey(string key)
         {
             return this.ContainsFQDN(key) || this.ContainsDN(key);
@@ -137,7 +138,29 @@ namespace AD.Api.Domains
             return !string.IsNullOrWhiteSpace(distinguishedName);
         }
     }
+    #region DEPENDENCY INJECTION
+    public static class SearchDomainDependencyInjectionExtensions
+    {
+        public static IServiceCollection AddSearchDomains(this IServiceCollection services, IConfigurationSection configurationSection)
+        {
+            IEnumerable<SearchDomain> domains = ParseDomainsFromConfig(configurationSection.GetChildren());
+            var collection = new SearchDomains(domains);
 
+            return services.AddSingleton(collection);
+        }
+
+        private static IEnumerable<SearchDomain> ParseDomainsFromConfig(IEnumerable<IConfigurationSection> sections)
+        {
+            foreach (IConfigurationSection section in sections)
+            {
+                SearchDomain dom = section.Get<SearchDomain>();
+                dom.FQDN = section.Key;
+                yield return dom;
+            }
+        }
+    }
+
+    #endregion
     public class SearchDomain
     {
         public string? DistinguishedName { get; set; }

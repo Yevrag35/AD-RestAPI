@@ -38,4 +38,22 @@
         public int Size { get; set; }
         public string[]? Properties { get; set; }
     }
+
+    #region DEPENDENCY INJECTION
+    public static class SearchDefaultsDependencyInjectionExtensions
+    {
+        public static IServiceCollection AddSearchDefaultSettings(this IServiceCollection services, IConfigurationSection configurationSection)
+        {
+            SearchDefaults searchDefaults = configurationSection.Get<SearchDefaults>();
+
+            return services
+                    .AddSingleton(searchDefaults)
+                    .AddSingleton<IUserSettings>(x => x.GetRequiredService<SearchDefaults>().User)
+                    .AddSingleton<IComputerSettings>(x => x.GetRequiredService<SearchDefaults>().Computer)
+                    .AddSingleton<IGenericSettings>(x => x.GetRequiredService<SearchDefaults>().Generic)
+                    .AddSingleton<IGroupSettings>(x => x.GetRequiredService<SearchDefaults>().Group);
+        }
+    }
+
+    #endregion
 }

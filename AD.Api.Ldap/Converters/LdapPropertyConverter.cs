@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AD.Api.Ldap.Converters.Json
+namespace AD.Api.Ldap.Converters
 {
     /// <summary>
     /// Converts an LDAP property's value.

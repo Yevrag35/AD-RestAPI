@@ -1,6 +1,5 @@
 using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Converters;
-using AD.Api.Ldap.Converters.Json;
 using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Path;
 using Newtonsoft.Json;

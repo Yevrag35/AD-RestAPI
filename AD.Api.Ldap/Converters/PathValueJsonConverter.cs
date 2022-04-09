@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AD.Api.Ldap.Converters.Json
+namespace AD.Api.Ldap.Converters
 {
     public class PathValueJsonConverter : JsonConverter<PathValue>
     {
