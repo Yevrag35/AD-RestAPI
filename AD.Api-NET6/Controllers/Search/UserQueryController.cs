@@ -37,6 +37,7 @@ namespace AD.Api.Controllers
         [HttpGet]
         public IActionResult GetUserSearch(
                 [FromQuery] string? domain = null,
+                [FromQuery] string? searchBase = null,
                 [FromQuery] int? limit = null,
                 [FromQuery] SearchScope scope = SearchScope.Subtree,
                 [FromQuery] string? sortDir = null,
@@ -46,6 +47,7 @@ namespace AD.Api.Controllers
             return this.PerformUserSearch(
                 AddUserCriteria(),
                 domain,
+                searchBase,
                 limit,
                 scope,
                 sortDir,
@@ -57,6 +59,7 @@ namespace AD.Api.Controllers
         public IActionResult PostUserSearch(
             [FromBody] IFilterStatement filter,
             [FromQuery] string? domain = null,
+            [FromQuery] string? searchBase = null,
             [FromQuery] int? limit = null,
             [FromQuery] SearchScope scope = SearchScope.Subtree,
             [FromQuery] string? sortDir = null,
@@ -66,6 +69,7 @@ namespace AD.Api.Controllers
             return this.PerformUserSearch(
                 AddUserCriteria(filter),
                 domain,
+                searchBase,
                 limit,
                 scope,
                 sortDir,
@@ -76,6 +80,7 @@ namespace AD.Api.Controllers
         private IActionResult PerformUserSearch(
             IFilterStatement filter,
             string? domain,
+            string? searchBase,
             int? limit,
             SearchScope scope,
             PropertySortDirection sortDir,
@@ -92,7 +97,7 @@ namespace AD.Api.Controllers
                 SizeLimit = limit ?? this.UserSettings.Size
             };
 
-            using (var connection = this.GetConnection(domain))
+            using (var connection = this.GetConnection(domain, searchBase))
             {
                 var list = base.PerformSearch(connection, options, out string ldapFilter);
 

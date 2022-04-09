@@ -31,6 +31,7 @@ namespace AD.Api.Controllers.Search
         [HttpGet]
         [Route("search")]
         public IActionResult GetGenericSearch(
+                [FromQuery] string? searchBase = null,
                 [FromQuery] string? sortDir = null,
                 [FromQuery] string? domain = null,
                 [FromQuery] int? limit = null,
@@ -41,6 +42,7 @@ namespace AD.Api.Controllers.Search
             return this.PerformGenericSearch(
                 null,
                 domain,
+                searchBase,
                 limit,
                 scope,
                 sortDir,
@@ -52,6 +54,7 @@ namespace AD.Api.Controllers.Search
         [Route("search")]
         public IActionResult PostGenericSearch(
             [FromBody] IFilterStatement filter,
+            [FromQuery] string? searchBase = null,
             [FromQuery] string? sortDir = null,
             [FromQuery] string? domain = null,
             [FromQuery] int? limit = null,
@@ -62,6 +65,7 @@ namespace AD.Api.Controllers.Search
             return this.PerformGenericSearch(
                 filter,
                 domain,
+                searchBase,
                 limit,
                 scope,
                 sortDir,
@@ -72,6 +76,7 @@ namespace AD.Api.Controllers.Search
         private IActionResult PerformGenericSearch(
             IFilterStatement? filter,
             string? domain,
+            string? searchBase,
             int? limit,
             SearchScope scope,
             PropertySortDirection sortDir,
@@ -88,7 +93,7 @@ namespace AD.Api.Controllers.Search
                 SizeLimit = limit ?? this.GenericSettings.Size
             };
 
-            using (var connection = this.GetConnection(domain))
+            using (var connection = this.GetConnection(domain, searchBase))
             {
                 var list = base.PerformSearch(connection, options, out string ldapFilter);
 

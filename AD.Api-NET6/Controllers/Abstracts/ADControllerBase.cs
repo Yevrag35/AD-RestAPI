@@ -16,11 +16,11 @@ namespace AD.Api.Controllers
             this.SerializationService = serializationService;
         }
 
-        protected LdapConnection GetConnection(string? domain)
+        protected LdapConnection GetConnection(string? domain, string? searchBase = null)
         {
             return string.IsNullOrWhiteSpace(domain)
-                ? this.Connections.GetDefaultConnection()
-                : this.Connections.GetConnection(domain);
+                ? this.Connections.GetDefaultConnection(searchBase)
+                : this.Connections.GetConnection(domain, searchBase);
         }
     }
 }
