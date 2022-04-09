@@ -37,4 +37,8 @@
     <ProjectReference Include="..\AD.Api.Ldap\AD.Api.Ldap.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Schemas\" />
+  </ItemGroup>
+
 </Project>
