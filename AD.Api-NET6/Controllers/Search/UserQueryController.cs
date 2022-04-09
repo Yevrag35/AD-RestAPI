@@ -5,8 +5,10 @@ using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Search;
 using AD.Api.Services;
 using AD.Api.Settings;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Web.Resource;
 using System.DirectoryServices;
 using System.Web;
 
@@ -15,6 +17,7 @@ namespace AD.Api.Controllers
     [ApiController]
     [Produces("application/json")]
     [Route("search/user")]
+    [Authorize]
     public class UserQueryController : ADQueryController
     {
         private static readonly Equal UserObjectClass = new("objectClass", "user");

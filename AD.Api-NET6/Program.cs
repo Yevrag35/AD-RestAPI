@@ -4,12 +4,16 @@ using AD.Api.Ldap.Converters.Json;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Settings;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Web;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -28,6 +32,11 @@ static IEnumerable<SearchDomain> GetSearchDomains(IEnumerable<IConfigurationSect
 }
 
 // Add services to the container.
+
+// Add Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(
+    builder.Configuration.GetSection("AzureAD"));
+builder.Services.AddAuthorization();
 
 IConfigurationSection section = builder.Configuration.GetSection("Domains");
 builder.Services.AddSingleton(new SearchDomains(GetSearchDomains(section.GetChildren())));
@@ -78,6 +87,8 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
