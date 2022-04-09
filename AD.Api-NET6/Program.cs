@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -34,9 +35,21 @@ static IEnumerable<SearchDomain> GetSearchDomains(IEnumerable<IConfigurationSect
 // Add services to the container.
 
 // Add Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(
-    builder.Configuration.GetSection("AzureAD"));
-builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    //.AddJwtBearer("Auth0", options =>
+    //{
+    //    options.Audience = "myCustomJwt";
+    //    options.Authority = "https://doesnotexist.com";
+    //    options.TokenValidationParameters.
+    //})
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
+
+builder.Services.AddAuthorization(options =>
+{
+    var policyBuilder = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme); // Auth0
+    policyBuilder = policyBuilder.RequireAuthenticatedUser();
+    options.DefaultPolicy = policyBuilder.Build();
+});
 
 IConfigurationSection section = builder.Configuration.GetSection("Domains");
 builder.Services.AddSingleton(new SearchDomains(GetSearchDomains(section.GetChildren())));
@@ -82,15 +95,20 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+IdentityModelEventSource.ShowPII = true;
 
 //app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+//app.UseMultipleSchemaAuthenticationMiddleware();
 
 app.MapControllers();
 
