@@ -10,7 +10,7 @@ namespace AD.Api.Controllers
 {
     [ApiController]
     [Produces("application/json")]
-    [Route("{controller}")]
+    [Route("edit")]
     public class ADEditController : ControllerBase
     {
         private IEditService EditService { get; }

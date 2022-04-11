@@ -12,11 +12,11 @@ namespace AD.Api.Ldap.Operations
 {
     public class Replace : EditPropertyOperationBase
     {
-        private readonly IEqualityComparer<object> _comparer;
+        protected IEqualityComparer<object> Comparer { get; }
         public override OperationType OperationType => OperationType.Replace;
 
         public override string Property { get; }
-        public List<(object Original, object New)> Values { get; }
+        public virtual List<(object Original, object New)> Values { get; }
 
         public Replace(string propertyName, IEqualityComparer<object>? comparer = null)
             : base()
@@ -24,7 +24,7 @@ namespace AD.Api.Ldap.Operations
             if (comparer is null)
                 comparer = (IEqualityComparer<object>)StringComparer.CurrentCultureIgnoreCase;
 
-            _comparer = comparer;
+            this.Comparer = comparer;
 
             this.Property = propertyName;
             this.Values = new List<(object, object)>(1);
@@ -50,11 +50,11 @@ namespace AD.Api.Ldap.Operations
 
                 for (int n = 0; n < this.Values.Count; n++)
                 {
-                    object? val = this.Values[i];
-                    if (_comparer.Equals(item, val))
+                    (object? Original, object? New) = this.Values[n];
+                    if (this.Comparer.Equals(item, Original))
                     {
+                        collection.Insert(i, New);
                         collection.Remove(item);
-                        collection.Add(val);
                     }
                 }
             }

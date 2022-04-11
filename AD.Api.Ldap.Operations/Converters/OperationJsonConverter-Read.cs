@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AD.Api.Ldap.Converters
 {
@@ -20,13 +21,13 @@ namespace AD.Api.Ldap.Converters
             switch (keywordType)
             {
                 case OperationType.Add:
-                    return ReadValueOperation(value, key => new Add(key));
+                    return ReadValueOperation(keywordType.Value, value, key => new Add(key));
 
                 case OperationType.Set:
-                    return ReadValueOperation(value, key => new Set(key));
+                    return ReadValueOperation(keywordType.Value, value, key => new Set(key));
                     
                 case OperationType.Remove:
-                    return ReadValueOperation(value, key => new Remove(key));
+                    return ReadValueOperation(keywordType.Value, value, key => new Remove(key));
                     
                 case OperationType.Replace:
                     return ReadReplaceOperation(value, (key, comparer) => new Replace(key, comparer));
@@ -40,9 +41,62 @@ namespace AD.Api.Ldap.Converters
         {
             return token.ToObject<object[]>();
         }
+        private static T[]? ReadMultipleValues<T>(JToken token)
+        {
+            return token.ToObject<T[]>();
+        }
+        private static IEnumerable<ILdapOperation> ReadProxyAddress(OperationType type, JToken? token)
+        {
+            if (token is null)
+                yield break;
+
+            switch (token.Type)
+            {
+                case JTokenType.Array:
+                    var paOp = new ProxyAddressesOperation(type);
+                    string[]? arr = ReadMultipleValues<string>(token);
+
+                    if (!(arr is null))
+                        paOp.Values.AddRange(arr);
+
+                    yield return paOp;
+
+                    break;
+
+                case JTokenType.Object:
+                {
+                    JObject job = (JObject)token;
+                    var props = job.Children<JProperty>();
+                    yield return new ProxyAddressesOperation(OperationType.Add, props.Select(x => x.Value.ToObject<string>() ?? string.Empty));
+                    yield return new ProxyAddressesOperation(OperationType.Remove, props.Select(x => x.Name));
+                    break;
+                }
+
+                case JTokenType.None:
+                case JTokenType.Null:
+                case JTokenType.Comment:
+                case JTokenType.Constructor:
+                case JTokenType.Property:
+                
+                case JTokenType.Undefined:
+                    throw new LdapOperationgParsingException($"A property of '{type}' must be a single or array of values.", type);
+
+                default:
+                    var paOp2 = new ProxyAddressesOperation(type);
+                    string? value = ReadSingleValue<string>(token);
+                    if (!string.IsNullOrWhiteSpace(value))
+                        paOp2.Values.Add(value);
+                    yield return paOp2;
+                    break;
+            }
+        }
         private static object? ReadSingleValue(JToken token)
         {
             return token.ToObject<object>();
+        }
+        private static T? ReadSingleValue<T>(JToken token)
+        {
+            return token.ToObject<T>();
         }
 
         private static void ReadIntoValues(ILdapOperationWithValues operation, JToken? token)
@@ -77,7 +131,7 @@ namespace AD.Api.Ldap.Converters
             }
         }
 
-        private static IEnumerable<Replace>? ReadReplaceOperation(JToken? token, Func<string, IEqualityComparer<object>, Replace> replaceImplementation)
+        private static IEnumerable<ILdapOperation>? ReadReplaceOperation(JToken? token, Func<string, IEqualityComparer<object>, Replace> replaceImplementation)
         {
             if (token is null || token.Type != JTokenType.Object)
                 throw new LdapOperationgParsingException($"A value type operation must be followed by a JSON object.");
@@ -86,6 +140,16 @@ namespace AD.Api.Ldap.Converters
 
             foreach (var kvp in job)
             {
+                if (!(kvp.Value is null) && kvp.Key.Equals(ProxyAddressesOperation.PROPERTY, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    foreach (var op in ReadProxyAddress(OperationType.Replace, kvp.Value))
+                    {
+                        yield return op;
+                    }
+
+                    continue;
+                }
+
                 Replace replace = replaceImplementation(kvp.Key, Cache.Value[typeof(string)]);
                 if (kvp.Value is null || kvp.Value.Type != JTokenType.Object)
                     continue;
@@ -119,7 +183,7 @@ namespace AD.Api.Ldap.Converters
             }
         }
 
-        private static IEnumerable<ILdapOperation>? ReadValueOperation(JToken? token, Func<string, ILdapOperationWithValues> factoryFunction)
+        private static IEnumerable<ILdapOperation>? ReadValueOperation(OperationType type, JToken? token, Func<string, ILdapOperationWithValues> factoryFunction)
         {
             if (token is null || token.Type != JTokenType.Object)
                 throw new LdapOperationgParsingException($"A value type operation must be followed by a JSON object.");
@@ -128,6 +192,20 @@ namespace AD.Api.Ldap.Converters
 
             foreach (KeyValuePair<string, JToken?> kvp in job)
             {
+                if (kvp.Key.Equals(ProxyAddressesOperation.PROPERTY, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    IEnumerable<ILdapOperation>? paOperation = ReadProxyAddress(type, kvp.Value);
+                    if (!(paOperation is null))
+                    {
+                        foreach (var op in paOperation)
+                        {
+                            yield return op;
+                        }
+
+                        continue;
+                    }
+                }
+
                 ILdapOperationWithValues operation = factoryFunction(kvp.Key);
                 ReadIntoValues(operation, kvp.Value);
 

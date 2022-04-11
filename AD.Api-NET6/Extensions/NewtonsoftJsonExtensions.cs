@@ -12,6 +12,7 @@ namespace AD.Api.Extensions
         public static MvcNewtonsoftJsonOptions AddADApiConfiguration(this MvcNewtonsoftJsonOptions options)
         {
             options.SerializerSettings.Converters.AddADApiConverters();
+            options.SerializerSettings.Converters.Add(new ProxyAddressConverter());
 
             options.SerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
             options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
