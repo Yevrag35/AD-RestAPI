@@ -8,7 +8,9 @@ Right now, the API can receive simple queries with the LDAP filter in the JSON b
 
 I took extra time to make sure that the LDAP filters can be built on the fly and read to and from JSON natively.
 
-Next step is to add bitwise operators into the mix.
+## Update 4/11/22
+
+The query controllers are done.  Now working on Edit.
 
 * EXAMPLE -
 
