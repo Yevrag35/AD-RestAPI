@@ -364,3 +364,5 @@ FodyWeavers.xsd
 AzureADInfo.txt
 
 AD.Api-NET6/appsettings.json.modified
+
+AD.Api-NET6/appsettings.Modified.json
