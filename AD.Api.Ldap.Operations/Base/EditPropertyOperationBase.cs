@@ -4,7 +4,7 @@ using System.DirectoryServices;
 
 namespace AD.Api.Ldap.Operations
 {
-    public abstract class EditPropertyOperationBase
+    public abstract class EditPropertyOperationBase : ILdapOperation
     {
         public bool HasBeenPerformed { get; protected set; }
         public abstract OperationType OperationType { get; }

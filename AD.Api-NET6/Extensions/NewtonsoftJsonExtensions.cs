@@ -28,14 +28,18 @@ namespace AD.Api.Extensions
             bool hasFilterConverter = false;
             bool hasPathValueConverter = false;
             bool hasStringEnumConverter = false;
+            bool hasOperationConverter = false;
 
-            CheckConverters(list, ref hasFilterConverter, ref hasPathValueConverter, ref hasStringEnumConverter);
+            CheckConverters(list, ref hasFilterConverter, ref hasPathValueConverter, ref hasStringEnumConverter, ref hasOperationConverter);
 
             if (!hasFilterConverter)
                 list.Add(new FilterConverter());
 
             if (!hasPathValueConverter)
                 list.Add(new PathValueJsonConverter());
+
+            if (!hasOperationConverter)
+                list.Add(new OperationJsonConverter());
 
             if (!hasStringEnumConverter)
             {
@@ -47,7 +51,7 @@ namespace AD.Api.Extensions
         }
 
         private static void CheckConverters(IList<JsonConverter> list, 
-            ref bool hasFilterConverter, ref bool hasPathValueConverter, ref bool hasStringEnumConverter)
+            ref bool hasFilterConverter, ref bool hasPathValueConverter, ref bool hasStringEnumConverter, ref bool hasOperationConverter)
         {
             foreach (JsonConverter converter in list)
             {
@@ -59,6 +63,9 @@ namespace AD.Api.Extensions
 
                 else if (converter is StringEnumConverter)
                     hasStringEnumConverter = true;
+
+                else if (converter is OperationJsonConverter)
+                    hasOperationConverter = true;
             }
         }
     }

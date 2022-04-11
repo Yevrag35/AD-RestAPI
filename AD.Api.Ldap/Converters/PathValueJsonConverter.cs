@@ -16,7 +16,7 @@ namespace AD.Api.Ldap.Converters
 
             if (reader.TokenType == JsonToken.String)
             {
-                path = reader.ReadAsString();
+                path = reader.Value as string;
             }
 
             return PathValue.FromPath(path);

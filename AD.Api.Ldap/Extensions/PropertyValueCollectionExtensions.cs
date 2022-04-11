@@ -11,6 +11,18 @@ namespace AD.Api.Extensions
 {
     public static class PropertyValueCollectionExtensions
     {
+        public static bool TryGetPropertyValueCollection(this PropertyCollection? propCol, string? propertyName,
+            [NotNullWhen(true)] out PropertyValueCollection? propertyValueCollection)
+        {
+            propertyValueCollection = null;
+            if (propCol is null || string.IsNullOrWhiteSpace(propertyName))
+                return false;
+
+            propertyValueCollection = propCol[propertyName];
+
+            return propertyValueCollection is not null;
+        }
+
         public static bool TryGetFirstValue<T>(this PropertyCollection? propCol, string? propertyName,
     [NotNullWhen(true)] out T? value)
         {

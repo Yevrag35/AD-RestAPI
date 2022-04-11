@@ -1,4 +1,5 @@
 using AD.Api.Ldap.Extensions;
+using AD.Api.Ldap.Operations.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -10,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Operations
 {
-    public class Remove : EditPropertyOperationBase
+    public class Remove : EditPropertyOperationBase, ILdapOperationWithValues
     {
         public override OperationType OperationType => OperationType.Remove;
         public override string Property { get; }
-        public IList<object> Values { get; }
+        public List<object> Values { get; }
 
         public Remove(string propertyName)
             : base()
@@ -46,14 +47,10 @@ namespace AD.Api.Ldap.Operations
             string name = namingStrategy.GetPropertyName(this.Property, false);
             writer.WritePropertyName(name);
 
-            writer.WriteStartObject();
-            writer.WritePropertyName(namingStrategy.GetPropertyName(nameof(Remove), false));
-
             writer.WriteStartArray();
-            this.Values.ForEach(obj => writer.WriteValue(obj));
+            this.Values.ForEach(obj => serializer.Serialize(writer, obj));
 
             writer.WriteEndArray();
-            writer.WriteEndObject();
         }
     }
 }

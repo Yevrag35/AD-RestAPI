@@ -1,4 +1,5 @@
 using AD.Api.Ldap.Extensions;
+using AD.Api.Ldap.Operations.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -10,12 +11,12 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Operations
 {
-    public class Set : EditPropertyOperationBase
+    public class Set : EditPropertyOperationBase, ILdapOperationWithValues
     {
         public override OperationType OperationType => OperationType.Set;
 
         public override string Property { get; }
-        public IList<object> Values { get; }
+        public List<object> Values { get; }
 
         public Set(string propertyName)
         {
@@ -48,24 +49,32 @@ namespace AD.Api.Ldap.Operations
             string name = namingStrategy.GetPropertyName(this.Property, false);
             writer.WritePropertyName(name);
 
-            switch (this.Values.Count)
+            writer.WriteStartArray();
+            this.Values.ForEach(obj =>
             {
-                case > 1:
-                {
-                    writer.WriteStartArray();
-                    this.Values.ForEach(obj =>
-                    {
-                        writer.WriteValue(obj);
-                    });
+                serializer.Serialize(writer, obj);
+            });
 
-                    writer.WriteEndArray();
-                    break;
-                }
+            writer.WriteEndArray();
 
-                default:
-                    writer.WriteValue(this.Values[0]);
-                    break;
-            }
+            //switch (this.Values.Count)
+            //{
+            //    case > 1:
+            //    {
+            //        writer.WriteStartArray();
+            //        this.Values.ForEach(obj =>
+            //        {
+            //            writer.WriteValue(obj);
+            //        });
+
+            //        writer.WriteEndArray();
+            //        break;
+            //    }
+
+            //    default:
+            //        writer.WriteValue(this.Values[0]);
+            //        break;
+            //}
         }
     }
 

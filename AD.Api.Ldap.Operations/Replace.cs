@@ -1,4 +1,5 @@
 using AD.Api.Ldap.Extensions;
+using AD.Api.Ldap.Operations.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -15,7 +16,7 @@ namespace AD.Api.Ldap.Operations
         public override OperationType OperationType => OperationType.Replace;
 
         public override string Property { get; }
-        public IList<(object Original, object New)> Values { get; }
+        public List<(object Original, object New)> Values { get; }
 
         public Replace(string propertyName, IEqualityComparer<object>? comparer = null)
             : base()
@@ -69,16 +70,13 @@ namespace AD.Api.Ldap.Operations
             writer.WritePropertyName(name);
 
             writer.WriteStartObject();
-            writer.WritePropertyName(namingStrategy.GetPropertyName(nameof(Replace), false));
 
-            writer.WriteStartObject();
             this.Values.ForEach(obj =>
             {
                 writer.WritePropertyName(obj.Original.ToString());
                 writer.WriteValue(obj.New.ToString());
             });
 
-            writer.WriteEndObject();
             writer.WriteEndObject();
         }
     }

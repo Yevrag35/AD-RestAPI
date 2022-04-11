@@ -37,6 +37,18 @@ namespace AD.Api.Ldap
             };
         }
 
+        public DirectoryEntry GetDirectoryEntry(string dn)
+        {
+            if (string.IsNullOrWhiteSpace(dn))
+                throw new ArgumentNullException(nameof(dn));
+
+            return this.GetDirectoryEntry(new PathValue(_options.Protocol)
+            {
+                DistinguishedName = dn,
+                Host = _options.Host,
+                UseSsl = _options.UseSSL
+            });
+        }
         public DirectoryEntry GetDirectoryEntry(PathValue path)
         {
             return CreateEntry(path, _options);
