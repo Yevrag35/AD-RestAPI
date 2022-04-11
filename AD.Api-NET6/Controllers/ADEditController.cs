@@ -35,7 +35,7 @@ namespace AD.Api.Controllers
             EditResult editResult = this.EditService.Edit(request);
             return editResult.Success
                 ? Ok(editResult)
-                : StatusCode((int)HttpStatusCode.InternalServerError, editResult);
+                : BadRequest(editResult);
         }
     }
 }

@@ -100,6 +100,11 @@ namespace AD.Api.Ldap.Operations
             if (!original.Overlaps(removals))
                 return false;
 
+            if (removals.HasPrimary() && original.HasPrimary())
+            {
+                original.Find(x => !x.IsPrimary && !removals.Contains(x)).IsPrimary = true;
+            }
+
             original.ForEach(pa =>
             {
                 if (!removals.Contains(pa))
