@@ -6,7 +6,9 @@
         {
             return services
                 .AddSingleton<IConnectionService, ConnectionService>()
-                .AddSingleton<ISerializationService, SerializationService>();
+                .AddSingleton<ISerializationService, SerializationService>()
+                .AddTransient<IQueryService, LdapQueryService>()
+                .AddTransient<IEditService, LdapEditService>();
         }
     }
 }

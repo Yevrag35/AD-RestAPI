@@ -18,9 +18,8 @@ namespace AD.Api.Controllers.Search
 
         private IComputerSettings ComputerSettings { get; }
 
-        public ComputerQueryController(IConnectionService connectionService,
-            IComputerSettings computerSettings, ISerializationService serializer)
-            : base(connectionService, serializer)
+        public ComputerQueryController(IQueryService queryService, IComputerSettings computerSettings)
+            : base(queryService)
         {
             this.ComputerSettings = computerSettings;
         }
@@ -78,8 +77,10 @@ namespace AD.Api.Controllers.Search
             string? sortBy,
             string? properties)
         {
-            SearchOptions options = new SearchOptions
+            QueryOptions options = new QueryOptions
             {
+                Domain = domain,
+                SearchBase = searchBase,
                 Filter = filter,
                 SearchScope = scope,
                 SortDirection = sortDir,
@@ -88,12 +89,8 @@ namespace AD.Api.Controllers.Search
                 SizeLimit = limit ?? this.ComputerSettings.Size
             };
 
-            using (var connection = this.GetConnection(domain, searchBase))
-            {
-                var list = base.PerformSearch(connection, options, out string ldapFilter);
-
-                return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, connection, ldapFilter);
-            }
+            var list = this.QueryService.Search(options, out string ldapFilter, out string host);
+            return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
         }
     }
 }

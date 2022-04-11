@@ -9,11 +9,13 @@ using System.DirectoryServices;
 
 namespace AD.Api.Controllers
 {
-    public abstract class ADQueryController : ADControllerBase
+    public abstract class ADQueryController : ControllerBase
     {
-        public ADQueryController(IConnectionService connectionService, ISerializationService serializationService)
-            : base(connectionService, serializationService)
+        protected IQueryService QueryService { get; }
+
+        public ADQueryController(IQueryService queryService)
         {
+            this.QueryService = queryService;
         }
 
         protected static IFilterStatement AddCriteria<T>(IList<T> criteria, IFilterStatement? existingFilter)
@@ -38,11 +40,11 @@ namespace AD.Api.Controllers
         }
 
         protected IActionResult GetReply(List<FindResult> list, int limitedTo, IList<string>? propertiesRequested,
-            LdapConnection? connection = null, string? ldapFilter = null)
+            string host, string? ldapFilter = null)
         {
             return Ok(new
             {
-                Host = connection?.RootDSE.Host ?? "AutoDCLookup",
+                Host = host,
                 Request = new {
                     FilterUsed = ldapFilter,
                     Limit = limitedTo,
@@ -52,18 +54,6 @@ namespace AD.Api.Controllers
                 list.Count,
                 Results = list
             });
-        }
-
-        protected List<FindResult> PerformSearch(LdapConnection connection, SearchOptions options, out string ldapFilter)
-        {
-            ldapFilter = string.Empty;
-            using (var searcher = connection.CreateSearcher())
-            {
-                var list = searcher.FindAll(options, out ldapFilter);
-                this.SerializationService.PrepareMany(list);
-
-                return list;
-            }
         }
 
         protected string[] GetProperties(ISearchSettings options, string? askedForProperties)

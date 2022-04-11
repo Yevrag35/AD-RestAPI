@@ -27,9 +27,8 @@ namespace AD.Api.Controllers
 
         private IUserSettings UserSettings { get; }
 
-        public UserQueryController(IConnectionService connectionService,
-            IUserSettings userSettings, ISerializationService serializer)
-            : base(connectionService, serializer)
+        public UserQueryController(IQueryService queryService, IUserSettings userSettings)
+            : base(queryService)
         {
             this.UserSettings = userSettings;
         }
@@ -87,7 +86,7 @@ namespace AD.Api.Controllers
             string? sortBy,
             string? properties)
         {
-            SearchOptions options = new SearchOptions
+            QueryOptions options = new QueryOptions
             {
                 Filter = filter,
                 SearchScope = scope,
@@ -97,12 +96,8 @@ namespace AD.Api.Controllers
                 SizeLimit = limit ?? this.UserSettings.Size
             };
 
-            using (var connection = this.GetConnection(domain, searchBase))
-            {
-                var list = base.PerformSearch(connection, options, out string ldapFilter);
-
-                return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, connection, ldapFilter);
-            }
+            var list = this.QueryService.Search(options, out string ldapFilter, out string host);
+            return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
         }
 
         private static IFilterStatement AddUserCriteria(IFilterStatement? statement = null)

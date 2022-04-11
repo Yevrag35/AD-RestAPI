@@ -6,9 +6,6 @@ namespace AD.Api.Controllers
 {
     public abstract class ADControllerBase : ControllerBase
     {
-        protected IConnectionService Connections { get; }
-        protected ISerializationService SerializationService { get; }
-
         public ADControllerBase(IConnectionService connectionService, ISerializationService serializationService)
             : base()
         {

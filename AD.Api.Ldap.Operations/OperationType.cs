@@ -8,6 +8,7 @@ namespace AD.Api.Ldap.Operations
 {
     public enum OperationType
     {
+        Commit,
         Set,
         Add,
         Remove,

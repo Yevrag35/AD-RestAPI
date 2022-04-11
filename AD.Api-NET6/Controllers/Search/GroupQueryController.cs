@@ -18,9 +18,8 @@ namespace AD.Api.Controllers.Search
 
         private IGroupSettings GroupSettings { get; }
 
-        public GroupQueryController(IConnectionService connectionService, ISerializationService serializationService,
-            IGroupSettings groupSettings)
-            : base(connectionService, serializationService)
+        public GroupQueryController(IQueryService queryService, IGroupSettings groupSettings)
+            : base(queryService)
         {
             this.GroupSettings = groupSettings;
         }
@@ -78,7 +77,7 @@ namespace AD.Api.Controllers.Search
             string? sortBy,
             string? properties)
         {
-            SearchOptions options = new SearchOptions
+            QueryOptions options = new QueryOptions
             {
                 Filter = filter,
                 SearchScope = scope,
@@ -93,12 +92,8 @@ namespace AD.Api.Controllers.Search
             if (this.GroupSettings.IncludeMembers && !options.PropertiesToLoad.Contains("member", StringComparer.CurrentCultureIgnoreCase))
                 options.PropertiesToLoad.Add("member");
 
-            using (var connection = this.GetConnection(domain, searchBase))
-            {
-                var list = base.PerformSearch(connection, options, out string ldapFilter);
-
-                return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, connection, ldapFilter);
-            }
+            var list = this.QueryService.Search(options, out string ldapFilter, out string host);
+            return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
         }
     }
 }

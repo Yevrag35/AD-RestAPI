@@ -9,10 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\Abstracts\ADControllerBase.cs" />
     <Compile Remove="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Controllers\Abstracts\ADControllerBase.cs" />
     <None Include="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
   </ItemGroup>
 

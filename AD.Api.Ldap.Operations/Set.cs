@@ -56,27 +56,6 @@ namespace AD.Api.Ldap.Operations
             });
 
             writer.WriteEndArray();
-
-            //switch (this.Values.Count)
-            //{
-            //    case > 1:
-            //    {
-            //        writer.WriteStartArray();
-            //        this.Values.ForEach(obj =>
-            //        {
-            //            writer.WriteValue(obj);
-            //        });
-
-            //        writer.WriteEndArray();
-            //        break;
-            //    }
-
-            //    default:
-            //        writer.WriteValue(this.Values[0]);
-            //        break;
-            //}
         }
     }
-
-    
 }
