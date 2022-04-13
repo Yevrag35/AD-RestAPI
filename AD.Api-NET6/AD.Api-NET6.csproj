@@ -42,7 +42,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AD.Api.Ldap\AD.Api.Ldap.csproj" />
-    <ProjectReference Include="..\AD.Api.Schema\AD.Api.Schema.csproj" />
   </ItemGroup>
 
   <ItemGroup>

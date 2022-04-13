@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json");
@@ -47,7 +48,10 @@ builder.Services.AddTextSettingOptions(builder.Configuration);
 
 builder.Services.AddADApiServices();
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+Assembly[] appDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+builder.Services
+    .AddAutoMapper(appDomainAssemblies)
+    .AddLdapEnumTypes(appDomainAssemblies);
 
 builder.Services.AddControllers().AddNewtonsoftJson(options => options.AddADApiConfiguration());
 
@@ -56,7 +60,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #if DEBUG
-_ = builder.Services.BuildServiceProvider(true);
+//_ = builder.Services.BuildServiceProvider(true);
 IdentityModelEventSource.ShowPII = true;
 #endif
 

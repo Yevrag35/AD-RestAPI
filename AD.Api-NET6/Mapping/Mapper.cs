@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using AD.Api.Ldap.Extensions;
+using AutoMapper;
 using Newtonsoft.Json;
 
 namespace AD.Api.Mapping
@@ -23,10 +24,10 @@ namespace AD.Api.Mapping
 
         private static void AddConverters(IList<JsonConverter> source, IList<JsonConverter> dest)
         {
-            for (int i = 0; i < source.Count; i++)
+            source.ForEach(converter =>
             {
-                dest.Add(source[i]);
-            }
+                dest.Add(converter);
+            });
         }
 
         //private class ValueConverter : ITypeConverter<IList<JsonConverter>, JsonConverterCollection>, IValueConverter<IList<JsonConverter>, JsonConverterCollection>

@@ -1,4 +1,7 @@
-﻿namespace AD.Api.Services
+﻿using AD.Api.Ldap.Attributes;
+using System.Reflection;
+
+namespace AD.Api.Services
 {
     public static class InjectServicesExtensions
     {
@@ -12,6 +15,13 @@
                 .AddTransient<IQueryService, LdapQueryService>()
                 .AddTransient<IEditService, LdapEditService>()
                 .AddTransient<ICreateService, LdapCreateService>();
+        }
+
+        public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)
+        {
+            ILdapEnumDictionary dict = EnumReader.GetLdapEnums(assemblies);
+            return services
+                .AddSingleton(dict);
         }
     }
 }

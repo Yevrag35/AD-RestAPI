@@ -6,8 +6,6 @@ namespace AD.Api.Services
 {
     public abstract class OperationServiceBase
     {
-
-
         protected static OperationResult CommitChanges(DirectoryEntry entry, bool andRefresh = false)
         {
             try

@@ -8,11 +8,11 @@ namespace AD.Api.Ldap.Attributes
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public class LdapPropertyAttribute : Attribute
     {
-        public string LdapName { get; }
+        public string? LdapName { get; }
         public bool WantsLast => this.Index < 0;
         public int Index { get; }
 
-        public LdapPropertyAttribute(string ldapName = null, int indexToGrab = -1)
+        public LdapPropertyAttribute(string? ldapName = null, int indexToGrab = -1)
         {
             this.LdapName = ldapName;
             this.Index = indexToGrab;

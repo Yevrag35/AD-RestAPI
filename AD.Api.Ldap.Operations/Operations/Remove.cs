@@ -1,5 +1,6 @@
 using AD.Api.Ldap.Extensions;
 using AD.Api.Ldap.Operations.Internal;
+using AD.Api.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -24,10 +25,10 @@ namespace AD.Api.Ldap.Operations
             this.Values = new List<object>(1);
         }
 
-        public override bool Perform(PropertyValueCollection collection)
+        public override bool Perform(PropertyValueCollection collection, SchemaProperty schemaProperty)
         {
             this.HasBeenPerformed = true;
-            if (collection.Count <= 0)
+            if (collection.Count <= 0 || schemaProperty.IsSingleValued)
                 return false;
 
             if (this.Values.Count <= 0)

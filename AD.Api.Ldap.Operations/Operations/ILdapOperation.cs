@@ -1,3 +1,4 @@
+using AD.Api.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -15,7 +16,7 @@ namespace AD.Api.Ldap.Operations
         OperationType OperationType { get; }
         string Property { get; }
 
-        bool Perform(PropertyValueCollection collection);
+        bool Perform(PropertyValueCollection collection, SchemaProperty schemaProperty);
         void WriteTo(JsonWriter writer, NamingStrategy namingStrategy, JsonSerializer serializer);
     }
 }

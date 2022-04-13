@@ -38,7 +38,7 @@ namespace AD.Api.Ldap.Path
         {
             (string Value, string Format, string DN) tuple = (fromValue, Strings.LDAP_Format_WKO, domainDn);
 
-            int totalLength = tuple.Value.Length + tuple.Format.Length + tuple.DN.Length;
+            int totalLength = tuple.Value.Length + tuple.Format.Length + tuple.DN.Length + 2;
 
             return string.Create(totalLength, tuple, (chars, state) =>
             {

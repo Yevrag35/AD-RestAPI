@@ -29,6 +29,7 @@ namespace AD.Api.Ldap
     }
 
     [Flags]
+    [LdapEnum("userAccountControl")]
     public enum UserAccountControl
     {
         /// <summary>

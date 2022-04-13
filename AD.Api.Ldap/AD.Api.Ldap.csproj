@@ -37,7 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AD.Api.Ldap.Attributes\AD.Api.Ldap.Attributes.csproj" />
     <ProjectReference Include="..\AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj" />
     <ProjectReference Include="..\AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj" />
   </ItemGroup>

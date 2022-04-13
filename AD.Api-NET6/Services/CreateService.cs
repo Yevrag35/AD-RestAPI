@@ -31,12 +31,6 @@ namespace AD.Api.Services
 
         public OperationResult Create(CreateOperationRequest request)
         {
-            //string classType = request.Type.ToString();
-            //if (!this.Schema.IsClassLoaded(classType))
-            //{
-            //    this.Schema.LoadClass(classType, request.Domain);
-            //}
-
             using var connection = this.Connections.GetConnection(request.Domain);
             using var pathEntry = GetDirectoryEntryFromRequest(connection, request);
 

@@ -1,4 +1,5 @@
 using AD.Api.Ldap.Properties;
+using AD.Api.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -44,7 +45,7 @@ namespace AD.Api.Ldap.Operations
             GC.SuppressFinalize(this);
         }
 
-        public override bool Perform(PropertyValueCollection collection)
+        public override bool Perform(PropertyValueCollection collection, SchemaProperty schemaProperty)
         {
             _original = new ProxyAddressCollection(collection);
             collection.Clear();

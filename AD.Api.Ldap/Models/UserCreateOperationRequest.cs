@@ -40,14 +40,20 @@ namespace AD.Api.Ldap.Models
 
         [JsonIgnore]
         [LdapProperty("userAccountControl")]
-        public UserAccountControl? UserAccountControl => Enum.TryParse(_userAccountControl, out UserAccountControl uac)
+        public UserAccountControl? UserAccountControl
+        {
+            get => Enum.TryParse(_userAccountControl, out UserAccountControl uac)
             ? uac
             : null;
+        }
 
         protected override void AddToProperties()
         {
             if (string.IsNullOrWhiteSpace(this.SamAccountName))
                 this.SamAccountName = this.CommonName;
+
+            if (int.TryParse(_userAccountControl, out int uacInt))
+                _userAccountControl = ((Ldap.UserAccountControl)uacInt).ToString();
 
             if (this.UserAccountControl.HasValue && !this.UserAccountControl.Value.HasFlag(Ldap.UserAccountControl.PasswordNotRequired)
                 && string.IsNullOrWhiteSpace(this.Base64Password))

@@ -32,8 +32,84 @@ namespace AD.Api.Ldap.Converters
                 case OperationType.Replace:
                     return ReadReplaceOperation(value, (key, comparer) => new Replace(key, comparer));
 
+                case OperationType.Clear:
+                    return ReadClearOperation(value);
+
                 default:
-                    throw new LdapOperationgParsingException($"An edit operation requires at least one of the following keywords: \"{Enum.GetNames<OperationType>().Join()}\"");
+                    throw new LdapOperationgParsingException($"An edit operation requires at least one of the following keywords: \"Add\", \"Set\", \"Remove\", \"Replace\", \"Clear\".");
+            }
+        }
+
+        private static IEnumerable<ILdapOperation> ReadClearOperation(JToken? token)
+        {
+            switch (token?.Type)
+            {
+                case JTokenType.Array:
+                {
+                    foreach (var op in ReadClearOperations(token))
+                    {
+                        yield return op;
+                    }
+
+                    break;
+                }
+
+                case JTokenType.String:
+                {
+                    string? key = token.ToObject<string>();
+                    if (!string.IsNullOrWhiteSpace(key))
+                        yield return new Clear(key);
+
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+        private static IEnumerable<ILdapOperation> ReadClearOperations(JToken token)
+        {
+            foreach (var kvp in token)
+            {
+                if (kvp?.Type == JTokenType.String)
+                {
+                    string? key = kvp.ToObject<string>();
+
+                    if (!string.IsNullOrWhiteSpace(key))
+                        yield return new Clear(key);
+                }
+            }
+        }
+
+        private static void ReadIntoValues(ILdapOperationWithValues operation, JToken? token)
+        {
+            if (token is null || token.Type == JTokenType.Null)
+                return;
+
+            switch (token.Type)
+            {
+                case JTokenType.Array:
+                    object[]? arr = ReadMultipleValues(token);
+
+                    if (!(arr is null))
+                        operation.Values.AddRange(arr);
+
+                    break;
+
+                case JTokenType.None:
+                case JTokenType.Null:
+                case JTokenType.Comment:
+                case JTokenType.Constructor:
+                case JTokenType.Property:
+                case JTokenType.Object:
+                case JTokenType.Undefined:
+                    throw new LdapOperationgParsingException($"A property of '{operation.OperationType}' must be a single or array of values.", operation.OperationType);
+
+                default:
+                    object? value = ReadSingleValue(token);
+                    if (!(value is null))
+                        operation.Values.Add(value);
+                    break;
             }
         }
 
@@ -45,6 +121,7 @@ namespace AD.Api.Ldap.Converters
         {
             return token.ToObject<T[]>();
         }
+
         private static IEnumerable<ILdapOperation> ReadProxyAddress(OperationType type, JToken? token)
         {
             if (token is null)
@@ -87,46 +164,6 @@ namespace AD.Api.Ldap.Converters
                     if (!string.IsNullOrWhiteSpace(value))
                         paOp2.Values.Add(value);
                     yield return paOp2;
-                    break;
-            }
-        }
-        private static object? ReadSingleValue(JToken token)
-        {
-            return token.ToObject<object>();
-        }
-        private static T? ReadSingleValue<T>(JToken token)
-        {
-            return token.ToObject<T>();
-        }
-
-        private static void ReadIntoValues(ILdapOperationWithValues operation, JToken? token)
-        {
-            if (token is null || token.Type == JTokenType.Null)
-                return;
-
-            switch (token.Type)
-            {
-                case JTokenType.Array:
-                    object[]? arr = ReadMultipleValues(token);
-
-                    if (!(arr is null))
-                        operation.Values.AddRange(arr);
-
-                    break;
-
-                case JTokenType.None:
-                case JTokenType.Null:
-                case JTokenType.Comment:
-                case JTokenType.Constructor:
-                case JTokenType.Property:
-                case JTokenType.Object:
-                case JTokenType.Undefined:
-                    throw new LdapOperationgParsingException($"A property of '{operation.OperationType}' must be a single or array of values.", operation.OperationType);
-
-                default:
-                    object? value = ReadSingleValue(token);
-                    if (!(value is null))
-                        operation.Values.Add(value);
                     break;
             }
         }
@@ -181,6 +218,15 @@ namespace AD.Api.Ldap.Converters
 
                 yield return replace;
             }
+        }
+
+        private static object? ReadSingleValue(JToken token)
+        {
+            return token.ToObject<object>();
+        }
+        private static T? ReadSingleValue<T>(JToken token)
+        {
+            return token.ToObject<T>();
         }
 
         private static IEnumerable<ILdapOperation>? ReadValueOperation(OperationType type, JToken? token, Func<string, ILdapOperationWithValues> factoryFunction)

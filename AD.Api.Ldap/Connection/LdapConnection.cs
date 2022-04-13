@@ -134,12 +134,27 @@ namespace AD.Api.Ldap
 
             WellKnownObject wko = WellKnownObject.Create(value, namingContext);
 
-            return new PathValue(_options.Protocol)
+            var wkoPath = new PathValue(_options.Protocol)
             {
                 DistinguishedName = wko,
                 Host = _options.Host,
                 UseSsl = _options.UseSSL
             };
+
+            using (var wkoDe = this.GetDirectoryEntry(wkoPath))
+            {
+                if (wkoDe.Properties.TryGetFirstValue(nameof(wkoPath.DistinguishedName), out string? realDn))
+                {
+                    return new PathValue(_options.Protocol)
+                    {
+                        DistinguishedName = realDn,
+                        Host = _options.Host,
+                        UseSsl = _options.UseSSL
+                    };
+                }
+                else
+                    return wkoPath; // which will error...
+            }
         }
 
         private static DirectoryEntry CreateEntry(PathValue path, ILdapConnectionOptions options)
