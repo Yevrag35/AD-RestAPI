@@ -1,3 +1,4 @@
+using AD.Api.Ldap.Attributes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -19,17 +20,18 @@ namespace AD.Api.Ldap.Models
         public override CreationType Type { get; internal set; } = CreationType.User;
 
         [JsonIgnore]
+        [LdapProperty("userAccountControl")]
         public UserAccountControl? UserAccountControl => Enum.TryParse(_userAccountControl, out UserAccountControl uac)
             ? uac
             : null;
 
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext ctx)
-        {
-            if (this.UserAccountControl.HasValue && !this.Properties.ContainsKey(nameof(this.UserAccountControl)))
-            {
-                this.Properties.Add(nameof(this.UserAccountControl), new JValue((int)this.UserAccountControl.Value));
-            }
-        }
+        //[OnDeserialized]
+        //private void OnDeserialized(StreamingContext ctx)
+        //{
+        //    if (this.UserAccountControl.HasValue && !this.Properties.ContainsKey(nameof(this.UserAccountControl)))
+        //    {
+        //        this.Properties.Add(nameof(this.UserAccountControl), new JValue((int)this.UserAccountControl.Value));
+        //    }
+        //}
     }
 }

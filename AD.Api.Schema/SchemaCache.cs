@@ -1,53 +1,52 @@
-﻿using System.DirectoryServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 
 namespace AD.Api.Schema
 {
-    public static class SchemaCache
+    public class SchemaCache
     {
-        private readonly static StringComparer _ignoreCase = StringComparer.CurrentCultureIgnoreCase;
-        private readonly static Lazy<Dictionary<string, Dictionary<string, SchemaProperty>>> _schemaDictionary = new(InitCache);
+        private readonly Dictionary<string, SchemaProperty> _cache;
 
-        public static bool IsLoaded => _schemaDictionary.IsValueCreated;
-
-        //public static void LoadSchema(DirectoryContext ctx, string[] classNames)
-        //{
-        //    if (classNames is null || classNames.Length <= 0)
-        //        throw new ArgumentNullException(nameof(classNames));
-
-        //    using ActiveDirectorySchema schema = ActiveDirectorySchema.GetSchema(ctx);
-        //    Array.ForEach(classNames, name =>
-        //    {
-        //        var propDict = GetClassDictionary(schema, name);
-        //        if (propDict.Count > 0)
-        //        {
-        //            _schemaDictionary.Value.Add(name, propDict);
-        //        }
-        //    });
-        //}
-
-        //private static Dictionary<string, SchemaProperty> GetClassDictionary(ActiveDirectorySchema schema, string className)
-        //{
-        //    using ActiveDirectorySchemaClass schemaClass = schema.FindClass(className);
-        //    IEnumerable<SchemaProperty> allPropertiesFromClass = GetAllProperties(schemaClass);
-        //    return allPropertiesFromClass.ToDictionary(x => x.Name, _ignoreCase);
-        //}
-
-        //private static IEnumerable<SchemaProperty> GetAllProperties(ActiveDirectorySchemaClass schemaClass)
-        //{
-        //    var col = schemaClass.GetAllProperties();
-        //    foreach (ActiveDirectorySchemaProperty prop in col)
-        //    {
-        //        using (prop)
-        //        {
-        //            //yield return SchemaProperty.FromProperty(prop, schemaClass.Name);
-        //        }
-        //    }
-        //}
-
-        private static Dictionary<string, Dictionary<string, SchemaProperty>> InitCache()
+        public SchemaProperty? this[string key]
         {
-            return new Dictionary<string, Dictionary<string, SchemaProperty>>(5, _ignoreCase);
+            get => this.TryGetValue(key, out SchemaProperty? schemaProperty) ? schemaProperty : null;
+        }
+
+        public int Count => _cache.Count;
+
+        public SchemaCache(int capacity = 1000)
+        {
+            _cache = new Dictionary<string, SchemaProperty>(capacity, StringComparer.CurrentCultureIgnoreCase);
+        }
+
+        public bool Add(ActiveDirectorySchemaProperty property)
+        {
+            bool added = false;
+
+            if (!this.ContainsKey(property.Name))
+            {
+                _cache.Add(property.Name, new SchemaProperty
+                {
+                    Class = property.SchemaGuid,
+                    Name = property.Name,
+                    IsInGlobalCatalog = property.IsInGlobalCatalog,
+                    IsSingleValued = property.IsSingleValued,
+                    RangeLower = property.RangeLower,
+                    RangeUpper = property.RangeUpper
+                });
+
+                added = true;
+            }
+
+            return added;
+        }
+
+        public bool ContainsKey(string key) => _cache.ContainsKey(key);
+
+        public bool TryGetValue(string? key, [NotNullWhen(true)] out SchemaProperty? schemaProperty)
+        {
+            return _cache.TryGetValue(key ?? string.Empty, out schemaProperty);
         }
     }
 }

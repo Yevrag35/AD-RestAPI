@@ -13,7 +13,7 @@ namespace AD.Api.Schema
         private readonly int? _lower;
         private readonly int? _upper;
 
-        public string Class { get; init; } = string.Empty;
+        public Guid Class { get; init; }
 
         [MemberNotNullWhen(true, nameof(RangeLower), nameof(RangeUpper))]
         public bool HasRange => this.RangeLower.HasValue && this.RangeUpper.HasValue;
@@ -61,13 +61,13 @@ namespace AD.Api.Schema
                 return true;
 
             else
-                return StringComparer.CurrentCultureIgnoreCase.Equals(this.Class, other.Class)
+                return this.Class.Equals(other.Class)
                     && StringComparer.CurrentCultureIgnoreCase.Equals(this.Name, other.Name);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.Class.ToUpper(), this.Name.ToUpper());
+            return HashCode.Combine(this.Class, this.Name.ToUpper());
         }
     }
 }

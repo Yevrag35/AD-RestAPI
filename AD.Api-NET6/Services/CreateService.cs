@@ -17,12 +17,10 @@ namespace AD.Api.Services
     public class LdapCreateService : OperationServiceBase, ICreateService
     {
         private IConnectionService Connections { get; }
-        private ISchemaService Schema { get; }
 
-        public LdapCreateService(IConnectionService connectionService, ISchemaService schemaService)
+        public LdapCreateService(IConnectionService connectionService)
         {
             this.Connections = connectionService;
-            this.Schema = schemaService;
         }
 
         public OperationResult Create(CreateOperationRequest request)
