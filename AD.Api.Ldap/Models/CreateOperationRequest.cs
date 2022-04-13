@@ -20,7 +20,6 @@ namespace AD.Api.Ldap.Models
         public string? Domain { get; set; }
 
         [JsonProperty("cn", Required = Required.Always)]
-        [LdapProperty("cn")]
         public string CommonName { get; set; } = string.Empty;
 
         public string? Path { get; set; }

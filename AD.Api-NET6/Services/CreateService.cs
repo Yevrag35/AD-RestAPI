@@ -17,10 +17,12 @@ namespace AD.Api.Services
     public class LdapCreateService : OperationServiceBase, ICreateService
     {
         private IConnectionService Connections { get; }
+        private ISchemaService Schema { get; }
 
-        public LdapCreateService(IConnectionService connectionService)
+        public LdapCreateService(IConnectionService connectionService, ISchemaService schemaService)
         {
             this.Connections = connectionService;
+            this.Schema = schemaService;
         }
 
         public OperationResult Create(CreateOperationRequest request)
@@ -67,8 +69,8 @@ namespace AD.Api.Services
                     if (createdEntry.Properties.TryGetPropertyValueCollection(kvp.Key, out PropertyValueCollection? collection))
                     {
                         // Let's figure out Schema Caching
-                        //if (!this.Schema.TryGet(kvp.Key, out SchemaProperty? schemaProperty))
-                        //    throw new InvalidOperationException("Schema not laoded.");
+                        if (!this.Schema.Dictionary.TryGetValue(kvp.Key, out SchemaProperty? schemaProperty))
+                            throw new InvalidOperationException("Schema not loaded.");
 
                         switch (kvp.Value.Type)
                         {
@@ -83,23 +85,23 @@ namespace AD.Api.Services
 
                             case JTokenType.Array:
                             {
-                                //Action<PropertyValueCollection, object[]> action = GetMultiValueAction(schemaProperty);
+                                Action<PropertyValueCollection, object[]> action = GetMultiValueAction(schemaProperty);
 
                                 object[]? arr = kvp.Value.ToObject<object[]>();
                                 if (arr is not null)
-                                    collection.AddRange(arr);
+                                    action(collection, arr);
 
                                 break;
                             }
 
                             default:
                             {
-                                //Action<PropertyValueCollection, object> action = GetSingleValueAction(schemaProperty);
+                                Action<PropertyValueCollection, object> action = GetSingleValueAction(schemaProperty);
 
                                 object? obj = kvp.Value.ToObject<object>();
                                 if (obj is not null)
-                                    collection.Value = obj;
-                                    //action(collection, obj);
+                                    //collection.Value = obj;
+                                    action(collection, obj);
 
                                 break;
                             }
@@ -152,10 +154,17 @@ namespace AD.Api.Services
             {
                 return (pvc, value) =>
                 {
-                    if (value is int intVal && schemaProperty.HasRange && 
-                        (intVal.CompareTo(schemaProperty.RangeLower) < 0
+                    int count = 0;
+                    if (value is int intVal)
+                        count = intVal;
+
+                    else if (value is string strVal)
+                        count = strVal.Length;
+
+                    if (schemaProperty.HasRange && 
+                        (count.CompareTo(schemaProperty.RangeLower) < 0
                         ||
-                        intVal.CompareTo(schemaProperty.RangeUpper) > 0))
+                        count.CompareTo(schemaProperty.RangeUpper) > 0))
                     {
                         throw new ArgumentOutOfRangeException($"{value} is outside of the range allowed by the attribute.");
                     }

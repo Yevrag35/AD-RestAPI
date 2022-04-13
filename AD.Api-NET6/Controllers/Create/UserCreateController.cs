@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
+using System.Net;
 
 namespace AD.Api.Controllers
 {
@@ -37,18 +38,20 @@ namespace AD.Api.Controllers
                 }
             }
 
-            if (this.Schema.Dictionary.TryGetValue("userAccountControl", out SchemaProperty? prop))
-            {
-                return Ok(prop);
-            }
-            else
-            {
-                return NotFound(":(");
-            }
+            //if (this.Schema.Dictionary.TryGetValue("userAccountControl", out SchemaProperty? prop))
+            //{
+            //    return Ok(prop);
+            //}
+            //else
+            //{
+            //    return NotFound(":(");
+            //}
 
-            //var result = this.CreateService.Create(request);
+            var result = this.CreateService.Create(request);
 
-            //return Ok(result);
+            return result.Success
+                ? StatusCode((int)HttpStatusCode.Created, result)
+                : UnprocessableEntity(result);
         }
     }
 }

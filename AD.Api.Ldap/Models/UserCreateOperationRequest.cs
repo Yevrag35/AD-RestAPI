@@ -13,8 +13,29 @@ namespace AD.Api.Ldap.Models
     [JsonObject(MemberSerialization = MemberSerialization.OptOut)]
     public class UserCreateOperationRequest : CreateOperationRequest
     {
+        [JsonIgnore]
+        private string? _sam;
+
         [JsonProperty("userAccountControl")]
         private string? _userAccountControl;
+
+        public string? Password { get; set; }
+
+        [LdapProperty("sAMAccountName")]
+        public string? SamAccountName
+        {
+            get => _sam;
+            set
+            {
+                if (value is null)
+                    return;
+
+                if (value.Length > 20)
+                    value = value[..20];
+
+                _sam = value;
+            }
+        }
 
         [JsonIgnore]
         public override CreationType Type { get; internal set; } = CreationType.User;
@@ -25,13 +46,18 @@ namespace AD.Api.Ldap.Models
             ? uac
             : null;
 
-        //[OnDeserialized]
-        //private void OnDeserialized(StreamingContext ctx)
-        //{
-        //    if (this.UserAccountControl.HasValue && !this.Properties.ContainsKey(nameof(this.UserAccountControl)))
-        //    {
-        //        this.Properties.Add(nameof(this.UserAccountControl), new JValue((int)this.UserAccountControl.Value));
-        //    }
-        //}
+        protected override void AddToProperties()
+        {
+            if (string.IsNullOrWhiteSpace(this.SamAccountName))
+                this.SamAccountName = this.CommonName;
+
+            if (this.UserAccountControl.HasValue && !this.UserAccountControl.Value.HasFlag(Ldap.UserAccountControl.PasswordNotRequired)
+                && string.IsNullOrWhiteSpace(this.Password))
+            {
+                _userAccountControl = $"{_userAccountControl}, {Ldap.UserAccountControl.PasswordNotRequired}";
+            }
+
+            base.AddToProperties();
+        }
     }
 }
