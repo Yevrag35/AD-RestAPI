@@ -11,13 +11,13 @@ using System.Linq;
 
 namespace AD.Api.Ldap.Converters
 {
-    public partial class OperationJsonConverter : JsonConverter<List<ILdapOperation>>
+    public partial class EditOperationJsonConverter : JsonConverter<List<ILdapOperation>>
     {
         private static readonly Lazy<ComparerCache> Cache = new();
 
         private NamingStrategy NamingStrategy { get; }
 
-        public OperationJsonConverter(NamingStrategy? namingStrategy = null)
+        public EditOperationJsonConverter(NamingStrategy? namingStrategy = null)
         {
             if (namingStrategy is null)
                 namingStrategy = new CamelCaseNamingStrategy();

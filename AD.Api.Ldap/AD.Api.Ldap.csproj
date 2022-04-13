@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Converters\CreateOperationJsonConverter.cs" />
     <Compile Remove="Live\EntryFactory.cs" />
     <Compile Remove="Live\LiveLdapObject.cs" />
     <Compile Remove="Path\PathFactory.cs" />
@@ -23,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Converters\CreateOperationJsonConverter.cs" />
     <None Include="Live\EntryFactory.cs" />
     <None Include="Live\LiveLdapObject.cs" />
     <None Include="Path\PathFactory.cs" />
@@ -38,6 +40,21 @@
     <ProjectReference Include="..\AD.Api.Ldap.Attributes\AD.Api.Ldap.Attributes.csproj" />
     <ProjectReference Include="..\AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj" />
     <ProjectReference Include="..\AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

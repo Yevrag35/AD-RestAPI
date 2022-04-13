@@ -6,9 +6,11 @@
         {
             return services
                 .AddSingleton<IConnectionService, ConnectionService>()
+                .AddSingleton<ISchemaService, SchemaService>()
                 .AddSingleton<ISerializationService, SerializationService>()
                 .AddTransient<IQueryService, LdapQueryService>()
-                .AddTransient<IEditService, LdapEditService>();
+                .AddTransient<IEditService, LdapEditService>()
+                .AddTransient<ICreateService, LdapCreateService>();
         }
     }
 }

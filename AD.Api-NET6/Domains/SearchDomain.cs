@@ -163,11 +163,19 @@ namespace AD.Api.Domains
     #endregion
     public class SearchDomain
     {
+        private bool _useSchemaCache;
+
         public string? DistinguishedName { get; set; }
         public bool IsDefault { get; set; }
+        public bool IsForestRoot { get; set; }
         public string FQDN { get; set; } = string.Empty;
         public string? StaticDomainController { get; set; }
         public bool UseGlobalCatalog { get; set; }
+        public bool UseSchemaCache
+        {
+            get => _useSchemaCache && this.IsForestRoot;
+            set => _useSchemaCache = value;
+        }
         public bool UseSSL { get; set; }
     }
 }

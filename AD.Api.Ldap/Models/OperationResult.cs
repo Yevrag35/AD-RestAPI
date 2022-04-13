@@ -7,7 +7,7 @@ namespace AD.Api.Ldap
 {
     [JsonObject(MemberSerialization = MemberSerialization.OptIn, MissingMemberHandling = MissingMemberHandling.Ignore,
         ItemNullValueHandling = NullValueHandling.Ignore)]
-    public class EditResult
+    public class OperationResult
     {
         [JsonProperty("message", Order = 2)]
         public string? Message { get; init; }

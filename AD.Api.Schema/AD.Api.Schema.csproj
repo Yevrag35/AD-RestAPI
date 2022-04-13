@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="SchemaCache.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="SchemaCache.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MG.Collections" Version="1.0.3" />
+    <PackageReference Include="System.DirectoryServices" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>

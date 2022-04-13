@@ -35,6 +35,12 @@ namespace AD.Api.Ldap
             return this;
         }
 
+        public LdapConnectionBuilder UsingForestControls(bool toggle = true)
+        {
+            _options.IsForest = toggle;
+            return this;
+        }
+
         public LdapConnectionBuilder UsingGlobalCatalog(bool toggle = true)
         {
             _options.Protocol = toggle ? Protocol.GlobalCatalog : Protocol.Ldap;
@@ -53,6 +59,12 @@ namespace AD.Api.Ldap
             return this;
         }
 
+        public LdapConnectionBuilder UseSchemaCache(bool toggle = true)
+        {
+            _options.UseSchemaCache = toggle;
+            return this;
+        }
+
         public LdapConnectionBuilder UsingSSL(bool toggle = true)
         {
             _options.UseSSL = toggle;
@@ -61,11 +73,19 @@ namespace AD.Api.Ldap
 
         private record LdapConnectionOptions : ILdapConnectionOptions
         {
+            private bool _useSchemaCache;
+
             public AuthenticationTypes? AuthenticationTypes { get; internal set; }
             public NetworkCredential? Credential { get; internal set; }
             public string? DistinguishedName { get; internal set; }
+            public bool IsForest { get; internal set; }
             public string? Host { get; internal set; }
             public Protocol Protocol { get; internal set; }
+            public bool UseSchemaCache
+            {
+                get => _useSchemaCache && this.IsForest;
+                set => _useSchemaCache = value;
+            }
             public bool UseSSL { get; internal set; }
 
             internal LdapConnectionOptions()

@@ -13,8 +13,10 @@ namespace AD.Api.Ldap.Connection
     {
         AuthenticationTypes? AuthenticationTypes { get; }
         string? DistinguishedName { get; }
+        bool IsForest { get; }
         string? Host { get; }
         Protocol Protocol { get; }
+        bool UseSchemaCache { get; }
         bool UseSSL { get; }
 
         NetworkCredential? GetCredential();

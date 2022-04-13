@@ -40,7 +40,7 @@ namespace AD.Api.Extensions
                 list.Add(new PathValueJsonConverter());
 
             if (!hasOperationConverter)
-                list.Add(new OperationJsonConverter());
+                list.Add(new EditOperationJsonConverter());
 
             if (!hasStringEnumConverter)
             {
@@ -65,7 +65,7 @@ namespace AD.Api.Extensions
                 else if (converter is StringEnumConverter)
                     hasStringEnumConverter = true;
 
-                else if (converter is OperationJsonConverter)
+                else if (converter is EditOperationJsonConverter)
                     hasOperationConverter = true;
             }
         }

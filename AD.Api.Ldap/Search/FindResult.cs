@@ -14,7 +14,7 @@ using System.Text;
 
 namespace AD.Api.Ldap.Search
 {
-    public class FindResult : IJsonSerializable
+    public class FindResult : IJsonPreparable
     {
         [JsonExtensionData(ReadData = false, WriteData = true)]
         [LdapIgnore]

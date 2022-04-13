@@ -7,10 +7,10 @@ namespace AD.Api.Services
 {
     public interface IEditService
     {
-        EditResult Edit(OperationRequest request);
+        OperationResult Edit(EditOperationRequest request);
     }
 
-    public class LdapEditService : IEditService
+    public class LdapEditService : OperationServiceBase, IEditService
     {
         private IConnectionService Connections { get; }
 
@@ -19,7 +19,7 @@ namespace AD.Api.Services
             this.Connections = connectionService;
         }
 
-        public EditResult Edit(OperationRequest request)
+        public OperationResult Edit(EditOperationRequest request)
         {
             using (var connection = this.Connections.GetConnection(request.Domain))
             {
@@ -31,7 +31,7 @@ namespace AD.Api.Services
                             &&
                             !operation.Perform(collection))
                         {
-                            return new EditResult
+                            return new OperationResult
                             {
                                 Error = new ErrorDetails
                                 {
@@ -46,50 +46,6 @@ namespace AD.Api.Services
 
                     return CommitChanges(dirEntry);
                 }
-            }
-        }
-
-        private static EditResult CommitChanges(DirectoryEntry entry)
-        {
-            try
-            {
-                entry.CommitChanges();
-                return new EditResult
-                {
-                    Message = "Successfully updated entry.",
-                    Success = true
-                };
-            }
-            catch (DirectoryServicesCOMException comException)
-            {
-                return new EditResult
-                {
-                    Message = comException.Message,
-                    Success = false,
-                    Error = new ErrorDetails(comException)
-                    {
-                        OperationType = OperationType.Commit
-                    }
-                };
-            }
-            catch (Exception genericException)
-            {
-                string? extMsg = null;
-                Exception baseEx = genericException.GetBaseException();
-                if (!ReferenceEquals(genericException, baseEx))
-                    extMsg = baseEx.Message;
-
-                return new EditResult
-                {
-                    Message = genericException.Message,
-                    Success = false,
-                    Error = new ErrorDetails
-                    {
-                        ErrorCode = genericException.HResult,
-                        ExtendedMessage = extMsg,
-                        OperationType = OperationType.Commit
-                    }
-                };
             }
         }
     }

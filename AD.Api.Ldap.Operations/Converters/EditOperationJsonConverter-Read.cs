@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace AD.Api.Ldap.Converters
 {
-    public partial class OperationJsonConverter
+    public partial class EditOperationJsonConverter
     {
         private static IEnumerable<ILdapOperation>? ReadToken(string key, JToken? value)
         {

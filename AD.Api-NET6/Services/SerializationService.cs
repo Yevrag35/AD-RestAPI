@@ -11,8 +11,8 @@ namespace AD.Api.Services
 {
     public interface ISerializationService
     {
-        void Prepare(IJsonSerializable? serializable);
-        void PrepareMany<T>(IEnumerable<T>? collection) where T : IJsonSerializable;
+        void Prepare(IJsonPreparable? serializable);
+        void PrepareMany<T>(IEnumerable<T>? collection) where T : IJsonPreparable;
     }
 
     public class SerializationService : ISerializationService
@@ -33,19 +33,19 @@ namespace AD.Api.Services
             return this.Mapper.Map<JsonSerializerSettings>(this.Settings);
         }
 
-        private void Prepare(IJsonSerializable? serializable, JsonSerializerSettings settings)
+        private static void Prepare(IJsonPreparable? serializable, JsonSerializerSettings settings)
         {
             serializable?.PrepareForSerialization(settings);
         }
 
-        public void Prepare(IJsonSerializable? serializable)
+        public void Prepare(IJsonPreparable? serializable)
         {
             if (serializable is null)
                 return;
 
-            this.Prepare(serializable, this.CreateNew());
+            Prepare(serializable, this.CreateNew());
         }
-        public void PrepareMany<T>(IEnumerable<T>? collection) where T : IJsonSerializable
+        public void PrepareMany<T>(IEnumerable<T>? collection) where T : IJsonPreparable
         {
             if (collection is null)
                 return;
@@ -54,7 +54,7 @@ namespace AD.Api.Services
 
             foreach (var serializable in collection)
             {
-                this.Prepare(serializable, settings);
+                Prepare(serializable, settings);
             }
         }
     }

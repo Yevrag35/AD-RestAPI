@@ -5,10 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AD.Api.Ldap.Models
+namespace AD.Api.Ldap.Converters
 {
-    public interface IJsonSerializable
+    public class CreateOperationJsonConverter : JsonConverter
     {
-        void PrepareForSerialization(JsonSerializerSettings settings);
     }
 }

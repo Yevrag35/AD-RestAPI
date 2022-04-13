@@ -1,6 +1,8 @@
 ﻿using AD.Api.Domains;
 using AD.Api.Ldap;
 using AD.Api.Ldap.Connection;
+using AD.Api.Ldap.Path;
+using AD.Api.Schema;
 
 namespace AD.Api.Services
 {
@@ -18,6 +20,11 @@ namespace AD.Api.Services
         public ConnectionService(SearchDomains searchDomains)
         {
             this.Domains = searchDomains;
+            //if (!SchemaCache.IsLoaded)
+            //{
+            //    using var connection = this.GetDefaultConnection();
+            //    SchemaCache.LoadSchema(connection.GetForestContext(), new string[] { "user", "group", "computer", "contact", "organizationalUnit" });
+            //}
         }
 
         public LdapConnection GetDefaultConnection(string? searchBase = null)
@@ -58,6 +65,8 @@ namespace AD.Api.Services
                 .UsingHost(host)
                 .UsingSearchBase(searchBase)
                 .UsingGlobalCatalog(defDom.UseGlobalCatalog)
+                .UsingForestControls(defDom.IsForestRoot)
+                .UseSchemaCache(defDom.UseSchemaCache)
                 .UsingSSL(defDom.UseSSL)
                 .Build();
         }

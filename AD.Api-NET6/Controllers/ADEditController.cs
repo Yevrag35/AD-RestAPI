@@ -23,16 +23,16 @@ namespace AD.Api.Controllers
 
 #if DEBUG
         [HttpPost]
-        public IActionResult TestSendBack([FromBody] OperationRequest request)
+        public IActionResult TestSendBack([FromBody] EditOperationRequest request)
         {
             return Ok(request);
         }
 #endif
 
         [HttpPut]
-        public IActionResult PerformEdit([FromBody] OperationRequest request)
+        public IActionResult PerformEdit([FromBody] EditOperationRequest request)
         {
-            EditResult editResult = this.EditService.Edit(request);
+            OperationResult editResult = this.EditService.Edit(request);
             return editResult.Success
                 ? Ok(editResult)
                 : BadRequest(editResult);

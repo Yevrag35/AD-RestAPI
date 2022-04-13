@@ -2,6 +2,7 @@ using AD.Api.Domains;
 using AD.Api.Extensions;
 using AD.Api.Ldap.Converters;
 using AD.Api.Middleware;
+using AD.Api.Schema;
 using AD.Api.Services;
 using AD.Api.Settings;
 using Microsoft.AspNetCore.Authentication;
@@ -54,7 +55,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #if DEBUG
-//_ = builder.Services.BuildServiceProvider(true);
+_ = builder.Services.BuildServiceProvider(true);
 IdentityModelEventSource.ShowPII = true;
 #endif
 

@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Ldap.Attributes", "A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Ldap.Filters-NET6", "AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj", "{E219405B-8032-46ED-A3EC-591E847F9C70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Ldap.Operations", "AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj", "{A34207DA-504A-4BAF-B5ED-DF478CB44F32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Ldap.Operations", "AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj", "{A34207DA-504A-4BAF-B5ED-DF478CB44F32}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Schema", "AD.Api.Schema\AD.Api.Schema.csproj", "{0146A0DF-229E-405B-A1CA-C2FE5231B23C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A34207DA-504A-4BAF-B5ED-DF478CB44F32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0146A0DF-229E-405B-A1CA-C2FE5231B23C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0146A0DF-229E-405B-A1CA-C2FE5231B23C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0146A0DF-229E-405B-A1CA-C2FE5231B23C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0146A0DF-229E-405B-A1CA-C2FE5231B23C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

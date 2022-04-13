@@ -12,6 +12,8 @@ namespace AD.Api.Ldap.Operations
         Set,
         Add,
         Remove,
-        Replace
+        Replace,
+        Create = 90,
+        Delete = 99
     }
 }
