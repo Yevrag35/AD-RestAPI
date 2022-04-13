@@ -19,8 +19,6 @@ namespace AD.Api.Ldap.Models
         [JsonProperty("userAccountControl")]
         private string? _userAccountControl;
 
-        public string? Password { get; set; }
-
         [LdapProperty("sAMAccountName")]
         public string? SamAccountName
         {
@@ -52,7 +50,7 @@ namespace AD.Api.Ldap.Models
                 this.SamAccountName = this.CommonName;
 
             if (this.UserAccountControl.HasValue && !this.UserAccountControl.Value.HasFlag(Ldap.UserAccountControl.PasswordNotRequired)
-                && string.IsNullOrWhiteSpace(this.Password))
+                && string.IsNullOrWhiteSpace(this.Base64Password))
             {
                 _userAccountControl = $"{_userAccountControl}, {Ldap.UserAccountControl.PasswordNotRequired}";
             }

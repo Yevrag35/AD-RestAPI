@@ -123,6 +123,9 @@
   <data name="DefaultNamingContext" xml:space="preserve">
     <value>defaultNamingContext</value>
   </data>
+  <data name="Invoke_PasswordSet" xml:space="preserve">
+    <value>SetPassword</value>
+  </data>
   <data name="LDAP_Format_WKO" xml:space="preserve">
     <value>&lt;WKGUID=</value>
   </data>

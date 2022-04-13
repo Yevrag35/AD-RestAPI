@@ -13,8 +13,8 @@ namespace AD.Api.Ldap.Models
     [JsonObject(MemberSerialization = MemberSerialization.OptOut)]
     public class CreateOperationRequest
     {
-        [JsonExtensionData]
-        public IDictionary<string, JToken?> Properties { get; private set; } = new SortedDictionary<string, JToken?>(StringComparer.CurrentCultureIgnoreCase);
+        [JsonProperty("password")]
+        public string? Base64Password { get; set; }
 
         [JsonIgnore]
         public string? Domain { get; set; }
@@ -23,6 +23,9 @@ namespace AD.Api.Ldap.Models
         public string CommonName { get; set; } = string.Empty;
 
         public string? Path { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken?> Properties { get; private set; } = new SortedDictionary<string, JToken?>(StringComparer.CurrentCultureIgnoreCase);
 
         [JsonIgnore]
         public virtual CreationType Type { get; internal set; } = CreationType.Generic;

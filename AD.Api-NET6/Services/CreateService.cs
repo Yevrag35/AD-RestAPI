@@ -5,6 +5,7 @@ using AD.Api.Ldap.Operations;
 using AD.Api.Ldap.Path;
 using AD.Api.Schema;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 
 namespace AD.Api.Services
@@ -17,11 +18,14 @@ namespace AD.Api.Services
     public class LdapCreateService : OperationServiceBase, ICreateService
     {
         private IConnectionService Connections { get; }
+        private IPasswordService Passwords { get; }
         private ISchemaService Schema { get; }
 
-        public LdapCreateService(IConnectionService connectionService, ISchemaService schemaService)
+        public LdapCreateService(IConnectionService connectionService, ISchemaService schemaService,
+            IPasswordService passwordService)
         {
             this.Connections = connectionService;
+            this.Passwords = passwordService;
             this.Schema = schemaService;
         }
 
@@ -62,6 +66,12 @@ namespace AD.Api.Services
                 };
             }
             
+            if (!this.TrySetPassword(request, result, createdEntry, out OperationResult? passwordResult) && passwordResult is not null)
+            {
+                createdEntry.Dispose();
+                return passwordResult;
+            }
+
             if (result.Success)
             {
                 foreach (var kvp in request.Properties.Where(x => x.Value is not null))
@@ -161,9 +171,10 @@ namespace AD.Api.Services
                     else if (value is string strVal)
                         count = strVal.Length;
 
-                    if (schemaProperty.HasRange && 
-                        (count.CompareTo(schemaProperty.RangeLower) < 0
+                    if ((schemaProperty.RangeLower.HasValue && 
+                        count.CompareTo(schemaProperty.RangeLower.Value) < 0)
                         ||
+                        (schemaProperty.RangeUpper.HasValue &&
                         count.CompareTo(schemaProperty.RangeUpper) > 0))
                     {
                         throw new ArgumentOutOfRangeException($"{value} is outside of the range allowed by the attribute.");
@@ -176,6 +187,27 @@ namespace AD.Api.Services
             {
                 return (pvc, value) => pvc.Value = value;
             }
+        }
+
+        private bool TrySetPassword(CreateOperationRequest request, OperationResult creationResult, DirectoryEntry createdEntry, 
+            [MaybeNullWhen(false)] out OperationResult? passwordResult)
+        {
+            passwordResult = null;
+            if (creationResult.Success && this.Passwords.TryGetFromBase64(request, out byte[]? passBytes))
+            {
+                var passResult = this.Passwords.SetPassword(createdEntry, passBytes);
+                if (passResult.Success)
+                {
+                    creationResult.Message = $"{creationResult.Message}; {passResult.Message}";
+                    return true;
+                }
+                else
+                {
+                    passwordResult = passResult;
+                }
+            }
+
+            return false;
         }
     }
 }

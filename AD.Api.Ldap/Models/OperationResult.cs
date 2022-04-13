@@ -10,7 +10,7 @@ namespace AD.Api.Ldap
     public class OperationResult
     {
         [JsonProperty("message", Order = 2)]
-        public string? Message { get; init; }
+        public string? Message { get; set; }
 
         [JsonProperty("error", Order = 3)]
         public ErrorDetails? Error { get; init; }

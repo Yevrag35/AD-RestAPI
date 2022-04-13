@@ -43,6 +43,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
 builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
+builder.Services.AddTextSettingOptions(builder.Configuration);
 
 builder.Services.AddADApiServices();
 

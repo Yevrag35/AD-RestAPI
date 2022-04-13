@@ -26,11 +26,6 @@ namespace AD.Api.Schema
             get => _lower;
             init
             {
-                if (value is not null && !_upper.HasValue)
-                {
-                    _upper = value.Value + 1;
-                }
-
                 _lower = value;
             }
         }
@@ -39,11 +34,6 @@ namespace AD.Api.Schema
             get => _upper;
             init
             {
-                if (value is not null && !_lower.HasValue)
-                {
-                    _lower = value.Value - 1;
-                }
-
                 _upper = value;
             }
         }

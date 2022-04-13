@@ -8,6 +8,7 @@
                 .AddSingleton<IConnectionService, ConnectionService>()
                 .AddSingleton<ISchemaService, SchemaService>()
                 .AddSingleton<ISerializationService, SerializationService>()
+                .AddSingleton<IPasswordService, PasswordService>()
                 .AddTransient<IQueryService, LdapQueryService>()
                 .AddTransient<IEditService, LdapEditService>()
                 .AddTransient<ICreateService, LdapCreateService>();
