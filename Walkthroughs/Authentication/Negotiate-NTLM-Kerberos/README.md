@@ -41,7 +41,7 @@ NT LAN Manager (NTLM) authentication is a challenge-response scheme that is a se
 
 # Setting up and Enforcing Kerberos Authentication
 
-Setting the API to leverage Kerberos is the most secure option for Windows Authentication.  Passing through a Kerberos ticket for authentication allows the service to naturally respect and enforces the permissions the requester has in the AD environment.  No secondary roles/groups are required to restrict access to the API's functionality.  The only special permission granted to the API service is the allowance to delegate Kerberos requests to a Domain Controller on behalf of the requester.  Other than that, the service runs as a standard, non-privileged identity in the environment.
+Leveraging Kerberos is the most secure option when the API is configured to use Windows Authentication.  Passing through a Kerberos ticket for authentication allows the service to naturally respect and enforces the permissions the requester has in the AD environment.  No secondary roles/groups are required to restrict access to the API's functionality.  The only special permission granted to the API service is the allowance to delegate Kerberos requests to a Domain Controller on behalf of the requester.  Other than that, the service runs as a standard, non-privileged identity in the environment.
 
 ## Creating a New Service Account
 

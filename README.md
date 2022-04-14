@@ -1,12 +1,19 @@
 # AD-RestAPI
 A standalone REST API built on .NET 6 for querying and managing Active Directory.
 
+* [__Walkthroughs__](/Walkthroughs)
+* [__WIKI__](https://github.com/Yevrag35/AD-RestAPI/wiki)
+
 __* Work in Progress *__
 
 Tore down and started to rebuild the API.
 Right now, the API can receive simple queries with the LDAP filter in the JSON body.
 
-I took extra time to make sure that the LDAP filters can be built on the fly and read to and from JSON natively.
+I took extra time to make sure that the LDAP filters and editing operations can be built on the fly and read to and from JSON natively.
+
+## [Authentication](/Walkthroughs/Authentication)
+
+By default, the project will use __Windows Authentication__, but I'm baking in some options as well as creating walkthroughs for leveraging other authentication schemes (e.g. - AzureAD, custom JSON web tokens, etc.).
 
 ## Update 4/13/22
 
