@@ -34,7 +34,7 @@ namespace AD.Api.Controllers
         {
             OperationResult editResult = this.EditService.Edit(request);
             return editResult.Success
-                ? Ok(editResult)
+                ? Accepted(editResult)
                 : BadRequest(editResult);
         }
     }

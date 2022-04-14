@@ -15,34 +15,42 @@ namespace AD.Api.Ldap.Attributes
 
     public static class EnumReader
     {
+        private static readonly Action<Type, Type, LdapEnumDictionary> _typeAction = (input, enumAttType, dict) =>
+        {
+            if (input.IsEnum && input.CustomAttributes.Any(x => enumAttType.IsAssignableFrom(x.AttributeType)))
+            {
+                LdapEnumAttribute att = input.GetCustomAttribute<LdapEnumAttribute>()
+                    ?? throw new Exception("WTF???");
+
+                string? name = att.Name;
+
+                if (string.IsNullOrWhiteSpace(name))
+                    name = input.Name.ToLower();
+
+                if (!dict.ContainsKey(name))
+                    dict.Add(name, input);
+            }
+        };
+        private static readonly Action<Assembly, Type, LdapEnumDictionary, Action<Type, Type, LdapEnumDictionary>> _assAction = (ass, enumAttType, dict, action) =>
+        {
+            Type[] loadedTypes = ass.GetExportedTypes();
+            for (int i = 0; i < loadedTypes.Length; i++)
+            {
+                action(loadedTypes[i], enumAttType, dict);
+            }
+
+            Array.Clear(loadedTypes, 0, loadedTypes.Length);
+        };
+
         public static ILdapEnumDictionary GetLdapEnums(Assembly[] assemblies)
         {
             Type enumAttType = typeof(LdapEnumAttribute);
             var dict = new LdapEnumDictionary(10);
 
-            Array.ForEach(assemblies, ass =>
+            for (int i = 0; i < assemblies.Length; i++)
             {
-                Type[] loadedTypes = ass.GetExportedTypes();
-
-                Array.ForEach(loadedTypes, type =>
-                {
-                    if (type.IsEnum && type.CustomAttributes.Any(x => enumAttType.IsAssignableFrom(x.AttributeType)))
-                    {
-                        LdapEnumAttribute att = type.GetCustomAttribute<LdapEnumAttribute>()
-                            ?? throw new Exception("WTF???");
-
-                        string? name = att.Name;
-
-                        if (string.IsNullOrWhiteSpace(name))
-                            name = type.Name.ToLower();
-
-                        if (!dict.ContainsKey(name))
-                            dict.Add(name, type);
-                    }
-                });
-
-                Array.Clear(loadedTypes, 0, loadedTypes.Length);
-            });
+                _assAction(assemblies[i], enumAttType, dict, _typeAction);
+            }
 
             return dict;
         }
@@ -52,7 +60,6 @@ namespace AD.Api.Ldap.Attributes
             public LdapEnumDictionary(int capacity = 10)
                 : base(capacity, StringComparer.CurrentCultureIgnoreCase)
             {
-                
             }
 
             public bool TryGetIntValue(string ldapName, string? strValue, out int result)
