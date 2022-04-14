@@ -1,5 +1,22 @@
 # Using AD-RestAPI with Negotiate Authentication
 
+__Table of Contents__
+
+* [Overview](#windows-auth-overview)
+    * [Negotiate](#negotiate)
+    * [NTLM](#ntlm)
+* [Setting up and Enforcing Kerberos Authentication](#setting-up-and-enforcing-kerberos-authentication)
+    * [Creating a New Service Account](#creating-a-new-service-account)
+        * [Creating a Managed Service Account](#creating-a-managed-service-account)
+    * [Configuring the Application Pool](#configuring-the-application-pool)
+    * [Setting the Service Princpal Name(s)](#setting-the-service-princpal-names)
+        * [ADUC Method](#aduc-method)
+        * [PowerShell Method](#powershell-method)
+    * [Constrained Kerberos Delegation](#recommended---constrained-kerberos-delegation)
+    * [Final Step](#final-step)
+
+---
+
 ## Windows Auth Overview
 
 Windows Authentication is the primary functionality normally used in conjunction with IIS applications.
@@ -23,6 +40,8 @@ NT LAN Manager (NTLM) authentication is a challenge-response scheme that is a se
 * _More Information - [Understanding HTTP Authentication](https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/understanding-http-authentication)_
 
 # Setting up and Enforcing Kerberos Authentication
+
+Setting the API to leverage Kerberos is the most secure option for Windows Authentication.  Passing through a Kerberos ticket for authentication allows the service to naturally respect and enforces the permissions the requester has in the AD environment.  No secondary roles/groups are required to restrict access to the API's functionality.  The only special permission granted to the API service is the allowance to delegate Kerberos requests to a Domain Controller on behalf of the requester.  Other than that, the service runs as a standard, non-privileged identity in the environment.
 
 ## Creating a New Service Account
 
