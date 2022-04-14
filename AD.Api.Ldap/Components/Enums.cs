@@ -1,5 +1,7 @@
 using AD.Api.Ldap.Attributes;
 using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Ldap
 {
@@ -28,6 +30,10 @@ namespace AD.Api.Ldap
         GlobalCatalog
     }
 
+    /// <summary>
+    /// The UserAccountControl bit flags.
+    /// </summary>
+    /// <remarks>Specify any combination of the flags to control the specified account.</remarks>
     [Flags]
     [LdapEnum("userAccountControl")]
     public enum UserAccountControl

@@ -1,31 +1,35 @@
 using AD.Api.Domains;
 using AD.Api.Extensions;
-using AD.Api.Ldap.Converters;
 using AD.Api.Middleware;
-using AD.Api.Schema;
 using AD.Api.Services;
 using AD.Api.Settings;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.IIS;
-using Microsoft.AspNetCore.Server.IISIntegration;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile("appsettings.json");
+builder.Configuration
+    .AddEnvironmentVariables()
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile(options =>
+    {
+        options.Path = "appsettings.json";
+        options.Optional = false;
+    });
 
 // Add services to the container.
 
@@ -61,7 +65,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(options => options.AddADApiC
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerWithOptions(builder.Configuration.GetSection("SwaggerInfo"));
 
 #if DEBUG
 //_ = builder.Services.BuildServiceProvider(true);
