@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Remove="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
+    <Compile Remove="Services\NewNameService.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
   <ItemGroup>
     <None Include="appsettings.Modified.json" />
     <None Include="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
+    <None Include="Services\NewNameService.cs" />
   </ItemGroup>
 
   <ItemGroup>
