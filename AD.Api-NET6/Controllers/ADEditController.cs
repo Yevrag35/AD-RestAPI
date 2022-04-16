@@ -33,10 +33,11 @@ namespace AD.Api.Controllers
         /// </summary>
         /// <param name="request">The request body containing the DistinguishedName (DN)
         /// of the object to modify with the specified edit operations.</param>
+        /// <param name="domain">The domain the of the object being edited.</param>
         /// <response code="202">The server successfully applied the modifications.</response>
         /// <response code="400">The JSON request body is malformed.</response>
         /// <response code="422">The encountered an error attempting to apply the modifications.</response>
-        [HttpPost]
+        [HttpPut]
         [Route("edit")]
         [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(ISuccessResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -53,7 +54,7 @@ namespace AD.Api.Controllers
             using (var connection = this.Connections.GetConnection(new ConnectionOptions()
             {
                 Domain = domain,
-                DontDisposeHandle = true,
+                DontDisposeHandle = false,
                 Principal = this.HttpContext?.User
             }))
             {
@@ -62,7 +63,7 @@ namespace AD.Api.Controllers
                     this.Schema.LoadAttributes(missing, connection);
                 }
 
-                DirectoryEntry de = connection.GetDirectoryEntry(request.DistinguishedName);
+                using DirectoryEntry de = connection.GetDirectoryEntry(request.DistinguishedName);
 
                 ISuccessResult editResult = this.EditService.Edit(de, request.EditOperations, token);
 
