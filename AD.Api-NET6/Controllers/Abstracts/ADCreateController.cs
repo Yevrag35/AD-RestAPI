@@ -9,13 +9,16 @@ using System.Net;
 
 namespace AD.Api.Controllers
 {
-    public abstract class ADCreateController : ControllerBase
+    public abstract class ADCreateController : ADControllerBase
     {
         protected ICreateService CreateService { get; }
+        protected IResultService ResultService { get; }
 
-        public ADCreateController(ICreateService createService)
+        public ADCreateController(IIdentityService identityService, ICreateService createService, IResultService resultService)
+            : base(identityService)
         {
             this.CreateService = createService;
+            this.ResultService = resultService;
         }
 
         protected static CreateOperationRequest RemoveProperties(CreateOperationRequest request, params string[] propertiesToRemove)

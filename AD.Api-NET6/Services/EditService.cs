@@ -3,12 +3,14 @@ using AD.Api.Ldap;
 using AD.Api.Ldap.Operations;
 using AD.Api.Schema;
 using System.DirectoryServices;
+using System.Security.Principal;
 
 namespace AD.Api.Services
 {
     public interface IEditService
     {
-        OperationResult Edit(EditOperationRequest request);
+        ISuccessResult Edit(EditOperationRequest request);
+        ISuccessResult EditOnBehalfOf(EditOperationRequest request, WindowsIdentity windowsIdentity);
     }
 
     public class LdapEditService : OperationServiceBase, IEditService
@@ -22,7 +24,14 @@ namespace AD.Api.Services
             this.Schema = schemaService;
         }
 
-        public OperationResult Edit(EditOperationRequest request)
+        public ISuccessResult EditOnBehalfOf(EditOperationRequest request, WindowsIdentity windowsIdentity)
+        {
+            return WindowsIdentity.RunImpersonated(windowsIdentity.AccessToken, () =>
+            {
+                return this.Edit(request);
+            });
+        }
+        public ISuccessResult Edit(EditOperationRequest request)
         {
             if (request.EditOperations.Count <= 0)
                 return new OperationResult

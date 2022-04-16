@@ -12,6 +12,11 @@ namespace AD.Api.Ldap.Exceptions
     /// </summary>
     public class LdapMappingException : TargetException
     {
+        public LdapMappingException(string message, params object[] arguments)
+            : base(string.Format(CultureInfo.CurrentCulture, message, arguments))
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of <see cref="LdapMappingException"/> with the specified message and inner exception that caused
         /// the exception. 

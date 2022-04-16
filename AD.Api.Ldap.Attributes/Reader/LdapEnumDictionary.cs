@@ -22,7 +22,7 @@ namespace AD.Api.Ldap.Attributes
                 LdapEnumAttribute att = input.GetCustomAttribute<LdapEnumAttribute>()
                     ?? throw new Exception("WTF???");
 
-                string? name = att.Name;
+                string name = att.Name ?? string.Empty; // not sure why 'String.Empty' was needed for CodeAnalysis >_>
 
                 if (string.IsNullOrWhiteSpace(name))
                     name = input.Name.ToLower();

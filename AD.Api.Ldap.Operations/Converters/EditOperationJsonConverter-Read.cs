@@ -36,7 +36,7 @@ namespace AD.Api.Ldap.Converters
                     return ReadClearOperation(value);
 
                 default:
-                    throw new LdapOperationgParsingException($"An edit operation requires at least one of the following keywords: \"Add\", \"Set\", \"Remove\", \"Replace\", \"Clear\".");
+                    throw new LdapOperationParsingException($"An edit operation requires at least one of the following keywords: \"Add\", \"Set\", \"Remove\", \"Replace\", \"Clear\".");
             }
         }
 
@@ -103,7 +103,7 @@ namespace AD.Api.Ldap.Converters
                 case JTokenType.Property:
                 case JTokenType.Object:
                 case JTokenType.Undefined:
-                    throw new LdapOperationgParsingException($"A property of '{operation.OperationType}' must be a single or array of values.", operation.OperationType);
+                    throw new LdapOperationParsingException($"A property of '{operation.OperationType}' must be a single or array of values.", operation.OperationType);
 
                 default:
                     object? value = ReadSingleValue(token);
@@ -156,7 +156,7 @@ namespace AD.Api.Ldap.Converters
                 case JTokenType.Property:
                 
                 case JTokenType.Undefined:
-                    throw new LdapOperationgParsingException($"A property of '{type}' must be a single or array of values.", type);
+                    throw new LdapOperationParsingException($"A property of '{type}' must be a single or array of values.", type);
 
                 default:
                     var paOp2 = new ProxyAddressesOperation(type);
@@ -171,7 +171,7 @@ namespace AD.Api.Ldap.Converters
         private static IEnumerable<ILdapOperation>? ReadReplaceOperation(JToken? token, Func<string, IEqualityComparer<object>, Replace> replaceImplementation)
         {
             if (token is null || token.Type != JTokenType.Object)
-                throw new LdapOperationgParsingException($"A value type operation must be followed by a JSON object.");
+                throw new LdapOperationParsingException($"A value type operation must be followed by a JSON object.");
 
             JObject job = (JObject)token;
 
@@ -188,6 +188,7 @@ namespace AD.Api.Ldap.Converters
                 }
 
                 Replace replace = replaceImplementation(kvp.Key, Cache.Value[typeof(string)]);
+
                 if (kvp.Value is null || kvp.Value.Type != JTokenType.Object)
                     continue;
 
@@ -206,11 +207,15 @@ namespace AD.Api.Ldap.Converters
                         case JTokenType.Object:
                         case JTokenType.Array:
                         case JTokenType.Undefined:
-                            throw new LdapOperationgParsingException($"A property's value, in a '{nameof(Replace)}' operation, must be a single non-null value.", OperationType.Replace);
+                            throw new LdapOperationParsingException($"A property's value, in a '{nameof(Replace)}' operation, must be a single non-null value.", OperationType.Replace);
 
                         default:
                         {
-                            replace.Values.Add((replacePair.Key, replacePair.Value.ToObject<object>()));
+                            object? value = replacePair.Value.ToObject<object>();
+
+                            if (value is not null)
+                                replace.Values.Add((replacePair.Key, value));
+                            
                             break;
                         }
                     }
@@ -232,7 +237,7 @@ namespace AD.Api.Ldap.Converters
         private static IEnumerable<ILdapOperation>? ReadValueOperation(OperationType type, JToken? token, Func<string, ILdapOperationWithValues> factoryFunction)
         {
             if (token is null || token.Type != JTokenType.Object)
-                throw new LdapOperationgParsingException($"A value type operation must be followed by a JSON object.");
+                throw new LdapOperationParsingException($"A value type operation must be followed by a JSON object.");
 
             JObject job = (JObject)token;
 

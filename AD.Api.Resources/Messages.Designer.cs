@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AD.Api.Ldap.Properties {
+namespace AD.Api {
     using System;
     
     
@@ -22,24 +22,24 @@ namespace AD.Api.Ldap.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Messages {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        internal Messages() {
         }
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AD.Api.Ldap.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AD.Api.Resources.Messages", typeof(Messages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -51,7 +51,7 @@ namespace AD.Api.Ldap.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,65 +61,20 @@ namespace AD.Api.Ldap.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CN=.
+        ///   Looks up a localized string similar to An exception occurred performing the operation.
         /// </summary>
-        internal static string CN_Prefix {
+        public static string OperationResult_DefaultError {
             get {
-                return ResourceManager.GetString("CN_Prefix", resourceCulture);
+                return ResourceManager.GetString("OperationResult_DefaultError", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to defaultNamingContext.
+        ///   Looks up a localized string similar to The operation result was successful.
         /// </summary>
-        internal static string DefaultNamingContext {
+        public static string OperationResult_Success {
             get {
-                return ResourceManager.GetString("DefaultNamingContext", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to SetPassword.
-        /// </summary>
-        internal static string Invoke_PasswordSet {
-            get {
-                return ResourceManager.GetString("Invoke_PasswordSet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;WKGUID=.
-        /// </summary>
-        internal static string LDAP_Format_WKO {
-            get {
-                return ResourceManager.GetString("LDAP_Format_WKO", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to computer.
-        /// </summary>
-        internal static string Schema_Computer {
-            get {
-                return ResourceManager.GetString("Schema_Computer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to group.
-        /// </summary>
-        internal static string Schema_Group {
-            get {
-                return ResourceManager.GetString("Schema_Group", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to user.
-        /// </summary>
-        internal static string Schema_User {
-            get {
-                return ResourceManager.GetString("Schema_User", resourceCulture);
+                return ResourceManager.GetString("OperationResult_Success", resourceCulture);
             }
         }
     }

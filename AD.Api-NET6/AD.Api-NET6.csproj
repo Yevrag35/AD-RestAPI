@@ -9,8 +9,15 @@
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1591;1701;1702</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1591;1701;1702</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Compile Remove="Controllers\Abstracts\ADControllerBase.cs" />
     <Compile Remove="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
   </ItemGroup>
 
@@ -20,7 +27,6 @@
 
   <ItemGroup>
     <None Include="appsettings.Modified.json" />
-    <None Include="Controllers\Abstracts\ADControllerBase.cs" />
     <None Include="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
   </ItemGroup>
 

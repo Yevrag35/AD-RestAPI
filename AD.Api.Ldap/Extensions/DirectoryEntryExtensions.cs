@@ -11,8 +11,10 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Extensions
 {
+    [Obsolete("These extensions are obsolete and will be removed soon.")]
     public static class DirectoryEntryExtensions
     {
+        [Obsolete("This extension is obsolete and will be removed soon.")]
         [return: NotNullIfNotNull("directoryEntry")]
         public static T? AsModel<T>(this DirectoryEntry? directoryEntry) where T : new()
         {
@@ -22,6 +24,7 @@ namespace AD.Api.Ldap.Extensions
             return Mapper.MapFromDirectoryEntry<T>(new T(), directoryEntry);
         }
 
+        [Obsolete("This extension is obsolete and will be removed soon.")]
         public static LdapUser AsLdapUser(this DirectoryEntry directoryEntry)
         {
             LdapUser user = AsModel<LdapUser>(directoryEntry);

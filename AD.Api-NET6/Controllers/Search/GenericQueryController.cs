@@ -14,8 +14,9 @@ namespace AD.Api.Controllers.Search
     {
         private IGenericSettings GenericSettings { get; }
         
-        public GenericQueryController(IQueryService queryService, IGenericSettings genericSettings)
-            : base(queryService)
+        public GenericQueryController(IIdentityService identityService, IQueryService queryService,
+            IResultService resultService, IGenericSettings genericSettings)
+            : base(identityService, queryService, resultService)
         {
             this.GenericSettings = genericSettings;
         }
@@ -90,6 +91,7 @@ namespace AD.Api.Controllers.Search
                 SearchScope = scope,
                 SortDirection = sortDir,
                 SortProperty = sortBy,
+                Principal = this.HttpContext.User,
                 PropertiesToLoad = GetProperties(this.GenericSettings, properties),
                 SizeLimit = limit ?? this.GenericSettings.Size
             };

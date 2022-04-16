@@ -64,7 +64,7 @@ namespace AD.Api.Ldap.Filters
             return this.Any();
         }
 
-        public static Equal Create<T, TMember>(T obj, Expression<Func<T, TMember>> expression) where TMember : IConvertible
+        public static Equal Create<T, TMember>(T obj, Expression<Func<T, TMember?>> expression) where TMember : IConvertible
         {
             if (!TryAsMemberExpression(expression, out MemberExpression? memberExpression))
                 throw new ArgumentException($"{nameof(expression)} is not a valid {nameof(MemberExpression)}.");
@@ -73,11 +73,11 @@ namespace AD.Api.Ldap.Filters
                 ? ldapName
                 : memberExpression.Member.Name;
 
-            Func<T, TMember> function = expression.Compile();
+            Func<T, TMember?> function = expression.Compile();
 
             return new Equal(propertyName, function(obj));
         }
-        public static Equal CreateWithValue<T, TMember>(IConvertible? value, Expression<Func<T, TMember>> expression)
+        public static Equal CreateWithValue<T, TMember>(IConvertible? value, Expression<Func<T, TMember?>> expression)
         {
             if (!TryAsMemberExpression(expression, out MemberExpression? memberExpression))
                 throw new ArgumentException($"{nameof(expression)} is not a valid {nameof(MemberExpression)}.");

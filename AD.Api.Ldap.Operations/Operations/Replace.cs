@@ -1,3 +1,4 @@
+using AD.Api.Ldap.Exceptions;
 using AD.Api.Ldap.Extensions;
 using AD.Api.Ldap.Operations.Internal;
 using AD.Api.Schema;
@@ -80,7 +81,10 @@ namespace AD.Api.Ldap.Operations
 
             this.Values.ForEach(obj =>
             {
-                writer.WritePropertyName(obj.Original.ToString());
+                string originalName = obj.Original.ToString()
+                    ?? throw new LdapOperationParsingException($"The property name in JSON cannot be null or empty.", OperationType.Replace);
+
+                writer.WritePropertyName(originalName);
                 writer.WriteValue(obj.New.ToString());
             });
 

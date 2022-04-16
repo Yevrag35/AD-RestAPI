@@ -18,8 +18,9 @@ namespace AD.Api.Controllers.Search
 
         private IComputerSettings ComputerSettings { get; }
 
-        public ComputerQueryController(IQueryService queryService, IComputerSettings computerSettings)
-            : base(queryService)
+        public ComputerQueryController(IIdentityService identityService, IQueryService queryService,
+            IResultService resultService, IComputerSettings computerSettings)
+            : base(identityService, queryService, resultService)
         {
             this.ComputerSettings = computerSettings;
         }
@@ -85,6 +86,7 @@ namespace AD.Api.Controllers.Search
                 SearchScope = scope,
                 SortDirection = sortDir,
                 SortProperty = sortBy,
+                Principal = this.HttpContext.User,
                 PropertiesToLoad = GetProperties(this.ComputerSettings, properties),
                 SizeLimit = limit ?? this.ComputerSettings.Size
             };

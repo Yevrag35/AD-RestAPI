@@ -27,8 +27,9 @@ namespace AD.Api.Controllers
 
         private IUserSettings UserSettings { get; }
 
-        public UserQueryController(IQueryService queryService, IUserSettings userSettings)
-            : base(queryService)
+        public UserQueryController(IResultService resultService,
+            IIdentityService identityService, IQueryService queryService, IUserSettings userSettings)
+            : base(identityService, queryService, resultService)
         {
             this.UserSettings = userSettings;
         }
@@ -92,6 +93,7 @@ namespace AD.Api.Controllers
                 SearchScope = scope,
                 SortDirection = sortDir,
                 SortProperty = sortBy,
+                Principal = this.HttpContext.User,
                 PropertiesToLoad = GetProperties(this.UserSettings, properties),
                 SizeLimit = limit ?? this.UserSettings.Size
             };

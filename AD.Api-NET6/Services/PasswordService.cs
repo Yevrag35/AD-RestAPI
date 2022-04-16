@@ -12,8 +12,6 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 
-using Strings = AD.Api.Ldap.Properties.Resources;
-
 namespace AD.Api.Services
 {
     public interface IPasswordService
@@ -26,7 +24,7 @@ namespace AD.Api.Services
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         OperationResult SetPassword(DirectoryEntry entry, byte[] passwordBytes);
-        bool TryGetFromBase64(CreateOperationRequest request, [NotNullWhen(true)] out byte[]? utf8Password);
+        bool TryGetFromBase64(UserCreateOperationRequest request, [NotNullWhen(true)] out byte[]? utf8Password);
     }
 
     public class PasswordService : IPasswordService
@@ -42,9 +40,9 @@ namespace AD.Api.Services
         /// 
         /// </summary>
         /// <param name="entry"></param>
-        /// <param name="passwordBytes"></param>
+        /// <param name="passwordBytes">The plain-text bytes of the password.</param>
         /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException"><paramref name="passwordBytes"/> is <see langword="null"/>.</exception>
         public OperationResult SetPassword(DirectoryEntry entry, byte[] passwordBytes)
         {
             if (passwordBytes is null)
@@ -94,9 +92,13 @@ namespace AD.Api.Services
                     }
                 };
             }
+            finally
+            {
+                Array.Clear(passwordBytes, 0, passwordBytes.Length);
+            }
         }
 
-        public bool TryGetFromBase64(CreateOperationRequest request, [NotNullWhen(true)] out byte[]? utf8Password)
+        public bool TryGetFromBase64(UserCreateOperationRequest request, [NotNullWhen(true)] out byte[]? utf8Password)
         {
             utf8Password = null;
             if (string.IsNullOrWhiteSpace(request.Base64Password))
@@ -166,6 +168,57 @@ namespace AD.Api.Services
                 }
             };
         }
+
+        private bool TryConvertPassword(byte[] passwordBytes, [MaybeNullWhen(false)] out char[] passwordChars, [NotNullWhen(false)] out OperationResult? exception)
+        {
+            passwordChars = null;
+            exception = null;
+
+            if (passwordBytes is null || passwordBytes.Length <= 0)
+            {
+                var ex = new ArgumentException($"{nameof(passwordBytes)} cannot be null or empty.");
+                exception = new OperationResult
+                {
+                    Success = false,
+                    Message = "The password was null or empty.",
+                    Error = new ErrorDetails
+                    {
+                        ErrorCode = ex.HResult,
+                        ExtendedMessage = ex.Message,
+                        OperationType = OperationType.Set,
+                        Property = "password"
+                    }
+                };
+
+                return false;
+            }
+
+            try
+            {
+                passwordChars = new char[passwordBytes.Length];
+
+                int numberOfCharsCopied = this.TextOptions.Encoding.GetChars(passwordBytes, passwordChars);
+                return numberOfCharsCopied == passwordBytes.Length && passwordChars.Length == passwordBytes.Length;
+            }
+            catch (Exception e)
+            {
+                exception = new OperationResult
+                {
+                    Error = new ErrorDetails
+                    {
+                        ErrorCode = e.HResult,
+                        ExtendedMessage = e.GetBaseException().Message,
+                        OperationType = OperationType.Set,
+                        Property = "password"
+                    },
+                    Message = "Unable to convert the password into a proper string.",
+                    Success = false
+                };
+                return false;
+            }
+        }
+
+        [Obsolete($"Use the overlord of {nameof(TryConvertPassword)} with the out char[] parameter.")]
         private bool TryConvertPassword(byte[] passwordBytes, [NotNullWhen(true)] out string? password, [NotNullWhen(false)] out OperationResult? exception)
         {
             password = null;
@@ -192,6 +245,5 @@ namespace AD.Api.Services
                 return false;
             }
         }
-
     }
 }

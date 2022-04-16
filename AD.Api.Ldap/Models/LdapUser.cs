@@ -17,10 +17,10 @@ namespace AD.Api.Ldap.Models
     {
         [LdapExtensionData]
         [JsonIgnore]
-        public IDictionary<string, object[]?>? ExtData;
+        public IDictionary<string, object[]?>? ExtData { get; private set; }
 
         [JsonExtensionData]
-        private IDictionary<string, JToken?> _extData;
+        private IDictionary<string, JToken?>? _extData;
 
         [LdapProperty(ldapName: "mail")]
         [JsonProperty("mail")]
@@ -60,9 +60,12 @@ namespace AD.Api.Ldap.Models
             else
                 _extData.Clear();
             
-            foreach (var kvp in this.ExtData.Where(x => x.Value is not null && !x.Value.Any(o => o is MarshalByRefObject)))
+            foreach (KeyValuePair<string, object[]?> kvp in this.ExtData)
             {
-                _extData.Add(kvp.Key, JToken.FromObject(kvp.Value));
+                if (kvp.Value is not null && !kvp.Value.Any(o => o is MarshalByRefObject))
+                {
+                    _extData.Add(kvp.Key, JToken.FromObject(kvp.Value));
+                }
             }
         }
 

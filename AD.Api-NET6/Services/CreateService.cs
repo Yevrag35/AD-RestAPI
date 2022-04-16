@@ -7,12 +7,14 @@ using AD.Api.Schema;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
+using System.Security.Principal;
 
 namespace AD.Api.Services
 {
     public interface ICreateService
     {
         OperationResult Create(CreateOperationRequest request);
+        OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity);
     }
 
     public class LdapCreateService : OperationServiceBase, ICreateService
@@ -30,6 +32,18 @@ namespace AD.Api.Services
         }
 
         public OperationResult Create(CreateOperationRequest request)
+        {
+            return this.CreateInContext(request);
+        }
+        public OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity)
+        {
+            return WindowsIdentity.RunImpersonated(windowsIdentity.AccessToken, () =>
+            {
+                return this.CreateInContext(request);
+            });
+        }
+
+        private OperationResult CreateInContext(CreateOperationRequest request)
         {
             using var connection = this.Connections.GetConnection(request.Domain);
             using var pathEntry = GetDirectoryEntryFromRequest(connection, request);
@@ -60,7 +74,9 @@ namespace AD.Api.Services
                 };
             }
             
-            if (!this.TrySetPassword(request, result, createdEntry, out OperationResult? passwordResult) && passwordResult is not null)
+            if (request is UserCreateOperationRequest userRequest && 
+                !this.TrySetPassword(userRequest, result, createdEntry, out OperationResult? passwordResult) 
+                && passwordResult is not null)
             {
                 createdEntry.Dispose();
                 return passwordResult;
@@ -183,7 +199,7 @@ namespace AD.Api.Services
             }
         }
 
-        private bool TrySetPassword(CreateOperationRequest request, OperationResult creationResult, DirectoryEntry createdEntry, 
+        private bool TrySetPassword(UserCreateOperationRequest request, OperationResult creationResult, DirectoryEntry createdEntry, 
             [MaybeNullWhen(false)] out OperationResult? passwordResult)
         {
             passwordResult = null;

@@ -11,9 +11,11 @@ namespace AD.Api.Services
         {
             return services
                 .AddSingleton<IConnectionService, ConnectionService>()
+                .AddSingleton<IIdentityService, IdentityService>()
+                .AddSingleton<IPasswordService, PasswordService>()
+                .AddSingleton<IResultService, ResultService>()
                 .AddSingleton<ISchemaService, SchemaService>()
                 .AddSingleton<ISerializationService, SerializationService>()
-                .AddSingleton<IPasswordService, PasswordService>()
                 .AddTransient<IQueryService, LdapQueryService>()
                 .AddTransient<IEditService, LdapEditService>()
                 .AddTransient<ICreateService, LdapCreateService>();

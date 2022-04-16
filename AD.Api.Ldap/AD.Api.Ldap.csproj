@@ -7,6 +7,14 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1591;1701;1702</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1591;1701;1702</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Converters\CreateOperationJsonConverter.cs" />
     <Compile Remove="Live\EntryFactory.cs" />
@@ -40,6 +48,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj" />
     <ProjectReference Include="..\AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj" />
+    <ProjectReference Include="..\AD.Api.Resources\AD.Api.Resources.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,7 +61,7 @@
 
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
+      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>

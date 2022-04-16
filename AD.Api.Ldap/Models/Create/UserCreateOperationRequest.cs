@@ -15,6 +15,14 @@ namespace AD.Api.Ldap.Models
     [JsonObject(MemberSerialization = MemberSerialization.OptOut)]
     public class UserCreateOperationRequest : CreateOperationRequest
     {
+        /// <summary>
+        /// The Base64-encoded password to set on the account.
+        /// </summary>
+        [JsonProperty("password")]
+        [DisplayName("Password")]
+        [DefaultValue(null)]
+        public string? Base64Password { get; set; }
+
         [JsonIgnore]
         private string? _sam;
 

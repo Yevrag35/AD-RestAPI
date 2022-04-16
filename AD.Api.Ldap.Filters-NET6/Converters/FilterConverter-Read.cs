@@ -120,7 +120,7 @@ namespace AD.Api.Ldap.Converters
             return and;
         }
 
-        private T ReadEquals<T>(JToken? token, FilterType type, Func<JProperty, T> newEqualFunction)
+        private T? ReadEquals<T>(JToken? token, FilterType type, Func<JProperty, T> newEqualFunction)
             where T : EqualityStatement
         {
             if (token is null || token.Type != JTokenType.Object)

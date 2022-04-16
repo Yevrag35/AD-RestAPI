@@ -254,7 +254,7 @@ namespace AD.Api.Ldap.Mapping
 
         private static List<(MemberInfo Member, LdapPropertyAttribute Attribute)> GetBindableMembers<T>()
         {
-            List<(MemberInfo Member, LdapPropertyAttribute? Attribute)> list = new();
+            List<(MemberInfo Member, LdapPropertyAttribute Attribute)> list = new();
             IEnumerable<MemberInfo> possibles = typeof(T)
                 .GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(x =>
@@ -262,7 +262,10 @@ namespace AD.Api.Ldap.Mapping
 
             foreach (MemberInfo memInfo in possibles)
             {
-                list.Add((memInfo, memInfo.GetCustomAttribute<LdapPropertyAttribute>()));
+                LdapPropertyAttribute attribute = memInfo.GetCustomAttribute<LdapPropertyAttribute>()
+                    ?? throw new LdapMappingException($"Unable to retrieve the {nameof(LdapPropertyAttribute)} on the member named '{memInfo.Name}'.");
+
+                list.Add((memInfo, attribute));
             }
 
             return list;

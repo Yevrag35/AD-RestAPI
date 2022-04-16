@@ -6,16 +6,20 @@ using AD.Api.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices;
+using System.Security.Claims;
 
 namespace AD.Api.Controllers
 {
-    public abstract class ADQueryController : ControllerBase
+    public abstract class ADQueryController : ADControllerBase
     {
         protected IQueryService QueryService { get; }
+        private IResultService ResultService { get; }
 
-        public ADQueryController(IQueryService queryService)
+        public ADQueryController(IIdentityService identityService, IQueryService queryService, IResultService resultService)
+            : base(identityService)
         {
             this.QueryService = queryService;
+            this.ResultService = resultService;
         }
 
         protected static IFilterStatement AddCriteria<T>(IList<T> criteria, IFilterStatement? existingFilter)
@@ -42,18 +46,7 @@ namespace AD.Api.Controllers
         protected IActionResult GetReply(List<FindResult> list, int limitedTo, IList<string>? propertiesRequested,
             string host, string? ldapFilter = null)
         {
-            return Ok(new
-            {
-                Host = host,
-                Request = new {
-                    FilterUsed = ldapFilter,
-                    Limit = limitedTo,
-                    PropertyCount = propertiesRequested?.Count ?? 0,
-                    PropertiesRequested = propertiesRequested ?? Array.Empty<string>()
-                },
-                list.Count,
-                Results = list
-            });
+            return Ok(this.ResultService.GetQueryReply(list, limitedTo, propertiesRequested, host, ldapFilter));
         }
 
         protected string[] GetProperties(ISearchSettings options, string? askedForProperties)

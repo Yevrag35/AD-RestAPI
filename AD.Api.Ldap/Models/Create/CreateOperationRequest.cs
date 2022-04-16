@@ -16,14 +16,6 @@ namespace AD.Api.Ldap.Models
     public class CreateOperationRequest
     {
         /// <summary>
-        /// The Base64-encoded password to set on the account.
-        /// </summary>
-        [JsonProperty("password")]
-        [DisplayName("Password")]
-        [DefaultValue(null)]
-        public string? Base64Password { get; set; }
-
-        /// <summary>
         /// The domain to create the account in.  Must be registered with the API.
         /// </summary>
         [JsonIgnore]

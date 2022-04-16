@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.Net;
+using System.Security.Principal;
 
 namespace AD.Api.Controllers
 {
@@ -22,8 +23,9 @@ namespace AD.Api.Controllers
         private IConnectionService Connections { get; }
         private ISchemaService Schema { get; }
 
-        public UserCreateController(ICreateService createService, ISchemaService schemaService, IConnectionService connectionService)
-            : base(createService)
+        public UserCreateController(IIdentityService identityService, ICreateService createService, IResultService resultService,
+            ISchemaService schemaService, IConnectionService connectionService)
+            : base(identityService, createService, resultService)
         {
             this.Connections = connectionService;
             this.Schema = schemaService;
@@ -56,9 +58,9 @@ namespace AD.Api.Controllers
         /// <response code="422">The LDAP operation failed to commit the changes from the request.  The response will have more error details.</response>
         [HttpPost]
         [Route("create/user")]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(OperationResult))]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ISuccessResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(OperationResult))]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(IErroredResult))]
         public IActionResult CreateUser([FromBody] UserCreateOperationRequest request)
         {
             RemoveProperties(request, "objectClass", "objectCategory");
@@ -71,20 +73,13 @@ namespace AD.Api.Controllers
                 }
             }
 
-            //if (this.Schema.Dictionary.TryGetValue("userAccountControl", out SchemaProperty? prop))
-            //{
-            //    return Ok(prop);
-            //}
-            //else
-            //{
-            //    return NotFound(":(");
-            //}
+            OperationResult createResult = this.Identity.TryGetKerberosIdentity(this.HttpContext.User, out WindowsIdentity? wid)
+                ? this.CreateService.CreateOnBehalfOf(request, wid)
+                : this.CreateService.Create(request);
 
-            var result = this.CreateService.Create(request);
-
-            return result.Success
-                ? StatusCode((int)HttpStatusCode.Created, result)
-                : UnprocessableEntity(result);
+            return createResult.Success
+                ? StatusCode((int)HttpStatusCode.Created, createResult)
+                : UnprocessableEntity(createResult);
         }
     }
 }

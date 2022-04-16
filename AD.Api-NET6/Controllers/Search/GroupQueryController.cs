@@ -18,8 +18,9 @@ namespace AD.Api.Controllers.Search
 
         private IGroupSettings GroupSettings { get; }
 
-        public GroupQueryController(IQueryService queryService, IGroupSettings groupSettings)
-            : base(queryService)
+        public GroupQueryController(IIdentityService identityService, IQueryService queryService,
+            IResultService resultService, IGroupSettings groupSettings)
+            : base(identityService, queryService, resultService)
         {
             this.GroupSettings = groupSettings;
         }
@@ -83,6 +84,7 @@ namespace AD.Api.Controllers.Search
                 SearchScope = scope,
                 SortDirection = sortDir,
                 SortProperty = sortBy,
+                Principal = this.HttpContext.User,
                 PropertiesToLoad = GetProperties(
                     this.GroupSettings,
                     properties),
