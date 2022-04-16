@@ -2,6 +2,7 @@
 using AD.Api.Ldap;
 using AD.Api.Ldap.Operations;
 using AD.Api.Schema;
+using Microsoft.Win32.SafeHandles;
 using System.DirectoryServices;
 using System.Security.Principal;
 
@@ -9,64 +10,62 @@ namespace AD.Api.Services
 {
     public interface IEditService
     {
-        ISuccessResult Edit(EditOperationRequest request);
+        //ISuccessResult Edit(EditOperationRequest request);
+        ISuccessResult Edit(DirectoryEntry dirEntry, List<ILdapOperation> operations, SafeAccessTokenHandle? token);
     }
 
     public class LdapEditService : OperationServiceBase, IEditService
     {
-        private IConnectionService Connections { get; }
+        //private IConnectionService Connections { get; }
         private ISchemaService Schema { get; }
 
-        public LdapEditService(IConnectionService connectionService, ISchemaService schemaService)
+        public LdapEditService(ISchemaService schemaService)
         {
-            this.Connections = connectionService;
             this.Schema = schemaService;
         }
 
-        public ISuccessResult Edit(EditOperationRequest request)
+        public ISuccessResult Edit(DirectoryEntry dirEntry, List<ILdapOperation> operations, SafeAccessTokenHandle? token)
         {
-            if (request.EditOperations.Count <= 0)
+            if (operations.Count <= 0)
                 return new OperationResult
                 {
                     Message = "No edit operations were specified.",
                     Success = false
                 };
 
-            using (LdapConnection connection = this.Connections.GetConnection(new ConnectionOptions
+            foreach (ILdapOperation operation in operations)
             {
-                Domain = request.Domain,
-                Principal = request.ClaimsPrincipal
-            }))
-            {
-                if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out List<string>? missing))
-                        this.Schema.LoadAttributes(missing, connection);
+                PropertyValueCollection col = GetCollection(operation.Property, dirEntry, token);
 
-                using (var dirEntry = connection.GetDirectoryEntry(request.DistinguishedName))
+                if (this.Schema.Dictionary.TryGetValue(operation.Property, out SchemaProperty? schemaProperty))
                 {
-                    foreach (ILdapOperation operation in request.EditOperations)
-                    {
-                        if (dirEntry.Properties.TryGetPropertyValueCollection(operation.Property, out PropertyValueCollection? collection)
-                            &&
-                            this.Schema.Dictionary.TryGetValue(operation.Property, out SchemaProperty? schemaProperty)
-                            &&
-                            !operation.Perform(collection, schemaProperty))
-                        {
-                            return new OperationResult
-                            {
-                                Error = new ErrorDetails
-                                {
-                                    OperationType = operation.OperationType,
-                                    Property = operation.Property,
-                                },
-                                Message = "Unable to perform the requested operation.",
-                                Success = false
-                            };
-                        }
-                    }
-
-                    return CommitChanges(dirEntry);
+                    bool resultPerform = operation.Perform(col, schemaProperty);
                 }
             }
+
+            OperationResult result = CommitChanges(dirEntry);
+
+            return result;
+        }
+
+        private static PropertyValueCollection GetCollection(string propertyName, DirectoryEntry dirEntry, SafeAccessTokenHandle? token)
+        {
+            if (token is null)
+                return GetCollection(propertyName, dirEntry);
+
+            return WindowsIdentity.RunImpersonated(token, () =>
+            {
+                return dirEntry.Properties.TryGetPropertyValueCollection(propertyName, out PropertyValueCollection? resultCol)
+                    ? resultCol
+                    : throw new InvalidOperationException($"No property called '{propertyName}' was found.");
+            });
+        }
+
+        private static PropertyValueCollection GetCollection(string propertyName, DirectoryEntry dirEntry)
+        {
+            return dirEntry.Properties.TryGetPropertyValueCollection(propertyName, out PropertyValueCollection? col)
+                ? col
+                : throw new InvalidOperationException($"No property named '{propertyName}' was found.");
         }
     }
 }

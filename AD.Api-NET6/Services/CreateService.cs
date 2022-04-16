@@ -44,6 +44,7 @@ namespace AD.Api.Services
             using var connection = this.Connections.GetConnection(new ConnectionOptions
             {
                 Domain = request.Domain,
+                DontDisposeHandle = false,
                 Principal = request.ClaimsPrincipal
             });
             using var pathEntry = GetDirectoryEntryFromRequest(connection, request);

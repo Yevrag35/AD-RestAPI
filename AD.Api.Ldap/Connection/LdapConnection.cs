@@ -2,8 +2,10 @@ using AD.Api.Extensions;
 using AD.Api.Ldap.Connection;
 using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Models;
+using AD.Api.Ldap.Operations;
 using AD.Api.Ldap.Path;
 using AD.Api.Ldap.Search;
+using AD.Api.Schema;
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
@@ -60,6 +62,11 @@ namespace AD.Api.Ldap
         }
 
         #region GET DIRECTORY ENTRIES
+        public DirectoryEntry TestGet(string dn, SafeAccessTokenHandle token)
+        {
+            return WindowsIdentity.RunImpersonated(token, () => new DirectoryEntry($"LDAP://{dn}"));
+        }
+
         /// <summary>
         /// Constructs a <see cref="DirectoryEntry"/> from the specified DistinguishedName (dn).
         /// </summary>
@@ -142,9 +149,65 @@ namespace AD.Api.Ldap
 
             CommonName cn = TruncateCN(commonName);
 
-            return _accessToken is not null
-                ? WindowsIdentity.RunImpersonated(_accessToken, () => parent.Children.Add(cn.Value, creationType.ToString().ToLower()))
-                : parent.Children.Add(cn.Value, creationType.ToString().ToLower());
+            return ExecuteInContext(_accessToken, () =>
+            {
+                return parent.Children.Add(cn.Value, creationType.ToString().ToLower());
+            });
+        }
+
+        public OperationResult CommitChanges(DirectoryEntry directoryEntry, bool andRefresh = false)
+        {
+            return ExecuteInContext(_accessToken, () =>
+            {
+                try
+                {
+                    directoryEntry.CommitChanges();
+                    if (andRefresh)
+                        directoryEntry.RefreshCache();
+
+                    return new OperationResult
+                    {
+                        Message = "Successfully updated entry.",
+                        Success = true
+                    };
+                }
+                catch (DirectoryServicesCOMException comException)
+                {
+                    return new OperationResult
+                    {
+                        Message = comException.Message,
+                        Success = false,
+                        Error = new ErrorDetails(comException)
+                        {
+                            OperationType = OperationType.Commit
+                        }
+                    };
+                }
+                catch (Exception genericException)
+                {
+                    string? extMsg = null;
+                    Exception baseEx = genericException.GetBaseException();
+                    if (!ReferenceEquals(genericException, baseEx))
+                        extMsg = baseEx.Message;
+
+                    return new OperationResult
+                    {
+                        Message = genericException.Message,
+                        Success = false,
+                        Error = new ErrorDetails
+                        {
+                            ErrorCode = genericException.HResult,
+                            ExtendedMessage = extMsg,
+                            OperationType = OperationType.Commit
+                        }
+                    };
+                }
+            });
+        }
+
+        public bool DoEditOperation(ILdapOperation operation, PropertyValueCollection collection, SchemaProperty schemaProperty)
+        {
+            return ExecuteInContext(_accessToken, () => operation.Perform(collection, schemaProperty));
         }
 
         #region CREATE SEARCHERS
@@ -242,9 +305,14 @@ namespace AD.Api.Ldap
                     : () => new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password, authenticationTypes.Value);
             }
 
+            return ExecuteInContext(token, createFunc);
+        }
+
+        private static T ExecuteInContext<T>(SafeAccessTokenHandle? token, Func<T> function)
+        {
             return token is not null
-                ? WindowsIdentity.RunImpersonated(token, createFunc)
-                : createFunc();
+                ? WindowsIdentity.RunImpersonated(token, function)
+                : function();
         }
 
         /// <summary>

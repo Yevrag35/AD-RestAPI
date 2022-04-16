@@ -4,6 +4,7 @@ using AD.Api.Ldap.Operations;
 using AD.Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Win32.SafeHandles;
 using System.DirectoryServices;
 using System.Net;
 using System.Security.Principal;
@@ -12,15 +13,19 @@ namespace AD.Api.Controllers
 {
     [ApiController]
     [Produces("application/json")]
-    [Route("edit")]
-    public class ADEditController : ControllerBase
+    public class ADEditController : ADControllerBase
     {
+        private IConnectionService Connections { get; }
         private IEditService EditService { get; }
+        private ISchemaService Schema { get; }
 
-        public ADEditController(IEditService editService)
-            : base()
+        public ADEditController(IIdentityService identityService, IConnectionService conService, IEditService editService,
+            ISchemaService schemaService)
+            : base(identityService)
         {
+            this.Connections = conService;
             this.EditService = editService;
+            this.Schema = schemaService;
         }
 
         /// <summary>
@@ -31,19 +36,40 @@ namespace AD.Api.Controllers
         /// <response code="202">The server successfully applied the modifications.</response>
         /// <response code="400">The JSON request body is malformed.</response>
         /// <response code="422">The encountered an error attempting to apply the modifications.</response>
-        [HttpPut]
+        [HttpPost]
+        [Route("edit")]
         [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(ISuccessResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(IErroredResult))]
-        public IActionResult PerformEdit([FromBody] EditOperationRequest request)
+        public IActionResult PerformEdit(
+            [FromBody] EditOperationRequest request,
+            [FromQuery] string? domain = null)
         {
+            request.Domain = domain;
             request.ClaimsPrincipal = this.HttpContext.User;
 
-            ISuccessResult editResult = this.EditService.Edit(request);
+            SafeAccessTokenHandle? token = ((WindowsIdentity?)this.HttpContext?.User?.Identity)?.AccessToken;
 
-            return editResult.Success
+            using (var connection = this.Connections.GetConnection(new ConnectionOptions()
+            {
+                Domain = domain,
+                DontDisposeHandle = true,
+                Principal = this.HttpContext?.User
+            }))
+            {
+                if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out List<string>? missing))
+                {
+                    this.Schema.LoadAttributes(missing, connection);
+                }
+
+                DirectoryEntry de = connection.GetDirectoryEntry(request.DistinguishedName);
+
+                ISuccessResult editResult = this.EditService.Edit(de, request.EditOperations, token);
+
+                return editResult.Success
                 ? Accepted(editResult)
                 : UnprocessableEntity(editResult);
+            }
         }
     }
 }

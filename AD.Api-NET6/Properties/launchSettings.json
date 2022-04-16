@@ -21,7 +21,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "https://localhost:7180;http://localhost:5180",
-      "dotnetRunMessages": true
+      "dotnetRunMessages": true,
+      "nativeDebugging": false
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -32,12 +33,11 @@
       }
     },
     "IIS": {
-        "commandName": "IIS",
-        "launchBrowser": false,
-        //"launchUrl": "swagger",
-        "environmentVariables": {
-            "ASPNETCORE_ENVIRONMENT": "Development"
-        }
+      "commandName": "IIS",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "nativeDebugging": false
     }
   }
 }

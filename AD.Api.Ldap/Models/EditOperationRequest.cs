@@ -28,7 +28,7 @@ namespace AD.Api.Ldap.Operations
         /// The domain that object resides in.
         /// </summary>
         [JsonIgnore]
-        public string Domain { get; set; } = string.Empty;
+        public string? Domain { get; set; } = string.Empty;
 
         /// <summary>
         /// All edit operations to perform on the object.

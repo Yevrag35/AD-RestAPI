@@ -15,7 +15,6 @@ namespace AD.Api.Controllers
     /// <summary>
     /// 
     /// </summary>
-    
     [ApiController]
     [Produces("application/json")]
     public class UserCreateController : ADCreateController
