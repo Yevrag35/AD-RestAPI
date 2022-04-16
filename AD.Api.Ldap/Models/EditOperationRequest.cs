@@ -6,12 +6,16 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Security.Claims;
 
 namespace AD.Api.Ldap.Operations
 {
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class EditOperationRequest
     {
+        [JsonIgnore]
+        public ClaimsPrincipal? ClaimsPrincipal { get; set; }
+
         /// <summary>
         /// The DistinguishedName of the object to edit.
         /// </summary>

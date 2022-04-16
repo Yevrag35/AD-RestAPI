@@ -28,7 +28,12 @@ namespace AD.Api.Services
         {
             host = string.Empty;
             ldapFilter = string.Empty;
-            using (var connection = this.Connections.GetConnection(options.Domain, options.SearchBase))
+            using (var connection = this.Connections.GetConnection(new ConnectionOptions
+            {
+                Domain = options.Domain,
+                SearchBase = options.SearchBase,
+                Principal = options.ClaimsPrincipal
+            }))
             {
                 host = connection.SearchBase.Host;
                 using (var searcher = connection.CreateSearcher())
@@ -54,7 +59,7 @@ namespace AD.Api.Services
             }
 
             List<FindResult> results;
-            if (!this.Identity.TryGetKerberosIdentity(options?.Principal, out WindowsIdentity? wid))
+            if (!this.Identity.TryGetKerberosIdentity(options?.ClaimsPrincipal, out WindowsIdentity? wid))
             {
                 (results, ldapFilter) = function();
             }

@@ -16,13 +16,11 @@ namespace AD.Api.Controllers
     public class ADEditController : ControllerBase
     {
         private IEditService EditService { get; }
-        private IIdentityService Identity { get; }
 
-        public ADEditController(IEditService editService, IIdentityService identityService)
+        public ADEditController(IEditService editService)
             : base()
         {
             this.EditService = editService;
-            this.Identity = identityService;
         }
 
         /// <summary>
@@ -39,13 +37,9 @@ namespace AD.Api.Controllers
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(IErroredResult))]
         public IActionResult PerformEdit([FromBody] EditOperationRequest request)
         {
-            ISuccessResult editResult;
-            if (this.Identity.TryGetKerberosIdentity(this.HttpContext.User, out WindowsIdentity? wid))
-            {
-                editResult = this.EditService.EditOnBehalfOf(request, wid);
-            }
-            else
-                editResult = this.EditService.Edit(request);
+            request.ClaimsPrincipal = this.HttpContext.User;
+
+            ISuccessResult editResult = this.EditService.Edit(request);
 
             return editResult.Success
                 ? Accepted(editResult)

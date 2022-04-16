@@ -10,7 +10,6 @@ namespace AD.Api.Services
     public interface IEditService
     {
         ISuccessResult Edit(EditOperationRequest request);
-        ISuccessResult EditOnBehalfOf(EditOperationRequest request, WindowsIdentity windowsIdentity);
     }
 
     public class LdapEditService : OperationServiceBase, IEditService
@@ -24,13 +23,6 @@ namespace AD.Api.Services
             this.Schema = schemaService;
         }
 
-        public ISuccessResult EditOnBehalfOf(EditOperationRequest request, WindowsIdentity windowsIdentity)
-        {
-            return WindowsIdentity.RunImpersonated(windowsIdentity.AccessToken, () =>
-            {
-                return this.Edit(request);
-            });
-        }
         public ISuccessResult Edit(EditOperationRequest request)
         {
             if (request.EditOperations.Count <= 0)
@@ -40,7 +32,11 @@ namespace AD.Api.Services
                     Success = false
                 };
 
-            using (var connection = this.Connections.GetConnection(request.Domain))
+            using (LdapConnection connection = this.Connections.GetConnection(new ConnectionOptions
+            {
+                Domain = request.Domain,
+                Principal = request.ClaimsPrincipal
+            }))
             {
                 if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out List<string>? missing))
                         this.Schema.LoadAttributes(missing, connection);

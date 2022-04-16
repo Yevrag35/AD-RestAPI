@@ -14,7 +14,7 @@ namespace AD.Api.Services
     public interface ICreateService
     {
         OperationResult Create(CreateOperationRequest request);
-        OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity);
+        //OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity);
     }
 
     public class LdapCreateService : OperationServiceBase, ICreateService
@@ -31,30 +31,31 @@ namespace AD.Api.Services
             this.Schema = schemaService;
         }
 
+        //public OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity)
+        //{
+        //    return WindowsIdentity.RunImpersonated(windowsIdentity.AccessToken, () =>
+        //    {
+        //        return this.CreateInContext(request);
+        //    });
+        //}
+
         public OperationResult Create(CreateOperationRequest request)
         {
-            return this.CreateInContext(request);
-        }
-        public OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity)
-        {
-            return WindowsIdentity.RunImpersonated(windowsIdentity.AccessToken, () =>
+            using var connection = this.Connections.GetConnection(new ConnectionOptions
             {
-                return this.CreateInContext(request);
+                Domain = request.Domain,
+                Principal = request.ClaimsPrincipal
             });
-        }
-
-        private OperationResult CreateInContext(CreateOperationRequest request)
-        {
-            using var connection = this.Connections.GetConnection(request.Domain);
             using var pathEntry = GetDirectoryEntryFromRequest(connection, request);
 
-            CommonName cn = request.CommonName;
+            //CommonName cn = request.CommonName;
 
             DirectoryEntry createdEntry;
             OperationResult result;
             try
             {
-                createdEntry = pathEntry.Children.Add(cn.Value, request.Type.ToString().ToLower());
+                //createdEntry = pathEntry.Children.Add(cn.Value, request.Type.ToString().ToLower());
+                createdEntry = connection.AddChildEntry(request.CommonName, pathEntry, request.Type);
                 result = CommitChanges(createdEntry, true);
             }
             catch (Exception e)
@@ -73,14 +74,17 @@ namespace AD.Api.Services
                     Success = false
                 };
             }
-            
-            if (request is UserCreateOperationRequest userRequest && 
-                !this.TrySetPassword(userRequest, result, createdEntry, out OperationResult? passwordResult) 
+
+            bool hasSetPass = false;
+            if (request is UserCreateOperationRequest userRequest &&
+                !this.TrySetPassword(userRequest, result, createdEntry, out OperationResult? passwordResult)
                 && passwordResult is not null)
             {
                 createdEntry.Dispose();
                 return passwordResult;
             }
+            else
+                hasSetPass = true;
 
             if (result.Success)
             {
@@ -116,6 +120,22 @@ namespace AD.Api.Services
 
                             default:
                             {
+                                if (schemaProperty.Name.Equals(nameof(UserAccountControl), StringComparison.CurrentCultureIgnoreCase)
+                                    &&
+                                    hasSetPass
+                                    &&
+                                    request is UserCreateOperationRequest userReq
+                                    &&
+                                    userReq.UserAccountControl.HasValue
+                                    &&
+                                    userReq.UserAccountControl.Value.HasFlag(UserAccountControl.PasswordNotRequired))
+                                {
+                                    UserAccountControl uac = userReq.UserAccountControl.Value;
+                                    uac &= ~UserAccountControl.PasswordNotRequired;
+                                    collection.Value = (int)uac;
+                                    break;
+                                }
+
                                 Action<PropertyValueCollection, object> action = GetSingleValueAction(schemaProperty);
 
                                 object? obj = kvp.Value.ToObject<object>();

@@ -1,9 +1,12 @@
 using AD.Api.Ldap.Connection;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -53,6 +56,13 @@ namespace AD.Api.Ldap
             return this;
         }
 
+        public LdapConnectionBuilder UsingIdentity(SafeAccessTokenHandle? token, bool dontDisposeToken = true)
+        {
+            _options.Token = token;
+            _options.DontDisposeToken = dontDisposeToken;
+            return this;
+        }
+
         public LdapConnectionBuilder UsingSearchBase(string? searchBase)
         {
             _options.DistinguishedName = searchBase;
@@ -78,9 +88,11 @@ namespace AD.Api.Ldap
             public AuthenticationTypes? AuthenticationTypes { get; internal set; }
             public NetworkCredential? Credential { get; internal set; }
             public string? DistinguishedName { get; internal set; }
+            public bool DontDisposeToken { get; internal set; } = true;
             public bool IsForest { get; internal set; }
             public string? Host { get; internal set; }
             public Protocol Protocol { get; internal set; }
+            public SafeAccessTokenHandle? Token { get; internal set; }
             public bool UseSchemaCache
             {
                 get => _useSchemaCache && this.IsForest;

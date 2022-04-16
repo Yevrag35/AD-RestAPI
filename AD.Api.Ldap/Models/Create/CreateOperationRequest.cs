@@ -9,12 +9,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Security.Claims;
 
 namespace AD.Api.Ldap.Models
 {
     [JsonObject(MemberSerialization = MemberSerialization.OptOut)]
     public class CreateOperationRequest
     {
+        [JsonIgnore]
+        public ClaimsPrincipal? ClaimsPrincipal { get; set; }
+
         /// <summary>
         /// The domain to create the account in.  Must be registered with the API.
         /// </summary>

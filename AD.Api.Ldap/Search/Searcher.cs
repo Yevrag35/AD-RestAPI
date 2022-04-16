@@ -42,51 +42,51 @@ namespace AD.Api.Ldap.Search
             GC.SuppressFinalize(this);
         }
 
-        public FindResult? FindOne()
-        {
-            _builder.Clear();
-            _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
-            SearchResult? result = _searcher.FindOne();
-            return result is not null
-                ? Mapper.MapFromSearchResult<FindResult>(result)
-                : null;
-        }
-        public FindResult? FindOne(ISearchOptions oneOffOptions)
-        {
-            _builder.Clear();
-            _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
+        //public FindResult? FindOne()
+        //{
+        //    _builder.Clear();
+        //    _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
+        //    SearchResult? result = _searcher.FindOne();
+        //    return result is not null
+        //        ? Mapper.MapFromSearchResult<FindResult>(result)
+        //        : null;
+        //}
+        //public FindResult? FindOne(ISearchOptions oneOffOptions)
+        //{
+        //    _builder.Clear();
+        //    _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
 
-            using (DirectorySearcher oneOffSearcher = new(_searcher.SearchRoot))
-            {
-                SearchResult? result = 
-                    SetSearcher(oneOffOptions, new StringBuilder(_builder.Capacity), oneOffSearcher)
-                    .FindOne();
+        //    using (DirectorySearcher oneOffSearcher = new(_searcher.SearchRoot))
+        //    {
+        //        SearchResult? result = 
+        //            SetSearcher(oneOffOptions, new StringBuilder(_builder.Capacity), oneOffSearcher)
+        //            .FindOne();
 
-                return result is not null 
-                    ? Mapper.MapFromSearchResult<FindResult>(result)
-                    : null;
-            }
-        }
+        //        return result is not null 
+        //            ? Mapper.MapFromSearchResult<FindResult>(result)
+        //            : null;
+        //    }
+        //}
 
-        public List<FindResult> FindAll()
-        {
-            _builder.Clear();
-            _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
+        //public List<FindResult> FindAll()
+        //{
+        //    _builder.Clear();
+        //    _searcher.Filter = this.Filter?.WriteTo(_builder).ToString();
 
-            var list = new List<FindResult>();
+        //    var list = new List<FindResult>();
 
-            using (SearchResultCollection resultCol = _searcher.FindAll())
-            {
-                foreach (SearchResult item in resultCol)
-                {
-                    list.Add(Mapper.MapFromSearchResult<FindResult>(item));
-                }
-            }
+        //    using (SearchResultCollection resultCol = _searcher.FindAll())
+        //    {
+        //        foreach (SearchResult item in resultCol)
+        //        {
+        //            list.Add(Mapper.MapFromSearchResult<FindResult>(item));
+        //        }
+        //    }
 
-            list.TrimExcess();
+        //    list.TrimExcess();
 
-            return list;
-        }
+        //    return list;
+        //}
         public List<FindResult> FindAll(ISearchOptions oneOffOptions, out string ldapFilter)
         {
             ldapFilter = string.Empty;
@@ -133,19 +133,19 @@ namespace AD.Api.Ldap.Search
             return searcher;
         }
 
-        private static DirectorySearcher SetFilter(DirectorySearcher searcher, StringBuilder builder, IFilterStatement? setFilter, IFilterStatement? oneOffFilter = null)
-        {
-            _ = builder.Clear();
+        //private static DirectorySearcher SetFilter(DirectorySearcher searcher, StringBuilder builder, IFilterStatement? setFilter, IFilterStatement? oneOffFilter = null)
+        //{
+        //    _ = builder.Clear();
 
-            if (oneOffFilter is not null)
-                _ = oneOffFilter.WriteTo(builder);
+        //    if (oneOffFilter is not null)
+        //        _ = oneOffFilter.WriteTo(builder);
 
-            else if (setFilter is not null)
-                _ = setFilter.WriteTo(builder);
+        //    else if (setFilter is not null)
+        //        _ = setFilter.WriteTo(builder);
 
-            searcher.Filter = builder.ToString();
+        //    searcher.Filter = builder.ToString();
 
-            return searcher;
-        }
+        //    return searcher;
+        //}
     }
 }

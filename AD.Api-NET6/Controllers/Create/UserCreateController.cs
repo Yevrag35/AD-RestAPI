@@ -35,6 +35,7 @@ namespace AD.Api.Controllers
         /// Creates a user account.
         /// </summary>
         /// <param name="request">A user request post body including all of the attributes and necessary information.</param>
+        /// <param name="domain">The domain to create the user account in.</param>
         /// <returns>A response indicating the result of the operation.</returns>
         /// <example>
         /// POST /create/user
@@ -61,11 +62,21 @@ namespace AD.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ISuccessResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(IErroredResult))]
-        public IActionResult CreateUser([FromBody] UserCreateOperationRequest request)
+        public IActionResult CreateUser(
+            [FromBody] UserCreateOperationRequest request,
+            [FromQuery] string? domain = null
+        )
         {
+            request.Domain = domain;
+            request.ClaimsPrincipal = this.HttpContext.User;
             RemoveProperties(request, "objectClass", "objectCategory");
 
-            using (var connection = this.Connections.GetConnection(request.Domain))
+            using (var connection = this.Connections.GetConnection(new ConnectionOptions
+            {
+                Domain = request.Domain,
+                DontDisposeHandle = true,
+                Principal = request.ClaimsPrincipal
+            }))
             {
                 if (!this.Schema.HasAllAttributesCached(request.Properties.Keys, out List<string>? missing))
                 {
@@ -73,9 +84,7 @@ namespace AD.Api.Controllers
                 }
             }
 
-            OperationResult createResult = this.Identity.TryGetKerberosIdentity(this.HttpContext.User, out WindowsIdentity? wid)
-                ? this.CreateService.CreateOnBehalfOf(request, wid)
-                : this.CreateService.Create(request);
+            OperationResult createResult = this.CreateService.Create(request);
 
             return createResult.Success
                 ? StatusCode((int)HttpStatusCode.Created, createResult)

@@ -84,7 +84,7 @@ namespace AD.Api.Controllers.Search
                 SearchScope = scope,
                 SortDirection = sortDir,
                 SortProperty = sortBy,
-                Principal = this.HttpContext.User,
+                ClaimsPrincipal = this.HttpContext.User,
                 PropertiesToLoad = GetProperties(
                     this.GroupSettings,
                     properties),
