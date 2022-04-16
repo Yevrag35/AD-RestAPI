@@ -9,22 +9,32 @@
         "azureAD": {
             "type": "object",
             "description": "The object that contains the AzureAD authentication app registration information.",
+            "required": [
+                "Instance",
+                "TenantId",
+                "ClientId"
+            ],
             "properties": {
                 "Instance": {
                     "type": "string",
-                    "format": "uri"
+                    "description": "The AzureAD authority.",
+                    "format": "uri",
+                    "default": "https://login.microsoftonline.com/"
                 },
                 "Audience": {
                     "type": "string"
                 },
                 "Domain": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "OPTIONAL - The AzureAD 'onmicrosoft.com' name of the tenant."
                 },
                 "TenantId": {
-                    "type": "string"
+                    "$ref": "#/definitions/guidString",
+                    "description": "The global unique identifier of the tenant."
                 },
                 "ClientId": {
-                    "type": "string"
+                    "$ref": "#/definitions/guidString",
+                    "description": "The application ID (clientID) of the AzureAD app registration."
                 },
                 "CallbackPath": {
                     "type": "string"
@@ -36,12 +46,16 @@
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "default": [
+                        "cp1"
+                    ]
                 }
             }
         },
         "groupSettingsCategory": {
             "type": "object",
+            "description": "The default settings when a group query is sent.",
             "required": [
                 "Size",
                 "Properties"
@@ -49,15 +63,18 @@
             "properties": {
                 "IncludeMembers": {
                     "type": "boolean",
+                    "description": "Indicates whether group membership should ALWAYS be retrieved on group queries without having to specify.",
                     "default": false
                 },
                 "Size": {
                     "type": "integer",
+                    "description": "The default number of results the API will not exceed.",
                     "minimum": 0,
                     "default": 0
                 },
                 "Properties": {
                     "type": "array",
+                    "description": "A list of properties that are pulled by default for this type of query.",
                     "items": {
                         "type": "string"
                     },
@@ -78,11 +95,13 @@
             "properties": {
                 "Size": {
                     "type": "integer",
+                    "description": "The default number of results the API will not exceed.",
                     "minimum": 0,
                     "default": 0
                 },
                 "Properties": {
                     "type": "array",
+                    "description": "A list of properties that are pulled by default for this type of query.",
                     "items": {
                         "type": "string"
                     },
@@ -96,9 +115,11 @@
         },
         "settings": {
             "type": "object",
+            "description": "Various default settings for the API.",
             "properties": {
                 "SearchDefaults": {
                     "type": "object",
+                    "description": "Default settings used when for querying.",
                     "required": [
                         "Computer",
                         "Generic",
@@ -107,46 +128,223 @@
                     ],
                     "properties": {
                         "Computer": {
+                            "description": "The default settings when a computer query is sent.",
                             "$ref": "#/definitions/settingsCategory"
                         },
                         "Generic": {
+                            "description": "The default settings when a generic query is sent.",
                             "$ref": "#/definitions/settingsCategory"
                         },
                         "Group": {
                             "$ref": "#/definitions/groupSettingsCategory"
                         },
                         "User": {
+                            "description": "The default settings when a user query is sent.",
                             "$ref": "#/definitions/settingsCategory"
                         }
                     }
+                },
+                "Text": {
+                    "$ref": "#/definitions/textSettings"
                 }
             }
         },
 
         "domainEntry": {
             "type": "object",
+            "description": "Represents a registered domain that the API is allowed to query.",
+            "default": {
+                "domain.com": {
+                    "IsDefault": true,
+                    "IsForest": true,
+                    "DistinguishedName": "DC=domain,DC=com",
+                    "UseSchemaCache": true
+                }
+            },
+            "required": [
+                "IsDefault",
+                "DistinguishedName",
+                "UseSchemaCache"
+            ],
             "properties": {
                 "IsDefault": {
                     "type": "boolean",
+                    "description": "Indicates this domain is the default if no domain is specified in an API request.\nIf more than one domain has this flag, the first (alphabetically) will be selected .",
                     "default": false
+                },
+                "IsForestRoot": {
+                    "type": "boolean",
+                    "description": "Indicates this domain is a forest root domain.  This flags the domain for retrieving schema information from.",
+                    "default": true
                 },
                 "DistinguishedName": {
                     "type": "string",
+                    "description": "The distinguished name of the domain's defaultNamingContext.",
                     "pattern": "^DC\\=\\w+\\,DC\\=.+$",
-                    "minLength": 8
+                    "minLength": 8,
+                    "default": "DC=domain,DC=com"
                 },
                 "StaticDomainController": {
-                    "type": "string"
+                    "description": "OPTIONAL - A static domain controller that all queries for this domain must be sent to.",
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "UseGlobalCatalog": {
                     "type": "boolean",
+                    "description": "Indicates this domain should always establish a Global Catalog connection.",
                     "default": false
+                },
+                "UseSchemaCache": {
+                    "type": "boolean",
+                    "description": "*Future Use*",
+                    "default": true
                 },
                 "UseSSL": {
                     "type": "boolean",
+                    "description": "Indicates this domain should always establish connections using LDAP over SSL.\nRequires domain controllers to have SSL certificates.",
                     "default": false
                 }
             }
+        },
+
+		"textSettings": {
+			"type": "object",
+			"properties": {
+                "Encoding": {
+                    "type": "string",
+                    "description": "The encoding used for reading request content.",
+                    "default": "utf-8",
+                    "enum": [
+                        "ASMO-708",
+                        "big5",
+                        "cp1025",
+                        "cp866",
+                        "cp875",
+                        "DOS-720",
+                        "DOS-862",
+                        "EUC-JP",
+                        "gb2312",
+                        "IBM-Thai",
+                        "IBM00858",
+                        "IBM00924",
+                        "IBM01047",
+                        "IBM01140",
+                        "IBM01141",
+                        "IBM01142",
+                        "IBM01143",
+                        "IBM01144",
+                        "IBM01145",
+                        "IBM01146",
+                        "IBM01147",
+                        "IBM01148",
+                        "IBM01149",
+                        "IBM037",
+                        "IBM1026",
+                        "IBM273",
+                        "IBM277",
+                        "IBM278",
+                        "IBM280",
+                        "IBM284",
+                        "IBM285",
+                        "IBM290",
+                        "IBM297",
+                        "IBM420",
+                        "IBM423",
+                        "IBM424",
+                        "IBM437",
+                        "IBM500",
+                        "ibm737",
+                        "ibm775",
+                        "ibm850",
+                        "ibm852",
+                        "IBM855",
+                        "ibm857",
+                        "IBM860",
+                        "ibm861",
+                        "IBM863",
+                        "IBM864",
+                        "IBM865",
+                        "ibm869",
+                        "IBM870",
+                        "IBM871",
+                        "IBM880",
+                        "IBM905",
+                        "iso-8859-1",
+                        "iso-8859-13",
+                        "iso-8859-15",
+                        "iso-8859-2",
+                        "iso-8859-3",
+                        "iso-8859-4",
+                        "iso-8859-5",
+                        "iso-8859-6",
+                        "iso-8859-7",
+                        "iso-8859-8",
+                        "iso-8859-9",
+                        "Johab",
+                        "koi8-r",
+                        "koi8-u",
+                        "ks_c_5601-1987",
+                        "macintosh",
+                        "shift_jis",
+                        "us-ascii",
+                        "utf-16",
+                        "utf-16BE",
+                        "utf-32",
+                        "utf-32BE",
+                        "utf-8",
+                        "windows-1250",
+                        "windows-1251",
+                        "windows-1252",
+                        "windows-1253",
+                        "windows-1254",
+                        "windows-1255",
+                        "windows-1256",
+                        "windows-1257",
+                        "windows-1258",
+                        "windows-874",
+                        "x-Chinese-CNS",
+                        "x-Chinese-Eten",
+                        "x-cp20001",
+                        "x-cp20003",
+                        "x-cp20004",
+                        "x-cp20005",
+                        "x-cp20261",
+                        "x-cp20269",
+                        "x-cp20936",
+                        "x-cp20949",
+                        "x-ebcdic-koreanextended",
+                        "x-Europa",
+                        "x-IA5",
+                        "x-IA5-German",
+                        "x-IA5-Norwegian",
+                        "x-IA5-Swedish",
+                        "x-mac-arabic",
+                        "x-mac-ce",
+                        "x-mac-chinesetrad",
+                        "x-mac-croatian",
+                        "x-mac-cyrillic",
+                        "x-mac-greek",
+                        "x-mac-hebrew",
+                        "x-mac-icelandic",
+                        "x-mac-japanese",
+                        "x-mac-romanian",
+                        "x-mac-thai",
+                        "x-mac-turkish",
+                        "x-mac-ukrainian"
+                    ]
+                }
+            }
+		},
+
+        "guidString": {
+            "type": "string",
+            "pattern": "^[{]?[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$"
         },
 
         "webOptimizer": {
