@@ -6,6 +6,10 @@ namespace AD.Api.Services
 {
     public interface IResultService
     {
+        IErroredResult GetError(string? message);
+        IErroredResult GetError(string? message, OperationType operationType, string? property = null);
+        IErroredResult GetError(Exception exception, string? property = null);
+        IErroredResult GetError(string? message, OperationType operationType, Exception? exception, string? property = null);
         object GetQueryReply<T>(List<T> results, int limitedTo, IList<string>? propertiesRequested, string host, string? ldapFilter);
         ISuccessResult GetSuccess();
     }

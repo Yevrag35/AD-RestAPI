@@ -120,14 +120,23 @@
   <data name="CN_Prefix" xml:space="preserve">
     <value>CN=</value>
   </data>
+  <data name="CriticalSystemObject" xml:space="preserve">
+    <value>isCriticalSystemObject</value>
+  </data>
   <data name="DefaultNamingContext" xml:space="preserve">
     <value>defaultNamingContext</value>
+  </data>
+  <data name="DistinguishedName" xml:space="preserve">
+    <value>distinguishedname</value>
   </data>
   <data name="Invoke_PasswordSet" xml:space="preserve">
     <value>SetPassword</value>
   </data>
   <data name="LDAP_Format_WKO" xml:space="preserve">
     <value>&lt;WKGUID=</value>
+  </data>
+  <data name="NTAccount_Everyone" xml:space="preserve">
+    <value>Everyone</value>
   </data>
   <data name="Schema_Computer" xml:space="preserve">
     <value>computer</value>

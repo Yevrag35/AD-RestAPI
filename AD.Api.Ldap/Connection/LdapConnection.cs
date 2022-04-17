@@ -13,6 +13,7 @@ using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Net;
+using System.Security.AccessControl;
 using System.Security.Principal;
 
 namespace AD.Api.Ldap
@@ -62,10 +63,6 @@ namespace AD.Api.Ldap
         }
 
         #region GET DIRECTORY ENTRIES
-        public DirectoryEntry TestGet(string dn, SafeAccessTokenHandle token)
-        {
-            return WindowsIdentity.RunImpersonated(token, () => new DirectoryEntry($"LDAP://{dn}"));
-        }
 
         /// <summary>
         /// Constructs a <see cref="DirectoryEntry"/> from the specified DistinguishedName (dn).
@@ -155,6 +152,7 @@ namespace AD.Api.Ldap
             });
         }
 
+        [Obsolete("Not needed")]
         public OperationResult CommitChanges(DirectoryEntry directoryEntry, bool andRefresh = false)
         {
             return ExecuteInContext(_accessToken, () =>
@@ -205,6 +203,7 @@ namespace AD.Api.Ldap
             });
         }
 
+        [Obsolete("Not needed")]
         public bool DoEditOperation(ILdapOperation operation, PropertyValueCollection collection, SchemaProperty schemaProperty)
         {
             return ExecuteInContext(_accessToken, () => operation.Perform(collection, schemaProperty));
@@ -291,6 +290,61 @@ namespace AD.Api.Ldap
             }
         }
 
+        public T? GetProperty<T>(DirectoryEntry directoryEntry, string? propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+                throw new ArgumentNullException(nameof(propertyName));
+
+            return ExecuteInContext(_accessToken, () =>
+            {
+                if (!directoryEntry.Properties.TryGetFirstValue(propertyName, out T? value))
+                    value = default;
+
+                return value;
+            });
+        }
+
+        public bool IsCriticalSystemObject(DirectoryEntry directoryEntry)
+        {
+            return ExecuteInContext(_accessToken, () =>
+            {
+                return directoryEntry.Properties.Contains(Strings.CriticalSystemObject)
+                       &&
+                       directoryEntry.Properties[Strings.CriticalSystemObject].Value is bool trueOrFalse
+                       &&
+                       trueOrFalse;
+            });
+        }
+
+        public bool IsProtectedObject(DirectoryEntry directoryEntry)
+        {
+            return ExecuteInContext(_accessToken, () =>
+            {
+                var ruleCollection = directoryEntry.ObjectSecurity.GetAccessRules(true, true, typeof(NTAccount));
+                NTAccount everyone = new(Strings.NTAccount_Everyone);
+                return ruleCollection.Cast<ActiveDirectoryAccessRule>()
+                    .Any(rule =>
+                        rule.AccessControlType == AccessControlType.Deny
+                        &&
+                        rule.IdentityReference.Equals(everyone)
+                        &&
+                        (
+                            rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.Delete)
+                            ||
+                            rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.DeleteTree)
+                        )
+                    );
+            });
+        }
+
+        public void MoveObject(DirectoryEntry entryToMove, DirectoryEntry destination)
+        {
+            ExecuteInContext(_accessToken, () =>
+            {
+                entryToMove.MoveTo(destination);
+            });
+        }
+
         private static DirectoryEntry CreateEntry(PathValue path, NetworkCredential? creds, AuthenticationTypes? authenticationTypes, SafeAccessTokenHandle? token)
         {
             Func<DirectoryEntry> createFunc;
@@ -308,6 +362,14 @@ namespace AD.Api.Ldap
             return ExecuteInContext(token, createFunc);
         }
 
+        private static void ExecuteInContext(SafeAccessTokenHandle? token, Action action)
+        {
+            if (token is not null)
+                WindowsIdentity.RunImpersonated(token, action);
+
+            else
+                action();
+        }
         private static T ExecuteInContext<T>(SafeAccessTokenHandle? token, Func<T> function)
         {
             return token is not null

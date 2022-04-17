@@ -70,11 +70,29 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to isCriticalSystemObject.
+        /// </summary>
+        public static string CriticalSystemObject {
+            get {
+                return ResourceManager.GetString("CriticalSystemObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to defaultNamingContext.
         /// </summary>
         public static string DefaultNamingContext {
             get {
                 return ResourceManager.GetString("DefaultNamingContext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to distinguishedname.
+        /// </summary>
+        public static string DistinguishedName {
+            get {
+                return ResourceManager.GetString("DistinguishedName", resourceCulture);
             }
         }
         
@@ -93,6 +111,15 @@ namespace AD.Api {
         public static string LDAP_Format_WKO {
             get {
                 return ResourceManager.GetString("LDAP_Format_WKO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Everyone.
+        /// </summary>
+        public static string NTAccount_Everyone {
+            get {
+                return ResourceManager.GetString("NTAccount_Everyone", resourceCulture);
             }
         }
         

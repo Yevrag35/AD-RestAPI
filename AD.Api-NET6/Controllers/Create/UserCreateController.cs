@@ -58,7 +58,7 @@ namespace AD.Api.Controllers
         /// <response code="422">The LDAP operation failed to commit the changes from the request.  The response will have more error details.</response>
         [HttpPost]
         [Route("create/user")]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ICreateResult))]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IDNResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(IErroredResult))]
         public IActionResult CreateUser(
