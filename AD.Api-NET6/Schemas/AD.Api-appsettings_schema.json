@@ -1957,7 +1957,7 @@
         "Domains": {
             "type": "object",
             "patternProperties": {
-                ".+": {
+                ".+\\..+": {
                     "$ref": "#/definitions/domainEntry"
                 }
             }

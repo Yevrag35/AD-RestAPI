@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "iisSettings": {
-    "windowsAuthentication": true,
-    "anonymousAuthentication": false,
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
     "iis": {
       "applicationUrl": "https://localhost:41812",
       "sslPort": 0

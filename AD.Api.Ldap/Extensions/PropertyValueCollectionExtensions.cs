@@ -23,6 +23,12 @@ namespace AD.Api.Extensions
             return propertyValueCollection is not null;
         }
 
+        public static T? GetFirstValue<T>(this PropertyCollection? propCol, string? propertyName)
+        {
+            _ = TryGetFirstValue(propCol, propertyName, out T? outVal);
+            return outVal;
+        }
+
         public static bool TryGetFirstValue<T>(this PropertyCollection? propCol, string? propertyName,
             [NotNullWhen(true)] out T? value)
         {

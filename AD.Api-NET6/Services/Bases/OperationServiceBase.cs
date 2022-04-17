@@ -52,7 +52,5 @@ namespace AD.Api.Services
                 };
             }
         }
-
-        
     }
 }

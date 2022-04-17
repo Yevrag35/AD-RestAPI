@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Attributes
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public class LdapExtensionDataAttribute : Attribute
     {
         public bool IncludeComObjects { get; }

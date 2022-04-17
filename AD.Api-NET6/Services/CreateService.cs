@@ -55,9 +55,9 @@ namespace AD.Api.Services
             OperationResult result;
             try
             {
-                //createdEntry = pathEntry.Children.Add(cn.Value, request.Type.ToString().ToLower());
                 createdEntry = connection.AddChildEntry(request.CommonName, pathEntry, request.Type);
                 result = CommitChanges(createdEntry, true);
+                result.DistinguishedName = createdEntry.Properties.GetFirstValue<string>(nameof(result.DistinguishedName));
             }
             catch (Exception e)
             {
@@ -87,7 +87,7 @@ namespace AD.Api.Services
             else
                 hasSetPass = true;
 
-            if (result.Success)
+            if (result.Success && request.Properties.Count > 0)
             {
                 foreach (var kvp in request.Properties.Where(x => x.Value is not null))
                 {
@@ -151,6 +151,7 @@ namespace AD.Api.Services
                 }
 
                 result = CommitChanges(createdEntry);
+                result.DistinguishedName = createdEntry.Properties.GetFirstValue<string>(nameof(result.DistinguishedName));
             }
 
             createdEntry.Dispose();

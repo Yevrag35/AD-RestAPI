@@ -15,6 +15,12 @@ namespace AD.Api.Ldap
         bool Success { get; }
     }
 
+    public interface ICreateResult : ISuccessResult
+    { 
+        [JsonProperty("dn")]
+        string DistinguishedName { get; }
+    }
+
     public interface IErroredResult : ISuccessResult
     {
         [JsonProperty("error", Order = 3)]
@@ -23,8 +29,13 @@ namespace AD.Api.Ldap
 
     [JsonObject(MemberSerialization = MemberSerialization.OptIn, MissingMemberHandling = MissingMemberHandling.Ignore,
         ItemNullValueHandling = NullValueHandling.Ignore)]
-    public class OperationResult : ISuccessResult, IErroredResult
+    public class OperationResult : ISuccessResult, ICreateResult, IErroredResult
     {
+        [JsonProperty("dn")]
+        public string? DistinguishedName { get; set; }
+
+        string ICreateResult.DistinguishedName => this.DistinguishedName ?? string.Empty;
+
         [JsonProperty("message", Order = 2)]
         public string? Message { get; set; }
 

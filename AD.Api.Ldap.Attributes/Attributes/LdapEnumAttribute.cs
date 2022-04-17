@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace AD.Api.Ldap.Attributes
 {
-    [AttributeUsage(AttributeTargets.Enum)]
+    [AttributeUsage(AttributeTargets.Enum, AllowMultiple = false)]
     public sealed class LdapEnumAttribute : Attribute
     {
         public string? Name { get; }
