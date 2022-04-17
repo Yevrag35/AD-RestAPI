@@ -79,6 +79,15 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string DefaultHostIfEmpty {
+            get {
+                return ResourceManager.GetString("DefaultHostIfEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to defaultNamingContext.
         /// </summary>
         public static string DefaultNamingContext {

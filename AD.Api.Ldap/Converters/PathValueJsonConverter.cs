@@ -10,6 +10,10 @@ namespace AD.Api.Ldap.Converters
 {
     public class PathValueJsonConverter : JsonConverter<PathValue>
     {
+        public PathValueJsonConverter()
+        {
+        }
+
         public override PathValue? ReadJson(JsonReader reader, Type objectType, PathValue? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             string? path = null;

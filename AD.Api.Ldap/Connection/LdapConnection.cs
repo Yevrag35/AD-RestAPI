@@ -210,7 +210,8 @@ namespace AD.Api.Ldap
         }
 
         #region CREATE SEARCHERS
-        public Searcher CreateSearcher(PathValue searchBase, IFilterStatement? filter = null)
+        [Obsolete]
+        public ILdapSearcher CreateSearcher(PathValue searchBase, IFilterStatement? filter = null)
         {
             return new Searcher(this.GetDirectoryEntry(searchBase))
             {
@@ -218,7 +219,7 @@ namespace AD.Api.Ldap
             };
         }
 
-        public Searcher CreateSearcher(ISearchOptions? options = null)
+        public ILdapSearcher CreateSearcher(ISearchOptions? options = null)
         {
             return new Searcher(this, options);
         }

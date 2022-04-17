@@ -8,14 +8,6 @@ namespace AD.Api.Ldap.Mapping
 {
     public static partial class Mapper
     {
-        //public static T? MapFromLiveObject<T>([NotNullIfNotNull("objToMap")] T? objToMap) where T : LiveLdapObject
-        //{
-        //    if (objToMap is null)
-        //        return default;
-
-        //    return Reflect(objToMap, objToMap.DirEntry.Properties);
-        //}
-
         public static T MapFromDirectoryEntry<T>(DirectoryEntry directoryEntry) where T : new()
         {
             return MapFromDirectoryEntry(new T(), directoryEntry);

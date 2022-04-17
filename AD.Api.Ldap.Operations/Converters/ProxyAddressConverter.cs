@@ -8,6 +8,10 @@ namespace AD.Api.Ldap.Converters
 {
     public class ProxyAddressConverter : JsonConverter<ProxyAddressCollection>
     {
+        public ProxyAddressConverter()
+        {
+        }
+
         public override bool CanRead => false;
         public override ProxyAddressCollection? ReadJson(JsonReader reader, Type objectType, ProxyAddressCollection? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {

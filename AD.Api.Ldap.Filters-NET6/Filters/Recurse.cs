@@ -21,6 +21,7 @@ namespace AD.Api.Ldap.Filters
     {
         private const string TRANSITIVE_EVAL = "{0}:1.2.840.113556.1.4.1941:";
 
+        public sealed override int Length => base.Length + this.Value.Length;
         public sealed override string Property { get; }
         public sealed override Type? PropertyType => typeof(string);
         public sealed override string RawProperty { get; }

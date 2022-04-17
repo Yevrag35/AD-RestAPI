@@ -16,7 +16,9 @@ namespace AD.Api.Ldap.Filters
 #endif
     {
         private const string BITWISE_OR = "{0}:1.2.840.113556.1.4.804:";
+        private readonly string _valueAsString;
 
+        public sealed override int Length => base.Length + _valueAsString.Length;
         public sealed override string Property { get; }
         [NotNull]
         public sealed override Type? PropertyType => typeof(long);
@@ -37,6 +39,7 @@ namespace AD.Api.Ldap.Filters
             this.RawProperty = propertyName;
             this.Property = string.Format(BITWISE_OR, propertyName);
             this.Value = flagValues;
+            _valueAsString = Convert.ToString(flagValues);
         }
         /// <summary>
         /// /// Initializes a new instance of <see cref="BitwiseOr"/> with the specified property and <see cref="Enum"/> value.
@@ -49,7 +52,7 @@ namespace AD.Api.Ldap.Filters
         }
 
         protected sealed override object? GetRawValue() => this.Value;
-        protected internal sealed override string? GetValue() => Convert.ToString(this.Value);
+        protected internal sealed override string? GetValue() => _valueAsString;
 
         protected sealed override EqualityStatement ToAny()
         {

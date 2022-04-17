@@ -29,6 +29,8 @@ namespace AD.Api.Ldap.Filters
         /// </summary>
         public int Count => this.Clauses.Count;
 
+        public override int Length => this.Clauses.Sum(x => x.Length);
+
         /// <summary>
         /// Initializes an instance of <see cref="FilterContainer"/> with the default initial capacity.
         /// </summary>

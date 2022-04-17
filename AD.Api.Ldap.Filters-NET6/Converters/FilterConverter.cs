@@ -22,7 +22,7 @@ namespace AD.Api.Ldap.Converters
         ///     <see cref="CamelCaseNamingStrategy"/> will be used.
         /// </remarks>
         /// <param name="namingStrategy">The optional naming strategy.</param>
-        public FilterConverter(NamingStrategy? namingStrategy = null)
+        public FilterConverter(NamingStrategy? namingStrategy)
         {
             if (namingStrategy is null)
                 namingStrategy = new CamelCaseNamingStrategy();

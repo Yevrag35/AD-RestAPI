@@ -12,7 +12,8 @@ namespace AD.Api.Services
     {
         //[Obsolete($"Use the overload with {nameof(ConnectionOptions)}.")]
         //LdapConnection GetDefaultConnection(string? searchBase = null);
-        LdapConnection GetConnection(ConnectionOptions options);
+        LdapConnection GetConnection(Action<ConnectionOptions> configureOptions);
+        LdapConnection GetConnection(IConnectionOptions options);
         //[Obsolete($"Use the overload with {nameof(ConnectionOptions)}.")]
         //LdapConnection GetConnection(string? domain = null);
         //[Obsolete($"Use the overload with {nameof(ConnectionOptions)}.")]
@@ -40,7 +41,15 @@ namespace AD.Api.Services
         //    return GetConnection(defDom, searchBase);
         //}
 
-        public LdapConnection GetConnection(ConnectionOptions options)
+        public LdapConnection GetConnection(Action<ConnectionOptions> configureOptions)
+        {
+            var options = new ConnectionOptions();
+            configureOptions(options);
+
+            return this.GetConnection(options);
+        }
+
+        public LdapConnection GetConnection(IConnectionOptions options)
         {
             SafeAccessTokenHandle? token = null;
             if (this.Identity.TryGetKerberosIdentity(options.Principal, out WindowsIdentity? identity))
@@ -52,7 +61,7 @@ namespace AD.Api.Services
                                         && 
                                         this.Domains.TryGetValue(options.Domain, out SearchDomain? thisDomain)
                 ? thisDomain
-                : this.Domains.GetDefaultDomain() 
+                : this.Domains.GetDefaultDomain()
                     ?? throw new ArgumentException("Domain is not specified and there is no default defined.");
 
             string host = !string.IsNullOrWhiteSpace(searchDomain.StaticDomainController)

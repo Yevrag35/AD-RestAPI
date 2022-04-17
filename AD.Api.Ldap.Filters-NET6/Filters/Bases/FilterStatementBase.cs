@@ -17,6 +17,8 @@ namespace AD.Api.Ldap.Filters
     public abstract record FilterStatementBase : IFilterStatement
 #endif
     {
+        public abstract int Length { get; }
+
         public abstract FilterType Type { get; }
 
         /// <summary>
@@ -38,6 +40,10 @@ namespace AD.Api.Ldap.Filters
         }
 
         public abstract void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer);
-        public abstract StringBuilder WriteTo(StringBuilder builder);
+        public virtual StringBuilder WriteTo(StringBuilder builder)
+        {
+            builder.EnsureCapacity(this.Length);
+            return builder;
+        }
     }
 }

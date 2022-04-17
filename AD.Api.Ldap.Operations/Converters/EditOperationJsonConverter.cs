@@ -17,7 +17,7 @@ namespace AD.Api.Ldap.Converters
 
         private NamingStrategy NamingStrategy { get; }
 
-        public EditOperationJsonConverter(NamingStrategy? namingStrategy = null)
+        public EditOperationJsonConverter(NamingStrategy? namingStrategy)
         {
             if (namingStrategy is null)
                 namingStrategy = new CamelCaseNamingStrategy();

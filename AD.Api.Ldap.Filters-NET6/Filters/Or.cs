@@ -17,6 +17,8 @@ namespace AD.Api.Ldap.Filters
     public sealed record Or : FilterContainer
 #endif
     {
+        public sealed override int Length => base.Length + 3;
+
         public sealed override FilterType Type => FilterType.Or;
 
         /// <summary>

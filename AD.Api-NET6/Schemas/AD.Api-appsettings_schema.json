@@ -213,9 +213,26 @@
             }
         },
 
+        "caseSetting": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "enum": [
+                        "default",
+                        "camelCase",
+                        "snakeCase",
+                        "kebabCase"
+                    ]
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+
 		"textSettings": {
 			"type": "object",
-			"properties": {
+            "properties": {
                 "Encoding": {
                     "type": "string",
                     "description": "The encoding used for reading request content.",
@@ -338,6 +355,21 @@
                         "x-mac-turkish",
                         "x-mac-ukrainian"
                     ]
+                },
+                "LdapEditNamingStrategy": {
+                    "description": "The case naming strategy to use when deserializing LDAP edit operations.",
+                    "default": "camelCase",
+                    "$ref": "#/definitions/caseSetting"
+                },
+                "LdapPropertyNamingStrategy": {
+                    "description": "The case naming strategy to use when serializing LDAP property names.",
+                    "default": "default",
+                    "$ref": "#/definitions/caseSetting"
+                },
+                "StringEnumNamingStrategy": {
+                    "description": "The case naming strategy to use when serializing Enum LDAP property values from integers to strings.",
+                    "default": "default",
+                    "$ref": "#/definitions/caseSetting"
                 }
             }
 		},

@@ -1,4 +1,5 @@
 using AD.Api.Ldap.Attributes;
+using AD.Api.Ldap.Converters;
 using AD.Api.Ldap.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -22,12 +23,27 @@ namespace AD.Api.Ldap.Search
             new SortedDictionary<string, JToken?>(StringComparer.CurrentCultureIgnoreCase);
 
         [JsonIgnore]
+        [LdapProperty]
+        [LdapConverter(typeof(FileTimeConverter))]
+        public DateTime? BadPasswordTime { get; private set; }
+
+        [JsonIgnore]
         [LdapExtensionData]
         public IDictionary<string, object[]>? Data { get; private set; }
 
         [JsonIgnore]
         [LdapProperty]
         public GroupType? GroupType { get; private set; }
+
+        [JsonIgnore]
+        [LdapProperty]
+        [LdapConverter(typeof(FileTimeConverter))]
+        public DateTime? LastLogon { get; private set; } 
+
+        [JsonIgnore]
+        [LdapProperty]
+        [LdapConverter(typeof(FileTimeConverter))]
+        public DateTime? PwdLastSet { get; private set; }
 
         [JsonIgnore]
         [LdapProperty]
@@ -83,8 +99,11 @@ namespace AD.Api.Ldap.Search
         protected virtual void OnPreparing(JsonSerializerSettings settings)
         {
             this.AddExpressionsToJsonData(this, settings,
-                x => x.UserAccountControl,
-                x => x.GroupType);
+                x => x.BadPasswordTime,
+                x => x.GroupType,
+                x => x.LastLogon,
+                x => x.PwdLastSet,
+                x => x.UserAccountControl);
         }
 
         [OnSerialized]

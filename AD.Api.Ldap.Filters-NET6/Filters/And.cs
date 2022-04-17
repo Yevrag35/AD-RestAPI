@@ -18,7 +18,9 @@ namespace AD.Api.Ldap.Filters
 #endif
 
     {
-        public override FilterType Type => FilterType.And;
+        public sealed override int Length => base.Length + 3;
+
+        public sealed override FilterType Type => FilterType.And;
 
         /// <summary>
         /// Initializes a new instance of <see cref="And"/> with the default capacity of 2.
@@ -48,6 +50,8 @@ namespace AD.Api.Ldap.Filters
 
         public sealed override StringBuilder WriteTo(StringBuilder builder)
         {
+            builder.EnsureCapacity(this.Length);
+
             builder.Append("(&");
 
             return base

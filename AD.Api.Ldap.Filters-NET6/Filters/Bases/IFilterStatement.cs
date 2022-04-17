@@ -11,6 +11,11 @@ namespace AD.Api.Ldap.Filters
     public interface IFilterStatement : IEquatable<IFilterStatement>
     {
         /// <summary>
+        /// The total length of the resulting <see cref="string"/> when constructed.
+        /// </summary>
+        int Length { get; }
+
+        /// <summary>
         /// The filter keyword of the statement or <see cref="FilterType.Equal"/> is no keyword matches.
         /// </summary>
         FilterType Type { get; }

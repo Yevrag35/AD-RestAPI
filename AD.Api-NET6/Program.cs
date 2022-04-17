@@ -54,7 +54,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
 builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
-builder.Services.AddTextSettingOptions(builder.Configuration);
+builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings textSettings);
 
 builder.Services.AddADApiServices();
 
@@ -63,7 +63,10 @@ builder.Services
     .AddAutoMapper(appDomainAssemblies)
     .AddLdapEnumTypes(appDomainAssemblies);
 
-builder.Services.AddControllers().AddNewtonsoftJson(options => options.AddADApiConfiguration());
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.AddADApiConfiguration(textSettings);
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

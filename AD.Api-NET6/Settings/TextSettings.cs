@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Serialization;
 using System.Text;
 
 namespace AD.Api.Settings
@@ -7,19 +8,24 @@ namespace AD.Api.Settings
     public interface ITextSettings
     {
         Encoding Encoding { get; }
+        NamingStrategy LdapEditNamingStrategy { get; }
+        NamingStrategy LdapPropertyNamingStrategy { get; }
+        NamingStrategy StringEnumNamingStrategy { get; }
     }
 
     public static class TextSettingsDependencyInjection
     {
-        public static IServiceCollection AddTextSettingOptions(this IServiceCollection services, IConfiguration config)
+        public static IServiceCollection AddTextSettingOptions(this IServiceCollection services, IConfiguration config, out ITextSettings textSettings)
         {
-            var settings = config.GetSection("Settings").GetSection("Text").Get<TextSettings>();
-            services.AddSingleton(settings);
-            return services.AddSingleton<ITextSettings>(services => services.GetRequiredService<TextSettings>());
+            textSettings = config.GetSection("Settings").GetSection("Text").Get<TextSettings>();
+            return services.AddSingleton(textSettings);
         }
 
         private class TextSettings : ITextSettings
         {
+            private static readonly Lazy<DefaultNamingStrategy> _default = new();
+            private static readonly Lazy<CamelCaseNamingStrategy> _camelCase = new();
+
             public string? Encoding
             {
                 get => this.DefaultEncoding.HeaderName;
@@ -27,6 +33,43 @@ namespace AD.Api.Settings
             }
             Encoding ITextSettings.Encoding => this.DefaultEncoding;
             public Encoding DefaultEncoding { get; private set; } = System.Text.Encoding.UTF8;
+
+            NamingStrategy ITextSettings.LdapEditNamingStrategy => _camelCase.Value;
+            public string? LdapPropertyNamingStrategy { get; set; }
+            NamingStrategy ITextSettings.LdapPropertyNamingStrategy
+            {
+                get => GetNamingStrategy(this.LdapPropertyNamingStrategy);
+            }
+
+            public string? StringEnumNamingStrategy { get; set; }
+            NamingStrategy ITextSettings.StringEnumNamingStrategy
+            {
+                get => GetNamingStrategy(this.StringEnumNamingStrategy);
+            }
+
+            private static NamingStrategy GetNamingStrategy(string? value)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    return _default.Value;
+
+                switch (value.ToLower())
+                {
+                    case "camel":
+                    case "camelcase":
+                        return _camelCase.Value;
+
+                    case "kebab":
+                        return new KebabCaseNamingStrategy();
+
+                    case "snake":
+                    case "nosteponsnek":
+                    case "snakecase":
+                        return new SnakeCaseNamingStrategy();
+
+                    default:
+                        return _default.Value;
+                }
+            }
 
             private void SetEncoder(string? encoding)
             {

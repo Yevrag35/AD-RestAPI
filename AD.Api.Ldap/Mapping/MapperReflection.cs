@@ -12,6 +12,8 @@ namespace AD.Api.Ldap.Mapping
 {
     public static partial class Mapper
     {
+        private static readonly Lazy<Dictionary<Type, object>> _cachedConverters = new();
+
         private static void ApplyFieldValue(object obj, FieldInfo fi, object value)
         {
             fi.SetValue(obj, value);
@@ -309,9 +311,22 @@ namespace AD.Api.Ldap.Mapping
                 if (att is null)
                     return false;
 
-                converter = (LdapPropertyConverter?)Activator.CreateInstance(att.ConverterType);
+                if (_cachedConverters.IsValueCreated && _cachedConverters.Value.TryGetValue(att.ConverterType, out object? cachedConverter))
+                {
+                    converter = (LdapPropertyConverter?)cachedConverter;
 
-                return converter is not null;
+                    return converter is not null;
+                }
+                else
+                {
+                    converter = (LdapPropertyConverter?)Activator.CreateInstance(att.ConverterType);
+
+                    if (converter is not null)
+                    {
+                        _cachedConverters.Value.Add(att.ConverterType, converter);
+                        return true;
+                    }
+                }
             }
 
             return false;

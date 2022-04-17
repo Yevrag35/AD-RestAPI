@@ -123,6 +123,9 @@
   <data name="CriticalSystemObject" xml:space="preserve">
     <value>isCriticalSystemObject</value>
   </data>
+  <data name="DefaultHostIfEmpty" xml:space="preserve">
+    <value />
+  </data>
   <data name="DefaultNamingContext" xml:space="preserve">
     <value>defaultNamingContext</value>
   </data>

@@ -28,44 +28,44 @@ namespace AD.Api.Services
         {
             host = string.Empty;
             ldapFilter = string.Empty;
-            using (var connection = this.Connections.GetConnection(new ConnectionOptions
-            {
-                Domain = options.Domain,
-                SearchBase = options.SearchBase,
-                Principal = options.ClaimsPrincipal
-            }))
-            {
-                host = connection.SearchBase.Host;
-                using (var searcher = connection.CreateSearcher())
-                {
-                    var list = ExecuteSearch(searcher, options, out ldapFilter);
-                    this.Serializer.PrepareMany(list);
 
-                    return list;
-                }
-            }
+            using var connection = this.Connections.GetConnection(con =>
+            {
+                con.Domain = options.Domain;
+                con.DontDisposeHandle = false;
+                con.SearchBase = options.SearchBase;
+                con.Principal = options.ClaimsPrincipal;
+            });
+
+            using var searcher = connection.CreateSearcher();
+            var list = ExecuteSearch(searcher, options, out ldapFilter, out string? hostContacted);
+            host = hostContacted ?? connection.SearchBase.Host;
+
+            this.Serializer.PrepareMany(list);
+
+            return list;
         }
 
-        private List<FindResult> ExecuteSearch(Searcher searcher, QueryOptions options, out string ldapFilter)
+        private List<FindResult> ExecuteSearch(ILdapSearcher searcher, QueryOptions options, out string ldapFilter, out string? hostContacted)
         {
             ldapFilter = string.Empty;
-            (List<FindResult> results, string ldapFilter) function()
+            (List<FindResult> results, string ldapFilter, string? hostContacted) function()
             {
                 if (options is null)
-                    return (new List<FindResult>(), string.Empty);
+                    return (new List<FindResult>(), string.Empty, null);
 
-                List<FindResult> results = searcher.FindAll(options, out string ldapFilter);
-                return (results, ldapFilter);
+                List<FindResult> results = searcher.FindAll(options, out string ldapFilter, out string? hostContacted);
+                return (results, ldapFilter, hostContacted);
             }
 
             List<FindResult> results;
             if (!this.Identity.TryGetKerberosIdentity(options?.ClaimsPrincipal, out WindowsIdentity? wid))
             {
-                (results, ldapFilter) = function();
+                (results, ldapFilter, hostContacted) = function();
             }
             else
             {
-                (results, ldapFilter) = WindowsIdentity.RunImpersonated(wid.AccessToken, () => function());
+                (results, ldapFilter, hostContacted) = WindowsIdentity.RunImpersonated(wid.AccessToken, () => function());
             }
 
             return results;

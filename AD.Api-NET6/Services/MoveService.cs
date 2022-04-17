@@ -29,7 +29,7 @@ namespace AD.Api.Services
             using var connection = this.Connections.GetConnection(new ConnectionOptions
             {
                 Domain = moveRequest.Domain,
-                DontDisposeHandle = true,
+                DontDisposeHandle = false,
                 Principal = moveRequest.ClaimsPrincipal
             });
 

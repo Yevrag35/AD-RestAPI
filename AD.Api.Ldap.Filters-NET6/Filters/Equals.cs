@@ -18,6 +18,7 @@ namespace AD.Api.Ldap.Filters
     public sealed record Equal : EqualityStatement
 #endif
     {
+        public sealed override int Length => base.Length + (this.Value?.Length).GetValueOrDefault();
         public sealed override string Property { get; }
         public sealed override Type? PropertyType { get; }
         public sealed override string RawProperty => this.Property;

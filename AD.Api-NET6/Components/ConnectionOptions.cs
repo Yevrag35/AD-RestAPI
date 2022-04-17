@@ -3,11 +3,19 @@ using System.Security.Claims;
 
 namespace AD.Api.Services
 {
-    public record ConnectionOptions
+    public interface IConnectionOptions
     {
-        public string? Domain { get; init; }
-        public bool DontDisposeHandle { get; init; } = true;
-        public ClaimsPrincipal? Principal { get; init; }
-        public string? SearchBase { get; init; }
+        string? Domain { get; }
+        bool DontDisposeHandle { get; }
+        ClaimsPrincipal? Principal { get; }
+        string? SearchBase { get; }
+    }
+
+    public record ConnectionOptions : IConnectionOptions
+    {
+        public string? Domain { get; set; }
+        public bool DontDisposeHandle { get; set; } = true;
+        public ClaimsPrincipal? Principal { get; set; }
+        public string? SearchBase { get; set; }
     }
 }

@@ -23,14 +23,7 @@ namespace AD.Api.Ldap.Filters
     {
         protected const char STAR = (char)42;
 
-        /// <summary>
-        /// The property name without any transformations.
-        /// </summary>
-        /// <example>
-        ///     If Property equals 'memberOf:1.2.840.113556.1.4.1941:',
-        ///     then RawProperty will equal 'memberOf'
-        /// </example>
-        public abstract string RawProperty { get; }
+        public override int Length => this.Property.Length + 3;  // the 3 is for the '(' + '=' + ')'.
 
         /// <summary>
         /// The property name used in the LDAP filter.
@@ -41,6 +34,15 @@ namespace AD.Api.Ldap.Filters
         /// The underlying type of the property value prior to converting to a <see cref="string"/>.
         /// </summary>
         public abstract Type? PropertyType { get; }
+
+        /// <summary>
+        /// The property name without any transformations.
+        /// </summary>
+        /// <example>
+        ///     If Property equals 'memberOf:1.2.840.113556.1.4.1941:',
+        ///     then RawProperty will equal 'memberOf'
+        /// </example>
+        public abstract string RawProperty { get; }
 
         /// <summary>
         /// Determines if the current <see cref="EqualityStatement"/> equals the specified <see cref="IFilterStatement"/> 
@@ -122,7 +124,7 @@ namespace AD.Api.Ldap.Filters
                 };
             }
 
-            return writeValue(builder);
+            return writeValue(base.WriteTo(builder));
         }
 
         protected static bool TryGetLdapName(MemberExpression expression, [NotNullWhen(true)] out string? ldapPropertyName)

@@ -51,11 +51,11 @@ namespace AD.Api.Controllers
 
             SafeAccessTokenHandle? token = ((WindowsIdentity?)this.HttpContext?.User?.Identity)?.AccessToken;
 
-            using (var connection = this.Connections.GetConnection(new ConnectionOptions()
+            using (var connection = this.Connections.GetConnection(options =>
             {
-                Domain = domain,
-                DontDisposeHandle = false,
-                Principal = this.HttpContext?.User
+                options.Domain = request.Domain;
+                options.DontDisposeHandle = false;
+                options.Principal = this.HttpContext?.User;
             }))
             {
                 if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out List<string>? missing))

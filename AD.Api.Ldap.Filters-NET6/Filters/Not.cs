@@ -22,6 +22,9 @@ namespace AD.Api.Ldap.Filters
         private readonly EqualityStatement _equalStatement;
 
         internal EqualityStatement EqualStatement => _equalStatement;
+
+        public sealed override int Length => _equalStatement.Length + 3 + (this.Value?.Length).GetValueOrDefault();
+
         public sealed override FilterType Type => FilterType.Not;
 
         /// <summary>

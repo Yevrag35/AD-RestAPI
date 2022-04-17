@@ -10,10 +10,16 @@ using System.Threading.Tasks;
 
 namespace AD.Api.Ldap.Search
 {
-    public sealed class Searcher : IDisposable
+    public interface ILdapSearcher : IDisposable
+    {
+        List<FindResult> FindAll(ISearchOptions searchOptions, out string ldapFilter, out string? hostContacted);
+    }
+
+    internal sealed class Searcher : ILdapSearcher
     {
         private bool _disposed;
-        private readonly StringBuilder _builder;
+        //private readonly StringBuilder _builder;
+        private readonly Lazy<StringBuilder> _lazyBuilder = new();
         private readonly DirectorySearcher _searcher;
         public IFilterStatement? Filter { get; set; }
 
@@ -21,13 +27,12 @@ namespace AD.Api.Ldap.Search
             : this(connection.GetSearchBase(), options)
         {
         }
-        public Searcher(DirectoryEntry searchBase, ISearchOptions? options = null)
+        internal Searcher(DirectoryEntry searchBase, ISearchOptions? options = null)
         {
-            _builder = new StringBuilder(500);
             _searcher = new DirectorySearcher(searchBase);
             this.Filter = options?.Filter;
             if (options is not null)
-                _ = SetSearcher(options, _builder, _searcher);
+                _ = SetSearcher(options, _lazyBuilder.Value, _searcher);
         }
 
         public void Dispose()
@@ -36,7 +41,9 @@ namespace AD.Api.Ldap.Search
                 return;
 
             _searcher.Dispose();
-            _builder.Clear();
+            if (_lazyBuilder.IsValueCreated)
+                _lazyBuilder.Value.Clear();
+
             _disposed = true;
 
             GC.SuppressFinalize(this);
@@ -87,17 +94,19 @@ namespace AD.Api.Ldap.Search
 
         //    return list;
         //}
-        public List<FindResult> FindAll(ISearchOptions oneOffOptions, out string ldapFilter)
+        public List<FindResult> FindAll(ISearchOptions oneOffOptions, out string ldapFilter, out string? hostContacted)
         {
             ldapFilter = string.Empty;
+            hostContacted = null;
             List<FindResult> list = new();
-            var sb = new StringBuilder(_builder.Capacity);
             using (DirectorySearcher oneOffSearcher = new(_searcher.SearchRoot))
             {
-                using (var resultCol = SetSearcher(oneOffOptions, sb, oneOffSearcher)
+                hostContacted = oneOffSearcher.SearchRoot?.Options?.GetCurrentServerName();
+
+                using (var resultCol = SetSearcher(oneOffOptions, _lazyBuilder.Value, oneOffSearcher)
                                        .FindAll())
                 {
-                    ldapFilter = sb.ToString();
+                    ldapFilter = _lazyBuilder.Value.ToString();
                     foreach (SearchResult result in resultCol)
                     {
                         FindResult findResult = Mapper.MapFromSearchResult<FindResult>(result);
