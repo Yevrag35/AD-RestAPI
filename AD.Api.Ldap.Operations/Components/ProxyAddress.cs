@@ -8,9 +8,8 @@ using System.Text.RegularExpressions;
 
 namespace AD.Api.Ldap.Properties
 {
-    public sealed class ProxyAddress : IDisposable, IEquatable<ProxyAddress>
+    public sealed class ProxyAddress : IEquatable<ProxyAddress>
     {
-        private bool _disposed;
         private bool _isPrimary;
         private const char AT_SIGN = (char)64;
         private const char COLON = (char)58;
@@ -25,7 +24,7 @@ namespace AD.Api.Ldap.Properties
         public bool IsPrimary
         {
             get => _isPrimary && this.IsValid;
-            internal set
+            set
             {
                 if (!this.IsValid)
                     return; // don't bother...
@@ -69,7 +68,7 @@ namespace AD.Api.Ldap.Properties
             if (obj is ProxyAddress pa)
                 return this.Equals(pa);
 
-            else if (obj is string paStr && !_disposed)
+            else if (obj is string paStr)
                 return StringComparer.CurrentCultureIgnoreCase.Equals(this.GetValue(), paStr);
 
             else
@@ -99,9 +98,7 @@ namespace AD.Api.Ldap.Properties
         }
         public override int GetHashCode()
         {
-            return !_disposed 
-                ? StringComparer.CurrentCultureIgnoreCase.GetHashCode(this.GetValue())
-                : base.GetHashCode();
+            return StringComparer.CurrentCultureIgnoreCase.GetHashCode(this.GetValue());
         }
 
         /// <summary>
@@ -111,9 +108,6 @@ namespace AD.Api.Ldap.Properties
         /// <exception cref="ObjectDisposedException"></exception>
         public string GetValue()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(ProxyAddress));
-
             if (!this.IsValid)
                 return new string(_raw);
 
@@ -237,29 +231,7 @@ namespace AD.Api.Ldap.Properties
         }
         public static implicit operator string(ProxyAddress proxyAddress)
         {
-            return !proxyAddress._disposed
-                ? proxyAddress.GetValue()
-                : throw new ObjectDisposedException(nameof(proxyAddress));
+            return proxyAddress.GetValue();
         }
-
-        #region IDISPOSABLE IMPLEMENTATION
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            Array.Clear(_charArrays);
-            _ = _builder.Value.Clear();
-            if (!(_raw is null))
-            {
-                Array.Clear(_raw);
-                _raw = null;
-            }
-
-            _disposed = true;
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }

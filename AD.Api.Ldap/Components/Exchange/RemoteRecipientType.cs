@@ -1,8 +1,10 @@
-﻿using System;
+﻿using AD.Api.Ldap.Attributes;
+using System;
 
 namespace AD.Api.Components.Exchange
 {
     [Flags]
+    [LdapEnum("msExchRemoteRecipientType")]
     public enum RemoteRecipientType
     {
         /// <summary>

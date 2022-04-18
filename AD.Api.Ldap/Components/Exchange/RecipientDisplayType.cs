@@ -1,10 +1,12 @@
-﻿using System;
+﻿using AD.Api.Ldap.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace AD.Api.Components.Exchange
 {
+    [LdapEnum("msExchRecipientDisplayType")]
     public enum RecipientDisplayType
     {
         Clear = -2147483648,

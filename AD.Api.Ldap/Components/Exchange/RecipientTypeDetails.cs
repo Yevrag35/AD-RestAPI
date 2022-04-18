@@ -1,8 +1,10 @@
-﻿using System;
+﻿using AD.Api.Ldap.Attributes;
+using System;
 
 namespace AD.Api.Components.Exchange
 {
     [Flags]
+    [LdapEnum("msExchRecipientTypeDetails")]
     public enum RecipientTypeDetails : long
     {
         Clear = -2147483648L,

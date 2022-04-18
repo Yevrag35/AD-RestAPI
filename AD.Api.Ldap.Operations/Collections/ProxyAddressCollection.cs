@@ -6,10 +6,8 @@ using System.Linq;
 
 namespace AD.Api.Ldap.Properties
 {
-    public sealed class ProxyAddressCollection : UniqueList<ProxyAddress>, IDisposable
+    public sealed class ProxyAddressCollection : UniqueList<ProxyAddress>
     {
-        private bool _disposed;
-
         public ProxyAddressCollection()
             : base()
         {
@@ -35,23 +33,6 @@ namespace AD.Api.Ldap.Properties
                 this.Add(address);
             }
         }
-
-        #region IDISPOSABLE IMPLEMENTATION
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            foreach (ProxyAddress proxyAddress in this)
-            {
-                proxyAddress.Dispose();
-            }
-
-            _disposed = true;
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
 
         /// <summary>
         /// 
