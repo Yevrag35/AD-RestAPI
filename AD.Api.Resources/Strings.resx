@@ -120,6 +120,9 @@
   <data name="CN_Prefix" xml:space="preserve">
     <value>CN=</value>
   </data>
+  <data name="ContentType_Json" xml:space="preserve">
+    <value>application/json</value>
+  </data>
   <data name="CriticalSystemObject" xml:space="preserve">
     <value>isCriticalSystemObject</value>
   </data>

@@ -42,7 +42,8 @@ namespace AD.Api.Controllers
                 [FromQuery] SearchScope scope = SearchScope.Subtree,
                 [FromQuery] string? sortDir = null,
                 [FromQuery] string? sortBy = null,
-                [FromQuery] string? properties = null)
+                [FromQuery] string? properties = null,
+                [FromQuery] bool includeDetails = false)
         {
             return this.PerformUserSearch(
                 AddUserCriteria(),
@@ -52,7 +53,8 @@ namespace AD.Api.Controllers
                 scope,
                 sortDir,
                 sortBy,
-                properties);
+                properties,
+                includeDetails);
         }
 
         [HttpPost]
@@ -64,7 +66,8 @@ namespace AD.Api.Controllers
             [FromQuery] SearchScope scope = SearchScope.Subtree,
             [FromQuery] string? sortDir = null,
             [FromQuery] string? sortBy = null,
-            [FromQuery] string? properties = null)
+            [FromQuery] string? properties = null,
+            [FromQuery] bool includeDetails = false)
         {
             return this.PerformUserSearch(
                 AddUserCriteria(filter),
@@ -74,7 +77,8 @@ namespace AD.Api.Controllers
                 scope,
                 sortDir,
                 sortBy,
-                properties);
+                properties,
+                includeDetails);
         }
 
         private IActionResult PerformUserSearch(
@@ -85,7 +89,8 @@ namespace AD.Api.Controllers
             SearchScope scope,
             PropertySortDirection sortDir,
             string? sortBy,
-            string? properties)
+            string? properties,
+            bool includeDetails)
         {
             QueryOptions options = new QueryOptions
             {
@@ -99,7 +104,7 @@ namespace AD.Api.Controllers
             };
 
             var list = this.QueryService.Search(options, out string ldapFilter, out string host);
-            return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
+            return base.GetReply(list, includeDetails, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
         }
 
         private static IFilterStatement AddUserCriteria(IFilterStatement? statement = null)

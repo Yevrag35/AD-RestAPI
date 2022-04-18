@@ -3,20 +3,17 @@ using AD.Api.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.DirectoryServices;
-using System.Linq;
 
 namespace AD.Api.Ldap.Operations
 {
-    public class ProxyAddressesOperation : EditPropertyOperationBase, IDisposable
+    public sealed class ProxyAddressesOperation : EditPropertyOperationBase
     {
         internal const string PROPERTY = "ProxyAddresses";
         private ProxyAddressCollection? _original;
-        private bool _disposed;
-        public override OperationType OperationType { get; }
-        public override string Property => PROPERTY;
+
+        public sealed override OperationType OperationType { get; }
+        public sealed override string Property => PROPERTY;
         public ProxyAddressCollection Values { get; }
 
         public ProxyAddressesOperation(OperationType operationType)
@@ -30,40 +27,18 @@ namespace AD.Api.Ldap.Operations
             this.Values = new ProxyAddressCollection(addresses);
         }
 
-        #region IDISPOSABLE IMPLEMENTATION
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            this.Values.Dispose();
-            this.Values.Clear();
-            _original?.Dispose();
-            _original?.Clear();
-
-            _disposed = true;
-            GC.SuppressFinalize(this);
-        }
-
-        public override bool Perform(PropertyValueCollection collection, SchemaProperty schemaProperty)
+        public sealed override bool Perform(PropertyValueCollection collection, SchemaProperty schemaProperty)
         {
             _original = new ProxyAddressCollection(collection);
             collection.Clear();
 
-            switch (this.OperationType)
+            return this.OperationType switch
             {
-                case OperationType.Add:
-                    return PerformAdd(collection, _original, this.Values);
-
-                case OperationType.Remove:
-                    return PerformRemove(collection, _original, this.Values);
-
-                case OperationType.Set:
-                    return PerformSet(collection, this.Values);
-
-                default:
-                    return false;
-            }
+                OperationType.Add => PerformAdd(collection, _original, this.Values),
+                OperationType.Remove => PerformRemove(collection, _original, this.Values),
+                OperationType.Set => PerformSet(collection, this.Values),
+                _ => false,
+            };
         }
 
         private static bool PerformAdd(PropertyValueCollection collection, ProxyAddressCollection original, ProxyAddressCollection additions)
@@ -115,14 +90,12 @@ namespace AD.Api.Ldap.Operations
             return collection.Count == original.Count - removals.Count;
         }
 
-        public override void WriteTo(JsonWriter writer, NamingStrategy namingStrategy, JsonSerializer serializer)
+        public sealed override void WriteTo(JsonWriter writer, NamingStrategy namingStrategy, JsonSerializer serializer)
         {
             string name = namingStrategy.GetPropertyName(PROPERTY, false);
             writer.WritePropertyName(name);
 
             serializer.Serialize(writer, this.Values);
         }
-
-        #endregion
     }
 }

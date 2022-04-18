@@ -1,3 +1,4 @@
+using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Mapping;
 using AD.Api.Ldap.Models;
@@ -21,14 +22,16 @@ namespace AD.Api.Ldap.Search
         //private readonly StringBuilder _builder;
         private readonly Lazy<StringBuilder> _lazyBuilder = new();
         private readonly DirectorySearcher _searcher;
+        private readonly ILdapEnumDictionary _enumDictionary;
         public IFilterStatement? Filter { get; set; }
 
-        internal Searcher(LdapConnection connection, ISearchOptions? options = null)
-            : this(connection.GetSearchBase(), options)
+        internal Searcher(LdapConnection connection, ILdapEnumDictionary enumDictionary, ISearchOptions? options = null)
+            : this(connection.GetSearchBase(), enumDictionary, options)
         {
         }
-        internal Searcher(DirectoryEntry searchBase, ISearchOptions? options = null)
+        internal Searcher(DirectoryEntry searchBase, ILdapEnumDictionary enumDictionary, ISearchOptions? options = null)
         {
+            _enumDictionary = enumDictionary;
             _searcher = new DirectorySearcher(searchBase);
             this.Filter = options?.Filter;
             if (options is not null)
@@ -109,7 +112,7 @@ namespace AD.Api.Ldap.Search
                     ldapFilter = _lazyBuilder.Value.ToString();
                     foreach (SearchResult result in resultCol)
                     {
-                        FindResult findResult = Mapper.MapFromSearchResult<FindResult>(result);
+                        FindResult findResult = Mapper.MapFromSearchResult<FindResult>(result, _enumDictionary);
                         list.Add(findResult);
                     }
                 }

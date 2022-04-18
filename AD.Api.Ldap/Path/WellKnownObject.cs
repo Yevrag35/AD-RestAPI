@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Strings = AD.Api.Ldap.Properties.Resources;
-
 namespace AD.Api.Ldap.Path
 {
     public struct WellKnownObject

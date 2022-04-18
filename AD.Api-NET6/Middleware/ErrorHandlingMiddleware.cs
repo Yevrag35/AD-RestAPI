@@ -19,7 +19,7 @@ namespace AD.Api.Middleware
                 message = ex.Message
             };
 
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = Strings.ContentType_Json;
 
             using (var writer = new StreamWriter(context.Response.Body))
             {

@@ -8,49 +8,53 @@ namespace AD.Api.Ldap.Mapping
 {
     public static partial class Mapper
     {
-        public static T MapFromDirectoryEntry<T>(DirectoryEntry directoryEntry) where T : new()
+        [Obsolete]
+        public static T MapFromDirectoryEntry<T>(DirectoryEntry directoryEntry, ILdapEnumDictionary enumDictionary) where T : new()
         {
-            return MapFromDirectoryEntry(new T(), directoryEntry);
+            return MapFromDirectoryEntry(new T(), directoryEntry, enumDictionary);
         }
-        public static T MapFromSearchResult<T>(SearchResult searchResult) where T : new()
+        public static T MapFromSearchResult<T>(SearchResult searchResult, ILdapEnumDictionary enumDictionary) where T : new()
         {
-            return MapFromSearchResult(new T(), searchResult);
+            return MapFromSearchResult(new T(), searchResult, enumDictionary);
         }
 
         [return: NotNullIfNotNull("objToMap")]
-        public static T? MapFromDirectoryEntry<T>(T? objToMap, DirectoryEntry directoryEntry)
+        public static T? MapFromDirectoryEntry<T>(T? objToMap, DirectoryEntry directoryEntry, ILdapEnumDictionary enumDictionary)
         {
             return objToMap is not null
-                ? Reflect(objToMap, directoryEntry.Properties)
+                ? Reflect(objToMap, directoryEntry.Properties, enumDictionary)
                 : default;
         }
 
         [return: NotNullIfNotNull("objToMap")]
-        public static T? MapFromSearchResult<T>(T? objToMap, SearchResult searchResult)
+        public static T? MapFromSearchResult<T>(T? objToMap, SearchResult searchResult, ILdapEnumDictionary enumDictionary)
         {
             return objToMap is not null
-                ? Reflect(objToMap, searchResult.Properties)
+                ? Reflect(objToMap, searchResult.Properties, enumDictionary)
                 : default;
         }
 
         [return: NotNull]
-        private static T Reflect<T>([DisallowNull] T obj, IDictionary collection)
+        private static T Reflect<T>([DisallowNull] T obj, IDictionary collection, ILdapEnumDictionary enumDictionary)
         {
             HashSet<string> namesUsed = new(StringComparer.CurrentCultureIgnoreCase);
             List<(MemberInfo Member, LdapPropertyAttribute Attribute)> bindables = GetBindableMembers<T>();
 
-            bindables.ForEach(bindable =>
+            //bindables.ForEach(bindable =>
+            for (int i = 0; i < bindables.Count; i++)
             {
+                var bindable = bindables[i];
+
                 string? key = null;
 
                 if (collection.Contains(bindable.Member.Name.ToLower()))
                     key = bindable.Member.Name.ToLower();
-                
+
                 else if (!string.IsNullOrWhiteSpace(bindable.Attribute.LdapName) && collection.Contains(bindable.Attribute.LdapName))
                     key = bindable.Attribute.LdapName;
 
                 else
-                    return;
+                    continue;
 
                 object? convertedValue = ConvertValue(obj, bindable.Member, bindable.Attribute, collection[key] as IEnumerable);
 
@@ -59,7 +63,7 @@ namespace AD.Api.Ldap.Mapping
                     ApplyMemberValue(obj, bindable.Member, convertedValue);
                     _ = namesUsed.Add(key);
                 }
-            });
+            }
 
             IEnumerable<MemberInfo> extDataMems = typeof(T).GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(x => x.CustomAttributes.Any(att => att.AttributeType.IsAssignableTo(typeof(LdapExtensionDataAttribute))));
@@ -75,6 +79,28 @@ namespace AD.Api.Ldap.Mapping
                     .Where(x => !namesUsed.Contains(x)))
                 {
                     IEnumerable<object>? enumerable = (collection[propertyName] as IEnumerable)?.Cast<object>();
+
+                    if (enumDictionary.TryGetValue(propertyName, out Type? enumType) && 
+                        enumerable is not null)
+                    {
+                        object? firstVal = enumerable?.FirstOrDefault();
+
+                        if (firstVal is not long enumVal)
+                        {
+                            if (firstVal is int intVal)
+                                enumVal = (long)intVal;
+
+                            else
+                                continue;
+                        }
+
+                        object? realValue = ConvertEnum(enumVal, enumType);
+                        if (realValue is not null)
+                            dict.Add(propertyName, new object[] { realValue });
+
+                        continue;
+                    }
+
                     if (enumerable is null)
                     {
                         dict.Add(propertyName, Array.Empty<object>());

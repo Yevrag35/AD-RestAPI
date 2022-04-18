@@ -1,13 +1,13 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace AD.Api.Ldap.Attributes
 {
-    public interface ILdapEnumDictionary : IReadOnlyDictionary<string, Type>
+    public interface ILdapEnumDictionary : IReadOnlyDictionary<string, Type>, ICollection
     {
         bool TryGetIntValue(string ldapName, string? strValue, out int result);
         bool TryGetEnumValue(string ldapName, string strValue, [NotNullWhen(true)] out Enum? results);

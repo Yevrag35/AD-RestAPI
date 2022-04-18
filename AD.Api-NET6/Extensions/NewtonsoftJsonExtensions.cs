@@ -16,74 +16,16 @@ namespace AD.Api.Extensions
             options.SerializerSettings.Converters.Add(new FilterConverter(textSettings.LdapPropertyNamingStrategy));
             options.SerializerSettings.Converters.Add(new PathValueJsonConverter());
             options.SerializerSettings.Converters.Add(new ProxyAddressConverter());
+            options.SerializerSettings.Converters.Add(new StringEnumConverter(textSettings.StringEnumNamingStrategy));
 
             options.SerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
             options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+            options.SerializerSettings.DateTimeZoneHandling = textSettings.DateTimeZoneHandling;
             options.SerializerSettings.Formatting = Formatting.Indented;
             options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
             options.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
 
             return options;
         }
-
-        //internal static void AddIfMissing<T>(this IList<JsonConverter> list) where T : JsonConverter, new()
-        //{
-        //    if (!list.Any(x => x is T))
-        //    {
-        //        list.Add(new T());
-        //    }
-        //}
-
-        //internal static void AddADApiConverters(this IList<JsonConverter> list, NamingStrategy? namingStrategy = null)
-        //{
-        //    if (!list.Any(x => x is FilterConverter))
-        //        list.Add(new FilterConverter(namingStrategy))
-
-        //    list.Add
-
-        //    //bool hasFilterConverter = false;
-        //    //bool hasPathValueConverter = false;
-        //    //bool hasStringEnumConverter = false;
-        //    //bool hasOperationConverter = false;
-
-        //    //CheckConverters(list, ref hasFilterConverter, ref hasPathValueConverter, ref hasStringEnumConverter, ref hasOperationConverter);
-
-        //    //if (!hasFilterConverter)
-        //    //    list.Add(new FilterConverter());
-
-        //    //if (!hasPathValueConverter)
-        //    //    list.Add(new PathValueJsonConverter());
-
-        //    //if (!hasOperationConverter)
-        //    //    list.Add(new EditOperationJsonConverter());
-
-        //    //if (!hasStringEnumConverter)
-        //    //{
-        //    //    if (enumNamingStrategy is null)
-        //    //        enumNamingStrategy = new DefaultNamingStrategy();
-
-        //    //    list.Add(new StringEnumConverter(enumNamingStrategy));
-        //    //}
-        //}
-
-        //private static void CheckConverters(IList<JsonConverter> list, 
-        //    ref bool hasFilterConverter, ref bool hasPathValueConverter, ref bool hasStringEnumConverter, ref bool hasOperationConverter)
-        //{
-        //    foreach (JsonConverter converter in list)
-        //    {
-        //        if (converter is FilterConverter)
-        //            hasFilterConverter = true;
-
-        //        else if (converter is PathValueJsonConverter)
-        //            hasPathValueConverter = true;
-
-        //        else if (converter is StringEnumConverter)
-        //            hasStringEnumConverter = true;
-
-        //        else if (converter is EditOperationJsonConverter)
-        //            hasOperationConverter = true;
-        //    }
-        //}
     }
 }

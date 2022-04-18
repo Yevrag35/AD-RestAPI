@@ -7,13 +7,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Linq;
 using System.Threading.Tasks;
+using AD.Api.Exceptions;
 using AD.Api.Extensions;
 
 namespace AD.Api.Domains
 {
     public class SearchDomains : IReadOnlyDictionary<string, SearchDomain>
     {
-        //private OrderedDictionary _d;
         private readonly SortedList<string, SearchDomain> _byFQDNs;
         private readonly Dictionary<string, SearchDomain> _byDNs;
         private SearchDomain? _registeredDefault;
@@ -41,7 +41,6 @@ namespace AD.Api.Domains
             if (domainsToAdd is null)
                 throw new ArgumentNullException(nameof(domainsToAdd));
 
-            //_d = new OrderedDictionary(1, KeyComparer);
             _byFQDNs = new SortedList<string, SearchDomain>(1, KeyComparer);
             _byDNs = new Dictionary<string, SearchDomain>(1, KeyComparer);
 
@@ -54,7 +53,7 @@ namespace AD.Api.Domains
 
                 if (!TryValidateDomain(domain, out string? domainNamingContext))
                 {
-                    throw new InvalidOperationException($"Unable to find the default naming context for domain '{domain.FQDN}.");
+                    throw new NoNamingContextException(domain.FQDN);
                 }
 
                 domain.DistinguishedName = domainNamingContext;

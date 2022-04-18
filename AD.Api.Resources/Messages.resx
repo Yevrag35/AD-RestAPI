@@ -123,4 +123,10 @@
   <data name="OperationResult_Success" xml:space="preserve">
     <value>The operation result was successful</value>
   </data>
+  <data name="SearchDomain_Err_NoDefault" xml:space="preserve">
+    <value>???</value>
+  </data>
+  <data name="SearchDomain_Err_NoNamingContext" xml:space="preserve">
+    <value>Unable to find the default naming context for domain '{0}'.</value>
+  </data>
 </root>

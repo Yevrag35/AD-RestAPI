@@ -16,14 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="SchemaDictionary.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="SchemaDictionary.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="MG.Collections" Version="1.0.3" />
     <PackageReference Include="System.DirectoryServices" Version="6.0.0" />
   </ItemGroup>

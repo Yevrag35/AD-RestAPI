@@ -1,4 +1,5 @@
 using AD.Api.Extensions;
+using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Connection;
 using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Models;
@@ -24,6 +25,7 @@ namespace AD.Api.Ldap
         private readonly NetworkCredential? _creds;
         private bool _disposed;
         private readonly bool _dontDisposeToken;
+        private readonly ILdapEnumDictionary _enumDictionary;
 
         public AuthenticationTypes? AuthenticationTypes { get; }
         public string? Host { get; }
@@ -34,10 +36,11 @@ namespace AD.Api.Ldap
         public bool UseSchemaCache { get; }
         public bool UseSSL { get; }
 
-        public LdapConnection(ILdapConnectionOptions options)
+        public LdapConnection(ILdapConnectionOptions options, ILdapEnumDictionary enumDictionary)
         {
             _accessToken = options.Token;
             _dontDisposeToken = options.DontDisposeToken;
+            _enumDictionary = enumDictionary;
 
             this.AuthenticationTypes = options.AuthenticationTypes;
             this.Host = options.Host;
@@ -210,18 +213,18 @@ namespace AD.Api.Ldap
         }
 
         #region CREATE SEARCHERS
-        [Obsolete]
-        public ILdapSearcher CreateSearcher(PathValue searchBase, IFilterStatement? filter = null)
-        {
-            return new Searcher(this.GetDirectoryEntry(searchBase))
-            {
-                Filter = filter
-            };
-        }
+        //[Obsolete]
+        //public ILdapSearcher CreateSearcher(PathValue searchBase, IFilterStatement? filter = null)
+        //{
+        //    return new Searcher(this.GetDirectoryEntry(searchBase))
+        //    {
+        //        Filter = filter
+        //    };
+        //}
 
         public ILdapSearcher CreateSearcher(ISearchOptions? options = null)
         {
-            return new Searcher(this, options);
+            return new Searcher(this, _enumDictionary, options);
         }
 
         #endregion

@@ -39,7 +39,7 @@ namespace AD.Api {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AD.Api.Resources.Properties.Strings", typeof(Strings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AD.Api.Resources.Strings", typeof(Strings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -66,6 +66,15 @@ namespace AD.Api {
         public static string CN_Prefix {
             get {
                 return ResourceManager.GetString("CN_Prefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to application/json.
+        /// </summary>
+        public static string ContentType_Json {
+            get {
+                return ResourceManager.GetString("ContentType_Json", resourceCulture);
             }
         }
         

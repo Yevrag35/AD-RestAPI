@@ -1,3 +1,4 @@
+using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Connection;
 using Microsoft.Win32.SafeHandles;
 using System;
@@ -15,15 +16,17 @@ namespace AD.Api.Ldap
     public class LdapConnectionBuilder
     {
         private readonly LdapConnectionOptions _options;
+        private readonly ILdapEnumDictionary _enumDictionary;
 
-        public LdapConnectionBuilder()
+        public LdapConnectionBuilder(ILdapEnumDictionary enumDictionary)
         {
             _options = new LdapConnectionOptions();
+            _enumDictionary = enumDictionary;
         }
 
         public LdapConnection Build()
         {
-            return new LdapConnection(_options);
+            return new LdapConnection(_options, _enumDictionary);
         }
 
         public LdapConnectionBuilder UsingAuthenticationTypes(AuthenticationTypes authenticationTypes)

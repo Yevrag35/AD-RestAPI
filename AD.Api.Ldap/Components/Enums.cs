@@ -15,6 +15,7 @@ namespace AD.Api.Ldap
     }
 
     [Flags]
+    [LdapEnum("groupType")]
     public enum GroupType : uint
     {
         BuiltIn = 1u,

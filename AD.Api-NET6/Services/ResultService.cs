@@ -1,5 +1,7 @@
 ﻿using AD.Api.Ldap;
+using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Operations;
+using System.Collections;
 using System.DirectoryServices;
 
 namespace AD.Api.Services
@@ -10,7 +12,9 @@ namespace AD.Api.Services
         IErroredResult GetError(string? message, OperationType operationType, string? property = null);
         IErroredResult GetError(Exception exception, string? property = null);
         IErroredResult GetError(string? message, OperationType operationType, Exception? exception, string? property = null);
-        object GetQueryReply<T>(List<T> results, int limitedTo, IList<string>? propertiesRequested, string host, string? ldapFilter);
+        QueryResult GetQueryReply(ICollection? results, string host);
+        QueryResult GetQueryReply(ICollection? results, int limitedTo, IList<string>? propertiesRequested, string host, string? ldapFilter);
+        //object GetQueryReply<T>(List<T> results, int limitedTo, IList<string>? propertiesRequested, string host, string? ldapFilter);
         ISuccessResult GetSuccess();
     }
 
@@ -68,23 +72,50 @@ namespace AD.Api.Services
         #endregion
 
         #region SUCCESS RESULTS
-        public object GetQueryReply<T>(List<T> results, int limitedTo, IList<string>? propertiesRequested,
-            string host, string? ldapFilter)
+        public QueryResult GetQueryReply(ICollection? results, string host)
         {
-            return new
+            return new QueryResult
             {
                 Host = host,
-                Request = new
-                {
-                    FilteredUsed = ldapFilter ?? string.Empty,
-                    Limit = limitedTo,
-                    PropertyCount = propertiesRequested?.Count ?? 0,
-                    PropertiesRequested = propertiesRequested ?? Array.Empty<string>()
-                },
-                results.Count,
                 Results = results
             };
         }
+
+        public QueryResult GetQueryReply(ICollection? results, int limitedTo, IList<string>? propertiesRequested, string host, string? ldapFilter)
+        {
+            if (propertiesRequested is null && ldapFilter is null)
+                return this.GetQueryReply(results, host);
+
+            return new QueryResult
+            {
+                Host = host,
+                Results = results,
+                Request = new QueryResultDetails
+                {
+                    FilterUsed = ldapFilter,
+                    Limit = limitedTo,
+                    PropertiesRequested = propertiesRequested
+                }
+            };
+        }
+
+        //public object GetQueryReply<T>(List<T> results, int limitedTo, IList<string>? propertiesRequested,
+        //    string host, string? ldapFilter)
+        //{
+        //    return new
+        //    {
+        //        Host = host,
+        //        Request = new
+        //        {
+        //            FilteredUsed = ldapFilter ?? string.Empty,
+        //            Limit = limitedTo,
+        //            PropertyCount = propertiesRequested?.Count ?? 0,
+        //            PropertiesRequested = propertiesRequested ?? Array.Empty<string>()
+        //        },
+        //        results.Count,
+        //        Results = results
+        //    };
+        //}
 
         public ISuccessResult GetSuccess()
         {

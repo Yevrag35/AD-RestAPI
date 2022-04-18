@@ -6,8 +6,6 @@ namespace AD.Api.Mapping
 {
     public class Mapper : Profile
     {
-        //private static readonly ValueConverter _valueConverter = new ValueConverter();
-
         public Mapper()
         {
             this.CreateMap<JsonSerializerSettings, JsonSerializerSettings>()
@@ -29,23 +27,5 @@ namespace AD.Api.Mapping
                 dest.Add(converter);
             });
         }
-
-        //private class ValueConverter : ITypeConverter<IList<JsonConverter>, JsonConverterCollection>, IValueConverter<IList<JsonConverter>, JsonConverterCollection>
-        //{
-        //    public JsonConverterCollection Convert(IList<JsonConverter> source, JsonConverterCollection destination, ResolutionContext context)
-        //    {
-        //        for (int i = 0; i < source.Count; i++)
-        //        {
-        //            destination.Add(source[i]);
-        //        }
-
-        //        return destination;
-        //    }
-
-        //    public JsonConverterCollection Convert(IList<JsonConverter> sourceMember, ResolutionContext context)
-        //    {
-        //        return this.Convert(sourceMember, new JsonConverterCollection(), context);
-        //    }
-        //}
     }
 }

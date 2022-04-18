@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Text;
 
@@ -7,6 +8,7 @@ namespace AD.Api.Settings
 {
     public interface ITextSettings
     {
+        DateTimeZoneHandling DateTimeZoneHandling { get; }
         Encoding Encoding { get; }
         NamingStrategy LdapEditNamingStrategy { get; }
         NamingStrategy LdapPropertyNamingStrategy { get; }
@@ -26,6 +28,29 @@ namespace AD.Api.Settings
             private static readonly Lazy<DefaultNamingStrategy> _default = new();
             private static readonly Lazy<CamelCaseNamingStrategy> _camelCase = new();
 
+            public string? DateTimeHandling { get; set; }
+            DateTimeZoneHandling ITextSettings.DateTimeZoneHandling
+            {
+                get
+                {
+                    switch (this.DateTimeHandling?.ToLower())
+                    {
+                        case "serverlocal":
+                        case "local":
+                            return DateTimeZoneHandling.Local;
+
+                        case "preserve":
+                        case "roundtripkind":
+                            return DateTimeZoneHandling.RoundtripKind;
+
+                        case "utc":
+                            return DateTimeZoneHandling.Utc;
+
+                        default:
+                            goto case "local";
+                    }
+                }
+            }
             public string? Encoding
             {
                 get => this.DefaultEncoding.HeaderName;

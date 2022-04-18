@@ -77,5 +77,23 @@ namespace AD.Api {
                 return ResourceManager.GetString("OperationResult_Success", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ???.
+        /// </summary>
+        public static string SearchDomain_Err_NoDefault {
+            get {
+                return ResourceManager.GetString("SearchDomain_Err_NoDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find the default naming context for domain &apos;{0}&apos;..
+        /// </summary>
+        public static string SearchDomain_Err_NoNamingContext {
+            get {
+                return ResourceManager.GetString("SearchDomain_Err_NoNamingContext", resourceCulture);
+            }
+        }
     }
 }

@@ -33,7 +33,8 @@ namespace AD.Api.Controllers.Search
                 [FromQuery] SearchScope scope = SearchScope.Subtree,
                 [FromQuery] string? sortDir = null,
                 [FromQuery] string? sortBy = null,
-                [FromQuery] string? properties = null)
+                [FromQuery] string? properties = null,
+                [FromQuery] bool includeDetails = false)
         {
             return this.PerformComputerSearch(
                 AddCriteria(_criteria, null),
@@ -43,7 +44,8 @@ namespace AD.Api.Controllers.Search
                 scope,
                 sortDir,
                 sortBy,
-                properties);
+                properties,
+                includeDetails);
         }
 
         [HttpPost]
@@ -55,7 +57,8 @@ namespace AD.Api.Controllers.Search
             [FromQuery] SearchScope scope = SearchScope.Subtree,
             [FromQuery] string? sortDir = null,
             [FromQuery] string? sortBy = null,
-            [FromQuery] string? properties = null)
+            [FromQuery] string? properties = null,
+            [FromQuery] bool includeDetails = false)
         {
             return this.PerformComputerSearch(
                 AddCriteria(_criteria, filter),
@@ -65,7 +68,8 @@ namespace AD.Api.Controllers.Search
                 scope,
                 sortDir,
                 sortBy,
-                properties);
+                properties,
+                includeDetails);
         }
 
         private IActionResult PerformComputerSearch(
@@ -76,7 +80,8 @@ namespace AD.Api.Controllers.Search
             SearchScope scope,
             PropertySortDirection sortDir,
             string? sortBy,
-            string? properties)
+            string? properties,
+            bool includeDetails)
         {
             QueryOptions options = new QueryOptions
             {
@@ -92,7 +97,7 @@ namespace AD.Api.Controllers.Search
             };
 
             var list = this.QueryService.Search(options, out string ldapFilter, out string host);
-            return base.GetReply(list, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
+            return base.GetReply(list, includeDetails, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
         }
     }
 }

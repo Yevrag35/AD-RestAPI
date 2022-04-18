@@ -43,10 +43,16 @@ namespace AD.Api.Controllers
             return and;
         }
 
-        protected IActionResult GetReply(List<FindResult> list, int limitedTo, IList<string>? propertiesRequested,
+        protected IActionResult GetReply(List<FindResult>? list, string host)
+        {
+            return Ok(this.ResultService.GetQueryReply(list, host));
+        }
+        protected IActionResult GetReply(List<FindResult>? list, bool includeRequestDetails, int limitedTo, IList<string>? propertiesRequested,
             string host, string? ldapFilter = null)
         {
-            return Ok(this.ResultService.GetQueryReply(list, limitedTo, propertiesRequested, host, ldapFilter));
+            return !includeRequestDetails
+                ? this.GetReply(list, host)
+                : Ok(this.ResultService.GetQueryReply(list, limitedTo, propertiesRequested, host, ldapFilter));
         }
 
         protected string[] GetProperties(ISearchSettings options, string? askedForProperties)
