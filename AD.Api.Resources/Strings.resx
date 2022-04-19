@@ -144,6 +144,9 @@
   <data name="NTAccount_Everyone" xml:space="preserve">
     <value>Everyone</value>
   </data>
+  <data name="OU_Prefix" xml:space="preserve">
+    <value>OU=</value>
+  </data>
   <data name="Schema_Computer" xml:space="preserve">
     <value>computer</value>
   </data>

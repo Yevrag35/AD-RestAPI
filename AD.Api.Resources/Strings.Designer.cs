@@ -142,6 +142,15 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OU=.
+        /// </summary>
+        public static string OU_Prefix {
+            get {
+                return ResourceManager.GetString("OU_Prefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to computer.
         /// </summary>
         public static string Schema_Computer {

@@ -11,7 +11,8 @@ namespace AD.Api.Ldap
         User,
         Group,
         Contact,
-        Computer
+        Computer,
+        OrganizationalUnit
     }
 
     [Flags]

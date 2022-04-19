@@ -7,6 +7,7 @@ using AD.Api.Schema;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
+using System.Security.AccessControl;
 using System.Security.Principal;
 
 namespace AD.Api.Services
@@ -96,6 +97,11 @@ namespace AD.Api.Services
                 groupChangeResult is not null)
             {
                 return groupChangeResult;
+            }
+            else if (request is OUCreateOperationRequest ouRequest
+                && !this.TrySetProtected(ouRequest, result, createdEntry, out ISuccessResult? ouResult))
+            {
+                return ouResult;
             }
 
             if (result.Success && request.Properties.Count > 0)
@@ -288,6 +294,36 @@ namespace AD.Api.Services
             catch (Exception ex)
             {
                 groupChangeResult = this.Results.GetError(ex, nameof(request.GroupType));
+                return false;
+            }
+        }
+
+        private bool TrySetProtected(OUCreateOperationRequest request, OperationResult creationResult,
+            DirectoryEntry ouEntry, [NotNullWhen(false)] out ISuccessResult? ouResult)
+        {
+            ouResult = null;
+
+            if (!request.ProtectFromAccidentalDeletion)
+                return true;
+
+            ActiveDirectoryAccessRule rule = new(
+                new NTAccount("Everyone"),
+                ActiveDirectoryRights.DeleteTree | ActiveDirectoryRights.Delete,
+                AccessControlType.Deny
+            );
+
+            ouEntry.ObjectSecurity.AddAccessRule(rule);
+
+            try
+            {
+                ouEntry.CommitChanges();
+                ouEntry.RefreshCache();
+
+                return true;
+            } 
+            catch (Exception ex)
+            {
+                ouResult = this.Results.GetError(ex, "object security");
                 return false;
             }
         }

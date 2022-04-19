@@ -147,7 +147,7 @@ namespace AD.Api.Ldap
             if (string.IsNullOrWhiteSpace(commonName) || commonName.Equals(Strings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
                 throw new ArgumentNullException(nameof(commonName));
 
-            CommonName cn = TruncateCN(commonName);
+            CommonName cn = CommonName.Create(commonName, creationType == CreationType.OrganizationalUnit);
 
             return ExecuteInContext(_accessToken, () =>
             {
