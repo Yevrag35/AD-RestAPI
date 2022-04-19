@@ -34,9 +34,8 @@ builder.Configuration
 // Add services to the container.
 
 // Add Authentication
-#if !DEBUG
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-#endif
+
 builder.Services.AddAuthentication()
     //.AddJwtBearer("Auth0", options =>
     //{

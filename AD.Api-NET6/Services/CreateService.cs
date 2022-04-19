@@ -13,7 +13,7 @@ namespace AD.Api.Services
 {
     public interface ICreateService
     {
-        OperationResult Create(CreateOperationRequest request);
+        ISuccessResult Create(CreateOperationRequest request);
         //OperationResult CreateOnBehalfOf(CreateOperationRequest request, WindowsIdentity windowsIdentity);
     }
 
@@ -21,13 +21,15 @@ namespace AD.Api.Services
     {
         private IConnectionService Connections { get; }
         private IPasswordService Passwords { get; }
+        private IResultService Results { get; }
         private ISchemaService Schema { get; }
 
         public LdapCreateService(IConnectionService connectionService, ISchemaService schemaService,
-            IPasswordService passwordService)
+            IPasswordService passwordService, IResultService resultService)
         {
             this.Connections = connectionService;
             this.Passwords = passwordService;
+            this.Results = resultService;
             this.Schema = schemaService;
         }
 
@@ -39,7 +41,7 @@ namespace AD.Api.Services
         //    });
         //}
 
-        public OperationResult Create(CreateOperationRequest request)
+        public ISuccessResult Create(CreateOperationRequest request)
         {
             using var connection = this.Connections.GetConnection(new ConnectionOptions
             {
@@ -86,6 +88,15 @@ namespace AD.Api.Services
             }
             else
                 hasSetPass = true;
+
+            if (request is GroupCreateOperationRequest groupRequest
+                && 
+                !this.TrySetDomainLocal(groupRequest, result, connection, createdEntry, out ISuccessResult? groupChangeResult)
+                &&
+                groupChangeResult is not null)
+            {
+                return groupChangeResult;
+            }
 
             if (result.Success && request.Properties.Count > 0)
             {
@@ -141,7 +152,6 @@ namespace AD.Api.Services
 
                                 object? obj = kvp.Value.ToObject<object>();
                                 if (obj is not null)
-                                    //collection.Value = obj;
                                     action(collection, obj);
 
                                 break;
@@ -175,7 +185,7 @@ namespace AD.Api.Services
             };
         }
 
-        private Action<PropertyValueCollection, object[]> GetMultiValueAction(SchemaProperty schemaProperty)
+        private static Action<PropertyValueCollection, object[]> GetMultiValueAction(SchemaProperty schemaProperty)
         {
             if (schemaProperty.IsSingleValued)
                 throw new InvalidOperationException($"'{schemaProperty.Name}' does not allow for multiple values.");
@@ -187,7 +197,7 @@ namespace AD.Api.Services
             };
         }
 
-        private Action<PropertyValueCollection, object> GetSingleValueAction(SchemaProperty schemaProperty)
+        private static Action<PropertyValueCollection, object> GetSingleValueAction(SchemaProperty schemaProperty)
         {
             if (!schemaProperty.IsSingleValued)
                 return (pvc, value) => pvc.Add(value);
@@ -240,6 +250,46 @@ namespace AD.Api.Services
             }
 
             return false;
+        }
+
+        private bool TrySetDomainLocal(GroupCreateOperationRequest request, OperationResult creationResult,
+            LdapConnection connection, DirectoryEntry groupEntry, out ISuccessResult? groupChangeResult)
+        {
+            groupChangeResult = null;
+            if (!creationResult.Success)
+                return false;
+
+            if (!request.GroupTypeValue.HasFlag(GroupType.DomainLocal))
+                return true;
+
+            // We have to change the group to Universal first.
+            GroupType changeTo = request.GroupTypeValue;
+            changeTo &= ~GroupType.DomainLocal;
+            changeTo |= GroupType.Universal;
+
+            if (!groupEntry.Properties.TryGetPropertyValueCollection(nameof(request.GroupType), out PropertyValueCollection? propValCol))
+                return false;
+
+            try
+            {
+                propValCol.Value = unchecked((int)changeTo);
+                groupEntry.CommitChanges();
+                groupEntry.RefreshCache();
+
+                changeTo &= ~GroupType.Universal;
+                changeTo |= GroupType.DomainLocal;
+
+                propValCol.Value = unchecked((int)changeTo);
+                groupEntry.CommitChanges();
+                groupEntry.RefreshCache();
+
+                return request.Properties.Remove(nameof(GroupType));
+            }
+            catch (Exception ex)
+            {
+                groupChangeResult = this.Results.GetError(ex, nameof(request.GroupType));
+                return false;
+            }
         }
     }
 }

@@ -16,13 +16,13 @@ namespace AD.Api.Ldap
 
     [Flags]
     [LdapEnum("groupType")]
-    public enum GroupType : uint
+    public enum GroupType
     {
-        BuiltIn = 1u,
-        Global = 2u,
-        DomainLocal = 4u,
-        Universal = 8u,
-        Security = 2147483648
+        BuiltIn = 0x00000001,
+        Global = 0x00000002,
+        DomainLocal = 0x00000004,
+        Universal = 0x00000008,
+        Security = unchecked((int)0x80000000)
     }
 
     public enum Protocol

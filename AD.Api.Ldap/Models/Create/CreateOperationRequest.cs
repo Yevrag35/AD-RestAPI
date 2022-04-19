@@ -13,7 +13,7 @@ using System.Security.Claims;
 
 namespace AD.Api.Ldap.Models
 {
-    [JsonObject(MemberSerialization = MemberSerialization.OptOut)]
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class CreateOperationRequest
     {
         [JsonIgnore]
@@ -39,6 +39,7 @@ namespace AD.Api.Ldap.Models
         /// The distinguished name of the OU or container to create the account in.
         /// </summary>
         /// <example>OU=AllUsers,DC=contoso,DC=com</example>
+        [JsonProperty]
         [DefaultValue("<The default user container or OU>")]
         public string? Path { get; set; }
 

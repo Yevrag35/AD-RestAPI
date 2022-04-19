@@ -83,11 +83,11 @@ namespace AD.Api.Controllers
                 }
             }
 
-            OperationResult createResult = this.CreateService.Create(request);
+            ISuccessResult createResult = this.CreateService.Create(request);
 
             return createResult.Success
                 ? StatusCode((int)HttpStatusCode.Created, createResult)
-                : UnprocessableEntity(createResult);
+                : BadRequest(createResult);
         }
     }
 }
