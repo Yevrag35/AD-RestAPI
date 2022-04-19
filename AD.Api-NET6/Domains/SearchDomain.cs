@@ -14,26 +14,26 @@ namespace AD.Api.Domains
 {
     public class SearchDomains : IReadOnlyDictionary<string, SearchDomain>
     {
-        private readonly SortedList<string, SearchDomain> _byFQDNs;
-        private readonly Dictionary<string, SearchDomain> _byDNs;
+        private readonly SortedList<string, SearchDomain> _fullyQualifiedDictionary;
+        private readonly Dictionary<string, SearchDomain> _distinguishedNameDictionary;
         private SearchDomain? _registeredDefault;
 
         public static readonly StringComparer KeyComparer = StringComparer.CurrentCultureIgnoreCase;
 
         public SearchDomain this[int index]
         {
-            get => _byFQDNs.Values[index];
+            get => _fullyQualifiedDictionary.Values[index];
         }
         public SearchDomain this[string key]
         {
-            get => _byFQDNs[key];
+            get => _fullyQualifiedDictionary[key];
         }
 
-        public int Count => _byFQDNs.Count;
+        public int Count => _fullyQualifiedDictionary.Count;
         IEnumerable<string> IReadOnlyDictionary<string, SearchDomain>.Keys => this.FQDNs;
-        public ICollection<string> DNs => _byDNs.Keys;
-        public IList<string> FQDNs => _byFQDNs.Keys;
-        public ICollection<SearchDomain> Values => _byFQDNs.Values;
+        public ICollection<string> DNs => _distinguishedNameDictionary.Keys;
+        public IList<string> FQDNs => _fullyQualifiedDictionary.Keys;
+        public ICollection<SearchDomain> Values => _fullyQualifiedDictionary.Values;
         IEnumerable<SearchDomain> IReadOnlyDictionary<string, SearchDomain>.Values => this.Values;
 
         public SearchDomains(IEnumerable<SearchDomain>? domainsToAdd)
@@ -41,15 +41,15 @@ namespace AD.Api.Domains
             if (domainsToAdd is null)
                 throw new ArgumentNullException(nameof(domainsToAdd));
 
-            _byFQDNs = new SortedList<string, SearchDomain>(1, KeyComparer);
-            _byDNs = new Dictionary<string, SearchDomain>(1, KeyComparer);
+            _fullyQualifiedDictionary = new SortedList<string, SearchDomain>(1, KeyComparer);
+            _distinguishedNameDictionary = new Dictionary<string, SearchDomain>(1, KeyComparer);
 
             foreach (SearchDomain domain in domainsToAdd.OrderByDescending(x => x.IsDefault).ThenBy(x => x.FQDN))
             {
                 if (domain.IsDefault && _registeredDefault is null)
                     _registeredDefault = domain;
 
-                _byFQDNs.Add(domain.FQDN, domain);
+                _fullyQualifiedDictionary.Add(domain.FQDN, domain);
 
                 if (!TryValidateDomain(domain, out string? domainNamingContext))
                 {
@@ -58,7 +58,7 @@ namespace AD.Api.Domains
 
                 domain.DistinguishedName = domainNamingContext;
 
-                _byDNs.Add(domainNamingContext, domain);
+                _distinguishedNameDictionary.Add(domainNamingContext, domain);
             }
         }
 
@@ -68,11 +68,11 @@ namespace AD.Api.Domains
         }
         public bool ContainsFQDN(string fqdn)
         {
-            return _byFQDNs.ContainsKey(fqdn);
+            return _fullyQualifiedDictionary.ContainsKey(fqdn);
         }
         public bool ContainsDN(string distinguishedName)
         {
-            return _byDNs.ContainsKey(distinguishedName);
+            return _distinguishedNameDictionary.ContainsKey(distinguishedName);
         }
         public string? GetDefaultFQDN()
         {
@@ -92,7 +92,7 @@ namespace AD.Api.Domains
         }
         public IEnumerator<KeyValuePair<string, SearchDomain>> GetEnumerator()
         {
-            return _byFQDNs.GetEnumerator();
+            return _fullyQualifiedDictionary.GetEnumerator();
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -105,11 +105,11 @@ namespace AD.Api.Domains
             if (string.IsNullOrWhiteSpace(key))
                 return false;
 
-            if (_byFQDNs.ContainsKey(key))
-                domain = _byFQDNs[key];
+            if (_fullyQualifiedDictionary.ContainsKey(key))
+                domain = _fullyQualifiedDictionary[key];
 
-            else if (_byDNs.ContainsKey(key))
-                domain = _byDNs[key];
+            else if (_distinguishedNameDictionary.ContainsKey(key))
+                domain = _distinguishedNameDictionary[key];
 
             return null != domain;
         }

@@ -101,6 +101,8 @@ namespace AD.Api.Ldap.Search
         {
             ldapFilter = string.Empty;
             hostContacted = null;
+            ArgumentNullException.ThrowIfNull(oneOffOptions);
+
             List<FindResult> list = new();
             using (DirectorySearcher oneOffSearcher = new(_searcher.SearchRoot))
             {
@@ -144,20 +146,5 @@ namespace AD.Api.Ldap.Search
 
             return searcher;
         }
-
-        //private static DirectorySearcher SetFilter(DirectorySearcher searcher, StringBuilder builder, IFilterStatement? setFilter, IFilterStatement? oneOffFilter = null)
-        //{
-        //    _ = builder.Clear();
-
-        //    if (oneOffFilter is not null)
-        //        _ = oneOffFilter.WriteTo(builder);
-
-        //    else if (setFilter is not null)
-        //        _ = setFilter.WriteTo(builder);
-
-        //    searcher.Filter = builder.ToString();
-
-        //    return searcher;
-        //}
     }
 }
