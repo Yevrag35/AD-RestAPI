@@ -231,6 +231,18 @@ namespace AD.Api.Ldap
             return ExecuteInContext(_accessToken, () => operation.Perform(collection, schemaProperty));
         }
 
+        public string? RenameEntry(DirectoryEntry entryToRename, CommonName commonName)
+        {
+            ArgumentNullException.ThrowIfNull(entryToRename);
+            ArgumentNullException.ThrowIfNull(commonName);
+
+            return ExecuteInContext(_accessToken, () =>
+            {
+                entryToRename.Rename(commonName.Value);
+                return entryToRename.Properties[Strings.DistinguishedName].Value as string;
+            });
+        }
+
         #region CREATE SEARCHERS
         //[Obsolete]
         //public ILdapSearcher CreateSearcher(PathValue searchBase, IFilterStatement? filter = null)

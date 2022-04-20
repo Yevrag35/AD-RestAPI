@@ -14,6 +14,7 @@ namespace AD.Api.Services
                 .AddSingleton<IIdentityService, IdentityService>()
                 .AddSingleton<IMoveService, MoveService>()
                 .AddSingleton<IPasswordService, PasswordService>()
+                .AddSingleton<IRenameService, RenameService>()
                 .AddSingleton<IResultService, ResultService>()
                 .AddSingleton<ISchemaService, SchemaService>()
                 .AddSingleton<ISerializationService, SerializationService>()
