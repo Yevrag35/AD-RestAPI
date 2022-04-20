@@ -67,6 +67,25 @@ namespace AD.Api.Ldap
 
         #region GET DIRECTORY ENTRIES
 
+        public bool ChildEntryExists(CommonName cn, DirectoryEntry parent)
+        {
+            return ExecuteInContext(_accessToken, () =>
+            {
+                try
+                {
+                    var de = parent.Children.Find(cn.Value);
+                    de.Dispose();
+                    return true;
+                }
+                catch (DirectoryServicesCOMException comEx)
+                {
+                    return comEx.Message.Contains("There is no such object on the server", StringComparison.CurrentCultureIgnoreCase)
+                        ? false
+                        : throw comEx;
+                }
+            });
+        }
+
         /// <summary>
         /// Constructs a <see cref="DirectoryEntry"/> from the specified DistinguishedName (dn).
         /// </summary>

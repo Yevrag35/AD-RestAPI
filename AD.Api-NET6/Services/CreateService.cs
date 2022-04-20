@@ -52,7 +52,8 @@ namespace AD.Api.Services
             });
             using var pathEntry = GetDirectoryEntryFromRequest(connection, request);
 
-            //CommonName cn = request.CommonName;
+            if (connection.ChildEntryExists(CommonName.Create(request.CommonName, request.Type == CreationType.OrganizationalUnit), pathEntry))
+                return this.Results.GetError($"A child entry with the name '{request.CommonName}' already exists.");
 
             DirectoryEntry createdEntry;
             OperationResult result;
