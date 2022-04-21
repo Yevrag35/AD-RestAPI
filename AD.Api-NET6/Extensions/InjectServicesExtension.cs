@@ -12,15 +12,16 @@ namespace AD.Api.Services
             return services
                 .AddSingleton<IConnectionService, ConnectionService>()
                 .AddSingleton<IIdentityService, IdentityService>()
-                .AddSingleton<IMoveService, MoveService>()
                 .AddSingleton<IPasswordService, PasswordService>()
-                .AddSingleton<IRenameService, RenameService>()
                 .AddSingleton<IResultService, ResultService>()
                 .AddSingleton<ISchemaService, SchemaService>()
                 .AddSingleton<ISerializationService, SerializationService>()
-                .AddTransient<IQueryService, LdapQueryService>()
-                .AddTransient<IEditService, LdapEditService>()
-                .AddTransient<ICreateService, LdapCreateService>();
+                .AddScoped<ICreateService, LdapCreateService>()
+                .AddScoped<IDeleteService, DeleteService>()
+                .AddScoped<IEditService, LdapEditService>()
+                .AddScoped<IMoveService, MoveService>()
+                .AddScoped<IQueryService, LdapQueryService>()
+                .AddScoped<IRenameService, RenameService>();
         }
 
         public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)

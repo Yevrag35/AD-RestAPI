@@ -9,7 +9,7 @@ using System.DirectoryServices;
 using System.Net;
 using System.Security.Principal;
 
-namespace AD.Api.Controllers
+namespace AD.Api.Controllers.Edit
 {
     [ApiController]
     [Produces("application/json")]

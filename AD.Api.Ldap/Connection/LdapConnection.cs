@@ -159,8 +159,6 @@ namespace AD.Api.Ldap
         }
 
         #endregion
-
-
         public DirectoryEntry AddChildEntry(string commonName, DirectoryEntry parent, CreationType creationType)
         {
             if (string.IsNullOrWhiteSpace(commonName) || commonName.Equals(Strings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
@@ -223,6 +221,11 @@ namespace AD.Api.Ldap
                     };
                 }
             });
+        }
+
+        public void DeleteEntry(DirectoryEntry entryToDelete)
+        {
+            ExecuteInContext(_accessToken, () => entryToDelete.DeleteTree());
         }
 
         [Obsolete("Not needed")]
