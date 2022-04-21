@@ -21,14 +21,14 @@ namespace AD.Api.Ldap.Operations
         Set = 1,
 
         /// <summary>
-        /// Represents an operation where one or more values are being added.
-        /// </summary>
-        Add = 2,
-
-        /// <summary>
         /// Represents an operation where one or more values are being removed.
         /// </summary>
-        Remove = 4,
+        Remove = 2,
+
+        /// <summary>
+        /// Represents an operation where one or more values are being added.
+        /// </summary>
+        Add = 4,
 
         /// <summary>
         /// Represents an operation where one or more values are being replaced with new ones.

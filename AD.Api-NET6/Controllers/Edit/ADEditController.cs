@@ -29,7 +29,7 @@ namespace AD.Api.Controllers.Edit
         }
 
         /// <summary>
-        /// Edits an account.
+        /// Edits an object.
         /// </summary>
         /// <param name="request">The request body containing the DistinguishedName (DN)
         /// of the object to modify with the specified edit operations.</param>

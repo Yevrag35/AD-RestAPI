@@ -1,5 +1,6 @@
 ﻿using AD.Api.Ldap.Components;
 using AD.Api.Ldap.Filters;
+using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Search;
 using AD.Api.Services;
 using AD.Api.Settings;
@@ -21,15 +22,10 @@ namespace AD.Api.Controllers.Search
             this.GenericSettings = genericSettings;
         }
 
-        [HttpPost]
-        [Route("search/test")]
-        public IActionResult SendBodyBack([FromBody] IFilterStatement statement)
-        {
-            return Ok(statement);
-        }
-
         [HttpGet]
         [Route("search")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(QueryResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetGenericSearch(
                 [FromQuery] string? searchBase = null,
                 [FromQuery] string? sortDir = null,
@@ -54,6 +50,8 @@ namespace AD.Api.Controllers.Search
 
         [HttpPost]
         [Route("search")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(QueryResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult PostGenericSearch(
             [FromBody] IFilterStatement filter,
             [FromQuery] string? searchBase = null,
