@@ -1,0 +1,72 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema",
+	"title": "JSON schema for additional attribute definition files.",
+	"type": "object",
+	"required": [
+		"Attributes"
+	],
+	"definitions": {
+		"attributeProperty": {
+			"type": "array",
+			"description": "Definitions of Schema Attributes",
+			"items": {
+				"$ref": "#/definitions/attributeDefinition"
+			}
+		},
+		"attributeDefinition": {
+			"type": "object",
+			"description": "Defines an Active Directory Schema attribute used to verify and define functionality in the API operations.",
+			"required": [
+				"Class",
+				"Name",
+				"IsInGlobalCatalog",
+				"IsSingleValued",
+				"RangeLower",
+				"RangeUpper"
+			],
+			"properties": {
+				"Class": {
+					"description": "The GUID of the Schema Class the attribute is for.",
+					"$ref": "#/definitions/guidString"
+				},
+				"Name": {
+					"type": "string",
+					"description": "The name of the schema attribute.",
+					"minLength": 1
+				},
+				"IsInGlobalCatalog": {
+					"type": "boolean",
+					"description": "Indicates whether the attribute is retrievable when querying the Global Catalog.",
+					"default": false
+				},
+				"IsSingleValued": {
+					"type": "boolean",
+					"description": "Indicates whether the attribute is single-valued.",
+					"default": true
+				},
+				"RangeLower": {
+					"description": "The inclusive lower bound the length or integer value must be for an attribute's value.",
+					"$ref": "#/definitions/range"
+				},
+				"RangeUpper": {
+					"description": "The inclusive upper bound the length or integer value must be for an attribute's value.",
+					"$ref": "#/definitions/range"
+				}
+			}
+		},
+		"guidString": {
+			"type": "string",
+			"pattern": "^[{]?[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$"
+		},
+		"range": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 2147483647
+		}
+	},
+	"properties": {
+		"Attributes": {
+			"$ref": "#/definitions/attributeProperty"
+		}
+	}
+}

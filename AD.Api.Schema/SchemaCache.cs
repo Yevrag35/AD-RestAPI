@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
+using System.IO;
 
 namespace AD.Api.Schema
 {
@@ -18,6 +19,10 @@ namespace AD.Api.Schema
         public SchemaCache(int capacity = 1000)
         {
             _cache = new Dictionary<string, SchemaProperty>(capacity, StringComparer.CurrentCultureIgnoreCase);
+        }
+        public SchemaCache(IEnumerable<SchemaProperty> collection)
+        {
+            _cache = collection.ToDictionary(key => key.Name, StringComparer.CurrentCultureIgnoreCase);
         }
 
         public bool Add(ActiveDirectorySchemaProperty property)
@@ -40,6 +45,11 @@ namespace AD.Api.Schema
             }
 
             return added;
+        }
+
+        public bool Add(SchemaProperty schemaProperty)
+        {
+            return _cache.TryAdd(schemaProperty.Name, schemaProperty);
         }
 
         public bool ContainsKey(string key) => _cache.ContainsKey(key);

@@ -32,9 +32,9 @@ namespace AD.Api.Services
         public SchemaCache Dictionary { get; }
         public ILdapEnumDictionary Enums { get; }
 
-        public SchemaService(ILdapEnumDictionary enumDictionary)
+        public SchemaService(SchemaCache schemaCache, ILdapEnumDictionary enumDictionary)
         {
-            this.Dictionary = new SchemaCache();
+            this.Dictionary = schemaCache;
             this.Enums = enumDictionary;
         }
 

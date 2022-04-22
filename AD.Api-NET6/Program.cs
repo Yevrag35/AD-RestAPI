@@ -23,13 +23,18 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
-    .AddEnvironmentVariables()
     .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile(options =>
     {
         options.Path = "appsettings.json";
         options.Optional = false;
-    });
+    })
+    .AddJsonFile(options =>
+    {
+        options.Path = "defaultAttributes.json";
+        options.Optional = false;
+    })
+    .AddEnvironmentVariables();
 
 // Add services to the container.
 
@@ -51,6 +56,7 @@ builder.Services.AddAuthorization(options =>
     options.DefaultPolicy = policyBuilder.Build();
 });
 
+builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
 builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
 builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
 builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
