@@ -116,7 +116,13 @@
         "settings": {
             "type": "object",
             "description": "Various default settings for the API.",
+            "required": [
+                "Restrictions"
+            ],
             "properties": {
+                "Restrictions": {
+                    "$ref": "#/definitions/restrictionCategories"
+                },
                 "SearchDefaults": {
                     "type": "object",
                     "description": "Default settings used when for querying.",
@@ -228,6 +234,55 @@
                     "type": "null"
                 }
             ]
+        },
+
+        "restriction": {
+            "type": "object",
+            "description": "Defines certain restrictions for the specified API operation. E.g. - only allowed to delete 'group' objects, etc.",
+            "required": [
+                "ObjectClasses"
+            ],
+            "properties": {
+                "ObjectClasses": {
+                    "description": "The schema class names that the specified API operation is allowed to execute on.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "computer",
+                        "contact",
+                        "group",
+                        "organizationalUnit",
+                        "user"
+                    ]
+                }
+            }
+        },
+
+        "restrictionCategories": {
+            "type": "object",
+            "description": "A set of restriction definitions for potentially destructive operations the API can perform.",
+            "required": [
+                "Delete",
+                "Edit",
+                "Move",
+                "Rename"
+            ],
+            "properties": {
+                "Delete": {
+                    "$ref": "#/definitions/restriction"
+                },
+                "Edit": {
+                    "$ref": "#/definitions/restriction"
+                },
+                "Move": {
+                    "$ref": "#/definitions/restriction"
+                },
+                "Rename": {
+                    "$ref": "#/definitions/restriction"
+                }
+            }
         },
 
 		"textSettings": {

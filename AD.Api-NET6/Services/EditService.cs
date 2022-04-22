@@ -69,25 +69,5 @@ namespace AD.Api.Services
 
             return result;
         }
-
-        private static PropertyValueCollection GetCollection(string propertyName, DirectoryEntry dirEntry, SafeAccessTokenHandle? token)
-        {
-            if (token is null)
-                return GetCollection(propertyName, dirEntry);
-
-            return WindowsIdentity.RunImpersonated(token, () =>
-            {
-                return dirEntry.Properties.TryGetPropertyValueCollection(propertyName, out PropertyValueCollection? resultCol)
-                    ? resultCol
-                    : throw new InvalidOperationException($"No property called '{propertyName}' was found.");
-            });
-        }
-
-        private static PropertyValueCollection GetCollection(string propertyName, DirectoryEntry dirEntry)
-        {
-            return dirEntry.Properties.TryGetPropertyValueCollection(propertyName, out PropertyValueCollection? col)
-                ? col
-                : throw new InvalidOperationException($"No property named '{propertyName}' was found.");
-        }
     }
 }

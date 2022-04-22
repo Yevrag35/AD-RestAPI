@@ -229,12 +229,6 @@ namespace AD.Api.Ldap
             ExecuteInContext(_accessToken, () => entryToDelete.DeleteTree());
         }
 
-        [Obsolete("Not needed")]
-        public bool DoEditOperation(ILdapOperation operation, PropertyValueCollection collection, SchemaProperty schemaProperty)
-        {
-            return ExecuteInContext(_accessToken, () => operation.Perform(collection, schemaProperty));
-        }
-
         public PropertyValueCollection GetValueCollection(DirectoryEntry entry, string propertyName)
         {
             ArgumentNullException.ThrowIfNull(entry);
