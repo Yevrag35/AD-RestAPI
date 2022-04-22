@@ -13,11 +13,13 @@ namespace AD.Api.Services
     public class MoveService : IMoveService
     {
         private IConnectionService Connections { get; }
+        private IRestrictionService Restrictions { get; }
         private IResultService Results { get; }
         
-        public MoveService(IConnectionService connectionService, IResultService resultService)
+        public MoveService(IConnectionService connectionService, IRestrictionService restrictionService, IResultService resultService)
         {
             this.Connections = connectionService;
+            this.Restrictions = restrictionService;
             this.Results = resultService;
         }
 
@@ -34,7 +36,16 @@ namespace AD.Api.Services
             });
 
             using DirectoryEntry entryToMove = connection.GetDirectoryEntry(moveRequest.DistinguishedName);
-            if (connection.IsCriticalSystemObject(entryToMove))
+
+            string? objectClass = connection.GetProperty<string>(entryToMove, "objectClass");
+            if (!this.Restrictions.IsAllowed(OperationType.Move, objectClass))
+                return new OperationResult
+                {
+                    Message = $"Not allowed to move an object of type '{objectClass}' as it's restricted.",
+                    Success = false
+                };
+
+            else if (connection.IsCriticalSystemObject(entryToMove))
                 return this.Results.GetError("Cannot move a critical system object.", OperationType.Move, "dn");
 
             else if (connection.IsProtectedObject(entryToMove))

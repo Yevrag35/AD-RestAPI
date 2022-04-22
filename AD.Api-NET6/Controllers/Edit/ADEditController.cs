@@ -49,28 +49,24 @@ namespace AD.Api.Controllers.Edit
             request.Domain = domain;
             request.ClaimsPrincipal = this.HttpContext.User;
 
-            SafeAccessTokenHandle? token = ((WindowsIdentity?)this.HttpContext?.User?.Identity)?.AccessToken;
-
             using (var connection = this.Connections.GetConnection(options =>
             {
                 options.Domain = request.Domain;
-                options.DontDisposeHandle = false;
-                options.Principal = this.HttpContext?.User;
+                options.DontDisposeHandle = true;
+                options.Principal = this.HttpContext.User;
             }))
             {
                 if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out List<string>? missing))
                 {
                     this.Schema.LoadAttributes(missing, connection);
                 }
-
-                using DirectoryEntry de = connection.GetDirectoryEntry(request.DistinguishedName);
-
-                ISuccessResult editResult = this.EditService.Edit(de, request.EditOperations, token);
-
-                return editResult.Success
-                ? Accepted(editResult)
-                : UnprocessableEntity(editResult);
             }
+
+            ISuccessResult editResult = this.EditService.Edit(request);
+
+            return editResult.Success
+            ? Accepted(editResult)
+            : UnprocessableEntity(editResult);
         }
     }
 }

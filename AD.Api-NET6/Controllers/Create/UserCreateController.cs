@@ -55,12 +55,10 @@ namespace AD.Api.Controllers
         /// </example>
         /// <response code="201">A success message is returned.</response>
         /// <response code="400">The request body is malformed.</response>
-        /// <response code="422">The LDAP operation failed to commit the changes from the request.  The response will have more error details.</response>
         [HttpPost]
         [Route("create/user")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IDNResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(IErroredResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IErroredResult))]
         public IActionResult CreateUser(
             [FromBody] UserCreateOperationRequest request,
             [FromQuery] string? domain = null

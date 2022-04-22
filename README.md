@@ -9,7 +9,8 @@ See the [__WIKI__](https://github.com/Yevrag35/AD-RestAPI/wiki) for details abou
 
 ## [Authentication](/Walkthroughs/Authentication)
 
-By default, the project will use __Windows Authentication__, but I'm baking in some options as well as creating walkthroughs for leveraging other authentication schemes (e.g. - AzureAD, custom JSON web tokens, etc.).
+By default, the project will use __Windows Authentication__, and it is highly recommended to [set up the application to use Kerberos/Negotiate](/Walkthroughs/Authentication/Negotiate-NTLM-Kerberos) to be as secure as possible.
+I'm planning on baking in some options as well as creating walkthroughs for leveraging other authentication schemes (e.g. - AzureAD, custom JSON web tokens, etc.).
 
 ## Update 4/21/22
 

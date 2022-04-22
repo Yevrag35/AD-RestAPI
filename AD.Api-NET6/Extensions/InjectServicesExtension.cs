@@ -13,6 +13,7 @@ namespace AD.Api.Services
                 .AddSingleton<IConnectionService, ConnectionService>()
                 .AddSingleton<IIdentityService, IdentityService>()
                 .AddSingleton<IPasswordService, PasswordService>()
+                .AddSingleton<IRestrictionService, RestrictionService>()
                 .AddSingleton<IResultService, ResultService>()
                 .AddSingleton<ISchemaService, SchemaService>()
                 .AddSingleton<ISerializationService, SerializationService>()

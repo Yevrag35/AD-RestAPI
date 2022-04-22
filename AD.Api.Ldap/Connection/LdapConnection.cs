@@ -106,6 +106,7 @@ namespace AD.Api.Ldap
                 UseSsl = this.UseSSL
             });
         }
+
         /// <summary>
         /// Constructs a <see cref="DirectoryEntry"/> from the specified <see cref="PathValue"/>.
         /// </summary>
@@ -234,6 +235,17 @@ namespace AD.Api.Ldap
             return ExecuteInContext(_accessToken, () => operation.Perform(collection, schemaProperty));
         }
 
+        public PropertyValueCollection GetValueCollection(DirectoryEntry entry, string propertyName)
+        {
+            ArgumentNullException.ThrowIfNull(entry);
+            ArgumentNullException.ThrowIfNull(propertyName);
+
+            return ExecuteInContext(_accessToken, () =>
+            {
+                return entry.Properties[propertyName];
+            });
+        }
+
         public string? RenameEntry(DirectoryEntry entryToRename, CommonName commonName)
         {
             ArgumentNullException.ThrowIfNull(entryToRename);
@@ -286,6 +298,11 @@ namespace AD.Api.Ldap
                 ? new DirectoryContext(DirectoryContextType.Forest, host)
                 : new DirectoryContext(DirectoryContextType.Forest, host, _creds.UserName, _creds.Password);
         }
+
+        public string GetSchemaClassName(DirectoryEntry entry)
+        {
+            return ExecuteInContext(_accessToken, () => entry.SchemaClassName);
+        }
         
         /// <summary>
         /// 
@@ -336,6 +353,19 @@ namespace AD.Api.Ldap
             return ExecuteInContext(_accessToken, () =>
             {
                 if (!directoryEntry.Properties.TryGetFirstValue(propertyName, out T? value))
+                    value = default;
+
+                return value;
+            });
+        }
+
+        public T? GetProperty<T>(DirectoryEntry directoryEntry, string? propertyName, Func<PropertyValueCollection, object?> selectFunc)
+        {
+            ArgumentNullException.ThrowIfNull(propertyName);
+
+            return ExecuteInContext(_accessToken, () =>
+            {
+                if (!directoryEntry.Properties.TryGetValue(propertyName, out T? value, selectFunc))
                     value = default;
 
                 return value;

@@ -53,6 +53,8 @@ namespace AD.Api.Ldap.Operations
         /// <summary>
         /// An operation that indicates an existing object is being deleted.
         /// </summary>
-        Delete = 512
+        Delete = 512,
+
+        Rename = 1024
     }
 }

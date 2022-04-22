@@ -12,11 +12,13 @@ namespace AD.Api.Services
     public class DeleteService : IDeleteService
     {
         private IConnectionService Connections { get; }
+        private IRestrictionService Restrictions { get; }
         private IResultService Results { get; }
 
-        public DeleteService(IConnectionService connectionService, IResultService resultService)
+        public DeleteService(IConnectionService connectionService, IRestrictionService restrictionService, IResultService resultService)
         {
             this.Connections = connectionService;
+            this.Restrictions = restrictionService;
             this.Results = resultService;
         }
 
@@ -40,6 +42,14 @@ namespace AD.Api.Services
             });
 
             using var dirEntry = connection.GetDirectoryEntry(distinguishedName);
+
+            string? objectClass = connection.GetProperty<string>(dirEntry, "objectClass");
+            if (!this.Restrictions.IsAllowed(OperationType.Delete, objectClass))
+                return new OperationResult
+                {
+                    Message = $"Not allowed to delete an object of type '{objectClass}' as it's restricted.",
+                    Success = false
+                };
 
             if (connection.IsCriticalSystemObject(dirEntry))
                 return this.Results.GetError("Cannot delete a critical system object.", OperationType.Delete);

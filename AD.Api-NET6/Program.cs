@@ -51,6 +51,7 @@ builder.Services.AddAuthorization(options =>
     options.DefaultPolicy = policyBuilder.Build();
 });
 
+builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
 builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
 builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
 builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings textSettings);
