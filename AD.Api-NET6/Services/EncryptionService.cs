@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
 using System.Security;
 using System.Security.Cryptography;
-using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 
 namespace AD.Api.Services
@@ -21,18 +20,16 @@ namespace AD.Api.Services
         private readonly X509Certificate2? _certificate;
         private bool _disposed;
 
-        //private EncryptionSettings Settings { get; }
-        //private ITextSettings TextSettings { get; }
+        private RSAEncryptionPadding Padding { get; }
 
         [MemberNotNull(nameof(_certificate))]
         public bool CanPerform { get; }
 
-        public EncryptionService(IOptions<EncryptionSettings> options)
+        public EncryptionService(IEncryptionSettings settings)
         {
-            _certificate = FindCertificate(options.Value.SHA1Thumbprint);
+            this.Padding = settings.Padding;
+            _certificate = FindCertificate(settings.SHA1Thumbprint);
             this.CanPerform = CertificateIsUsable(_certificate);
-            //this.Settings = options.Value;
-            //this.TextSettings = textSettings;
         }
 
         [return: NotNullIfNotNull("base64Encrypted")]
@@ -41,12 +38,11 @@ namespace AD.Api.Services
             if (string.IsNullOrWhiteSpace(base64Encrypted))
                 return null;
 
-            var cms = new EnvelopedCms();
-            cms.Decode(Convert.FromBase64String(base64Encrypted));
+            using var rsa = _certificate?.GetRSAPrivateKey();
 
-            cms.Decrypt();
-
-            return cms.ContentInfo.Content;
+            return rsa is not null
+                ? rsa.Decrypt(Convert.FromBase64String(base64Encrypted), this.Padding)
+                : throw new InvalidOperationException("Cannot decrypt when no private key was found.");
         }
 
         #region BACKEND METHODS
