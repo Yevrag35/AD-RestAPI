@@ -3,7 +3,9 @@
     "$schema": "http://json-schema.org/draft-04/schema",
     "type": "object",
     "required": [
-        "AzureAD"
+        "AzureAD",
+        "Domains",
+        "Settings"
     ],
     "definitions": {
         "azureAD": {
@@ -117,9 +119,15 @@
             "type": "object",
             "description": "Various default settings for the API.",
             "required": [
-                "Restrictions"
+                "Encryption",
+                "Restrictions",
+                "SearchDefaults",
+                "Text"
             ],
             "properties": {
+                "Encryption": {
+                    "$ref": "#/definitions/encryptionSettings"
+                },
                 "Restrictions": {
                     "$ref": "#/definitions/restrictionCategories"
                 },
@@ -236,6 +244,35 @@
             ]
         },
 
+        "encryptionSettings": {
+            "type": "object",
+            "description": "Contains settings that govern the encryption mechanisms around password operations.",
+            "required": [
+                "SHA1Thumbprint"
+            ],
+            "properties": {
+                "SHA1Thumbprint": {
+                    "description": "The SHA1 Thumbprint of the certificate that clients use to encrypt the data in their requests.\r\nThis certificate must be installed in the local machine or the current user store of the account that runs the IIS Application Pool.",
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "minLength": 0,
+                            "maxLength": 0
+                        },
+                        {
+                            "type": "string",
+                            "minLength": 40,
+                            "maxLength": 40,
+                            "pattern": "^[a-fA-F0-9]{40}$"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            }
+        },
+
         "restriction": {
             "type": "object",
             "description": "Defines certain restrictions for the specified API operation. E.g. - only allowed to delete 'group' objects, etc.",
@@ -288,6 +325,17 @@
 		"textSettings": {
 			"type": "object",
             "properties": {
+                "DateTimeHandling": {
+                    "type": "string",
+                    "description": "Specifies the TimeZoneHandling of DateTime objects are serialized in responses.",
+                    "default": "local",
+                    "enum": [
+                        "local",
+                        "roundtripKind",
+                        "unspecified",
+                        "utc"
+                    ]
+                },
                 "Encoding": {
                     "type": "string",
                     "description": "The encoding used for reading request content.",
