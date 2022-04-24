@@ -115,6 +115,15 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ChangePassword.
+        /// </summary>
+        public static string Invoke_ChangePassword {
+            get {
+                return ResourceManager.GetString("Invoke_ChangePassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SetPassword.
         /// </summary>
         public static string Invoke_PasswordSet {

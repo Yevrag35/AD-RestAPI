@@ -75,7 +75,7 @@ namespace AD.Api.Controllers
                 Principal = request.ClaimsPrincipal
             }))
             {
-                if (!this.Schema.HasAllAttributesCached(request.Properties.Keys, out List<string>? missing))
+                if (!this.Schema.HasAllAttributesCached(request.Properties.Keys, out ICollection<string>? missing))
                 {
                     this.Schema.LoadAttributes(missing, connection);
                 }

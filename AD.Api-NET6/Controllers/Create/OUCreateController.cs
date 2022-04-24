@@ -39,7 +39,7 @@ namespace AD.Api.Controllers.Create
                 options.DontDisposeHandle = true;
             }))
             {
-                if (!this.Schema.HasAllAttributesCached(request.Properties.Keys, out List<string>? missing))
+                if (!this.Schema.HasAllAttributesCached(request.Properties.Keys, out ICollection<string>? missing))
                 {
                     this.Schema.LoadAttributes(missing, connection);
                 }

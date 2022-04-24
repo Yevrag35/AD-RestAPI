@@ -39,7 +39,7 @@ builder.Configuration
 // Add services to the container.
 
 // Add Authentication
-builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+//builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
 builder.Services.AddAuthentication()
     //.AddJwtBearer("Auth0", options =>
@@ -57,6 +57,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
+builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));
 builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
 builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
 builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));

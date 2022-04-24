@@ -61,6 +61,15 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The current password is required in order to perform a change request..
+        /// </summary>
+        public static string Error_CurrentPassIsRequired {
+            get {
+                return ResourceManager.GetString("Error_CurrentPassIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An exception occurred performing the operation.
         /// </summary>
         public static string OperationResult_DefaultError {

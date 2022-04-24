@@ -19,12 +19,32 @@ namespace AD.Api.Services
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="entry"></param>
+        /// <param name="distinguishedName"></param>
+        /// <param name="connection"></param>
+        /// <param name="currentPasswordBytes"></param>
+        /// <param name="newPasswordBytes"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        OperationResult ChangePassword(string distinguishedName, LdapConnection connection, byte[] currentPasswordBytes, byte[] newPasswordBytes);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="distinguishedName"></param>
+        /// <param name="connection"></param>
         /// <param name="passwordBytes"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        OperationResult SetPassword(DirectoryEntry entry, byte[] passwordBytes);
-        bool TryGetFromBase64(UserCreateOperationRequest request, [NotNullWhen(true)] out byte[]? utf8Password);
+        OperationResult SetPassword(string distinguishedName, LdapConnection connection, byte[] passwordBytes);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dirEntry"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        OperationResult SetPassword(DirectoryEntry dirEntry, byte[] password);
+        bool TryGetFromBase64(string? base64Password, [NotNullWhen(true)] out byte[]? utf8Password);
     }
 
     public class PasswordService : IPasswordService
@@ -39,21 +59,99 @@ namespace AD.Api.Services
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="entry"></param>
-        /// <param name="passwordBytes">The plain-text bytes of the password.</param>
+        /// <param name="distinguishedName"></param>
+        /// <param name="connection"></param>
+        /// <param name="currentPasswordBytes"></param>
+        /// <param name="newPasswordBytes"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentNullException"><paramref name="passwordBytes"/> is <see langword="null"/>.</exception>
-        public OperationResult SetPassword(DirectoryEntry entry, byte[] passwordBytes)
+        /// <exception cref="ArgumentNullException"></exception>
+        public OperationResult ChangePassword(string distinguishedName, LdapConnection connection, byte[] currentPasswordBytes, byte[] newPasswordBytes)
         {
-            if (passwordBytes is null)
-                throw new ArgumentNullException(nameof(passwordBytes));
+            ArgumentNullException.ThrowIfNull(currentPasswordBytes);
+            ArgumentNullException.ThrowIfNull(newPasswordBytes);
 
-            if (!this.TryConvertPassword(passwordBytes, out string? password, out OperationResult? result))
+            if (!this.TryConvertPassword(currentPasswordBytes, out string? currentPassword, out OperationResult? result))
                 return result;
+
+            if (!this.TryConvertPassword(newPasswordBytes, out string? newPassword, out OperationResult? newResult))
+                return newResult;
+
+            using DirectoryEntry dirEntry = connection.GetDirectoryEntry(distinguishedName);
 
             try
             {
-                entry.Invoke(Strings.Invoke_PasswordSet, password);
+                connection.ExecuteInContext(() => dirEntry.Invoke(Strings.Invoke_ChangePassword, currentPassword, newPassword));
+                return new OperationResult
+                {
+                    Success = true,
+                    Message = "Password updated successfully."
+                };
+            }
+            catch (TargetInvocationException tie)
+            {
+                return HandleComException(tie);
+            }
+            catch (DirectoryServicesCOMException dsCom)
+            {
+                return new OperationResult
+                {
+                    Message = dsCom.Message,
+                    Success = false,
+                    Error = new ErrorDetails(dsCom)
+                    {
+                        OperationType = OperationType.Set,
+                        Property = "password"
+                    }
+                };
+            }
+            catch (Exception e)
+            {
+                return new OperationResult
+                {
+                    Message = e.Message,
+                    Success = false,
+                    Error = new ErrorDetails
+                    {
+                        ErrorCode = e.HResult,
+                        ExtendedMessage = e.GetBaseException().Message,
+                        OperationType = OperationType.Set,
+                        Property = "password"
+                    }
+                };
+            }
+            finally
+            {
+                Array.Clear(currentPasswordBytes, 0, currentPasswordBytes.Length);
+                Array.Clear(newPasswordBytes, 0, newPasswordBytes.Length);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="distinguishedName"></param>
+        /// <param name="connection"></param>
+        /// <param name="passwordBytes">The plain-text bytes of the password.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="passwordBytes"/> is <see langword="null"/>.</exception>
+        public OperationResult SetPassword(string distinguishedName, LdapConnection connection, byte[] passwordBytes)
+        {
+            using DirectoryEntry dirEntry = connection.GetDirectoryEntry(distinguishedName);
+
+            return SetPassword(connection, dirEntry, passwordBytes);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dirEntry"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public OperationResult SetPassword(DirectoryEntry dirEntry, byte[] password)
+        {
+            try
+            {
+                dirEntry.Invoke(Strings.Invoke_PasswordSet, password);
                 return new OperationResult
                 {
                     Success = true,
@@ -94,19 +192,19 @@ namespace AD.Api.Services
             }
             finally
             {
-                Array.Clear(passwordBytes, 0, passwordBytes.Length);
+                Array.Clear(password, 0, password.Length);
             }
         }
 
-        public bool TryGetFromBase64(UserCreateOperationRequest request, [NotNullWhen(true)] out byte[]? utf8Password)
+        public bool TryGetFromBase64(string? base64Password, [NotNullWhen(true)] out byte[]? utf8Password)
         {
             utf8Password = null;
-            if (string.IsNullOrWhiteSpace(request.Base64Password))
+            if (string.IsNullOrWhiteSpace(base64Password))
                 return false;
 
             try
             {
-                utf8Password = Convert.FromBase64String(request.Base64Password);
+                utf8Password = Convert.FromBase64String(base64Password);
             }
             catch
             {
@@ -115,7 +213,6 @@ namespace AD.Api.Services
 
             return utf8Password is not null && utf8Password.Length > 0;
         }
-
 
         private static OperationResult HandleComException(TargetInvocationException tie)
         {
@@ -243,6 +340,59 @@ namespace AD.Api.Services
                     Success = false
                 };
                 return false;
+            }
+        }
+
+        
+        private OperationResult SetPassword(LdapConnection connection, DirectoryEntry dirEntry, byte[] password)
+        {
+            if (!this.TryConvertPassword(password, out string? passStr, out OperationResult? badResult))
+                return badResult;
+
+            try
+            {
+                connection.ExecuteInContext(() => dirEntry.Invoke(Strings.Invoke_PasswordSet, passStr));
+                return new OperationResult
+                {
+                    Success = true,
+                    Message = "Password updated successfully."
+                };
+            }
+            catch (TargetInvocationException tie)
+            {
+                return HandleComException(tie);
+            }
+            catch (DirectoryServicesCOMException dsCom)
+            {
+                return new OperationResult
+                {
+                    Message = dsCom.Message,
+                    Success = false,
+                    Error = new ErrorDetails(dsCom)
+                    {
+                        OperationType = OperationType.Set,
+                        Property = nameof(password)
+                    }
+                };
+            }
+            catch (Exception e)
+            {
+                return new OperationResult
+                {
+                    Message = e.Message,
+                    Success = false,
+                    Error = new ErrorDetails
+                    {
+                        ErrorCode = e.HResult,
+                        ExtendedMessage = e.GetBaseException().Message,
+                        OperationType = OperationType.Set,
+                        Property = nameof(password)
+                    }
+                };
+            }
+            finally
+            {
+                Array.Clear(password, 0, password.Length);
             }
         }
     }

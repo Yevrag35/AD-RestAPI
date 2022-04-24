@@ -22,7 +22,8 @@ namespace AD.Api.Services
                 .AddScoped<IEditService, LdapEditService>()
                 .AddScoped<IMoveService, MoveService>()
                 .AddScoped<IQueryService, LdapQueryService>()
-                .AddScoped<IRenameService, RenameService>();
+                .AddScoped<IRenameService, RenameService>()
+                .AddTransient<IEncryptionService, EncryptionService>();
         }
 
         public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)

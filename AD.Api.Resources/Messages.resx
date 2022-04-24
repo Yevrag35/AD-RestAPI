@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Error_CurrentPassIsRequired" xml:space="preserve">
+    <value>The current password is required in order to perform a change request.</value>
+  </data>
   <data name="OperationResult_DefaultError" xml:space="preserve">
     <value>An exception occurred performing the operation</value>
   </data>

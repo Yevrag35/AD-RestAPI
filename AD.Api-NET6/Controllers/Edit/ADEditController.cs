@@ -56,7 +56,7 @@ namespace AD.Api.Controllers.Edit
                 options.Principal = this.HttpContext.User;
             }))
             {
-                if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out List<string>? missing))
+                if (!this.Schema.HasAllAttributesCached(request.EditOperations.Select(x => x.Property), out ICollection<string>? missing))
                 {
                     this.Schema.LoadAttributes(missing, connection);
                 }

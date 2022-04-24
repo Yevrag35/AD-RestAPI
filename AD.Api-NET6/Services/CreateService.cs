@@ -242,7 +242,7 @@ namespace AD.Api.Services
             [MaybeNullWhen(false)] out OperationResult? passwordResult)
         {
             passwordResult = null;
-            if (creationResult.Success && this.Passwords.TryGetFromBase64(request, out byte[]? passBytes))
+            if (creationResult.Success && this.Passwords.TryGetFromBase64(request.Base64Password, out byte[]? passBytes))
             {
                 var passResult = this.Passwords.SetPassword(createdEntry, passBytes);
                 if (passResult.Success)

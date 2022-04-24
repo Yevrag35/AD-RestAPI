@@ -59,9 +59,16 @@
 			"pattern": "^[{]?[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$"
 		},
 		"range": {
-			"type": "integer",
-			"minimum": 0,
-			"maximum": 2147483647
+			"oneOf": [
+				{
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 2147483647
+				},
+				{
+					"type": "null"
+				}
+			]
 		}
 	},
 	"properties": {

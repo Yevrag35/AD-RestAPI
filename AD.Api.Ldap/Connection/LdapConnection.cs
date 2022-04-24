@@ -424,6 +424,14 @@ namespace AD.Api.Ldap
             return ExecuteInContext(token, createFunc);
         }
 
+        public void ExecuteInContext(Action action)
+        {
+            ExecuteInContext(_accessToken, action);
+        }
+        public T ExecuteInContext<T>(Func<T> function)
+        {
+            return ExecuteInContext(_accessToken, function);
+        }
         private static void ExecuteInContext(SafeAccessTokenHandle? token, Action action)
         {
             if (token is not null)

@@ -135,6 +135,9 @@
   <data name="DistinguishedName" xml:space="preserve">
     <value>distinguishedname</value>
   </data>
+  <data name="Invoke_ChangePassword" xml:space="preserve">
+    <value>ChangePassword</value>
+  </data>
   <data name="Invoke_PasswordSet" xml:space="preserve">
     <value>SetPassword</value>
   </data>

@@ -11,20 +11,8 @@ namespace AD.Api.Services
         SchemaCache Dictionary { get; }
         ILdapEnumDictionary Enums { get; }
 
-        bool HasAllAttributesCached(IEnumerable<string> keys, [NotNullWhen(false)] out List<string>? missing);
+        bool HasAllAttributesCached(IEnumerable<string> keys, [NotNullWhen(false)] out ICollection<string>? missing);
         void LoadAttributes(IEnumerable<string> attributes, LdapConnection connection);
-
-        //bool IsClassLoaded(string? className);
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="className"></param>
-        ///// <param name="domain"></param>
-        ///// <exception cref="ArgumentNullException"/>
-        ///// <exception cref="InvalidOperationException"/>
-        //void LoadClass(string className, string? domain = null);
-
-        //bool TryGet(string? attributeName, [NotNullWhen(true)] out SchemaProperty? property);
     }
 
     public class SchemaService : ISchemaService
@@ -38,10 +26,10 @@ namespace AD.Api.Services
             this.Enums = enumDictionary;
         }
 
-        public bool HasAllAttributesCached(IEnumerable<string> keys, [NotNullWhen(false)] out List<string>? missing)
+        public bool HasAllAttributesCached(IEnumerable<string> keys, [NotNullWhen(false)] out ICollection<string>? missing)
         {
             missing = null;
-            var lazyList = new Lazy<List<string>>();
+            var lazyList = new Lazy<HashSet<string>>(() => new HashSet<string>(StringComparer.CurrentCultureIgnoreCase));
             foreach (string key in keys)
             {
                 if (!this.Dictionary.ContainsKey(key))
