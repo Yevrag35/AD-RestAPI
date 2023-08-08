@@ -18,6 +18,7 @@ namespace AD.Api.Controllers
     [ApiController]
     [Produces("application/json")]
     [Route("search/user")]
+    [AllowAnonymous]
     //[Authorize(AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}")]
     public class UserQueryController : ADQueryController
     {
@@ -99,7 +100,7 @@ namespace AD.Api.Controllers
                 SortDirection = sortDir,
                 SortProperty = sortBy,
                 ClaimsPrincipal = this.HttpContext.User,
-                PropertiesToLoad = GetProperties(this.UserSettings, properties),
+                PropertiesToLoad = this.GetProperties(this.UserSettings, properties),
                 SizeLimit = limit ?? this.UserSettings.Size
             };
 

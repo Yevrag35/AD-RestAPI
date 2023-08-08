@@ -138,7 +138,7 @@ namespace AD.Api.Services
         {
             using DirectoryEntry dirEntry = connection.GetDirectoryEntry(distinguishedName);
 
-            return SetPassword(connection, dirEntry, passwordBytes);
+            return this.SetPassword(connection, dirEntry, passwordBytes);
         }
 
         /// <summary>

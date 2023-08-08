@@ -38,7 +38,7 @@ namespace AD.Api.Services
             });
 
             using var searcher = connection.CreateSearcher();
-            var list = ExecuteSearch(searcher, options, out ldapFilter, out string? hostContacted);
+            var list = this.ExecuteSearch(searcher, options, out ldapFilter, out string? hostContacted);
             host = hostContacted ?? connection.SearchBase.Host;
 
             this.Serializer.PrepareMany(list);

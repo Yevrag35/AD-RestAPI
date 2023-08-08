@@ -65,8 +65,8 @@ namespace AD.Api.Controllers.Edit
             ISuccessResult editResult = this.EditService.Edit(request);
 
             return editResult.Success
-            ? Accepted(editResult)
-            : UnprocessableEntity(editResult);
+            ? this.Accepted(editResult)
+            : this.UnprocessableEntity(editResult);
         }
     }
 }

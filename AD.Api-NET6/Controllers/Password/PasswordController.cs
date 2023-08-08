@@ -47,7 +47,7 @@ namespace AD.Api.Controllers.Password
             [FromQuery] string? domain = null)
         {
             if (string.IsNullOrWhiteSpace(request.CurrentPassword))
-                return BadRequest(new
+                return this.BadRequest(new
                 {
                     Success = false,
                     Message = Messages.Error_CurrentPassIsRequired
@@ -59,7 +59,7 @@ namespace AD.Api.Controllers.Password
             if (request.IsEncrypted)
             {
                 if (!this.Encryption.CanPerform)
-                    return UnprocessableEntity(new
+                    return this.UnprocessableEntity(new
                     {
                         Success = false,
                         Message = "The server is not configured to decrypt passwords."
@@ -85,12 +85,12 @@ namespace AD.Api.Controllers.Password
             {
                 var result = this.Password.ChangePassword(request.DistinguishedName, connection, currentBytes, newBytes);
                 return result.Success
-                    ? Ok(result)
-                    : BadRequest(result);
+                    ? this.Ok(result)
+                    : this.BadRequest(result);
             }
             catch (Exception e)
             {
-                return BadRequest(this.Results.GetError(e, "password"));
+                return this.BadRequest(this.Results.GetError(e, "password"));
             }
             finally
             {
@@ -118,7 +118,7 @@ namespace AD.Api.Controllers.Password
             if (request.IsEncrypted)
             {
                 if (!this.Encryption.CanPerform)
-                    return UnprocessableEntity(new
+                    return this.UnprocessableEntity(new
                     {
                         Success = false,
                         Message = "The server is not configured to decrypt passwords."
@@ -142,12 +142,12 @@ namespace AD.Api.Controllers.Password
             {
                 var result = this.Password.SetPassword(request.DistinguishedName, connection, newBytes);
                 return result.Success
-                    ? Ok(result)
-                    : BadRequest(result);
+                    ? this.Ok(result)
+                    : this.BadRequest(result);
             }
             catch (Exception e)
             {
-                return BadRequest(this.Results.GetError(e, "password"));
+                return this.BadRequest(this.Results.GetError(e, "password"));
             }
             finally
             {

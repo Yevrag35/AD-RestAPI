@@ -90,7 +90,7 @@ namespace AD.Api.Controllers.Search
                 SortDirection = sortDir,
                 SortProperty = sortBy,
                 ClaimsPrincipal = this.HttpContext.User,
-                PropertiesToLoad = GetProperties(
+                PropertiesToLoad = this.GetProperties(
                     this.GroupSettings,
                     properties),
                 SizeLimit = limit ?? this.GroupSettings.Size

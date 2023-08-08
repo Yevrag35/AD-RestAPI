@@ -41,20 +41,20 @@ builder.Configuration
 // Add Authentication
 //builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
-builder.Services.AddAuthentication()
-    //.AddJwtBearer("Auth0", options =>
-    //{
-    //    options.Audience = "myCustomJwt";
-    //    options.Authority = "https://doesnotexist.com";
-    //})
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
+//builder.Services.AddAuthentication()
+//    //.AddJwtBearer("Auth0", options =>
+//    //{
+//    //    options.Audience = "myCustomJwt";
+//    //    options.Authority = "https://doesnotexist.com";
+//    //})
+//    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
 
-builder.Services.AddAuthorization(options =>
-{
-    var policyBuilder = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme); // Auth0
-    policyBuilder = policyBuilder.RequireAuthenticatedUser();
-    options.DefaultPolicy = policyBuilder.Build();
-});
+//builder.Services.AddAuthorization(options =>
+//{
+//    var policyBuilder = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme); // Auth0
+//    policyBuilder = policyBuilder.RequireAuthenticatedUser();
+//    options.DefaultPolicy = policyBuilder.Build();
+//});
 
 builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
 builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));

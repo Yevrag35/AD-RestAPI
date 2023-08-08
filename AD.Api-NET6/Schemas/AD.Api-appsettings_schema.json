@@ -251,6 +251,18 @@
                 "SHA1Thumbprint"
             ],
             "properties": {
+                "Padding": {
+                    "type": "string",
+                    "description": "The encryption padding to use when decrypting text.",
+                    "default": "SHA256",
+                    "enum": [
+                        "SHA1",
+                        "SHA256",
+                        "SHA384",
+                        "SHA512",
+                        "Pkcs1"
+                    ]
+                },
                 "SHA1Thumbprint": {
                     "description": "The SHA1 Thumbprint of the certificate that clients use to encrypt the data in their requests.\r\nThis certificate must be installed in the local machine or the current user store of the account that runs the IIS Application Pool.",
                     "oneOf": [

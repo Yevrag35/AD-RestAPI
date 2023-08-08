@@ -36,8 +36,8 @@ namespace AD.Api.Controllers.Delete
             ISuccessResult result = this.DeleteService.Delete(dn, domain, this.HttpContext.User);
 
             return result.Success
-                ? Ok(result)
-                : BadRequest(result);
+                ? this.Ok(result)
+                : this.BadRequest(result);
         }
     }
 }

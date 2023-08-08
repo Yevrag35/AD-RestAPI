@@ -29,8 +29,8 @@ namespace AD.Api.Controllers.Rename
             ISuccessResult result = this.RenameService.Rename(request);
 
             return result.Success
-                ? Ok(result)
-                : BadRequest(result);
+                ? this.Ok(result)
+                : this.BadRequest(result);
         }
     }
 }

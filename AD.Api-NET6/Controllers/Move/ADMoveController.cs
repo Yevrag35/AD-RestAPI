@@ -29,8 +29,8 @@ namespace AD.Api.Controllers.Move
             var result = this.MoveService.MoveObject(moveRequest);
 
             return result.Success
-                ? Ok(result)
-                : BadRequest(result);
+                ? this.Ok(result)
+                : this.BadRequest(result);
         }
     }
 }

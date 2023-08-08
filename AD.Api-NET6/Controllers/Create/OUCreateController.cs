@@ -48,8 +48,8 @@ namespace AD.Api.Controllers.Create
             ISuccessResult createResult = this.CreateService.Create(request);
 
             return createResult.Success
-                ? StatusCode((int)HttpStatusCode.Created, createResult)
-                : BadRequest(createResult);
+                ? this.StatusCode((int)HttpStatusCode.Created, createResult)
+                : this.BadRequest(createResult);
         }
     }
 }
