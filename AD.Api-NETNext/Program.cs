@@ -3,43 +3,55 @@ using AD.Api.Extensions;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Settings;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using System.Reflection;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
+});
+
+builder.Host.UseDefaultServiceProvider((context, options) =>
+{
+    bool isDev = context.HostingEnvironment.IsDevelopment();
+    options.ValidateOnBuild = isDev;
+    options.ValidateScopes = isDev;
+});
+
 builder.Configuration
-    .SetBasePath(builder.Environment.ContentRootPath)
-    .AddJsonFile(options =>
-    {
-        options.Path = "appsettings.json";
-        options.Optional = false;
-    })
-    .AddJsonFile(options =>
-    {
-        options.Path = "defaultAttributes.json";
-        options.Optional = false;
-    })
-    .AddEnvironmentVariables();
+    .AddEnvironmentVariables()
+    .AddJsonFile("defaultAttributes.json", true, false);
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, false);
+}
+else
+{
+    builder.Configuration.AddJsonFile("appsettings.json", true, false);
+}
+//builder.Configuration
+//    .SetBasePath(builder.Environment.ContentRootPath)
+//    .AddJsonFile(options =>
+//    {
+//        options.Path = "appsettings.json";
+//        options.Optional = false;
+//    })
+//    .AddJsonFile(options =>
+//    {
+//        options.Path = "defaultAttributes.json";
+//        options.Optional = false;
+//    })
+//    .AddEnvironmentVariables();
 
 // Add services to the container.
 
 // Add Authentication
-//builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate(options =>
+{
+    options.Validate();
+});
 
 //builder.Services.AddAuthentication()
 //    //.AddJwtBearer("Auth0", options =>
@@ -94,7 +106,6 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    
     app.UseSwagger();
     app.UseSwaggerUI();
 }
