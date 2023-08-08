@@ -9,11 +9,30 @@
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Content>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>
 
@@ -24,12 +43,9 @@
 
   <ItemGroup>
     <Content Remove="appsettings.Modified.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="appsettings.Modified.json" />
-    <None Include="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
-    <None Include="Services\NewNameService.cs" />
+	<None Include="appsettings.Modified.json" />
+	  <None Include="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
+	  <None Include="Services\NewNameService.cs" />
   </ItemGroup>
 
   <ItemGroup>
