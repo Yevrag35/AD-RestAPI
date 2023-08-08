@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AD.Api.Ldap.Filters-NET6\AD.Api.Ldap.Filters-NET6.csproj" />
+    <ProjectReference Include="..\AD.Api.Ldap.Filters-NETNext\AD.Api.Ldap.Filters-NETNext.csproj" />
     <ProjectReference Include="..\AD.Api.Ldap.Operations\AD.Api.Ldap.Operations.csproj" />
     <ProjectReference Include="..\AD.Api.Resources\AD.Api.Resources.csproj" />
   </ItemGroup>
