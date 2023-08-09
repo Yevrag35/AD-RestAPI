@@ -53,7 +53,9 @@ namespace AD.Api.Services
             using var pathEntry = GetDirectoryEntryFromRequest(connection, request);
 
             if (connection.ChildEntryExists(CommonName.Create(request.CommonName, request.Type == CreationType.OrganizationalUnit), pathEntry))
+            {
                 return this.Results.GetError($"A child entry with the name '{request.CommonName}' already exists.");
+            }
 
             DirectoryEntry createdEntry;
             OperationResult result;
@@ -89,7 +91,9 @@ namespace AD.Api.Services
                 return passwordResult;
             }
             else
+            {
                 hasSetPass = true;
+            }
 
             if (request is GroupCreateOperationRequest groupRequest
                 && 
@@ -113,7 +117,9 @@ namespace AD.Api.Services
                     {
                         // Let's figure out Schema Caching
                         if (!this.Schema.Dictionary.TryGetValue(kvp.Key, out SchemaProperty? schemaProperty))
+                        {
                             throw new InvalidOperationException("Schema not loaded.");
+                        }
 
                         switch (kvp.Value.Type)
                         {
@@ -132,7 +138,9 @@ namespace AD.Api.Services
 
                                 object[]? arr = kvp.Value.ToObject<object[]>();
                                 if (arr is not null)
+                                {
                                     action(collection, arr);
+                                }
 
                                 break;
                             }
@@ -159,7 +167,9 @@ namespace AD.Api.Services
 
                                 object? obj = kvp.Value.ToObject<object>();
                                 if (obj is not null)
+                                {
                                     action(collection, obj);
+                                }
 
                                 break;
                             }
@@ -195,7 +205,9 @@ namespace AD.Api.Services
         private static Action<PropertyValueCollection, object[]> GetMultiValueAction(SchemaProperty schemaProperty)
         {
             if (schemaProperty.IsSingleValued)
+            {
                 throw new InvalidOperationException($"'{schemaProperty.Name}' does not allow for multiple values.");
+            }
 
             return (pvc, values) =>
             {
@@ -207,7 +219,9 @@ namespace AD.Api.Services
         private static Action<PropertyValueCollection, object> GetSingleValueAction(SchemaProperty schemaProperty)
         {
             if (!schemaProperty.IsSingleValued)
+            {
                 return (pvc, value) => pvc.Add(value);
+            }
 
             if (schemaProperty.HasRange)
             {
@@ -215,10 +229,13 @@ namespace AD.Api.Services
                 {
                     int count = 0;
                     if (value is int intVal)
+                    {
                         count = intVal;
-
+                    }
                     else if (value is string strVal)
+                    {
                         count = strVal.Length;
+                    }
 
                     if ((schemaProperty.RangeLower.HasValue && 
                         count.CompareTo(schemaProperty.RangeLower.Value) < 0)
@@ -264,10 +281,14 @@ namespace AD.Api.Services
         {
             groupChangeResult = null;
             if (!creationResult.Success)
+            {
                 return false;
+            }
 
             if (!request.GroupTypeValue.HasFlag(GroupType.DomainLocal))
+            {
                 return true;
+            }
 
             // We have to change the group to Universal first.
             GroupType changeTo = request.GroupTypeValue;
@@ -275,7 +296,9 @@ namespace AD.Api.Services
             changeTo |= GroupType.Universal;
 
             if (!groupEntry.Properties.TryGetPropertyValueCollection(nameof(request.GroupType), out PropertyValueCollection? propValCol))
+            {
                 return false;
+            }
 
             try
             {
@@ -305,7 +328,9 @@ namespace AD.Api.Services
             ouResult = null;
 
             if (!request.ProtectFromAccidentalDeletion)
+            {
                 return true;
+            }
 
             ActiveDirectoryAccessRule rule = new(
                 new NTAccount("Everyone"),

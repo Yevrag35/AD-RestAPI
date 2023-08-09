@@ -41,14 +41,18 @@ namespace AD.Api.Services
         public void Prepare(IJsonPreparable? serializable)
         {
             if (serializable is null)
+            {
                 return;
+            }
 
             Prepare(serializable, this.CreateNew());
         }
         public void PrepareMany<T>(IEnumerable<T>? collection) where T : IJsonPreparable
         {
             if (collection is null)
+            {
                 return;
+            }
 
             JsonSerializerSettings settings = this.CreateNew();
 

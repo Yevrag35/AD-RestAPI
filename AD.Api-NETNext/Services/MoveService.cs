@@ -26,7 +26,9 @@ namespace AD.Api.Services
         public ISuccessResult MoveObject(MoveRequest moveRequest)
         {
             if (!moveRequest.IsValid)
+            {
                 return this.Results.GetError("The destination cannot be the same as the source.", OperationType.Move, "dest");
+            }
 
             using var connection = this.Connections.GetConnection(new ConnectionOptions
             {
@@ -39,17 +41,21 @@ namespace AD.Api.Services
 
             string? objectClass = connection.GetProperty<string>(entryToMove, "objectClass");
             if (!this.Restrictions.IsAllowed(OperationType.Move, objectClass))
+            {
                 return new OperationResult
                 {
                     Message = $"Not allowed to move an object of type '{objectClass}' as it's restricted.",
                     Success = false
                 };
-
+            }
             else if (connection.IsCriticalSystemObject(entryToMove))
+            {
                 return this.Results.GetError("Cannot move a critical system object.", OperationType.Move, "dn");
-
+            }
             else if (connection.IsProtectedObject(entryToMove))
+            {
                 return this.Results.GetError("Cannot move an object protected from accidental deletion.", OperationType.Move, "dn");
+            }
 
             using DirectoryEntry destination = connection.GetDirectoryEntry(moveRequest.DestinationPath);
 

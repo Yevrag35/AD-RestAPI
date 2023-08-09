@@ -12,7 +12,9 @@ namespace AD.Api.Services
             {
                 entry.CommitChanges();
                 if (andRefresh)
+                {
                     entry.RefreshCache();
+                }
 
                 return new OperationResult
                 {
@@ -37,7 +39,9 @@ namespace AD.Api.Services
                 string? extMsg = null;
                 Exception baseEx = genericException.GetBaseException();
                 if (!ReferenceEquals(genericException, baseEx))
+                {
                     extMsg = baseEx.Message;
+                }
 
                 return new OperationResult
                 {

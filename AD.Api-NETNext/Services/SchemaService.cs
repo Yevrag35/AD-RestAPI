@@ -39,7 +39,9 @@ namespace AD.Api.Services
             }
 
             if (lazyList.IsValueCreated)
+            {
                 missing = lazyList.Value;
+            }
 
             return !lazyList.IsValueCreated;
         }

@@ -39,7 +39,9 @@ namespace AD.Api.Domains
         public SearchDomains(IEnumerable<SearchDomain>? domainsToAdd)
         {
             if (domainsToAdd is null)
+            {
                 throw new ArgumentNullException(nameof(domainsToAdd));
+            }
 
             _fullyQualifiedDictionary = new SortedList<string, SearchDomain>(1, KeyComparer);
             _distinguishedNameDictionary = new Dictionary<string, SearchDomain>(1, KeyComparer);
@@ -47,7 +49,9 @@ namespace AD.Api.Domains
             foreach (SearchDomain domain in domainsToAdd.OrderByDescending(x => x.IsDefault).ThenBy(x => x.FQDN))
             {
                 if (domain.IsDefault && _registeredDefault is null)
+                {
                     _registeredDefault = domain;
+                }
 
                 _fullyQualifiedDictionary.Add(domain.FQDN, domain);
 
@@ -81,8 +85,9 @@ namespace AD.Api.Domains
         public SearchDomain? GetDefaultDomain()
         {
             if (this.Values.Count <= 0)
+            {
                 return null;
-
+            }
             else if (_registeredDefault is null)
             {
                 _registeredDefault = this[0];
@@ -103,13 +108,18 @@ namespace AD.Api.Domains
         {
             domain = null;
             if (string.IsNullOrWhiteSpace(key))
+            {
                 return false;
+            }
 
             if (_fullyQualifiedDictionary.ContainsKey(key))
+            {
                 domain = _fullyQualifiedDictionary[key];
-
+            }
             else if (_distinguishedNameDictionary.ContainsKey(key))
+            {
                 domain = _distinguishedNameDictionary[key];
+            }
 
             return null != domain;
         }
@@ -118,7 +128,9 @@ namespace AD.Api.Domains
         {
             distinguishedName = domain.DistinguishedName;
             if (!string.IsNullOrWhiteSpace(distinguishedName))
+            {
                 return true;
+            }
 
             using DirectoryEntry tempEntry = new($"LDAP://{domain.FQDN}/RootDSE");
             try

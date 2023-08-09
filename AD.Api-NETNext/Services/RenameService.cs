@@ -36,11 +36,13 @@ namespace AD.Api.Services
 
             string? objectClass = connection.GetProperty<string>(dirEntry, "objectClass");
             if (!this.Restrictions.IsAllowed(OperationType.Rename, objectClass))
+            {
                 return new OperationResult
                 {
                     Message = $"Not allowed to rename an object of type '{objectClass}' as it's restricted.",
                     Success = false
                 };
+            }
 
             CommonName cn = CommonName.Create(
                 request.NewName, dirEntry.SchemaClassName.Equals("organizationalUnit")

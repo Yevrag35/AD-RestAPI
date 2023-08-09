@@ -71,10 +71,14 @@ namespace AD.Api.Services
             ArgumentNullException.ThrowIfNull(newPasswordBytes);
 
             if (!this.TryConvertPassword(currentPasswordBytes, out string? currentPassword, out OperationResult? result))
+            {
                 return result;
+            }
 
             if (!this.TryConvertPassword(newPasswordBytes, out string? newPassword, out OperationResult? newResult))
+            {
                 return newResult;
+            }
 
             using DirectoryEntry dirEntry = connection.GetDirectoryEntry(distinguishedName);
 
@@ -200,7 +204,9 @@ namespace AD.Api.Services
         {
             utf8Password = null;
             if (string.IsNullOrWhiteSpace(base64Password))
+            {
                 return false;
+            }
 
             try
             {
@@ -347,7 +353,9 @@ namespace AD.Api.Services
         private OperationResult SetPassword(LdapConnection connection, DirectoryEntry dirEntry, byte[] password)
         {
             if (!this.TryConvertPassword(password, out string? passStr, out OperationResult? badResult))
+            {
                 return badResult;
+            }
 
             try
             {

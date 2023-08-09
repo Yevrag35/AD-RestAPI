@@ -47,11 +47,13 @@ namespace AD.Api.Controllers.Password
             [FromQuery] string? domain = null)
         {
             if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+            {
                 return this.BadRequest(new
                 {
                     Success = false,
                     Message = Messages.Error_CurrentPassIsRequired
                 });
+            }
 
             byte[] currentBytes;
             byte[] newBytes;
@@ -59,11 +61,13 @@ namespace AD.Api.Controllers.Password
             if (request.IsEncrypted)
             {
                 if (!this.Encryption.CanPerform)
+                {
                     return this.UnprocessableEntity(new
                     {
                         Success = false,
                         Message = "The server is not configured to decrypt passwords."
                     });
+                }
 
                 currentBytes = this.Encryption.Decrypt(request.CurrentPassword);
                 newBytes = this.Encryption.Decrypt(request.NewPassword);
@@ -118,11 +122,13 @@ namespace AD.Api.Controllers.Password
             if (request.IsEncrypted)
             {
                 if (!this.Encryption.CanPerform)
+                {
                     return this.UnprocessableEntity(new
                     {
                         Success = false,
                         Message = "The server is not configured to decrypt passwords."
                     });
+                }
 
                 newBytes = this.Encryption.Decrypt(request.NewPassword);
             }

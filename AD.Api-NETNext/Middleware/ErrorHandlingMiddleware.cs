@@ -12,7 +12,9 @@ namespace AD.Api.Middleware
 
             var ex = context.Features.Get<IExceptionHandlerFeature>()?.Error;
             if (ex is null)
+            {
                 return;
+            }
 
             var error = new
             {

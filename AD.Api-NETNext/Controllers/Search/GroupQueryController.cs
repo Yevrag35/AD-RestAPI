@@ -97,7 +97,9 @@ namespace AD.Api.Controllers.Search
             };
 
             if (this.GroupSettings.IncludeMembers && !options.PropertiesToLoad.Contains("member", StringComparer.CurrentCultureIgnoreCase))
+            {
                 options.PropertiesToLoad.Add("member");
+            }
 
             var list = this.QueryService.Search(options, out string ldapFilter, out string host);
             return base.GetReply(list, includeDetails, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
