@@ -36,7 +36,9 @@ namespace AD.Api.Services
         public byte[]? Decrypt(string? base64Encrypted)
         {
             if (string.IsNullOrWhiteSpace(base64Encrypted))
+            {
                 return null;
+            }
 
             using var rsa = _certificate?.GetRSAPrivateKey();
 
@@ -61,12 +63,16 @@ namespace AD.Api.Services
         private static X509Certificate2? FindCertificate(string? sha1Thumbprint)
         {
             if (string.IsNullOrWhiteSpace(sha1Thumbprint))
+            {
                 return null;
+            }
 
             if (!TryFind(sha1Thumbprint, StoreLocation.CurrentUser, out X509Certificate2? userCert))
             {
                 if (TryFind(sha1Thumbprint, StoreLocation.LocalMachine, out X509Certificate2? machineCert))
+                {
                     return machineCert;
+                }
             }
 
             return userCert;
@@ -105,7 +111,9 @@ namespace AD.Api.Services
         public void Dispose()
         {
             if (_disposed)
+            {
                 return;
+            }
 
             _certificate?.Dispose();
             _disposed = true;

@@ -75,7 +75,9 @@ namespace AD.Api.Settings
             private static NamingStrategy GetNamingStrategy(string? value)
             {
                 if (string.IsNullOrWhiteSpace(value))
+                {
                     return _default.Value;
+                }
 
                 switch (value.ToLower())
                 {
@@ -99,7 +101,9 @@ namespace AD.Api.Settings
             private void SetEncoder(string? encoding)
             {
                 if (string.IsNullOrWhiteSpace(encoding))
+                {
                     return;
+                }
 
                 System.Text.Encoding enc;
                 try

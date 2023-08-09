@@ -22,7 +22,9 @@ namespace AD.Api.Services
         public bool IsAllowed(OperationType operationType, string? objectClass)
         {
             if (string.IsNullOrWhiteSpace(objectClass))
+            {
                 return false;
+            }
 
             return !this.Restrictions.TryGetRestriction(operationType, out Restriction? restriction)
                    || 

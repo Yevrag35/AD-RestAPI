@@ -52,7 +52,9 @@ namespace AD.Api.Services
             (List<FindResult> results, string ldapFilter, string? hostContacted) function()
             {
                 if (options is null)
+                {
                     return (new List<FindResult>(), string.Empty, null);
+                }
 
                 List<FindResult> results = searcher.FindAll(options, out string ldapFilter, out string? hostContacted);
                 return (results, ldapFilter, hostContacted);

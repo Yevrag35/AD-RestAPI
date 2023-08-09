@@ -37,7 +37,9 @@ namespace AD.Api.Controllers
             {
                 IFilterStatement criterion = criteria[i];
                 if (!and.Contains(criterion))
+                {
                     and.Add(criterion);
+                }
             }
 
             return and;
@@ -71,7 +73,9 @@ namespace AD.Api.Controllers
         private static string[] AddProperties(string[] askedFor, string[]? defaultProperties)
         {
             if (defaultProperties is null)
+            {
                 defaultProperties = Array.Empty<string>();
+            }
 
             string[] newArr = new string[askedFor.Length - 1 + defaultProperties.Length];
             int index = 0;
@@ -79,7 +83,9 @@ namespace AD.Api.Controllers
             {
                 string s = askedFor[i];
                 if (s.Equals("default", StringComparison.CurrentCultureIgnoreCase))
-                    continue;                    
+                {
+                    continue;
+                }
 
                 newArr[i - index] = s;
                 index++;

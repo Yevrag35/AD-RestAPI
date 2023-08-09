@@ -24,7 +24,9 @@ namespace AD.Api.Controllers
         protected static CreateOperationRequest RemoveProperties(CreateOperationRequest request, params string[] propertiesToRemove)
         {
             if (propertiesToRemove is null || propertiesToRemove.Length <= 0)
+            {
                 return request;
+            }
 
             Array.ForEach(propertiesToRemove, prop =>
             {

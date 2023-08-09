@@ -107,7 +107,9 @@ namespace AD.Api.Settings
                 }
 
                 if (action is null)
+                {
                     continue;
+                }
 
                 action(restriction);
             }

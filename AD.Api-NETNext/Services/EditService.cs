@@ -32,11 +32,13 @@ namespace AD.Api.Services
             ArgumentNullException.ThrowIfNull(request.DistinguishedName);
 
             if (request.EditOperations.Count <= 0)
+            {
                 return new OperationResult
                 {
                     Message = "No edit operations were specified.",
                     Success = false
                 };
+            }
 
             using var connection = this.Connections.GetConnection(options =>
             {
@@ -49,11 +51,13 @@ namespace AD.Api.Services
 
             string? objectClass = connection.GetSchemaClassName(dirEntry);
             if (!this.Restrictions.IsAllowed(OperationType.Set, objectClass))
+            {
                 return new OperationResult
                 {
                     Message = $"Not allowed to edit an object of type '{objectClass}' as it's restricted",
                     Success = false
                 };
+            }
 
             foreach (ILdapOperation operation in request.EditOperations)
             {

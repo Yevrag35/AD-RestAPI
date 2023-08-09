@@ -9,7 +9,7 @@ namespace AD.Api.Services
         ISuccessResult Delete(string distinguishedName, string? domain, ClaimsPrincipal claimsPrincipal);
     }
 
-    public class DeleteService : IDeleteService
+    internal sealed class DeleteService : IDeleteService
     {
         private IConnectionService Connections { get; }
         private IRestrictionService Restrictions { get; }
@@ -32,7 +32,9 @@ namespace AD.Api.Services
         public ISuccessResult Delete(string? distinguishedName, string? domain, ClaimsPrincipal claimsPrincipal)
         {
             if (string.IsNullOrWhiteSpace(distinguishedName))
+            {
                 return this.Results.GetError(new ArgumentNullException(nameof(distinguishedName)), nameof(distinguishedName));
+            }
 
             using var connection = this.Connections.GetConnection(options =>
             {
@@ -45,17 +47,23 @@ namespace AD.Api.Services
 
             string? objectClass = connection.GetProperty<string>(dirEntry, "objectClass");
             if (!this.Restrictions.IsAllowed(OperationType.Delete, objectClass))
+            {
                 return new OperationResult
                 {
                     Message = $"Not allowed to delete an object of type '{objectClass}' as it's restricted.",
                     Success = false
                 };
+            }
 
             if (connection.IsCriticalSystemObject(dirEntry))
+            {
                 return this.Results.GetError("Cannot delete a critical system object.", OperationType.Delete);
+            }
 
             if (connection.IsProtectedObject(dirEntry))
+            {
                 return this.Results.GetError("Cannot delete an object that is protected from deletion.", OperationType.Delete);
+            }
 
             try
             {
@@ -71,11 +79,6 @@ namespace AD.Api.Services
                 return this.Results.GetError($"Unable to delete \"{distinguishedName}\"", OperationType.Delete, e);
             }
         }
-
-        #endregion
-
-        #region BACKEND METHODS
-
 
         #endregion
     }

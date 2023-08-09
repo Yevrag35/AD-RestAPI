@@ -8,7 +8,7 @@ namespace AD.Api.Controllers.Delete
 {
     [ApiController]
     [Produces("application/json")]
-    public class ADDeleteController : ADControllerBase
+    public sealed class ADDeleteController : ADControllerBase
     {
         private IDeleteService DeleteService { get; }
         

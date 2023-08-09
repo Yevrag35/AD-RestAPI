@@ -84,7 +84,9 @@ namespace AD.Api.Services
         public QueryResult GetQueryReply(ICollection? results, int limitedTo, IList<string>? propertiesRequested, string host, string? ldapFilter)
         {
             if (propertiesRequested is null && ldapFilter is null)
+            {
                 return this.GetQueryReply(results, host);
+            }
 
             return new QueryResult
             {
