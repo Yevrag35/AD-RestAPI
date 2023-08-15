@@ -31,13 +31,17 @@ namespace AD.Api.Ldap.Models
             if (string.IsNullOrWhiteSpace(this.NewPassword))
             {
                 if (_extData.TryGetValue("password", out JToken? token) && token?.Type == JTokenType.String)
-                    this.NewPassword = token.ToObject<string>() ?? throw new ArgumentException($"{nameof(NewPassword)} must always be set in Password Requests.");
-
+                {
+                    this.NewPassword = token.ToObject<string>() ?? throw new ArgumentException($"{nameof(this.NewPassword)} must always be set in Password Requests.");
+                }
                 else if (_extData.TryGetValue("pass", out JToken? token2) && token2?.Type == JTokenType.String)
-                    this.NewPassword = token2.ToObject<string>() ?? throw new ArgumentException($"{nameof(NewPassword)} must always be set in Password Requests.");
-
+                {
+                    this.NewPassword = token2.ToObject<string>() ?? throw new ArgumentException($"{nameof(this.NewPassword)} must always be set in Password Requests.");
+                }
                 else
-                    throw new ArgumentException($"{nameof(NewPassword)} must always be set in Password Requests.");
+                {
+                    throw new ArgumentException($"{nameof(this.NewPassword)} must always be set in Password Requests.");
+                }
             }
         }
     }

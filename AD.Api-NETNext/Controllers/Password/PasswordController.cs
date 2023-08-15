@@ -146,6 +146,7 @@ namespace AD.Api.Controllers.Password
 
             try
             {
+                connection.GetRootDSE();
                 var result = this.Password.SetPassword(request.DistinguishedName, connection, newBytes);
                 return result.Success
                     ? this.Ok(result)

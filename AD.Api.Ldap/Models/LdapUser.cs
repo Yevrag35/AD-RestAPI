@@ -50,16 +50,19 @@ namespace AD.Api.Ldap.Models
         private void OnSerializing(StreamingContext ctx)
         {
             if (this.ExtData is null)
+            {
                 return;
-
+            }
             else if (_extData is null)
             {
                 _extData = new SortedDictionary<string, JToken?>(StringComparer.CurrentCultureIgnoreCase);
             }
 
             else
+            {
                 _extData.Clear();
-            
+            }
+
             foreach (KeyValuePair<string, object[]?> kvp in this.ExtData)
             {
                 if (kvp.Value is not null && !kvp.Value.Any(o => o is MarshalByRefObject))

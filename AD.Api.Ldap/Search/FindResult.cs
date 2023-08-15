@@ -53,7 +53,9 @@ namespace AD.Api.Ldap.Search
             where T : FindResult
         {
             if (expressions is null || expressions.Length <= 0)
+            {
                 return;
+            }
 
             Array.ForEach(expressions, exp =>
             {
@@ -69,7 +71,9 @@ namespace AD.Api.Ldap.Search
         public void PrepareForSerialization(JsonSerializerSettings settings)
         {
             if (this.Data is null)
+            {
                 return;
+            }
 
             this.OnPreparing(settings);
 
@@ -90,7 +94,7 @@ namespace AD.Api.Ldap.Search
                         break;
                 }
 
-                JsonData.Add(kvp.Key, token);
+                this.JsonData.Add(kvp.Key, token);
             }
 
             this.Data.Clear();
@@ -109,7 +113,7 @@ namespace AD.Api.Ldap.Search
         [OnSerialized]
         private void OnSerialized(StreamingContext ctx)
         {
-            JsonData?.Clear();
+            this.JsonData?.Clear();
         }
 
         protected static bool TryAsMemberExpression<T, TMember>([NotNullWhen(true)] out MemberExpression? member,
@@ -134,13 +138,17 @@ namespace AD.Api.Ldap.Search
         {
             kvp = null;
             if (!TryAsMemberExpression(out MemberExpression? memberExpression, expression))
+            {
                 return false;
+            }
 
             Func<T, object?> func = expression.Compile();
             object? value = func(obj);
 
             if (value is null)
+            {
                 return false;
+            }
 
             string jsonKey = memberExpression.Member.Name.ToLower();
 

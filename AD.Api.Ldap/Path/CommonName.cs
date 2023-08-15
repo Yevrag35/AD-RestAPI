@@ -18,10 +18,14 @@ namespace AD.Api.Ldap.Path
         public static CommonName Create(string name, bool isOU = false)
         {
             if (string.IsNullOrWhiteSpace(name))
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
 
             if (name.StartsWith(Strings.CN_Prefix) || name.StartsWith(Strings.OU_Prefix))
+            {
                 return new CommonName(name);
+            }
 
             (string Name, string Format) tuple = (name, isOU ? Strings.OU_Prefix : Strings.CN_Prefix);
 

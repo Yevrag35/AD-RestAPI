@@ -20,7 +20,9 @@ namespace AD.Api.Ldap.Extensions
         public static T? AsModel<T>(this DirectoryEntry? directoryEntry, ILdapEnumDictionary enumDictionary) where T : new()
         {
             if (directoryEntry is null)
+            {
                 return default;
+            }
 
             return Mapper.MapFromDirectoryEntry<T>(new T(), directoryEntry, enumDictionary);
         }

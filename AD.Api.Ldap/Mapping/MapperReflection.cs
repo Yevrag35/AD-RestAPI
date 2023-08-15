@@ -54,11 +54,15 @@ namespace AD.Api.Ldap.Mapping
         {
             MethodInfo? setAcc = pi.GetSetMethod();
             if (setAcc is null)
+            {
                 setAcc = pi.GetSetMethod(true);
+            }
 
             if (setAcc is null)
+            {
                 throw new LdapMappingException(new MissingMethodException(pi.DeclaringType?.FullName, $"{pi.Name}_set"),
                     $"Property '{pi.Name}' on type '{typeof(T).Name}' has no available set accessor.");
+            }
 
             setAcc.Invoke(obj, new object[1] { value });
         }
@@ -94,7 +98,9 @@ namespace AD.Api.Ldap.Mapping
         private static IEnumerable? ConvertEnumerable(MemberInfo memInfo, LdapPropertyAttribute attribute, Type toType, IEnumerable? value, IEnumerable? existingValue)
         {
             if (value is null)
+            {
                 return existingValue;
+            }
 
             if (toType.IsArray)
             {
@@ -108,7 +114,9 @@ namespace AD.Api.Ldap.Mapping
             {
                 existingValue = (IEnumerable?)Activator.CreateInstance(toType);
                 if (existingValue is null)
+                {
                     return null;
+                }
             }
 
             Type genericArgument = toType.GetGenericArguments().FirstOrDefault() ?? typeof(object);
@@ -121,11 +129,14 @@ namespace AD.Api.Ldap.Mapping
             {
                 object? converted = obj;
                 if (obj is not string && obj is IEnumerable eo)
+                {
                     converted = ConvertObject(memInfo, attribute, genericArgument, eo, null);
-
+                }
                 else
+                {
                     converted = ConvertToType(converted, genericArgument);
-                    //converted = ConvertSingleObject(converted, genericArgument);
+                }
+                //converted = ConvertSingleObject(converted, genericArgument);
 
                 ExecuteAddMethod(addMethod, existingValue, converted);
             }
@@ -144,7 +155,9 @@ namespace AD.Api.Ldap.Mapping
                 IEnumerable? existingCol = null;
 
                 if (existingValue is IEnumerable isCol)
+                {
                     existingCol = isCol;
+                }
 
                 return ConvertEnumerable(memberInfo, attribute, valueType, rawValue, existingCol);
             }
@@ -153,15 +166,20 @@ namespace AD.Api.Ldap.Mapping
                 IEnumerable<object> objs = rawValue.Cast<object>();
                 object? single;
                 if (attribute.WantsLast)
+                {
                     single = objs.LastOrDefault();
-                
+                }
                 else
+                {
                     single = objs.ElementAt(attribute.Index);
+                }
 
                 if (!valueType.Equals(typeof(object)))
                 {
                     if (valueType.IsEnum)
+                    {
                         single = ConvertEnum(single, valueType);
+                    }
 
                     single = ConvertToType(single, valueType);
                 }
@@ -171,14 +189,18 @@ namespace AD.Api.Ldap.Mapping
                 //return Convert.ChangeType(rawValue, valueType);
             }
             else
+            {
                 return existingValue;
+            }
         }
 
         [Obsolete($"Use {nameof(ConvertToType)} instead.")]
         private static object? ConvertSingleObject(object? value, Type toType)
         {
             if (toType.Equals(typeof(object)))
+            {
                 return value;
+            }
 
             return Convert.ChangeType(value, toType);
         }
@@ -217,7 +239,9 @@ namespace AD.Api.Ldap.Mapping
             _ = TryGetExistingValue(obj, memberInfo, out object? existingValue, out Type valueType);
 
             if (rawValue is null)
+            {
                 return existingValue;
+            }
 
             return TryGetConverter(memberInfo, out LdapPropertyConverter? converter) && converter.CanConvert(valueType)
                 ? converter.Convert(attribute, rawValue.Cast<object>().ToArray(), existingValue)
@@ -227,7 +251,9 @@ namespace AD.Api.Ldap.Mapping
         private static IEnumerable? CreateArray(Type arrayType, IEnumerable? rawValue)
         {
             if (rawValue is null)
+            {
                 return rawValue;
+            }
 
             Type eType = typeof(Enumerable);
 
@@ -249,7 +275,9 @@ namespace AD.Api.Ldap.Mapping
         private static void ExecuteAddMethod(MethodInfo addMethod, object collection, object? toBeAdded)
         {
             if (toBeAdded is null)
+            {
                 return;
+            }
 
             addMethod.Invoke(collection, new object[] { toBeAdded });
         }
@@ -309,7 +337,9 @@ namespace AD.Api.Ldap.Mapping
             {
                 LdapConverterAttribute? att = memberInfo.GetCustomAttribute<LdapConverterAttribute>();
                 if (att is null)
+                {
                     return false;
+                }
 
                 if (_cachedConverters.IsValueCreated && _cachedConverters.Value.TryGetValue(att.ConverterType, out object? cachedConverter))
                 {

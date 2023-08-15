@@ -64,7 +64,9 @@ namespace AD.Api.Ldap.Path
                 return attribute.Value;
             }
             else
+            {
                 throw new InvalidOperationException("Something went horribly wrong...");
+            }
         }
     }
 }

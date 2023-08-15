@@ -60,8 +60,10 @@ namespace AD.Api.Ldap.Filters
         /// <param name="statement">The filter statement to add.</param>
         public virtual void Add(IFilterStatement? statement)
         {
-            if (!(statement is null))
+            if (statement is not null)
+            {
                 this.Clauses.Add(statement);
+            }
         }
         /// <summary>
         /// Determines wheter the <see cref="FilterContainer"/> contains an <see cref="IFilterStatement"/>
@@ -83,7 +85,9 @@ namespace AD.Api.Ldap.Filters
         protected bool Contains(Type typeOfFilterStatement)
         {
             if (!_filterStatementType.IsAssignableFrom(typeOfFilterStatement))
+            {
                 throw new ArgumentException($"{nameof(typeOfFilterStatement)} must implement '{nameof(IFilterStatement)}'.");
+            }
 
             return this.Clauses.Exists(statement => typeOfFilterStatement.Equals(statement.GetType()));
         }
@@ -155,17 +159,17 @@ namespace AD.Api.Ldap.Filters
 
         public override void WriteTo(JsonWriter writer, NamingStrategy strategy, JsonSerializer serializer)
         {
-            this.Clauses.ForEach(clause =>
+            foreach (IFilterStatement clause in this.Clauses)
             {
                 clause.WriteTo(writer, strategy, serializer);
-            });
+            }
         }
         public override StringBuilder WriteTo(StringBuilder builder)
         {
-            this.Clauses.ForEach(clause =>
+            foreach (IFilterStatement clause in this.Clauses)
             {
-                clause.WriteTo(builder);
-            });
+                _ = clause.WriteTo(builder);
+            }
 
             return builder;
         }

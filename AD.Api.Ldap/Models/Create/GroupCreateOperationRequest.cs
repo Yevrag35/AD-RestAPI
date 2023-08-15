@@ -35,10 +35,14 @@ namespace AD.Api.Ldap.Models
             set
             {
                 if (value is null)
+                {
                     return;
+                }
 
                 if (value.Length > 20)
+                {
                     value = value[..20];
+                }
 
                 _sam = value;
             }
@@ -54,7 +58,9 @@ namespace AD.Api.Ldap.Models
         protected override void AddToProperties()
         {
             if (string.IsNullOrWhiteSpace(this.SamAccountName))
+            {
                 this.SamAccountName = this.CommonName;
+            }
 
             bool addedScope = false;
             if (!string.IsNullOrWhiteSpace(this.Scope) && Enum.TryParse(this.Scope, true, out Ldap.GroupType scope))
@@ -63,14 +69,17 @@ namespace AD.Api.Ldap.Models
                 addedScope = true;
             }
             else
+            {
                 this.GroupTypeValue |= Ldap.GroupType.Global;
+            }
 
             if (!string.IsNullOrWhiteSpace(this.GroupType))
             {
                 if (!this.GroupType.Equals(nameof(Ldap.GroupType.Security), StringComparison.CurrentCultureIgnoreCase)
                     && !this.GroupType.Equals("distribution", StringComparison.CurrentCultureIgnoreCase))
+                {
                     throw new ArgumentException($"'{this.GroupType}' is not a valid group type.");
-
+                }
                 else if (this.GroupType.Equals("distribution", StringComparison.CurrentCultureIgnoreCase))
                 {
                     this.GroupTypeValue &= ~Ldap.GroupType.Security;

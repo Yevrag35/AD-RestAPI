@@ -48,13 +48,17 @@ namespace AD.Api.Ldap.Mapping
                 string? key = null;
 
                 if (collection.Contains(bindable.Member.Name.ToLower()))
+                {
                     key = bindable.Member.Name.ToLower();
-
+                }
                 else if (!string.IsNullOrWhiteSpace(bindable.Attribute.LdapName) && collection.Contains(bindable.Attribute.LdapName))
+                {
                     key = bindable.Attribute.LdapName;
-
+                }
                 else
+                {
                     continue;
+                }
 
                 object? convertedValue = ConvertValue(obj, bindable.Member, bindable.Attribute, collection[key] as IEnumerable);
 
@@ -88,15 +92,20 @@ namespace AD.Api.Ldap.Mapping
                         if (firstVal is not long enumVal)
                         {
                             if (firstVal is int intVal)
+                            {
                                 enumVal = (long)intVal;
-
+                            }
                             else
+                            {
                                 continue;
+                            }
                         }
 
                         object? realValue = ConvertEnum(enumVal, enumType);
                         if (realValue is not null)
+                        {
                             dict.Add(propertyName, new object[] { realValue });
+                        }
 
                         continue;
                     }
@@ -120,10 +129,13 @@ namespace AD.Api.Ldap.Mapping
                 }
 
                 if (extDataMem is FieldInfo fi)
+                {
                     fi.SetValue(obj, dict);
-
+                }
                 else if (extDataMem is PropertyInfo pi)
+                {
                     pi.SetValue(obj, dict);
+                }
             }
 
             return obj;

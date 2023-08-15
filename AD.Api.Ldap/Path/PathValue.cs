@@ -113,7 +113,9 @@ namespace AD.Api.Ldap.Path
         public PathValue GetParent()
         {
             if (this.DNArray.Length <= 0 || (this.DNArray.Length >= 2 && this.DNArray[0] == (char)68 && this.DNArray[1] == (char)67))
+            {
                 return this;
+            }
 
             Match parentMatch = Regex.Match(this.DistinguishedName, @"\,(?=(?:CN|OU|DC)\=)(.+)", RegexOptions.Compiled);
             if (parentMatch.Success && parentMatch.Groups.Count > 1 && parentMatch.Groups[1].Success)
@@ -142,7 +144,9 @@ namespace AD.Api.Ldap.Path
         public PathValue BuildSubLevel(string? subPath)
         {
             if (string.IsNullOrWhiteSpace(subPath))
+            {
                 return this;
+            }
 
             PathValue subPv = new(this.Protocol)
             {
@@ -180,10 +184,14 @@ namespace AD.Api.Ldap.Path
                     {
                         case 2:
                             if (thisArray is null || thisArray.Length <= 0)
+                            {
                                 i += 3;
-
+                            }
                             else
+                            {
                                 goto default;
+                            }
+
                             continue;
 
                         case 5:
@@ -194,7 +202,9 @@ namespace AD.Api.Ldap.Path
                             }
 
                             else
+                            {
                                 goto default;
+                            }
 
                         default:
                             _builder.Append(thisArray);
@@ -250,7 +260,9 @@ namespace AD.Api.Ldap.Path
             char[] newArr = new char[newLength];
 
             if (needsComma)
+            {
                 newArr[subCharacters.Length] = COMMA;
+            }
 
             return newArr;
         }
@@ -295,7 +307,9 @@ namespace AD.Api.Ldap.Path
         private static char[] ValidateString(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
+            {
                 return Array.Empty<char>();
+            }
 
             Span<char> span = new(value.ToCharArray());
 
@@ -308,7 +322,9 @@ namespace AD.Api.Ldap.Path
         public static PathValue? FromDirectoryEntry(DirectoryEntry? directoryEntry)
         {
             if (directoryEntry is null)
+            {
                 return null;
+            }
 
             return FromPath(directoryEntry.Path);
         }
@@ -316,7 +332,9 @@ namespace AD.Api.Ldap.Path
         public static PathValue? FromPath(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
+            {
                 return null;
+            }
 
             Match regexMatch = Regex.Match(
                 path,
@@ -324,7 +342,9 @@ namespace AD.Api.Ldap.Path
                 RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
             if (!regexMatch.Success)
+            {
                 throw new InvalidDataException(nameof(path));
+            }
 
             Protocol protocol = Protocol.Ldap;
             if (regexMatch.Groups.TryGetValue(nameof(Protocol), out Group? protoGroup) && protoGroup.Success)

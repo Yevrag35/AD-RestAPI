@@ -141,7 +141,8 @@ namespace AD.Api.Services
         public OperationResult SetPassword(string distinguishedName, LdapConnection connection, byte[] passwordBytes)
         {
             using DirectoryEntry dirEntry = connection.GetDirectoryEntry(distinguishedName);
-
+            using DirectoryEntry test = new DirectoryEntry("LDAP://GARVDC06.yevrag35.com:636/CN=Dat\\, Who X.,OU=Testing,OU=Real Users,DC=yevrag35,DC=com");
+            dirEntry.UsePropertyCache = false;
             return this.SetPassword(connection, dirEntry, passwordBytes);
         }
 
@@ -321,7 +322,7 @@ namespace AD.Api.Services
             }
         }
 
-        [Obsolete($"Use the overlord of {nameof(TryConvertPassword)} with the out char[] parameter.")]
+        [Obsolete($"Use the overload of {nameof(TryConvertPassword)} with the out char[] parameter.")]
         private bool TryConvertPassword(byte[] passwordBytes, [NotNullWhen(true)] out string? password, [NotNullWhen(false)] out OperationResult? exception)
         {
             password = null;
@@ -359,7 +360,8 @@ namespace AD.Api.Services
 
             try
             {
-                connection.ExecuteInContext(() => dirEntry.Invoke(Strings.Invoke_PasswordSet, passStr));
+                dirEntry.Invoke(Strings.Invoke_PasswordSet, passStr);
+                //connection.ExecuteInContext(() => dirEntry.Invoke(Strings.Invoke_PasswordSet, passStr));
                 return new OperationResult
                 {
                     Success = true,
