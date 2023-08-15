@@ -97,13 +97,15 @@ namespace AD.Api.Ldap
         public DirectoryEntry GetDirectoryEntry(string dn)
         {
             if (string.IsNullOrWhiteSpace(dn))
+            {
                 throw new ArgumentNullException(nameof(dn));
+            }
 
             return this.GetDirectoryEntry(new PathValue(this.Protocol)
             {
                 DistinguishedName = dn,
                 Host = this.Host,
-                UseSsl = this.UseSSL
+                UseSsl = this.UseSSL,
             });
         }
 
@@ -118,7 +120,9 @@ namespace AD.Api.Ldap
         public DirectoryEntry GetDirectoryEntry(PathValue path)
         {
             if (path is null)
+            {
                 throw new ArgumentNullException(nameof(path));
+            }
 
             return CreateEntry(path, _creds, this.AuthenticationTypes, _accessToken);
         }
@@ -163,7 +167,9 @@ namespace AD.Api.Ldap
         public DirectoryEntry AddChildEntry(string commonName, DirectoryEntry parent, CreationType creationType)
         {
             if (string.IsNullOrWhiteSpace(commonName) || commonName.Equals(Strings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
+            {
                 throw new ArgumentNullException(nameof(commonName));
+            }
 
             CommonName cn = CommonName.Create(commonName, creationType == CreationType.OrganizationalUnit);
 
@@ -182,7 +188,9 @@ namespace AD.Api.Ldap
                 {
                     directoryEntry.CommitChanges();
                     if (andRefresh)
+                    {
                         directoryEntry.RefreshCache();
+                    }
 
                     return new OperationResult
                     {
@@ -207,7 +215,9 @@ namespace AD.Api.Ldap
                     string? extMsg = null;
                     Exception baseEx = genericException.GetBaseException();
                     if (!ReferenceEquals(genericException, baseEx))
+                    {
                         extMsg = baseEx.Message;
+                    }
 
                     return new OperationResult
                     {
@@ -226,7 +236,8 @@ namespace AD.Api.Ldap
 
         public void DeleteEntry(DirectoryEntry entryToDelete)
         {
-            ExecuteInContext(_accessToken, () => entryToDelete.DeleteTree());
+            entryToDelete.DeleteTree();
+            //ExecuteInContext(_accessToken, () => entryToDelete.DeleteTree());
         }
 
         public PropertyValueCollection GetValueCollection(DirectoryEntry entry, string propertyName)
@@ -277,7 +288,9 @@ namespace AD.Api.Ldap
         public DirectoryContext GetForestContext()
         {
             if (!this.IsForestRoot)
+            {
                 throw new InvalidOperationException($"Cannot get AD forest context when the connection was not specified as the Forest Root.");
+            }
 
             string host;
             if (string.IsNullOrWhiteSpace(this.Host))
@@ -286,7 +299,9 @@ namespace AD.Api.Ldap
                 host = GetForestName(rootDse);
             }
             else
+            {
                 host = this.Host;
+            }
 
             return _creds is null
                 ? new DirectoryContext(DirectoryContextType.Forest, host)
@@ -335,19 +350,25 @@ namespace AD.Api.Ldap
                     };
                 }
                 else
+                {
                     return wkoPath; // which will error...
+                }
             }
         }
 
         public T? GetProperty<T>(DirectoryEntry directoryEntry, string? propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
+            {
                 throw new ArgumentNullException(nameof(propertyName));
+            }
 
             return ExecuteInContext(_accessToken, () =>
             {
                 if (!directoryEntry.Properties.TryGetFirstValue(propertyName, out T? value))
+                {
                     value = default;
+                }
 
                 return value;
             });
@@ -360,7 +381,9 @@ namespace AD.Api.Ldap
             return ExecuteInContext(_accessToken, () =>
             {
                 if (!directoryEntry.Properties.TryGetValue(propertyName, out T? value, selectFunc))
+                {
                     value = default;
+                }
 
                 return value;
             });
@@ -409,19 +432,31 @@ namespace AD.Api.Ldap
 
         private static DirectoryEntry CreateEntry(PathValue path, NetworkCredential? creds, AuthenticationTypes? authenticationTypes, SafeAccessTokenHandle? token)
         {
-            Func<DirectoryEntry> createFunc;
-
             if (creds is null)
-                createFunc = () => new DirectoryEntry(path.GetValue());
-
+            {
+                return new DirectoryEntry(path.GetValue(), null, null, authenticationTypes ?? System.DirectoryServices.AuthenticationTypes.Secure);
+            }
+            else if (authenticationTypes.HasValue)
+            {
+                return new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password, authenticationTypes.Value);
+            }
             else
             {
-                createFunc = !authenticationTypes.HasValue
-                    ? () => new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password)
-                    : () => new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password, authenticationTypes.Value);
+                return new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password);
             }
+            //Func<DirectoryEntry> createFunc;
 
-            return ExecuteInContext(token, createFunc);
+            //if (creds is null)
+            //    createFunc = () => new DirectoryEntry(path.GetValue());
+
+            //else
+            //{
+            //    createFunc = !authenticationTypes.HasValue
+            //        ? () => new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password)
+            //        : () => new DirectoryEntry(path.GetValue(), creds.UserName, creds.Password, authenticationTypes.Value);
+            //}
+
+            //return ExecuteInContext(token, createFunc);
         }
 
         public void ExecuteInContext(Action action)
@@ -435,10 +470,13 @@ namespace AD.Api.Ldap
         private static void ExecuteInContext(SafeAccessTokenHandle? token, Action action)
         {
             if (token is not null)
+            {
                 WindowsIdentity.RunImpersonated(token, action);
-
+            }
             else
+            {
                 action();
+            }
         }
         private static T ExecuteInContext<T>(SafeAccessTokenHandle? token, Func<T> function)
         {
@@ -456,7 +494,9 @@ namespace AD.Api.Ldap
         private static string GetForestName(DirectoryEntry rootDse)
         {
             if (!rootDse.Properties.TryGetFirstValue("dnsHostName", out string? hostName))
+            {
                 throw new InvalidOperationException($"Unable to get the connection name from RootDSE");
+            }
 
             return hostName;
         }
@@ -464,7 +504,9 @@ namespace AD.Api.Ldap
         private static string TruncateCN(string commonName)
         {
             if (!commonName.StartsWith(Strings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
+            {
                 return commonName;
+            }
 
             (string cn, int startAt) tuple = (commonName, Strings.CN_Prefix.Length);
 
@@ -481,13 +523,18 @@ namespace AD.Api.Ldap
         public void Dispose()
         {
             if (_disposed)
+            {
                 return;
+            }
 
             if (!_dontDisposeToken)
+            {
                 _accessToken?.Dispose();
-
+            }
             else
+            {
                 _accessToken = null;
+            }
 
             _disposed = true;
             GC.SuppressFinalize(this);

@@ -66,8 +66,10 @@ namespace AD.Api.Ldap.Converters
         {
             bool existingIsNull = existingValue is null;
             if (!(existingValue is null || existingValue is T))
+            {
                 throw new ArgumentException(string.Format("Converter cannot process the existing value.  '{0}' is required.",
                     typeof(T)));
+            }
 
             return this.Convert(attribute, rawValue, existingIsNull ? default : (T?)existingValue, !existingIsNull);
         }

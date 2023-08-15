@@ -24,7 +24,9 @@ namespace AD.Api.Ldap.Models
             init
             {
                 if (string.IsNullOrWhiteSpace(value))
+                {
                     return;
+                }
 
                 _host = value;
             }
@@ -41,7 +43,9 @@ namespace AD.Api.Ldap.Models
             init
             {
                 if (value is null)
+                {
                     return;
+                }
 
                 _results = value;
             }
@@ -62,7 +66,9 @@ namespace AD.Api.Ldap.Models
             init
             {
                 if (string.IsNullOrWhiteSpace(value))
+                {
                     return;
+                }
 
                 _filter = value;
             }
@@ -82,7 +88,9 @@ namespace AD.Api.Ldap.Models
             init
             {
                 if (value is null)
+                {
                     return;
+                }
 
                 _properties = value;
             }

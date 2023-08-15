@@ -64,6 +64,7 @@ namespace AD.Api.Services
                 .UsingHost(host)
                 .UsingSearchBase(searchBase)
                 .UsingGlobalCatalog(searchDomain.UseGlobalCatalog)
+                .UsingAuthenticationTypes(System.DirectoryServices.AuthenticationTypes.Secure)
                 .UsingForestControls(searchDomain.IsForestRoot)
                 .UsingIdentity(token, options.DontDisposeHandle)
                 .UseSchemaCache(searchDomain.UseSchemaCache)

@@ -16,7 +16,9 @@ namespace AD.Api.Extensions
         {
             propertyValueCollection = null;
             if (propCol is null || string.IsNullOrWhiteSpace(propertyName))
+            {
                 return false;
+            }
 
             propertyValueCollection = propCol[propertyName];
 
@@ -47,7 +49,9 @@ namespace AD.Api.Extensions
         {
             value = default;
             if (propCol is null || string.IsNullOrWhiteSpace(propertyName))
+            {
                 return false;
+            }
 
             PropertyValueCollection? propValCol = propCol[propertyName];
             object? firstValue = propValCol?.Count > 1
@@ -80,11 +84,15 @@ namespace AD.Api.Extensions
         {
             values = Array.Empty<T>();
             if (propCol is null || string.IsNullOrWhiteSpace(propertyName))
+            {
                 return false;
+            }
 
             PropertyValueCollection? propValCol = propCol[propertyName];
             if (propValCol is null)
+            {
                 return false;
+            }
 
             values = new T[propValCol.Count];
             Type convertToType = GetNullTypeOrDefault(typeof(T));
@@ -116,7 +124,9 @@ namespace AD.Api.Extensions
             }
 
             if (count < propValCol.Count)
+            {
                 Array.Resize(ref values, count);
+            }
 
             return count > 0;
         }

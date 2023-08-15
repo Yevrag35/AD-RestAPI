@@ -54,7 +54,9 @@ namespace AD.Api.Ldap.Search
             init
             {
                 if (!string.IsNullOrWhiteSpace(value))
+                {
                     SortOption.PropertyName = value;
+                }
             }
         }
 

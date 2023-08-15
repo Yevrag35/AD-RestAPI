@@ -46,10 +46,14 @@ namespace AD.Api.Ldap.Models
             set
             {
                 if (value is null)
+                {
                     return;
+                }
 
                 if (value.Length > 20)
+                {
                     value = value[..20];
+                }
 
                 _sam = value;
             }
@@ -71,10 +75,14 @@ namespace AD.Api.Ldap.Models
         protected override void AddToProperties()
         {
             if (string.IsNullOrWhiteSpace(this.SamAccountName))
+            {
                 this.SamAccountName = this.CommonName;
+            }
 
             if (int.TryParse(this.UserAccountControlString, out int uacInt))
+            {
                 this.UserAccountControlString = ((Ldap.UserAccountControl)uacInt).ToString();
+            }
 
             if (this.UserAccountControl.HasValue && !this.UserAccountControl.Value.HasFlag(Ldap.UserAccountControl.PasswordNotRequired)
                 && string.IsNullOrWhiteSpace(this.Base64Password))

@@ -24,13 +24,17 @@ namespace AD.Api.Ldap.Components
         public override bool Equals([NotNullWhen(true)] object? obj)
         {
             if (obj is SortDirection sd)
+            {
                 return this.Equals(sd);
-
+            }
             else if (obj is DirectionValue dv)
+            {
                 return this.Equals(dv);
-
+            }
             else
+            {
                 return false;
+            }
         }
 
         public bool Equals(SortDirection other)

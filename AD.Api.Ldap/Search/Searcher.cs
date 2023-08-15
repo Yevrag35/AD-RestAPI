@@ -35,17 +35,23 @@ namespace AD.Api.Ldap.Search
             _searcher = new DirectorySearcher(searchBase);
             this.Filter = options?.Filter;
             if (options is not null)
+            {
                 _ = SetSearcher(options, _lazyBuilder.Value, _searcher);
+            }
         }
 
         public void Dispose()
         {
             if (_disposed)
+            {
                 return;
+            }
 
             _searcher.Dispose();
             if (_lazyBuilder.IsValueCreated)
+            {
                 _lazyBuilder.Value.Clear();
+            }
 
             _disposed = true;
 

@@ -66,7 +66,9 @@ namespace AD.Api.Ldap.Models
             {
                 var att = memInfo.GetCustomAttribute<LdapPropertyAttribute>() ?? throw new InvalidOperationException("huh?");
                 if (string.IsNullOrWhiteSpace(att.LdapName) || !this.TryGetValue(memInfo, out object? value))
+                {
                     continue;
+                }
 
                 this.Properties.Add(att.LdapName, JToken.FromObject(value));
             }
