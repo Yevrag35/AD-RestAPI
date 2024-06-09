@@ -88,7 +88,7 @@ namespace AD.Api.Ldap.Converters
                         doContinue = true;
 
                     if (!(kvp.Value is null) && kvp.Value.Type == JTokenType.Null)
-                        statement = new Equal(kvp.Key, null);
+                        statement = new Equal(kvp.Key, (IConvertible?)null);
 
                     else if (kvp.Value is IConvertible icon)
                         statement = new Equal(kvp.Key, icon);
@@ -113,7 +113,7 @@ namespace AD.Api.Ldap.Converters
 
             foreach (var kvp in job)
             {
-                var filter = this.ReadToken(kvp, out bool throwAway);
+                var filter = this.ReadToken(kvp, out _);
                 and.Add(filter);
             }
 
@@ -147,7 +147,7 @@ namespace AD.Api.Ldap.Converters
 
                 foreach (var kvp in (JObject)tok)
                 {
-                    var filter = this.ReadToken(kvp, out bool throwAway);
+                    var filter = this.ReadToken(kvp, out _);
                     container.Add(filter);
                 }
             }
@@ -171,7 +171,7 @@ namespace AD.Api.Ldap.Converters
                             jar.Add(kvp.Value);
                     }
 
-                    return this.ReadToken(new KeyValuePair<string, JToken?>("nor", jar), out bool throwAway);
+                    return this.ReadToken(new KeyValuePair<string, JToken?>("nor", jar), out _);
                 }
 
                 if (job.First is JProperty jProp)

@@ -45,6 +45,17 @@ namespace AD.Api.Ldap.Filters
                 ? v : null;
         }
 
+        public Equal(string propertyName, IFormattable? formattable)
+        {
+            this.Property = propertyName;
+            this.PropertyType = formattable?.GetType();
+            string? v = formattable?.ToString(null, null);
+
+            this.Value = !string.IsNullOrWhiteSpace(v)
+                ? v
+                : null;
+        }
+
         protected sealed override object? GetRawValue() => this.Value;
         protected internal sealed override string? GetValue() => this.Value;
 
@@ -57,7 +68,7 @@ namespace AD.Api.Ldap.Filters
         /// </returns>
         public Equal Any()
         {
-            return new Equal(this.RawProperty, STAR);
+            return new Equal(this.RawProperty, formattable: STAR);
         }
 
         protected sealed override EqualityStatement ToAny()
