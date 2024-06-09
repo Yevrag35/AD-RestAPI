@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AD.Api.Ldap.Path
 {
-    public struct WellKnownObject
+    public readonly struct WellKnownObject
     {
         private const char COMMA = (char)44;
         private const char RIGHT_ARROW = (char)62;
@@ -13,8 +13,8 @@ namespace AD.Api.Ldap.Path
         private readonly string _path;
         private readonly WellKnownObjectValue _value;
 
-        public string Path => _path;
-        public WellKnownObjectValue Value => _value;
+        public readonly string Path => _path;
+        public readonly WellKnownObjectValue Value => _value;
 
         private WellKnownObject(WellKnownObjectValue value, string path)
         {

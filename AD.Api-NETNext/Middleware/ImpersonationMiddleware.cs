@@ -17,8 +17,7 @@ namespace AD.Api.Middleware
 
         public async Task Invoke(HttpContext httpContext)
         {
-            var user = (WindowsIdentity)httpContext.User.Identity!;
-            
+            var user = (WindowsIdentity)httpContext.User.Identity!;   
 
             Debug.WriteLine($"User: {user.Name}\tState: {user.ImpersonationLevel}\n");
 
@@ -29,8 +28,8 @@ namespace AD.Api.Middleware
                     var impersonated = WindowsIdentity.GetCurrent();
                     Debug.WriteLine($"User: {impersonated.Name}\tState: {impersonated.ImpersonationLevel}\n");
 
-                    await _next(httpContext);
-                });
+                    await _next(httpContext).ConfigureAwait(false);
+                }).ConfigureAwait(false);
             }
             catch (Exception e)
             {

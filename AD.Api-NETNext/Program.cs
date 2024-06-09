@@ -1,11 +1,14 @@
 using AD.Api.Domains;
 using AD.Api.Extensions;
+using AD.Api.Ldap.Extensions;
+using AD.Api.Ldap.Filters.Converters;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Settings;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.IdentityModel.Logging;
 using System.Reflection;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -31,27 +34,15 @@ else
 {
     builder.Configuration.AddJsonFile("appsettings.json", true, false);
 }
-//builder.Configuration
-//    .SetBasePath(builder.Environment.ContentRootPath)
-//    .AddJsonFile(options =>
-//    {
-//        options.Path = "appsettings.json";
-//        options.Optional = false;
-//    })
-//    .AddJsonFile(options =>
-//    {
-//        options.Path = "defaultAttributes.json";
-//        options.Optional = false;
-//    })
-//    .AddEnvironmentVariables();
 
 // Add services to the container.
 
-// Add Authentication
-builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate(options =>
-{
-    options.Validate();
-});
+// Add Authentication - Kerberos/Negotiate
+//builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+//    .AddNegotiate(options =>
+//    {
+//        options.Validate();
+//    });
 
 //builder.Services.AddAuthentication()
 //    //.AddJwtBearer("Auth0", options =>
@@ -82,19 +73,39 @@ builder.Services
     .AddAutoMapper(appDomainAssemblies)
     .AddLdapEnumTypes(appDomainAssemblies);
 
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
-{
-    options.AddADApiConfiguration(textSettings);
-});
+builder
+    .ConfigureJson(x => x.Services.AddControllers(), (config, env, options) =>
+    {
+        bool isDev = env.IsDevelopment();
+
+        IConfigurationSection section = config
+            .GetRequiredSection("Settings")
+            .GetRequiredSection("Serialization");
+
+        var settings = section.Get<SerializationSettings>() ?? throw new JsonException("Unable to deserialize settings.");
+
+        settings.SetJsonOptions(options.JsonSerializerOptions);
+        
+        options.AllowInputFormatterExceptionMessages = isDev;
+        options.JsonSerializerOptions.WriteIndented = isDev;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+
+        options.JsonSerializerOptions.Converters.AddRange(
+            new LdapFilterStringConverter(),
+            new FilterJsonConverter()
+        );
+    });
+
+//builder.Services.AddControllers().AddNewtonsoftJson(options =>
+//{
+//    options.AddADApiConfiguration(textSettings);
+//});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerWithOptions(builder.Configuration.GetSection("SwaggerInfo"));
 
-#if DEBUG
-//_ = builder.Services.BuildServiceProvider(true);
-IdentityModelEventSource.ShowPII = true;
-#endif
+IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
 var app = builder.Build();
 

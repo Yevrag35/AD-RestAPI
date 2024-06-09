@@ -1,7 +1,4 @@
 using AD.Api.Ldap.Attributes;
-using System;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Ldap
 {
