@@ -1,18 +1,15 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
 
 namespace AD.Api.Ldap.Attributes
 {
+    [Obsolete("Use 'IEnumValues' instead.")]
     public interface ILdapEnumDictionary : IReadOnlyDictionary<string, Type>, ICollection
     {
         bool TryGetIntValue(string ldapName, string? strValue, out int result);
         bool TryGetEnumValue(string ldapName, string strValue, [NotNullWhen(true)] out Enum? results);
     }
 
+    [Obsolete("Use 'IEnumValues' instead.")]
     public static class EnumReader
     {
         private static readonly Action<Type, Type, LdapEnumDictionary> _typeAction = (input, enumAttType, dict) =>
@@ -22,7 +19,7 @@ namespace AD.Api.Ldap.Attributes
                 LdapEnumAttribute att = input.GetCustomAttribute<LdapEnumAttribute>()
                     ?? throw new Exception("WTF???");
 
-                string name = att.Name ?? string.Empty; // not sure why 'String.Empty' was needed for CodeAnalysis >_>
+                string name = att.Name ?? string.Empty; // not sure why 'String.Empty' was needed for CodeAnalysis -_-
 
                 if (string.IsNullOrWhiteSpace(name))
                     name = input.Name.ToLower();

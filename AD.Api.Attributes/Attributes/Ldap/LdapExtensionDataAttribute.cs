@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AD.Api.Ldap.Attributes
+namespace AD.Api.Attributes.Ldap
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public class LdapExtensionDataAttribute : Attribute
     {
         public bool IncludeComObjects { get; }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace AD.Api.Ldap.Extensions
+﻿namespace AD.Api.Extensions
 {
     public static class ListExtensions
     {

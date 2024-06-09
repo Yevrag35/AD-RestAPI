@@ -1,12 +1,6 @@
-//using MG.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-
 namespace AD.Api.Ldap.Attributes
 {
+    [Obsolete("Use 'IEnumValues' instead.")]
     public static class EnumReader<T> where T : Attribute
     {
         public static bool TryGetAttribute(Enum e, [NotNullWhen(true)] out T? attribute)
