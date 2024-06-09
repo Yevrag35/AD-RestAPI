@@ -1,7 +1,8 @@
+using AD.Api.Exceptions;
 using AD.Api.Reflection;
 using System.ComponentModel;
 
-namespace AD.Api.Exceptions.Startup
+namespace AD.Api.Startup.Exceptions
 {
     /// <summary>
     /// Represents an error thrown during a Dependency Injection (DI) operation during the startup of an 

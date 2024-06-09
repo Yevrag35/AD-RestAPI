@@ -28,6 +28,10 @@
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
+	</ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>

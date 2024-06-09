@@ -147,6 +147,9 @@
   <data name="Exception_MissingCtor" xml:space="preserve">
     <value>Unable to find a parameterless constructor for type '{0}' with flags: {1}.</value>
   </data>
+  <data name="Exception_ReadOnlyCollection" xml:space="preserve">
+    <value>The collection was of a fixed size and is marked as read-only.</value>
+  </data>
   <data name="Exception_Reflection_Default" xml:space="preserve">
     <value>An exception occurred during a reflection operation but no other specifics were provided.</value>
   </data>

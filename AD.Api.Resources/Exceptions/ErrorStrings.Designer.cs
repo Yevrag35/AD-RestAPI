@@ -151,6 +151,15 @@ namespace AD.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The collection was of a fixed size and is marked as read-only..
+        /// </summary>
+        public static string Exception_ReadOnlyCollection {
+            get {
+                return ResourceManager.GetString("Exception_ReadOnlyCollection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An exception occurred during a reflection operation but no other specifics were provided..
         /// </summary>
         public static string Exception_Reflection_Default {

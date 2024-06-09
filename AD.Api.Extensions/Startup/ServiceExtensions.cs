@@ -2,10 +2,10 @@ using AD.Api.Assemblies;
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Collections.Enumerators;
-using AD.Api.Exceptions.Startup;
 using AD.Api.Reflection;
-using AD.Api.Startup.Services.Internal;
+using AD.Api.Startup.Exceptions;
 using AD.Api.Startup.Services;
+using AD.Api.Startup.Services.Internal;
 
 namespace AD.Api.Startup
 {
@@ -83,7 +83,7 @@ namespace AD.Api.Startup
                 DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type)
         {
             MethodInfo? method = type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-                .Where(x => x.IsDefined(typeof(DependencyRegistrationMethodAttribute), inherit: false))
+                .Where(x => x.IsDefined(typeof(DynamicDependencyRegistrationMethodAttribute), inherit: false))
                 .OrderBy(x => x.Name)
                 .FirstOrDefault();
 

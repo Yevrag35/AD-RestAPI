@@ -15,6 +15,10 @@
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>
 
+	<ItemGroup>
+		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
+	</ItemGroup>
+
   <ItemGroup>
     <None Remove="Debug.ps1" />
   </ItemGroup>

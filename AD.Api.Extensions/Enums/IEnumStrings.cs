@@ -1,4 +1,4 @@
-namespace AD.Api.Ldap.Enums
+namespace AD.Api.Enums
 {
     public interface IEnumStrings
     {
@@ -29,10 +29,12 @@ namespace AD.Api.Ldap.Enums
     {
         /// <summary>
         /// Gets the name of the <typeparamref name="T"/> enumeration that is associated with the
-        /// speicifed key.
+        /// specified key.
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <param name="key">The enumeration value key to search for.</param>
+        /// <returns>
+        /// The name of the <typeparamref name="T"/> enumeration that is associated with the specified key.
+        /// </returns>
         string this[T key] { get; }
 
         /// <summary>

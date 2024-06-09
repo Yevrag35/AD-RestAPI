@@ -12,6 +12,10 @@
   </ItemGroup>
 
 	<ItemGroup>
+		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Using Include="AD.Api.Resources.ErrorStrings" Alias="Errors" />
 		<Using Include="Microsoft.Extensions.Configuration" />
 		<Using Include="Microsoft.Extensions.DependencyInjection" />

@@ -24,10 +24,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Messages.resx</DependentUpon>
     </Compile>
-    <Compile Update="Strings.Designer.cs">
+    <Compile Update="ADStrings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Strings.resx</DependentUpon>
+      <DependentUpon>ADStrings.resx</DependentUpon>
     </Compile>
   </ItemGroup>
 
@@ -42,9 +42,9 @@
       <LastGenOutput>Messages.Designer.cs</LastGenOutput>
       <CustomToolNamespace>AD.Api</CustomToolNamespace>
     </EmbeddedResource>
-    <EmbeddedResource Update="Strings.resx">
+    <EmbeddedResource Update="ADStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <LastGenOutput>ADStrings.Designer.cs</LastGenOutput>
       <CustomToolNamespace>AD.Api</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>

@@ -1,11 +1,4 @@
-using AD.Api.Reflection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AD.Api.Exceptions.Reflection
+namespace AD.Api.Reflection.Exceptions
 {
     /// <summary>
     /// An exception thrown when one <see cref="Type"/> was attempted to be assigned to a variable of another, but the 

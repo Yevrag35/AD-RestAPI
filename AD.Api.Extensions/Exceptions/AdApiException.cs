@@ -1,4 +1,3 @@
-using Microsoft.VisualBasic;
 using System.ComponentModel;
 
 namespace AD.Api.Exceptions

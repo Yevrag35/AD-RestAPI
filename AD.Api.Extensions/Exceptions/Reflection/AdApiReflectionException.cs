@@ -1,4 +1,6 @@
-namespace AD.Api.Exceptions.Reflection
+using AD.Api.Exceptions;
+
+namespace AD.Api.Reflection.Exceptions
 {
     /// <summary>
     /// An <see langword="abstract"/> exception base class for exceptions thrown during operations involving reflection.

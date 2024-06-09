@@ -1,7 +1,6 @@
 using AD.Api.Reflection;
-using Errors = AD.Api.Resources.ErrorStrings;
 
-namespace AD.Api.Exceptions.Startup
+namespace AD.Api.Startup.Exceptions
 {
     /// <summary>
     /// An exception that is thrown when a service is registered more than once in the Dependency Injection 

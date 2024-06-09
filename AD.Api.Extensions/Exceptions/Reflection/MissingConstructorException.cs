@@ -1,6 +1,4 @@
-﻿using AD.Api.Reflection;
-
-namespace AD.Api.Exceptions.Reflection
+﻿namespace AD.Api.Reflection.Exceptions
 {
     /// <summary>
     /// An exception thrown when a constructor is not found on a class type through reflection.
