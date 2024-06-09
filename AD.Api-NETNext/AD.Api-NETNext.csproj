@@ -41,6 +41,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Mapping\Mapper.cs" />
     <Compile Remove="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
     <Compile Remove="Services\NewNameService.cs" />
   </ItemGroup>

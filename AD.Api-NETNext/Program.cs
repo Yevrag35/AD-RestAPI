@@ -1,15 +1,11 @@
 using AD.Api.Collections;
 using AD.Api.Domains;
+using AD.Api.Enums;
 using AD.Api.Extensions;
 using AD.Api.Extensions.Collections;
 using AD.Api.Extensions.Startup;
 using AD.Api.Ldap;
-using AD.Api.Ldap.Converters;
-using AD.Api.Ldap.Filters;
-using AD.Api.Ldap.Filters.Converters;
-using AD.Api.Ldap.Operations;
 using AD.Api.Middleware;
-using AD.Api.Schema;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Settings;
@@ -100,8 +96,8 @@ builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings 
 
 builder.Services.AddADApiServices();
 
-builder.Services
-    .AddAutoMapper(assemblies);
+//builder.Services
+//    .AddAutoMapper(assemblies);
     //.AddLdapEnumTypes(assemblies);
 
 builder

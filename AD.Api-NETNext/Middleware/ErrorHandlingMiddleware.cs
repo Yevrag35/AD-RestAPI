@@ -21,7 +21,7 @@ namespace AD.Api.Middleware
                 message = ex.Message
             };
 
-            context.Response.ContentType = Strings.ContentType_Json;
+            context.Response.ContentType = ADStrings.ContentType_Json;
 
             using (var writer = new StreamWriter(context.Response.Body))
             {
