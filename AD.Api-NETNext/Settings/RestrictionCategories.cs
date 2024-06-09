@@ -1,6 +1,5 @@
 ﻿using AD.Api.Ldap.Operations;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 
 namespace AD.Api.Settings

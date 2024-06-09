@@ -1,8 +1,5 @@
 using MG.Collections;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace AD.Api.Ldap.Properties
 {

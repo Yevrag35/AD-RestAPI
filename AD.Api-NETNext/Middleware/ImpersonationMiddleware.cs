@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Principal;
-using System.Threading.Tasks;
 
 namespace AD.Api.Middleware
 {

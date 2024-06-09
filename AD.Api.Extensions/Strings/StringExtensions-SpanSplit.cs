@@ -1,6 +1,6 @@
 using AD.Api.Strings.Spans;
 
-namespace AD.Api.Strings
+namespace AD.Api.Strings.Extensions
 {
     public static partial class StringExtensions
     {

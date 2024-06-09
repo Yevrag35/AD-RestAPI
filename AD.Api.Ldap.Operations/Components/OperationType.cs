@@ -1,4 +1,3 @@
-using System;
 using System.DirectoryServices;
 
 namespace AD.Api.Ldap.Operations

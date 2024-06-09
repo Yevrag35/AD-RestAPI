@@ -1,7 +1,4 @@
-﻿using AD.Api.Ldap.Attributes;
-using Microsoft.OpenApi.Models;
-using System.IO;
-using System.Reflection;
+﻿using Microsoft.OpenApi.Models;
 
 namespace AD.Api.Services
 {
@@ -26,12 +23,12 @@ namespace AD.Api.Services
                 .AddTransient<IEncryptionService, EncryptionService>();
         }
 
-        public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)
-        {
-            ILdapEnumDictionary dict = EnumReader.GetLdapEnums(assemblies);
-            return services
-                .AddSingleton(dict);
-        }
+        //public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)
+        //{
+        //    ILdapEnumDictionary dict = EnumReader.GetLdapEnums(assemblies);
+        //    return services
+        //        .AddSingleton(dict);
+        //}
 
         public static IServiceCollection AddSwaggerWithOptions(this IServiceCollection services, IConfigurationSection openApiConfig,
             bool includeXmlComments = true)

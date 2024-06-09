@@ -1,4 +1,4 @@
-using AD.Api.Ldap.Attributes;
+using AD.Api.Attributes.Ldap;
 
 namespace AD.Api.Ldap
 {

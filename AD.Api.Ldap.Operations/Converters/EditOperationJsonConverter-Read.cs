@@ -1,12 +1,7 @@
 using AD.Api.Ldap.Exceptions;
-using AD.Api.Ldap.Extensions;
 using AD.Api.Ldap.Operations;
 using AD.Api.Ldap.Operations.Internal;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace AD.Api.Ldap.Converters
 {

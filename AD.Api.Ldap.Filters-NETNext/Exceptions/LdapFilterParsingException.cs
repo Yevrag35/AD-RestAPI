@@ -1,5 +1,4 @@
 using AD.Api.Ldap.Filters;
-using System;
 
 namespace AD.Api.Ldap.Exceptions
 {

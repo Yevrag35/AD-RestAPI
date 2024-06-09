@@ -1,14 +1,36 @@
+using AD.Api.Collections;
 using AD.Api.Domains;
 using AD.Api.Extensions;
-using AD.Api.Ldap.Extensions;
+using AD.Api.Extensions.Collections;
+using AD.Api.Extensions.Startup;
+using AD.Api.Ldap;
+using AD.Api.Ldap.Converters;
+using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Filters.Converters;
+using AD.Api.Ldap.Operations;
 using AD.Api.Middleware;
+using AD.Api.Schema;
 using AD.Api.Services;
+using AD.Api.Services.Enums;
 using AD.Api.Settings;
-using Microsoft.AspNetCore.Authentication.Negotiate;
+using AD.Api.Startup;
 using Microsoft.IdentityModel.Logging;
 using System.Reflection;
 using System.Text.Json;
+
+#region EXPLICIT LOADS
+
+Referencer.LoadAll((in Referencer referer) =>
+{
+    referer
+        .Reference<Add>()
+        .Reference<And>()
+        .Reference<UnsafeDictionary<int>>()
+        .Reference<LdapPropertyConverter>()
+        .Reference<SchemaProperty>();
+});
+
+#endregion
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -59,6 +81,16 @@ else
 //    options.DefaultPolicy = policyBuilder.Build();
 //});
 
+Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
+builder.Services
+    .AddResolvedServicesFromAssemblies(builder.Configuration, assemblies)
+    .AddEnumDictionaryGeneration(x =>
+    {
+        x.Register<GroupType>(freeze: true)
+         .Register<UserAccountControl>(freeze: true)
+         .Register<WellKnownObjectValue>(freeze: true);
+    });
+
 builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
 builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));
 builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
@@ -68,10 +100,9 @@ builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings 
 
 builder.Services.AddADApiServices();
 
-Assembly[] appDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 builder.Services
-    .AddAutoMapper(appDomainAssemblies)
-    .AddLdapEnumTypes(appDomainAssemblies);
+    .AddAutoMapper(assemblies);
+    //.AddLdapEnumTypes(assemblies);
 
 builder
     .ConfigureJson(x => x.Services.AddControllers(), (config, env, options) =>

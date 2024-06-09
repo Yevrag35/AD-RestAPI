@@ -1,5 +1,4 @@
-﻿using AD.Api.Ldap;
-using AD.Api.Services;
+﻿using AD.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers

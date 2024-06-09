@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
-using System.Linq;
-using System.Threading.Tasks;
 using AD.Api.Exceptions;
 using AD.Api.Extensions;
 

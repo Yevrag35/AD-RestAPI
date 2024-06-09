@@ -1,13 +1,7 @@
-﻿using AD.Api.Extensions;
-using AD.Api.Ldap;
+﻿using AD.Api.Ldap;
 using AD.Api.Ldap.Operations;
 using AD.Api.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Win32.SafeHandles;
-using System.DirectoryServices;
-using System.Net;
-using System.Security.Principal;
 
 namespace AD.Api.Controllers.Edit
 {

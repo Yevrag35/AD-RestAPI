@@ -1,7 +1,5 @@
 using AD.Api.Ldap.Operations;
 using Newtonsoft.Json;
-using System;
-using System.ComponentModel;
 using System.DirectoryServices;
 
 namespace AD.Api.Ldap

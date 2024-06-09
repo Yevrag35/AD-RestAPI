@@ -1,8 +1,6 @@
 ﻿using AD.Api.Ldap;
 using AD.Api.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace AD.Api.Controllers.Delete
 {

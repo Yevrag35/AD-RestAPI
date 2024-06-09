@@ -1,15 +1,7 @@
-using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Connection;
 using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
 using System.DirectoryServices;
-using System.Linq;
 using System.Net;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AD.Api.Ldap
 {
@@ -21,7 +13,6 @@ namespace AD.Api.Ldap
         public LdapConnectionBuilder(ILdapEnumDictionary enumDictionary)
         {
             _options = new LdapConnectionOptions();
-            _enumDictionary = enumDictionary;
         }
 
         public LdapConnection Build()

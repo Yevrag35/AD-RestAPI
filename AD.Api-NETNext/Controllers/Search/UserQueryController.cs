@@ -1,17 +1,11 @@
-﻿using AD.Api.Ldap;
-using AD.Api.Ldap.Components;
+﻿using AD.Api.Ldap.Components;
 using AD.Api.Ldap.Filters;
-using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Search;
 using AD.Api.Services;
 using AD.Api.Settings;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Microsoft.Identity.Web.Resource;
 using System.DirectoryServices;
-using System.Web;
 
 namespace AD.Api.Controllers
 {

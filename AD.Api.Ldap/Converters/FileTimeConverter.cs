@@ -1,9 +1,4 @@
-using AD.Api.Ldap.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using AD.Api.Attributes.Ldap;
 
 namespace AD.Api.Ldap.Converters
 {

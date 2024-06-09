@@ -1,6 +1,5 @@
 ﻿using AD.Api.Ldap.Operations;
 using AD.Api.Settings;
-using Microsoft.Extensions.Options;
 
 namespace AD.Api.Services
 {

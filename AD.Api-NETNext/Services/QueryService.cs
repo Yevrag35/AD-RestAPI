@@ -1,6 +1,4 @@
 ﻿using AD.Api.Ldap.Search;
-using AD.Api.Settings;
-using Microsoft.Win32.SafeHandles;
 using System.Security.Principal;
 
 namespace AD.Api.Services

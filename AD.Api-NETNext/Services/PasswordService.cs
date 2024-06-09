@@ -1,16 +1,10 @@
-﻿using AD.Api.Extensions;
-using AD.Api.Ldap;
-using AD.Api.Ldap.Models;
+﻿using AD.Api.Ldap;
 using AD.Api.Ldap.Operations;
 using AD.Api.Settings;
-using Microsoft.Extensions.Options;
-using System.Configuration.Provider;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security;
-using System.Text;
 
 namespace AD.Api.Services
 {

@@ -1,11 +1,5 @@
-﻿using AD.Api.Extensions;
-using AD.Api.Ldap;
-using AD.Api.Ldap.Models;
-using AD.Api.Ldap.Operations;
+﻿using AD.Api.Ldap.Models;
 using AD.Api.Services;
-using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices;
-using System.Net;
 
 namespace AD.Api.Controllers
 {

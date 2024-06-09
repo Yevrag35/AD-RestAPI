@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
-using System.IO;
 
 namespace AD.Api.Schema
 {

@@ -1,9 +1,9 @@
 using AD.Api.Collections;
-using AD.Api.Extensions.Strings;
 using System.Buffers;
 using System.Collections.Frozen;
 using System.Collections;
 using System.Collections.ObjectModel;
+using AD.Api.Strings.Extensions;
 
 namespace AD.Api.Enums.Internal
 {

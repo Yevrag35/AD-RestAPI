@@ -1,14 +1,8 @@
 using AD.Api.Ldap.Exceptions;
-using AD.Api.Ldap.Extensions;
-using AD.Api.Ldap.Operations.Internal;
 using AD.Api.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
 using System.DirectoryServices;
-using System.Linq;
-using System.Text;
 
 namespace AD.Api.Ldap.Operations
 {

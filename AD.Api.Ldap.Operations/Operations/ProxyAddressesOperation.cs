@@ -2,7 +2,6 @@ using AD.Api.Ldap.Properties;
 using AD.Api.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System;
 using System.DirectoryServices;
 
 namespace AD.Api.Ldap.Operations

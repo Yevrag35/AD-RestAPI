@@ -1,7 +1,4 @@
-﻿using AD.Api.Ldap.Attributes;
-using System;
-
-namespace AD.Api.Components.Exchange
+﻿namespace AD.Api.Components.Exchange
 {
     [Flags]
     [LdapEnum("msExchRemoteRecipientType")]

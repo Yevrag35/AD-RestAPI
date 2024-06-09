@@ -1,8 +1,3 @@
-using AD.Api.Ldap.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace AD.Api.Ldap.Path
 {
     public readonly struct WellKnownObject

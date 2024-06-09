@@ -1,12 +1,8 @@
-﻿using AD.Api.Ldap;
-using AD.Api.Ldap.Filters;
+﻿using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Search;
 using AD.Api.Services;
 using AD.Api.Settings;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices;
-using System.Security.Claims;
 
 namespace AD.Api.Controllers
 {

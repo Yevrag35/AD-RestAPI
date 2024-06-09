@@ -1,7 +1,6 @@
 ﻿using AD.Api.Ldap;
 using AD.Api.Ldap.Models;
 using AD.Api.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Password

@@ -1,5 +1,4 @@
 ﻿using AD.Api.Ldap;
-using AD.Api.Ldap.Attributes;
 using AD.Api.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices.ActiveDirectory;

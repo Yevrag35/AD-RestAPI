@@ -1,11 +1,7 @@
-﻿using AD.Api.Extensions;
-using AD.Api.Ldap;
+﻿using AD.Api.Ldap;
 using AD.Api.Ldap.Operations;
 using AD.Api.Schema;
-using Microsoft.Win32.SafeHandles;
 using System.DirectoryServices;
-using System.Security.Claims;
-using System.Security.Principal;
 
 namespace AD.Api.Services
 {

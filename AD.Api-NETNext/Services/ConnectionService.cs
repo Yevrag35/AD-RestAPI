@@ -1,9 +1,5 @@
 ﻿using AD.Api.Domains;
 using AD.Api.Ldap;
-using AD.Api.Ldap.Attributes;
-using AD.Api.Ldap.Connection;
-using AD.Api.Ldap.Path;
-using AD.Api.Schema;
 using Microsoft.Win32.SafeHandles;
 using System.Security.Principal;
 

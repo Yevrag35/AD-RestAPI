@@ -1,18 +1,12 @@
 using AD.Api.Extensions;
-using AD.Api.Ldap.Attributes;
 using AD.Api.Ldap.Connection;
-using AD.Api.Ldap.Filters;
 using AD.Api.Ldap.Models;
 using AD.Api.Ldap.Operations;
 using AD.Api.Ldap.Path;
 using AD.Api.Ldap.Search;
-using AD.Api.Schema;
 using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
-using System.Linq;
 using System.Net;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -166,7 +160,7 @@ namespace AD.Api.Ldap
         #endregion
         public DirectoryEntry AddChildEntry(string commonName, DirectoryEntry parent, CreationType creationType)
         {
-            if (string.IsNullOrWhiteSpace(commonName) || commonName.Equals(Strings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
+            if (string.IsNullOrWhiteSpace(commonName) || commonName.Equals(ADStrings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
             {
                 throw new ArgumentNullException(nameof(commonName));
             }
@@ -259,7 +253,7 @@ namespace AD.Api.Ldap
             return ExecuteInContext(_accessToken, () =>
             {
                 entryToRename.Rename(commonName.Value);
-                return entryToRename.Properties[Strings.DistinguishedName].Value as string;
+                return entryToRename.Properties[ADStrings.DistinguishedName].Value as string;
             });
         }
 
@@ -323,7 +317,7 @@ namespace AD.Api.Ldap
         {
             using DirectoryEntry rootDse = this.GetRootDSE();
 
-            if (!rootDse.Properties.TryGetFirstValue(Strings.DefaultNamingContext, out string? namingContext))
+            if (!rootDse.Properties.TryGetFirstValue(ADStrings.DefaultNamingContext, out string? namingContext))
             {
                 rootDse.Dispose();
                 throw new InvalidOperationException();  // Figure out what to do later.
@@ -393,9 +387,9 @@ namespace AD.Api.Ldap
         {
             return ExecuteInContext(_accessToken, () =>
             {
-                return directoryEntry.Properties.Contains(Strings.CriticalSystemObject)
+                return directoryEntry.Properties.Contains(ADStrings.CriticalSystemObject)
                        &&
-                       directoryEntry.Properties[Strings.CriticalSystemObject].Value is bool trueOrFalse
+                       directoryEntry.Properties[ADStrings.CriticalSystemObject].Value is bool trueOrFalse
                        &&
                        trueOrFalse;
             });
@@ -406,7 +400,7 @@ namespace AD.Api.Ldap
             return ExecuteInContext(_accessToken, () =>
             {
                 var ruleCollection = directoryEntry.ObjectSecurity.GetAccessRules(true, true, typeof(NTAccount));
-                NTAccount everyone = new(Strings.NTAccount_Everyone);
+                NTAccount everyone = new(ADStrings.NTAccount_Everyone);
                 return ruleCollection.Cast<ActiveDirectoryAccessRule>()
                     .Any(rule =>
                         rule.AccessControlType == AccessControlType.Deny
@@ -503,12 +497,12 @@ namespace AD.Api.Ldap
 
         private static string TruncateCN(string commonName)
         {
-            if (!commonName.StartsWith(Strings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
+            if (!commonName.StartsWith(ADStrings.CN_Prefix, StringComparison.CurrentCultureIgnoreCase))
             {
                 return commonName;
             }
 
-            (string cn, int startAt) tuple = (commonName, Strings.CN_Prefix.Length);
+            (string cn, int startAt) tuple = (commonName, ADStrings.CN_Prefix.Length);
 
             return string.Create(commonName.Length - tuple.startAt, tuple, (chars, state) =>
             {

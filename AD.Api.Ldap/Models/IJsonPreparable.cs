@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using System;
 
 namespace AD.Api.Ldap.Models
 {

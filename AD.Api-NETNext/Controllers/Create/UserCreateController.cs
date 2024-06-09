@@ -1,14 +1,8 @@
 ﻿using AD.Api.Ldap;
 using AD.Api.Ldap.Models;
-using AD.Api.Schema;
 using AD.Api.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
-using System.DirectoryServices;
-using System.DirectoryServices.ActiveDirectory;
 using System.Net;
-using System.Security.Principal;
 
 namespace AD.Api.Controllers
 {

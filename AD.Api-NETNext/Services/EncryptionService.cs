@@ -1,7 +1,5 @@
 ﻿using AD.Api.Settings;
-using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
-using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 

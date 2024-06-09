@@ -1,6 +1,5 @@
 using AD.Api.Ldap.Filters;
 using Newtonsoft.Json;
-using System;
 
 namespace AD.Api.Ldap.Converters
 {

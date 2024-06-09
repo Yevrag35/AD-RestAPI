@@ -1,5 +1,4 @@
 using AD.Api.Ldap.Operations;
-using System;
 
 namespace AD.Api.Ldap.Exceptions
 {
