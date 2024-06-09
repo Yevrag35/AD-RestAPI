@@ -1,10 +1,9 @@
 using AD.Api.Collections;
+using AD.Api.Core.Ldap.Enums;
 using AD.Api.Domains;
-using AD.Api.Enums;
 using AD.Api.Extensions;
 using AD.Api.Extensions.Collections;
 using AD.Api.Extensions.Startup;
-using AD.Api.Ldap;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Services.Enums;

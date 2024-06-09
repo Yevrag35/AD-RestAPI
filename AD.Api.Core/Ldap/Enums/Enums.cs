@@ -1,6 +1,6 @@
 using AD.Api.Attributes.Ldap;
 
-namespace AD.Api.Enums
+namespace AD.Api.Core.Ldap.Enums
 {
     public enum CreationType
     {
