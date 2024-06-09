@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AD.Api.Ldap.Attributes\AD.Api.Attributes.csproj" />
+    <ProjectReference Include="..\AD.Api.Extensions\AD.Api.Extensions.csproj" />
     <ProjectReference Include="..\AD.Api.Schema\AD.Api.Schema.csproj" />
   </ItemGroup>
 

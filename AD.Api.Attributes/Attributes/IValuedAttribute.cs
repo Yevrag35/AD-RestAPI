@@ -7,7 +7,7 @@ namespace AD.Api.Attributes
     /// synonymous with the implementing <see cref="Attribute"/>.
     /// </summary>
     /// <typeparam name="TValue">The output type of the attribute's value.</typeparam>
-    public interface IValuedAttribute<TValue> where TValue : notnull
+    public interface IValuedAttribute<TValue> : IAdApiAttribute where TValue : notnull
     {
         /// <summary>
         /// The value that the <see cref="Attribute"/> is synonymous with.

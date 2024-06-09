@@ -19,7 +19,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Schema", "AD.Api.Sch
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Resources", "AD.Api.Resources\AD.Api.Resources.csproj", "{18A7182B-A6F4-4096-92EA-C2E4E45DB82B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Extensions", "AD.Api.Extensions\AD.Api.Extensions.csproj", "{AC8D8050-66B0-42CA-A39F-47CC3E85B28A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Extensions", "AD.Api.Extensions\AD.Api.Extensions.csproj", "{AC8D8050-66B0-42CA-A39F-47CC3E85B28A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9FFE5B95-97FD-48BC-8176-0237E59C759D}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

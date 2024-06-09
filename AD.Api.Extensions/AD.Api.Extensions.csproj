@@ -4,16 +4,34 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<RootNamespace>AD.Api</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AD.Api.Ldap.Attributes\AD.Api.Attributes.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
+		<Using Include="AD.Api.Resources.ErrorStrings" Alias="Errors" />
+		<Using Include="Microsoft.Extensions.Configuration" />
+		<Using Include="Microsoft.Extensions.DependencyInjection" />
 		<Using Include="System.Diagnostics" />
 		<Using Include="System.Diagnostics.CodeAnalysis" />
 		<Using Include="System.Reflection" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\AD.Api.Attributes\AD.Api.Attributes.csproj" />
+	  <ProjectReference Include="..\AD.Api.Resources\AD.Api.Resources.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+    <Compile Update="**\*-*.cs">
+      <DependentUpon>$([System.Text.RegularExpressions.Regex]::Replace('$([System.String]::Copy(%(Filename)))', '^(.+)\-.+$', '$1.cs'))</DependentUpon>
+    </Compile>
+  </ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="Exceptions\Services\" />
+	</ItemGroup>
 </Project>

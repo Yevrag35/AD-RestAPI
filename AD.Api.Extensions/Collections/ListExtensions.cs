@@ -1,4 +1,4 @@
-﻿namespace AD.Api.Extensions
+﻿namespace AD.Api.Extensions.Collections
 {
     public static class ListExtensions
     {
