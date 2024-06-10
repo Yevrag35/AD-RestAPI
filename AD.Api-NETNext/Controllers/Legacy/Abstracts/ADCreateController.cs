@@ -1,7 +1,4 @@
-﻿using AD.Api.Ldap.Models;
-using AD.Api.Services;
-
-namespace AD.Api.Controllers
+﻿namespace AD.Api.Controllers
 {
     public abstract class ADCreateController : ADControllerBase
     {

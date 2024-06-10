@@ -1,4 +1,5 @@
 using AD.Api.Spans;
+using AD.Api.Strings.Extensions;
 using System.Buffers;
 
 namespace AD.Api.Strings.Spans

@@ -1,5 +1,4 @@
-﻿using AD.Api.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers
 {

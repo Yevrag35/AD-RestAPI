@@ -1,43 +1,42 @@
-﻿using AD.Api.Ldap.Components;
-using AD.Api.Ldap.Filters;
-using AD.Api.Ldap.Models;
-using AD.Api.Ldap.Search;
-using AD.Api.Services;
-using AD.Api.Settings;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices;
 
-namespace AD.Api.Controllers.Search
+namespace AD.Api.Controllers
 {
     [ApiController]
     [Produces("application/json")]
-    public class GenericQueryController : ADQueryController
+    [Route("search/user")]
+    [AllowAnonymous]
+    //[Authorize(AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}")]
+    public class UserQueryController : ADQueryController
     {
-        private IGenericSettings GenericSettings { get; }
-        
-        public GenericQueryController(IIdentityService identityService, IQueryService queryService,
-            IResultService resultService, IGenericSettings genericSettings)
+        private static readonly Equal UserObjectClass = new("objectClass", "user");
+        private static readonly Equal UserObjectCategory = new("objectCategory", "person");
+        private static readonly Equal[] _criteria = new Equal[2] { UserObjectClass, UserObjectCategory };
+
+        private IUserSettings UserSettings { get; }
+
+        public UserQueryController(IResultService resultService,
+            IIdentityService identityService, IQueryService queryService, IUserSettings userSettings)
             : base(identityService, queryService, resultService)
         {
-            this.GenericSettings = genericSettings;
+            this.UserSettings = userSettings;
         }
 
         [HttpGet]
-        [Route("search")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(QueryResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult GetGenericSearch(
-                [FromQuery] string? searchBase = null,
-                [FromQuery] string? sortDir = null,
+        public IActionResult GetUserSearch(
                 [FromQuery] string? domain = null,
+                [FromQuery] string? searchBase = null,
                 [FromQuery] int? limit = null,
                 [FromQuery] SearchScope scope = SearchScope.Subtree,
+                [FromQuery] string? sortDir = null,
                 [FromQuery] string? sortBy = null,
                 [FromQuery] string? properties = null,
                 [FromQuery] bool includeDetails = false)
         {
-            return this.PerformGenericSearch(
-                null,
+            return this.PerformUserSearch(
+                AddUserCriteria(),
                 domain,
                 searchBase,
                 limit,
@@ -49,22 +48,19 @@ namespace AD.Api.Controllers.Search
         }
 
         [HttpPost]
-        [Route("search")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(QueryResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult PostGenericSearch(
+        public IActionResult PostUserSearch(
             [FromBody] IFilterStatement filter,
-            [FromQuery] string? searchBase = null,
-            [FromQuery] string? sortDir = null,
             [FromQuery] string? domain = null,
+            [FromQuery] string? searchBase = null,
             [FromQuery] int? limit = null,
             [FromQuery] SearchScope scope = SearchScope.Subtree,
+            [FromQuery] string? sortDir = null,
             [FromQuery] string? sortBy = null,
             [FromQuery] string? properties = null,
             [FromQuery] bool includeDetails = false)
         {
-            return this.PerformGenericSearch(
-                filter,
+            return this.PerformUserSearch(
+                AddUserCriteria(filter),
                 domain,
                 searchBase,
                 limit,
@@ -75,8 +71,8 @@ namespace AD.Api.Controllers.Search
                 includeDetails);
         }
 
-        private IActionResult PerformGenericSearch(
-            IFilterStatement? filter,
+        private IActionResult PerformUserSearch(
+            IFilterStatement filter,
             string? domain,
             string? searchBase,
             int? limit,
@@ -88,19 +84,22 @@ namespace AD.Api.Controllers.Search
         {
             QueryOptions options = new QueryOptions
             {
-                Domain = domain,
-                SearchBase = searchBase,
                 Filter = filter,
                 SearchScope = scope,
                 SortDirection = sortDir,
                 SortProperty = sortBy,
                 ClaimsPrincipal = this.HttpContext.User,
-                PropertiesToLoad = this.GetProperties(this.GenericSettings, properties),
-                SizeLimit = limit ?? this.GenericSettings.Size
+                PropertiesToLoad = this.GetProperties(this.UserSettings, properties),
+                SizeLimit = limit ?? this.UserSettings.Size
             };
 
             var list = this.QueryService.Search(options, out string ldapFilter, out string host);
             return base.GetReply(list, includeDetails, options.SizeLimit, options.PropertiesToLoad, host, ldapFilter);
+        }
+
+        private static IFilterStatement AddUserCriteria(IFilterStatement? statement = null)
+        {
+            return AddCriteria(_criteria, statement);
         }
     }
 }

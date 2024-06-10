@@ -4,24 +4,24 @@ namespace AD.Api.Services
 {
     public static class InjectServicesExtensions
     {
-        public static IServiceCollection AddADApiServices(this IServiceCollection services)
-        {
-            return services
-                .AddSingleton<IConnectionService, ConnectionService>()
-                .AddSingleton<IIdentityService, IdentityService>()
-                .AddSingleton<IPasswordService, PasswordService>()
-                .AddSingleton<IRestrictionService, RestrictionService>()
-                .AddSingleton<IResultService, ResultService>()
-                .AddSingleton<ISchemaService, SchemaService>()
-                .AddSingleton<ISerializationService, SerializationService>()
-                .AddScoped<ICreateService, LdapCreateService>()
-                .AddScoped<IDeleteService, DeleteService>()
-                .AddScoped<IEditService, LdapEditService>()
-                .AddScoped<IMoveService, MoveService>()
-                .AddScoped<IQueryService, LdapQueryService>()
-                .AddScoped<IRenameService, RenameService>()
-                .AddTransient<IEncryptionService, EncryptionService>();
-        }
+        //public static IServiceCollection AddADApiServices(this IServiceCollection services)
+        //{
+        //    return services
+        //        .AddSingleton<IConnectionService, ConnectionService>()
+        //        .AddSingleton<IIdentityService, IdentityService>()
+        //        .AddSingleton<IPasswordService, PasswordService>()
+        //        .AddSingleton<IRestrictionService, RestrictionService>()
+        //        .AddSingleton<IResultService, ResultService>()
+        //        .AddSingleton<ISchemaService, SchemaService>()
+        //        .AddSingleton<ISerializationService, SerializationService>()
+        //        .AddScoped<ICreateService, LdapCreateService>()
+        //        .AddScoped<IDeleteService, DeleteService>()
+        //        .AddScoped<IEditService, LdapEditService>()
+        //        .AddScoped<IMoveService, MoveService>()
+        //        .AddScoped<IQueryService, LdapQueryService>()
+        //        .AddScoped<IRenameService, RenameService>()
+        //        .AddTransient<IEncryptionService, EncryptionService>();
+        //}
 
         //public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)
         //{

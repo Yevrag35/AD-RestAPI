@@ -1,43 +1,37 @@
-﻿using AD.Api.Ldap.Components;
-using AD.Api.Ldap.Filters;
-using AD.Api.Ldap.Search;
-using AD.Api.Services;
-using AD.Api.Settings;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices;
 
 namespace AD.Api.Controllers.Search
 {
     [ApiController]
     [Produces("application/json")]
-    [Route("search/computer")]
-    public class ComputerQueryController : ADQueryController
+    public class GenericQueryController : ADQueryController
     {
-        private static readonly Equal ComputerObjectClass = new Equal("objectClass", "computer");
-        private static readonly Equal[] _criteria = new[] { ComputerObjectClass };
-
-        private IComputerSettings ComputerSettings { get; }
-
-        public ComputerQueryController(IIdentityService identityService, IQueryService queryService,
-            IResultService resultService, IComputerSettings computerSettings)
+        private IGenericSettings GenericSettings { get; }
+        
+        public GenericQueryController(IIdentityService identityService, IQueryService queryService,
+            IResultService resultService, IGenericSettings genericSettings)
             : base(identityService, queryService, resultService)
         {
-            this.ComputerSettings = computerSettings;
+            this.GenericSettings = genericSettings;
         }
 
         [HttpGet]
-        public IActionResult GetComputerSearch(
-                [FromQuery] string? domain = null,
+        [Route("search")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(QueryResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult GetGenericSearch(
                 [FromQuery] string? searchBase = null,
+                [FromQuery] string? sortDir = null,
+                [FromQuery] string? domain = null,
                 [FromQuery] int? limit = null,
                 [FromQuery] SearchScope scope = SearchScope.Subtree,
-                [FromQuery] string? sortDir = null,
                 [FromQuery] string? sortBy = null,
                 [FromQuery] string? properties = null,
                 [FromQuery] bool includeDetails = false)
         {
-            return this.PerformComputerSearch(
-                AddCriteria(_criteria, null),
+            return this.PerformGenericSearch(
+                null,
                 domain,
                 searchBase,
                 limit,
@@ -49,19 +43,22 @@ namespace AD.Api.Controllers.Search
         }
 
         [HttpPost]
-        public IActionResult PostComputerSearch(
+        [Route("search")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(QueryResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult PostGenericSearch(
             [FromBody] IFilterStatement filter,
-            [FromQuery] string? domain = null,
             [FromQuery] string? searchBase = null,
+            [FromQuery] string? sortDir = null,
+            [FromQuery] string? domain = null,
             [FromQuery] int? limit = null,
             [FromQuery] SearchScope scope = SearchScope.Subtree,
-            [FromQuery] string? sortDir = null,
             [FromQuery] string? sortBy = null,
             [FromQuery] string? properties = null,
             [FromQuery] bool includeDetails = false)
         {
-            return this.PerformComputerSearch(
-                AddCriteria(_criteria, filter),
+            return this.PerformGenericSearch(
+                filter,
                 domain,
                 searchBase,
                 limit,
@@ -72,8 +69,8 @@ namespace AD.Api.Controllers.Search
                 includeDetails);
         }
 
-        private IActionResult PerformComputerSearch(
-            IFilterStatement filter,
+        private IActionResult PerformGenericSearch(
+            IFilterStatement? filter,
             string? domain,
             string? searchBase,
             int? limit,
@@ -92,8 +89,8 @@ namespace AD.Api.Controllers.Search
                 SortDirection = sortDir,
                 SortProperty = sortBy,
                 ClaimsPrincipal = this.HttpContext.User,
-                PropertiesToLoad = this.GetProperties(this.ComputerSettings, properties),
-                SizeLimit = limit ?? this.ComputerSettings.Size
+                PropertiesToLoad = this.GetProperties(this.GenericSettings, properties),
+                SizeLimit = limit ?? this.GenericSettings.Size
             };
 
             var list = this.QueryService.Search(options, out string ldapFilter, out string host);

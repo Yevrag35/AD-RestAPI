@@ -1,6 +1,4 @@
-﻿using AD.Api.Ldap;
-using AD.Api.Ldap.Operations;
-using System.DirectoryServices;
+﻿using System.DirectoryServices;
 
 namespace AD.Api.Services
 {

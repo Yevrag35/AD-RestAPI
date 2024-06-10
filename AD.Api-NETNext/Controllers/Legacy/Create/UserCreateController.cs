@@ -1,7 +1,4 @@
-﻿using AD.Api.Ldap;
-using AD.Api.Ldap.Models;
-using AD.Api.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
 namespace AD.Api.Controllers

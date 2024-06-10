@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -40,16 +40,25 @@
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Mapping\Mapper.cs" />
+	<ItemGroup>
+		<Compile Remove="**\Legacy\**\*.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="**\Legacy\**\*.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="Extensions\InjectServicesExtension.cs" />
+	</ItemGroup>
+
+  <!--<ItemGroup>
     <Compile Remove="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
     <Compile Remove="Services\NewNameService.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Middleware\MultipleSchemaAuthenticationMiddleware.cs" />
-    <None Include="Services\NewNameService.cs" />
-  </ItemGroup>
+    <None Include="Middleware\Legacy\MultipleSchemaAuthenticationMiddleware.cs" />
+    <None Include="Services\Legacy\NewNameService.cs" />
+  </ItemGroup>-->
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="11.0.1" />

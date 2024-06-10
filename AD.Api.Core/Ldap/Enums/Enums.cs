@@ -1,3 +1,4 @@
+using AD.Api.Attributes;
 using AD.Api.Attributes.Ldap;
 
 namespace AD.Api.Core.Ldap.Enums

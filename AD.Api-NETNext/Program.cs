@@ -1,13 +1,10 @@
 using AD.Api.Collections;
 using AD.Api.Core.Ldap.Enums;
-using AD.Api.Domains;
-using AD.Api.Extensions;
 using AD.Api.Extensions.Collections;
 using AD.Api.Extensions.Startup;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
-using AD.Api.Settings;
 using AD.Api.Startup;
 using Microsoft.IdentityModel.Logging;
 using System.Reflection;
@@ -18,11 +15,11 @@ using System.Text.Json;
 Referencer.LoadAll((in Referencer referer) =>
 {
     referer
-        .Reference<Add>()
-        .Reference<And>()
-        .Reference<UnsafeDictionary<int>>()
-        .Reference<LdapPropertyConverter>()
-        .Reference<SchemaProperty>();
+        //.Reference<Add>()
+        //.Reference<And>()
+        //.Reference<LdapPropertyConverter>()
+        //.Reference<SchemaProperty>();
+        .Reference<UnsafeDictionary<int>>();
 });
 
 #endregion
@@ -86,43 +83,44 @@ builder.Services
          .Register<WellKnownObjectValue>(freeze: true);
     });
 
-builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
-builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));
-builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
-builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
-builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
-builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings textSettings);
+//builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
+//builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));
+//builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
+//builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
+//builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
+//builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings textSettings);
 
-builder.Services.AddADApiServices();
+//builder.Services.AddADApiServices();
 
 //builder.Services
 //    .AddAutoMapper(assemblies);
-    //.AddLdapEnumTypes(assemblies);
+//.AddLdapEnumTypes(assemblies);
 
-builder
-    .ConfigureJson(x => x.Services.AddControllers(), (config, env, options) =>
-    {
-        bool isDev = env.IsDevelopment();
+//builder
+//    .ConfigureJson(x => x.Services.AddControllers(), (config, env, options) =>
+//    {
+//        bool isDev = env.IsDevelopment();
 
-        IConfigurationSection section = config
-            .GetRequiredSection("Settings")
-            .GetRequiredSection("Serialization");
+//        IConfigurationSection section = config
+//            .GetRequiredSection("Settings")
+//            .GetRequiredSection("Serialization");
 
-        var settings = section.Get<SerializationSettings>() ?? throw new JsonException("Unable to deserialize settings.");
+//        var settings = section.Get<SerializationSettings>() ?? throw new JsonException("Unable to deserialize settings.");
 
-        settings.SetJsonOptions(options.JsonSerializerOptions);
-        
-        options.AllowInputFormatterExceptionMessages = isDev;
-        options.JsonSerializerOptions.WriteIndented = isDev;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+//        settings.SetJsonOptions(options.JsonSerializerOptions);
 
-        options.JsonSerializerOptions.Converters.AddRange(
-            new LdapFilterStringConverter(),
-            new FilterJsonConverter()
-        );
-    });
+//        options.AllowInputFormatterExceptionMessages = isDev;
+//        options.JsonSerializerOptions.WriteIndented = isDev;
+//        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 
-//builder.Services.AddControllers().AddNewtonsoftJson(options =>
+//        options.JsonSerializerOptions.Converters.AddRange(
+//            new LdapFilterStringConverter(),
+//            new FilterJsonConverter()
+//        );
+//    });
+
+builder.Services.AddControllers();
+//.AddNewtonsoftJson(options =>
 //{
 //    options.AddADApiConfiguration(textSettings);
 //});
@@ -135,10 +133,10 @@ IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
 var app = builder.Build();
 
-app.UseExceptionHandler(new ExceptionHandlerOptions
-{
-    ExceptionHandler = new ErrorHandlingMiddleware().Invoke
-});
+//app.UseExceptionHandler(new ExceptionHandlerOptions
+//{
+//    ExceptionHandler = new ErrorHandlingMiddleware().Invoke
+//});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -149,12 +147,12 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 //app.UseMultipleSchemaAuthenticationMiddleware();
 
-app.UseImpersonationMiddleware();
+//app.UseImpersonationMiddleware();
 
 app.MapControllers();
 

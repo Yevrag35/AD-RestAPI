@@ -1,9 +1,4 @@
-﻿using AD.Api.Ldap.Components;
-using AD.Api.Ldap.Filters;
-using AD.Api.Ldap.Search;
-using AD.Api.Services;
-using AD.Api.Settings;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices;
 
 namespace AD.Api.Controllers.Search
