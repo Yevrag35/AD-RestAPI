@@ -159,4 +159,7 @@
   <data name="Exception_TypeNotAssignable" xml:space="preserve">
     <value>The type '{0}' is not assignable to type '{1}'.</value>
   </data>
+  <data name="Exception_ValidationStartup" xml:space="preserve">
+    <value>The startup validation for type '{0}' failed. The following results were returned:</value>
+  </data>
 </root>

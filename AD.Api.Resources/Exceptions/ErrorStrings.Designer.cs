@@ -185,5 +185,14 @@ namespace AD.Api.Resources {
                 return ResourceManager.GetString("Exception_TypeNotAssignable", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The startup validation for type &apos;{0}&apos; failed. The following results were returned:.
+        /// </summary>
+        public static string Exception_ValidationStartup {
+            get {
+                return ResourceManager.GetString("Exception_ValidationStartup", resourceCulture);
+            }
+        }
     }
 }

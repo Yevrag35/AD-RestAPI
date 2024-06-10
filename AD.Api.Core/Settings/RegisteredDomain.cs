@@ -1,3 +1,4 @@
+using AD.Api.Core.Security;
 using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Core.Settings
@@ -8,13 +9,13 @@ namespace AD.Api.Core.Settings
         [MinLength(9)]
         public required string DefaultNamingContext { get; init; }
         public string[] DomainControllers { get; init; } = [];
-        [Required]
-        [MinLength(3)]
-        public required string DomainName { get; init; }
+        public string DomainName { get; set; } = string.Empty;
+        public bool IsDefault { get; init; }
         [Required]
         public required bool IsForestRoot { get; init; }
         public string Name { get; set; } = string.Empty;
-        public bool UseSSL { get; init; }
+        public int? PortNumber { get; set; }
+        public bool? UseSSL { get; init; }
     }
 }
 

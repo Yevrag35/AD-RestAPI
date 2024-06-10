@@ -18,20 +18,13 @@ namespace AD.Api.Middleware
 
             Debug.WriteLine($"User: {user.Name}\tState: {user.ImpersonationLevel}\n");
 
-            try
+            await WindowsIdentity.RunImpersonatedAsync(user.AccessToken, async () =>
             {
-                await WindowsIdentity.RunImpersonatedAsync(user.AccessToken, async () =>
-                {
-                    var impersonated = WindowsIdentity.GetCurrent();
-                    Debug.WriteLine($"User: {impersonated.Name}\tState: {impersonated.ImpersonationLevel}\n");
+                var impersonated = WindowsIdentity.GetCurrent();
+                Debug.WriteLine($"User: {impersonated.Name}\tState: {impersonated.ImpersonationLevel}\n");
 
-                    await _next(httpContext).ConfigureAwait(false);
-                }).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                await httpContext.Response.WriteAsync(e.ToString());
-            }
+                await _next(httpContext).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
     }
 

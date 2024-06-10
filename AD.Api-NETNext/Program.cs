@@ -1,5 +1,7 @@
 using AD.Api.Collections;
 using AD.Api.Core.Ldap.Enums;
+using AD.Api.Core.Ldap.Services.Connections;
+using AD.Api.Core.Security.Encryption;
 using AD.Api.Extensions.Collections;
 using AD.Api.Extensions.Startup;
 using AD.Api.Middleware;
@@ -18,7 +20,7 @@ Referencer.LoadAll((in Referencer referer) =>
         //.Reference<Add>()
         //.Reference<And>()
         //.Reference<LdapPropertyConverter>()
-        //.Reference<SchemaProperty>();
+        .Reference<IConnectionService>()
         .Reference<UnsafeDictionary<int>>();
 });
 
@@ -82,6 +84,11 @@ builder.Services
          .Register<UserAccountControl>(freeze: true)
          .Register<WellKnownObjectValue>(freeze: true);
     });
+
+if (OperatingSystem.IsWindows())
+{
+    builder.Services.AddSingleton<IEncryptionService, WindowsDpapiEncryptionService>();
+}
 
 //builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
 //builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));
@@ -152,7 +159,7 @@ if (app.Environment.IsDevelopment())
 
 //app.UseMultipleSchemaAuthenticationMiddleware();
 
-//app.UseImpersonationMiddleware();
+app.UseImpersonationMiddleware();
 
 app.MapControllers();
 
