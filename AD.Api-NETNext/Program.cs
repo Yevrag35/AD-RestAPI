@@ -171,7 +171,7 @@ if (app.Environment.IsDevelopment())
 
 //app.UseMultipleSchemaAuthenticationMiddleware();
 
-app.UseImpersonationMiddleware();
+//app.UseImpersonationMiddleware();
 
 app.MapControllers();
 

@@ -7,19 +7,22 @@ using AD.Api.Startup.Exceptions;
 using System.Collections.Frozen;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Net;
+using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap.Services.Connections
 {
     public interface IConnectionService
     {
-        bool TryGetConnection(string key, [NotNullWhen(true)] out LdapConnection? connection);
+        bool TryGetConnection(string? key, [NotNullWhen(true)] out LdapConnection? connection);
     }
 
     [DynamicDependencyRegistration]
     internal sealed class ConnectionService : IConnectionService
     {
+        private const string DEFAULT = "Default";
         internal FrozenDictionary<string, ConnectionContext> Contexts { get; }
 
         private ConnectionService(FrozenDictionary<string, ConnectionContext> pairs)
@@ -27,8 +30,10 @@ namespace AD.Api.Core.Ldap.Services.Connections
             this.Contexts = pairs;
         }
 
-        public bool TryGetConnection(string key, [NotNullWhen(true)] out LdapConnection? connection)
+        public bool TryGetConnection(string? key, [NotNullWhen(true)] out LdapConnection? connection)
         {
+            key ??= DEFAULT;
+
             if (!this.Contexts.TryGetValue(key, out ConnectionContext? context))
             {
                 connection = null;
@@ -46,7 +51,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
             services.AddSingleton<IConnectionService>(provider =>
             {
                 IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
-                IConfigurationSection domains = configuration.GetRequiredSection("Domains");
+                IConfigurationSection domains = configuration.GetSection("Domains");
                 IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
                 var dict = ReadCredentialsFromConfig(domains, encSvc).ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
                 return new ConnectionService(dict);
@@ -72,28 +77,45 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 throw new NotSupportedException("Coming soon.");
             }
         }
-        private static IEnumerable<KeyValuePair<string, ConnectionContext>> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService)
+        private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService)
         {
+            Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
             List<ValidationResult> results = [];
-            foreach (IConfigurationSection domain in domainsSection.GetChildren())
+            if (domainsSection.Exists())
             {
-                RegisteredDomain info = ReadDomainFromConfig(domain);
-                info.Name = domain.Key;
-                if (string.IsNullOrWhiteSpace(info.DomainName))
+                foreach (IConfigurationSection domain in domainsSection.GetChildren())
                 {
-                    info.DomainName = domain.Key;
-                }
+                    RegisteredDomain info = ReadDomainFromConfig(domain);
+                    info.Name = domain.Key;
+                    if (string.IsNullOrWhiteSpace(info.DomainName))
+                    {
+                        info.DomainName = domain.Key;
+                    }
 
-                var result = encryptionService.ReadCredentials(domain);
-                results.AddRange(result.Errors);
+                    var result = encryptionService.ReadCredentials(domain);
+                    results.AddRange(result.Errors);
 
-                if (results.Count == 0)
-                {
-                    yield return new KeyValuePair<string, ConnectionContext>(domain.Key, CreateContextFromResult(domain.Key, info, result));
+                    if (results.Count == 0)
+                    {
+                        _ = dict.TryAdd(domain.Key, CreateContextFromResult(domain.Key, info, result));
+                    }
                 }
             }
 
+            if (dict.Count <= 0)
+            {
+                if (!OperatingSystem.IsWindows())
+                {
+                    throw new AdApiStartupException(typeof(ConnectionService), "No domains were found in the configuration.");   
+                }
+
+                using Forest forest = GetForest();
+                NegotiateContext context = new(forest, "Default");
+                _ = dict.TryAdd(context.Name, context);
+            }
+
             StartupValidationException.ThrowIfNotEmpty<ConnectionService>(results);
+            return dict;
         }
         private static RegisteredDomain ReadDomainFromConfig(IConfigurationSection domain)
         {
@@ -104,6 +126,18 @@ namespace AD.Api.Core.Ldap.Services.Connections
             }
 
             return parsed;
+        }
+        [SupportedOSPlatform("WINDOWS")]
+        private static Forest GetForest()
+        {
+            try
+            {
+                return Forest.GetCurrentForest();
+            }
+            catch (ActiveDirectoryOperationException e)
+            {
+                throw new AdApiStartupException(typeof(ConnectionService), e);
+            }
         }
     }
 }
