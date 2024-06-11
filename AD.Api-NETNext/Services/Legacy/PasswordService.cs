@@ -135,7 +135,7 @@ namespace AD.Api.Services
         public OperationResult SetPassword(string distinguishedName, LdapConnection connection, byte[] passwordBytes)
         {
             using DirectoryEntry dirEntry = connection.GetDirectoryEntry(distinguishedName);
-            using DirectoryEntry test = new DirectoryEntry("LDAP://GARVDC06.yevrag35.com:636/CN=Dat\\, Who X.,OU=Testing,OU=Real Users,DC=yevrag35,DC=com");
+            using DirectoryEntry test = new DirectoryEntry("");
             dirEntry.UsePropertyCache = false;
             return this.SetPassword(connection, dirEntry, passwordBytes);
         }

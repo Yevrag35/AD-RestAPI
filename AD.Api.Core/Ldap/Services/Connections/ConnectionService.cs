@@ -8,6 +8,7 @@ using System.Collections.Frozen;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;
+using System.Net;
 
 namespace AD.Api.Core.Ldap.Services.Connections
 {
@@ -51,9 +52,9 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 return new ConnectionService(dict);
             });
         }
-        private static ConnectionContext CreateContextFromResult(string key, RegisteredDomain domain, EncryptedCredential credential)
+        private static ConnectionContext CreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result)
         {
-            if (credential.IsEmpty)
+            if (result.HasCredential && result.Credential.IsEmpty)
             {
                 if (!OperatingSystem.IsWindows())
                 {
@@ -62,9 +63,9 @@ namespace AD.Api.Core.Ldap.Services.Connections
 
                 return new NegotiateContext(domain, key);
             }
-            else if (OperatingSystem.IsWindows())
+            else if (result.HasCredential && OperatingSystem.IsWindows())
             {
-                return new ChallengeContext(domain, key, credential);
+                return new ChallengeContext(domain, key, result.Credential);
             }
             else
             {
@@ -88,7 +89,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
 
                 if (results.Count == 0)
                 {
-                    yield return new KeyValuePair<string, ConnectionContext>(domain.Key, CreateContextFromResult(domain.Key, info, result.Credential));
+                    yield return new KeyValuePair<string, ConnectionContext>(domain.Key, CreateContextFromResult(domain.Key, info, result));
                 }
             }
 

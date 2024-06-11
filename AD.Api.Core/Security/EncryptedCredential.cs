@@ -60,7 +60,7 @@ namespace AD.Api.Core.Security
 
             _netCreds = new();
             this.UserAccountName.SetCredential(_netCreds);
-            encryptionService.SetCredentialPassword(_netCreds, this.EncryptedPassword, _encoding);
+            encryptionService.SetCredentialPassword(this, _netCreds, this.EncryptedPassword, _encoding);
             this.Password = null;
             this.UserName = null;
         }
@@ -82,17 +82,19 @@ namespace AD.Api.Core.Security
                 _disposed = true;
             }
         }
-        public static EncryptionResult FromSettings(IConfigurationSection connectionSection, IEncryptionService encryptionService)
+        public static EncryptionResult<T> FromSettings<T>(IConfigurationSection connectionSection, IEncryptionService encryptionService) where T : EncryptedCredential
         {
             IConfigurationSection section = connectionSection.GetSection("Credentials");
             if (!section.Exists())
             {
-                return EncryptionResult.NoCredential;
+                return EncryptionResult.Empty<T>();
             }
 
-            EncryptedCredential creds = OperatingSystem.IsWindows()
-                ? ReadWindowsCredential(section)
-                : ReadCredential(section);
+            T? creds = section.Get<T>(x => x.ErrorOnUnknownConfiguration = false);
+            if (creds is null)
+            {
+                return EncryptionResult.Empty<T>();
+            }
 
             if (!string.IsNullOrWhiteSpace(creds.UserName))
             {
@@ -101,7 +103,7 @@ namespace AD.Api.Core.Security
             }
 
             ValidationResult[] results = creds.Validate(new ValidationContext(creds)).ToArray();
-            return new EncryptionResult
+            return new EncryptionResult<T>
             {
                 Credential = creds,
                 Errors = results,
@@ -110,17 +112,6 @@ namespace AD.Api.Core.Security
         public Encode GetEncoding()
         {
             return _encoding;
-        }
-
-        [SupportedOSPlatform("WINDOWS")]
-        private static EncryptedCredential ReadWindowsCredential(IConfigurationSection section)
-        {
-            return section.Get<DpApiEncryptedCredential>(x => x.ErrorOnUnknownConfiguration = false)
-                ?? NoCredential;
-        }
-        private static EncryptedCredential ReadCredential(IConfigurationSection section)
-        {
-            return NoCredential;
         }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -157,6 +148,7 @@ namespace AD.Api.Core.Security
             }
             public override void StoreCredential(IEncryptionService encryptionService)
             {
+                _netCreds ??= new();
             }
         }
     }

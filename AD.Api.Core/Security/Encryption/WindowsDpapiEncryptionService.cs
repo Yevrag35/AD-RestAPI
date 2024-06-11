@@ -14,11 +14,41 @@ namespace AD.Api.Core.Security.Encryption
     [SupportedOSPlatform("WINDOWS")]
     public sealed class WindowsDpapiEncryptionService : IEncryptionService
     {
-        public DataProtectionScope Scope { get; private set; } = DataProtectionScope.CurrentUser;
-
-        public EncryptionResult ReadCredentials(IConfigurationSection connectionSection)
+        private EncryptionResult<DpApiEncryptedCredential> Encrypt(DpApiEncryptedCredential credential, Encoding encoding)
         {
-            EncryptionResult result = EncryptedCredential.FromSettings(connectionSection, this);
+            if (string.IsNullOrWhiteSpace(credential.UserName) && !string.IsNullOrWhiteSpace(credential.EncryptedUserName))
+            {
+                credential.UserAccountName = DecryptAccountName(credential.EncryptedUserName, encoding, credential.DpapiScope);
+            }
+
+            IReadOnlyList<ValidationResult> errors = ValidateAccountName(credential);
+            if (errors.Count > 0)
+            {
+                return new EncryptionResult<DpApiEncryptedCredential>
+                {
+                    Credential = credential,
+                    Errors = errors,
+                };
+            }
+
+            if (!IsEncrypted(credential))
+            {
+                throw new SecurityException("Need encrypted credentials for now.");
+            }
+
+            if (errors.Count <= 0)
+            {
+                credential.StoreCredential(this);
+
+                credential.Password = null;
+                credential.UserName = null;
+            }
+
+            return new EncryptionResult<DpApiEncryptedCredential> { Credential = credential, Errors = errors };
+        }
+        public IEncryptionResult ReadCredentials(IConfigurationSection connectionSection)
+        {
+            EncryptionResult<DpApiEncryptedCredential> result = EncryptedCredential.FromSettings<DpApiEncryptedCredential>(connectionSection, this);
             if (result.HasCredential && result.Errors.Count <= 0)
             {
                 result = this.Encrypt(result.Credential, result.Credential.GetEncoding());
@@ -26,71 +56,37 @@ namespace AD.Api.Core.Security.Encryption
 
             return result;
         }
-
-        public EncryptionResult Encrypt(EncryptedCredential credential, Encoding encoding)
+        
+        public void SetCredentialPassword(EncryptedCredential credential, NetworkCredential networkCredential, ReadOnlySpan<char> encryptedPassword, Encoding encoding)
         {
             if (credential is not DpApiEncryptedCredential windowsCreds)
             {
                 throw new InvalidDataException("On the windows platform, the credential must be a DpApiEncryptedCredential type.");
             }
 
-            this.Scope = windowsCreds.DpapiScope;
-
-            if (string.IsNullOrWhiteSpace(windowsCreds.UserName) && !string.IsNullOrWhiteSpace(windowsCreds.EncryptedUserName))
-            {
-                windowsCreds.UserAccountName = DecryptAccountName(windowsCreds.EncryptedUserName, encoding, this.Scope);
-            }
-
-            IReadOnlyList<ValidationResult> errors = ValidateAccountName(windowsCreds);
-            if (errors.Count > 0)
-            {
-                return new EncryptionResult
-                {
-                    Credential = windowsCreds,
-                    Errors = errors,
-                };
-            }
-
-            if (!IsEncrypted(windowsCreds))
-            {
-                throw new SecurityException("Need encrypted credentials for now.");
-            }
-
-            if (errors.Count <= 0)
-            {
-                windowsCreds.StoreCredential(this);
-
-                windowsCreds.Password = null;
-                windowsCreds.UserName = null;
-            }
-
-            return new EncryptionResult { Credential = windowsCreds, Errors = errors };
-        }
-        public void SetCredentialPassword(NetworkCredential credential, ReadOnlySpan<char> encryptedPassword, Encoding encoding)
-        {
             byte[] encBytes = ReadOutEncryptedBytes(encryptedPassword);
             
-            byte[] plainBytes = ProtectedData.Unprotect(encBytes, null, this.Scope);
+            byte[] plainBytes = ProtectedData.Unprotect(encBytes, null, windowsCreds.DpapiScope);
             SecureString securePass = ReadInPlainBytes(plainBytes, encoding);
 
-            credential.SecurePassword = securePass;
+            networkCredential.SecurePassword = securePass;
             Array.Clear(encBytes);
             Array.Clear(plainBytes);
         }
         
-        private static string EncryptString(ReadOnlySpan<char> plainChars, Encoding encoding, DataProtectionScope scope)
-        {
-            int length = encoding.GetMaxByteCount(plainChars.Length);
-            byte[] bytes = new byte[length];
+        //private static string EncryptString(ReadOnlySpan<char> plainChars, Encoding encoding, DataProtectionScope scope)
+        //{
+        //    int length = encoding.GetMaxByteCount(plainChars.Length);
+        //    byte[] bytes = new byte[length];
 
-            _ = encoding.GetBytes(plainChars, bytes);
-            byte[] encBytes = ProtectedData.Protect(bytes, null, scope);
+        //    _ = encoding.GetBytes(plainChars, bytes);
+        //    byte[] encBytes = ProtectedData.Protect(bytes, null, scope);
 
-            string s = Convert.ToBase64String(bytes);
-            Array.Clear(bytes);
-            Array.Clear(encBytes);
-            return s;
-        }
+        //    string s = Convert.ToBase64String(bytes);
+        //    Array.Clear(bytes);
+        //    Array.Clear(encBytes);
+        //    return s;
+        //}
         private static bool IsEncrypted(EncryptedCredential credential)
         {
             return !string.IsNullOrWhiteSpace(credential.EncryptedUserName) && !string.IsNullOrWhiteSpace(credential.EncryptedPassword);
@@ -146,7 +142,7 @@ namespace AD.Api.Core.Security.Encryption
 
             return errors.Count > 0
                 ? errors
-                : [];
+                : Array.Empty<ValidationResult>();
         }
     }
 }

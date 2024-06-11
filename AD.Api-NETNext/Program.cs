@@ -87,7 +87,19 @@ builder.Services
 
 if (OperatingSystem.IsWindows())
 {
-    builder.Services.AddSingleton<IEncryptionService, WindowsDpapiEncryptionService>();
+    IConfigurationSection section = builder.Configuration.GetSection("Settings").GetSection("Encryption");
+    if (section.Exists() && "Certificate".Equals(section.GetValue<string>("Type"), StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
+    }
+    else
+    {
+       builder.Services.AddSingleton<IEncryptionService, WindowsDpapiEncryptionService>();
+    }
+}
+else
+{
+    builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
 }
 
 //builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
