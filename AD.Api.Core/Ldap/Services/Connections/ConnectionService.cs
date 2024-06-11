@@ -4,11 +4,13 @@ using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Settings;
 using AD.Api.Exceptions;
 using AD.Api.Startup.Exceptions;
+using OneOf;
 using System.Collections.Frozen;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
+using System.Linq.Expressions;
 using System.Net;
 using System.Runtime.Versioning;
 
@@ -16,25 +18,34 @@ namespace AD.Api.Core.Ldap.Services.Connections
 {
     public interface IConnectionService
     {
-        bool TryGetConnection(string? key, [NotNullWhen(true)] out LdapConnection? connection);
+        ContextLibrary RegisteredConnections { get; }
+        OneOf<LdapConnection, T> GetConnectionOr<T>(string? key, Expression<Func<string, T>> errorExpression);
     }
 
     [DynamicDependencyRegistration]
     internal sealed class ConnectionService : IConnectionService
     {
         private const string DEFAULT = "Default";
-        internal FrozenDictionary<string, ConnectionContext> Contexts { get; }
+        public ContextLibrary RegisteredConnections { get; }
 
-        private ConnectionService(FrozenDictionary<string, ConnectionContext> pairs)
+        private ConnectionService(Dictionary<string, ConnectionContext> pairs)
         {
-            this.Contexts = pairs;
+            this.RegisteredConnections = new(pairs);
         }
 
-        public bool TryGetConnection(string? key, [NotNullWhen(true)] out LdapConnection? connection)
+        public OneOf<LdapConnection, T> GetConnectionOr<T>(string? key, Expression<Func<string, T>> errorExpression)
         {
-            key ??= DEFAULT;
+            if (!this.TryGetConnection(key, out LdapConnection? connection))
+            {
+                T error = errorExpression.Compile().Invoke(key);
+                return error;
+            }
 
-            if (!this.Contexts.TryGetValue(key, out ConnectionContext? context))
+            return connection;
+        }
+        public bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection)
+        {
+            if (!this.RegisteredConnections.TryGetValue(key, out ConnectionContext? context))
             {
                 connection = null;
                 return false;
@@ -53,39 +64,50 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
                 IConfigurationSection domains = configuration.GetSection("Domains");
                 IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
-                var dict = ReadCredentialsFromConfig(domains, encSvc).ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+                var dict = ReadCredentialsFromConfig(domains, encSvc);
                 return new ConnectionService(dict);
             });
         }
-        private static ConnectionContext CreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result)
+        private static void AddDefaultContext(ConnectionContext? defaultContext, Dictionary<string, ConnectionContext> contexts)
         {
-            if (result.HasCredential && result.Credential.IsEmpty)
+            if (defaultContext is not null)
             {
-                if (!OperatingSystem.IsWindows())
-                {
-                    throw new NotSupportedException("Negotiate is only supported on Windows platforms.");
-                }
-
-                return new NegotiateContext(domain, key);
+                contexts[DEFAULT] = defaultContext;
+                contexts[string.Empty] = defaultContext;
             }
-            else if (result.HasCredential && OperatingSystem.IsWindows())
+        }
+        
+        [SupportedOSPlatform("WINDOWS")]
+        private static Forest GetForest()
+        {
+            try
             {
-                return new ChallengeContext(domain, key, result.Credential);
+                return Forest.GetCurrentForest();
             }
-            else
+            catch (ActiveDirectoryOperationException e)
             {
-                throw new NotSupportedException("Coming soon.");
+                throw new AdApiStartupException(typeof(ConnectionService), e);
             }
         }
         private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService)
         {
             Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
+            ConnectionContext? defaultContext = null;
+
             List<ValidationResult> results = [];
             if (domainsSection.Exists())
             {
                 foreach (IConfigurationSection domain in domainsSection.GetChildren())
                 {
+                    if (string.IsNullOrWhiteSpace(domain.Key))
+                    {
+                        results.Add(new ValidationResult("A registered domain must have a name (key) identifier for connections.", [nameof(domain)]));
+
+                        continue;
+                    }
+
                     RegisteredDomain info = ReadDomainFromConfig(domain);
+
                     info.Name = domain.Key;
                     if (string.IsNullOrWhiteSpace(info.DomainName))
                     {
@@ -95,9 +117,11 @@ namespace AD.Api.Core.Ldap.Services.Connections
                     var result = encryptionService.ReadCredentials(domain);
                     results.AddRange(result.Errors);
 
-                    if (results.Count == 0)
+                    if (TryCreateContextFromResult(domain.Key, info, result, results, out var context))
                     {
-                        _ = dict.TryAdd(domain.Key, CreateContextFromResult(domain.Key, info, result));
+                        SetDefaultContext(context, info, ref defaultContext);
+                        _ = dict.TryAdd(domain.Key, context);
+                        _ = dict.TryAdd(info.DomainName, context);
                     }
                 }
             }
@@ -110,9 +134,14 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 }
 
                 using Forest forest = GetForest();
-                NegotiateContext context = new(forest, "Default");
-                _ = dict.TryAdd(context.Name, context);
+                defaultContext = new NegotiateContext(forest, DEFAULT);
+                _ = dict.TryAdd(forest.Name, defaultContext);
+                _ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
+                using var de = forest.RootDomain.GetDirectoryEntry();
+                _ = dict.TryAdd((string)de.Properties["name"].Value!, defaultContext);
             }
+
+            AddDefaultContext(defaultContext, dict);
 
             StartupValidationException.ThrowIfNotEmpty<ConnectionService>(results);
             return dict;
@@ -127,17 +156,42 @@ namespace AD.Api.Core.Ldap.Services.Connections
 
             return parsed;
         }
-        [SupportedOSPlatform("WINDOWS")]
-        private static Forest GetForest()
+        private static void SetDefaultContext(ConnectionContext context, RegisteredDomain domain, ref ConnectionContext? defaultContext)
         {
-            try
+            if (domain.IsDefault && defaultContext is null)
             {
-                return Forest.GetCurrentForest();
+                defaultContext = context;
             }
-            catch (ActiveDirectoryOperationException e)
+        }
+        private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, [NotNullWhen(true)] out ConnectionContext? context)
+        {
+            context = null;
+            if (result.Errors.Count > 0)
             {
-                throw new AdApiStartupException(typeof(ConnectionService), e);
+                return false;
             }
+
+            if (result.HasCredential && result.Credential.IsEmpty)
+            {
+                if (!OperatingSystem.IsWindows())
+                {
+                    errors.Add(new ValidationResult($"'{key}' has no credentials and Negotitate is only supported on Windows platforms.", [key]));
+                    context = null;
+                    return false;
+                }
+
+                context = new NegotiateContext(domain, key);
+                return true;
+            }
+
+            if (result.HasCredential && OperatingSystem.IsWindows())
+            {
+                context = new ChallengeContext(domain, key, result.Credential);
+                return true;
+            }
+
+            errors.Add(new ValidationResult($"'{key}' - couldn't find a supportable authentication mechanism for this domain. Coming soon.", [key]));
+            return false;
         }
     }
 }
