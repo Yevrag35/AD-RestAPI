@@ -49,6 +49,16 @@ namespace AD.Api.Core.Pooling
             return callback ?? StatedCallback.Create(provider, DefaultFactory);
         }
 
+        private Guid GenerateLease()
+        {
+            Guid id = Guid.NewGuid();
+            while (!_leasedIds.Add(id))
+            {
+                id = Guid.NewGuid();
+            }
+
+            return id;
+        }
         protected T GetOrConstruct(out bool constructed)
         {
             constructed = false;
@@ -59,6 +69,14 @@ namespace AD.Api.Core.Pooling
             }
 
             return item;
+        }
+
+        protected static IPooledItem<T> GetPooledItem<TPool>(TPool pool, Func<TPool, T> getItemFunc) where TPool : ThreadedPoolBag<T>
+        {
+            var item = getItemFunc(pool);
+            Guid lease = pool.GenerateLease();
+
+            return new PooledItem<T, TPool>(in lease, item, pool);
         }
 
         protected abstract bool Reset([DisallowNull] T item);

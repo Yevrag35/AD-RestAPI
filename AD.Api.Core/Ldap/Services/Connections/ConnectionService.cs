@@ -3,6 +3,7 @@ using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Settings;
 using AD.Api.Exceptions;
+using AD.Api.Expressions;
 using AD.Api.Startup.Exceptions;
 using OneOf;
 using System.Collections.Frozen;
@@ -26,18 +27,23 @@ namespace AD.Api.Core.Ldap.Services.Connections
     internal sealed class ConnectionService : IConnectionService
     {
         private const string DEFAULT = "Default";
+
+        private readonly IServiceScopeFactory _scopeFactory;
         public ContextLibrary RegisteredConnections { get; }
 
-        private ConnectionService(Dictionary<string, ConnectionContext> pairs)
+        private ConnectionService(Dictionary<string, ConnectionContext> pairs, IServiceScopeFactory scopeFactory)
         {
             this.RegisteredConnections = new(pairs);
+            _scopeFactory = scopeFactory;
         }
 
         public OneOf<LdapConnection, T> GetConnectionOr<T>(string? key, Expression<Func<string, T>> errorExpression)
         {
             if (!this.TryGetConnection(key, out LdapConnection? connection))
             {
-                T error = errorExpression.Compile().Invoke(key);
+                Func<string, T> func = GetCachedFunction(_scopeFactory, errorExpression);
+
+                T error = func.Invoke(key);
                 return error;
             }
 
@@ -64,8 +70,9 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
                 IConfigurationSection domains = configuration.GetSection("Domains");
                 IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
+                IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
                 var dict = ReadCredentialsFromConfig(domains, encSvc);
-                return new ConnectionService(dict);
+                return new ConnectionService(dict, scopeFactory);
             });
         }
         private static void AddDefaultContext(ConnectionContext? defaultContext, Dictionary<string, ConnectionContext> contexts)
@@ -88,6 +95,12 @@ namespace AD.Api.Core.Ldap.Services.Connections
             {
                 throw new AdApiStartupException(typeof(ConnectionService), e);
             }
+        }
+        private static Func<TInput, TOutput> GetCachedFunction<TInput, TOutput>(IServiceScopeFactory scopeFactory, Expression<Func<TInput, TOutput>> expression)
+        {
+            using var scope = scopeFactory.CreateScope();
+            var cache = scope.ServiceProvider.GetRequiredService<IExpressionCache<TInput, TOutput>>();
+            return cache.GetOrAdd(expression);
         }
         private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService)
         {

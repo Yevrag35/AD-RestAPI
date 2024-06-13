@@ -1,17 +1,21 @@
-﻿using System.Linq.Expressions;
+﻿using AD.Api.Attributes.Services;
+using System.Linq.Expressions;
 
 namespace AD.Api.Expressions
 {
-    public class ExpressionComparisonVisitor : ExpressionVisitor
+    [DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
+    public sealed class LambdaComparisonVisitor : ExpressionVisitor
     {
-        private Expression? _other;
+        private LambdaExpression? _other;
         private bool _result;
-        private readonly Stack<Expression> _stack = new();
+        private readonly Stack<LambdaExpression> _stack = new();
 
-        public bool AreEqual(Expression left, Expression right)
+        public LambdaComparisonVisitor() { }
+
+        public bool AreEqual(LambdaExpression left, LambdaExpression right)
         {
             _other = right;
-            _stack.Push(left);
+            _result = true;
             this.Visit(left);
             return _result;
         }
@@ -25,11 +29,16 @@ namespace AD.Api.Expressions
                 return node;
             }
 
-            if (_result && node.NodeType == _other.NodeType && node.Type.Equals(_other.Type))
+            if (node is not LambdaExpression lambdaNode)
+            {
+                return node;
+            }
+
+            if (lambdaNode.Body.Type.Equals(_other.Body.Type))
             {
                 _stack.Push(_other);
-                _other = node;
-                base.Visit(node);
+                _other = lambdaNode;
+                base.Visit(lambdaNode);
                 _other = _stack.Pop();
             }
             else
@@ -37,7 +46,7 @@ namespace AD.Api.Expressions
                 _result = false;
             }
 
-            return node;
+            return lambdaNode;
         }
 
         public void Reset()
