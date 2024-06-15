@@ -1,3 +1,4 @@
+using AD.Api.Actions;
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
@@ -5,6 +6,7 @@ using AD.Api.Core.Settings;
 using AD.Api.Exceptions;
 using AD.Api.Expressions;
 using AD.Api.Startup.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using OneOf;
 using System.Collections.Frozen;
 using System.ComponentModel;
@@ -20,7 +22,9 @@ namespace AD.Api.Core.Ldap.Services.Connections
     public interface IConnectionService
     {
         ContextLibrary RegisteredConnections { get; }
-        OneOf<LdapConnection, T> GetConnectionOr<T>(string? key, Expression<Func<string, T>> errorExpression);
+
+        OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
+        bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
     }
 
     [DynamicDependencyRegistration]
@@ -37,14 +41,11 @@ namespace AD.Api.Core.Ldap.Services.Connections
             _scopeFactory = scopeFactory;
         }
 
-        public OneOf<LdapConnection, T> GetConnectionOr<T>(string? key, Expression<Func<string, T>> errorExpression)
+        public OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
         {
             if (!this.TryGetConnection(key, out LdapConnection? connection))
             {
-                Func<string, T> func = GetCachedFunction(_scopeFactory, errorExpression);
-
-                T error = func.Invoke(key);
-                return error;
+                return StatedCallback.Create(state, onNotFound);
             }
 
             return connection;
@@ -95,12 +96,6 @@ namespace AD.Api.Core.Ldap.Services.Connections
             {
                 throw new AdApiStartupException(typeof(ConnectionService), e);
             }
-        }
-        private static Func<TInput, TOutput> GetCachedFunction<TInput, TOutput>(IServiceScopeFactory scopeFactory, Expression<Func<TInput, TOutput>> expression)
-        {
-            using var scope = scopeFactory.CreateScope();
-            var cache = scope.ServiceProvider.GetRequiredService<IExpressionCache<TInput, TOutput>>();
-            return cache.GetOrAdd(expression);
         }
         private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService)
         {

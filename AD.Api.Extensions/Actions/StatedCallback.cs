@@ -7,7 +7,7 @@
             return new StatedCallback<TState, TOutput>(state, callback);
         }
     }
-    public sealed class StatedCallback<TState, TOutput> : IStatedCallback<TOutput>
+    public readonly struct StatedCallback<TState, TOutput> : IStatedCallback<TOutput>
     {
         private readonly Func<TState, TOutput> _callback;
         private readonly TState _state;

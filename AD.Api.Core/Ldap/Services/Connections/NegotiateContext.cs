@@ -1,6 +1,7 @@
 using AD.Api.Core.Security;
 using AD.Api.Core.Settings;
 using AD.Api.Startup.Exceptions;
+using System.Collections.Concurrent;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
@@ -11,12 +12,23 @@ namespace AD.Api.Core.Ldap.Services.Connections
     [SupportedOSPlatform("WINDOWS")]
     public sealed class NegotiateContext : ConnectionContext
     {
+        private readonly ConcurrentDictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
+
         public NegotiateContext(Forest forest, string connectionName)
             : this(FromForest(forest, connectionName), connectionName)
         {
         }
         public NegotiateContext(RegisteredDomain domain, string connectionName) : base(domain, connectionName)
         {
+            _dirContexts = new(Environment.ProcessorCount, 1);
+            bool added = _dirContexts.TryAdd(DirectoryContextType.Domain, new(DirectoryContextType.Domain, domain.DomainName));
+            Debug.Assert(added);
+
+            if (domain.IsForestRoot)
+            {
+                added = _dirContexts.TryAdd(DirectoryContextType.Forest, new(DirectoryContextType.Forest, domain.DomainName));
+                Debug.Assert(added);
+            }
         }
 
         protected override LdapConnection CreateConnection(RegisteredDomain domain, LdapDirectoryIdentifier identifier)
@@ -51,6 +63,17 @@ namespace AD.Api.Core.Ldap.Services.Connections
             {
                 throw new AdApiStartupException(typeof(NegotiateContext), e);
             }
+        }
+
+        public override bool TryGetDirectoryContext(DirectoryContextType contextType, [NotNullWhen(true)] out DirectoryContext? directoryContext)
+        {
+            if (!_dirContexts.TryGetValue(contextType, out directoryContext))
+            {
+                directoryContext = new(contextType, this.DomainName);
+                _ = _dirContexts.TryAdd(contextType, directoryContext);
+            }
+
+            return true;
         }
     }
 }

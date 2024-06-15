@@ -2,6 +2,7 @@ using AD.Api.Collections;
 using AD.Api.Core.Ldap.Enums;
 using AD.Api.Core.Ldap.Services.Connections;
 using AD.Api.Core.Security.Encryption;
+using AD.Api.Core.Serialization;
 using AD.Api.Extensions.Collections;
 using AD.Api.Extensions.Startup;
 using AD.Api.Middleware;
@@ -9,8 +10,10 @@ using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using Microsoft.IdentityModel.Logging;
+using System.DirectoryServices.Protocols;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #region EXPLICIT LOADS
 
@@ -138,7 +141,16 @@ else
 //        );
 //    });
 
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
+        options.AllowInputFormatterExceptionMessages = builder.Environment.IsDevelopment();
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.Converters.Add(new SearchResultConverter());
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<ResultCode>(JsonNamingPolicy.CamelCase));
+    });
 //.AddNewtonsoftJson(options =>
 //{
 //    options.AddADApiConfiguration(textSettings);

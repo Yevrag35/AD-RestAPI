@@ -45,25 +45,7 @@ namespace AD.Api.Core.Security
         public string? UserName { get; set; }
         public IAccountName UserAccountName { get; set; } = AccountName.Empty;
 
-        [MemberNotNull(nameof(_netCreds))]
-        public virtual void StoreCredential(IEncryptionService encryptionService)
-        {
-            if (this.IsEmpty)
-            {
-                _netCreds = new();
-                return;
-            }
-            else if (_netCreds is not null)
-            {
-                return;
-            }
-
-            _netCreds = new();
-            this.UserAccountName.SetCredential(_netCreds);
-            encryptionService.SetCredentialPassword(this, _netCreds, this.EncryptedPassword, _encoding);
-            this.Password = null;
-            this.UserName = null;
-        }
+        
         public void Dispose()
         {
             this.Dispose(disposing: true);
@@ -113,7 +95,29 @@ namespace AD.Api.Core.Security
         {
             return _encoding;
         }
+        public virtual void SetCredential(LdapConnection connection)
+        {
+            connection.Credential = _netCreds;
+        }
+        [MemberNotNull(nameof(_netCreds))]
+        public virtual void StoreCredential(IEncryptionService encryptionService)
+        {
+            if (this.IsEmpty)
+            {
+                _netCreds = new();
+                return;
+            }
+            else if (_netCreds is not null)
+            {
+                return;
+            }
 
+            _netCreds = new();
+            this.UserAccountName.SetCredential(_netCreds);
+            encryptionService.SetCredentialPassword(this, _netCreds, this.EncryptedPassword, _encoding);
+            this.Password = null;
+            this.UserName = null;
+        }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (string.IsNullOrWhiteSpace(this.EncryptedPassword) && string.IsNullOrWhiteSpace(this.Password))
@@ -129,13 +133,8 @@ namespace AD.Api.Core.Security
             }
         }
 
-        public virtual void SetCredential(LdapConnection connection)
-        {
-            connection.Credential = _netCreds;
-        }
-
+        #region EMPTY CREDENTIAL
         public static readonly EncryptedCredential NoCredential = new Empty();
-
         private sealed class Empty : EncryptedCredential
         {
             internal Empty()
@@ -151,6 +150,7 @@ namespace AD.Api.Core.Security
                 _netCreds ??= new();
             }
         }
+
+        #endregion
     }
 }
-

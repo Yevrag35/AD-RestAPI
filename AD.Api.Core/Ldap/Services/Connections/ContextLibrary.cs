@@ -1,6 +1,7 @@
 using AD.Api.Collections.Enumerators;
 using System.Collections;
 using System.Collections.Frozen;
+using System.Collections.Immutable;
 
 namespace AD.Api.Core.Ldap.Services.Connections
 {
@@ -11,6 +12,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
         public ref readonly ConnectionContext this[string? key] => ref this.GetValueOrDefault(key);
 
         public int Count => _dictionary.Count;
+        public ImmutableArray<string> Keys => _dictionary.Keys;
 
         internal ContextLibrary(Dictionary<string, ConnectionContext> dictionary)
         {

@@ -49,7 +49,7 @@ namespace AD.Api.Core.Pooling
             return callback ?? StatedCallback.Create(provider, DefaultFactory);
         }
 
-        private Guid GenerateLease()
+        protected Guid GenerateLease()
         {
             Guid id = Guid.NewGuid();
             while (!_leasedIds.Add(id))
@@ -87,24 +87,35 @@ namespace AD.Api.Core.Pooling
                 Debug.Fail("Tried to return a NULL item back to the pool.");
                 return;
             }
-            else if (this.Reset(item))
-            {
-                if (!this.TryReturn(item))
-                {
-                    Debug.Fail("Item not returned.");
-                }
-            }
+
+            this.ReturnCore(Guid.Empty, item);
         }
         public void Return(Guid lease, T? item)
         {
-            if (!_leasedIds.TryRemove(lease))
+            if (item is null)
             {
+                Debug.Fail("Tried to return a NULL item back to the pool.");
                 return;
             }
 
-            this.Return(item);
+            this.ReturnCore(lease, item);
         }
-        protected virtual bool TryReturn([DisallowNull] T item)
+        protected virtual void ReturnCore(Guid lease, [DisallowNull] T item)
+        {
+            if (lease != Guid.Empty && !this.ReturnLease(lease))
+            {
+                return;
+            }
+            else if (this.Reset(item))
+            {
+                _ = this.TryReturn(item);
+            }
+        }
+        private bool ReturnLease(Guid lease)
+        {
+            return _leasedIds.TryRemove(lease);
+        }
+        private bool TryReturn([DisallowNull] T item)
         {
             if (_bag.IsEmpty || this.MaxSize > _bag.Count)
             {

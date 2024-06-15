@@ -140,7 +140,7 @@ namespace AD.Api.Startup
                         break;
                 }
 
-                tripped = flags.Count > 0;
+                tripped = flags.Count == 2;
             }
 
             if (0 == flags.Count)
