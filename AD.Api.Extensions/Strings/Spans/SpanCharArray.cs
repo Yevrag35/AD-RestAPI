@@ -155,10 +155,12 @@ namespace AD.Api.Strings.Spans
         }
 
         [DebuggerStepThrough]
+        [Obsolete("A bug exists in the 'Remove' methods.", error: true)]
         public bool Remove(scoped ReadOnlySpan<char> value)
         {
             return this.Remove(value, StringComparison.OrdinalIgnoreCase);
         }
+        [Obsolete("A bug exists in the 'Remove' methods.", error: true)]
         public bool Remove(scoped ReadOnlySpan<char> value, StringComparison comparison)
         {
             bool removed = false;
@@ -177,11 +179,13 @@ namespace AD.Api.Strings.Spans
 
             return removed;
         }
+        [Obsolete("A bug exists in the 'Remove' methods.", error: true)]
         public void RemoveAt(int index)
         {
             ref readonly SpanPosition pos = ref _positions[index];
             this.RemoveAt(in index, in pos);
         }
+        [Obsolete("A bug exists in the 'Remove' methods.", error: true)]
         private void RemoveAt(in int index, ref readonly SpanPosition pos)
         {
             if (pos.Index + pos.Length < _builder.Length)

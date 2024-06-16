@@ -1,6 +1,7 @@
 using AD.Api.Collections;
 using AD.Api.Core.Ldap.Enums;
 using AD.Api.Core.Ldap.Services.Connections;
+using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization;
 using AD.Api.Extensions.Collections;
@@ -88,6 +89,28 @@ builder.Services
          .Register<WellKnownObjectValue>(freeze: true);
     });
 
+PropertyConverter.AddToServices(builder.Services, (conversions) =>
+{
+    static void convertTime(Utf8JsonWriter writer, JsonSerializerOptions options, object value)
+    {
+        if (value is long longVal)
+        {
+            writer.WriteStringValue(DateTime.FromFileTime(longVal));
+        }
+        else if (value is string strVal && DateTime.TryParse(strVal, out DateTime res))
+        {
+            writer.WriteStringValue(res);
+        }
+        else
+        {
+            JsonSerializer.Serialize(writer, value, options);
+        }
+    };
+
+    conversions.Add("pwdLastSet", convertTime);
+    conversions.Add("lastLogon", convertTime);
+});
+
 if (OperatingSystem.IsWindows())
 {
     IConfigurationSection section = builder.Configuration.GetSection("Settings").GetSection("Encryption");
@@ -148,7 +171,8 @@ builder.Services
         options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
         options.AllowInputFormatterExceptionMessages = builder.Environment.IsDevelopment();
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new SearchResultConverter());
+        options.JsonSerializerOptions.Converters.Add(new ResultEntryConverter());
+        options.JsonSerializerOptions.Converters.Add(new ResultEntryCollectionConverter());
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<ResultCode>(JsonNamingPolicy.CamelCase));
     });
 //.AddNewtonsoftJson(options =>

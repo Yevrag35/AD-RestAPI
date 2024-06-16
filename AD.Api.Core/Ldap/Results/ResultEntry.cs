@@ -6,21 +6,23 @@ using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 using System.Text.Json;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap.Results
 {
     [SupportedOSPlatform("WINDOWS")]
-    [DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
     public sealed class ResultEntry : IReadOnlyCollection<KeyValuePair<string, object>>
     {
         private readonly ISchemaService _schemas;
         private readonly SortedDictionary<string, object> _attributes;
+        private readonly PropertyConverter _converter;
 
         public int Count => _attributes.Count;
+        public Guid LeaseId { get; set; }
 
-        public ResultEntry(ISchemaService schemaService)
+        public ResultEntry(ISchemaService schemaService, PropertyConverter converter)
         {
             _attributes = new(StringComparer.OrdinalIgnoreCase);
             _schemas = schemaService;
+            _converter = converter;
         }
 
         public void AddResult(string domain, SearchResultEntry entry)
@@ -61,7 +63,8 @@ namespace AD.Api.Core.Ldap
 
             if (type.Equals(typeof(byte[])) || type.Equals(typeof(Guid)))
             {
-                return ConvertObject(attribute.GetValues(typeof(byte[]))[0] as object[] ?? [], property.RuntimeType);
+                object[] vals = attribute.GetValues(typeof(byte[]));
+                return ConvertObject(vals[0], property.RuntimeType);
             }
             else
             {
@@ -73,7 +76,7 @@ namespace AD.Api.Core.Ldap
             if (convertTo.IsArray && values is object[] objArr)
             {
                 Type element = convertTo.GetElementType() ?? typeof(object);
-                Array array = Array.CreateInstance(element, objArr.Length);
+                var array = Array.CreateInstance(element, objArr.Length);
                 for (int i = 0; i < objArr.Length; i++)
                 {
                     array.SetValue(ConvertObject(objArr[i], element), i);
@@ -101,22 +104,22 @@ namespace AD.Api.Core.Ldap
             {
                 return GetBoolean(values);
             }
-            else if (convertTo.Equals(typeof(int?)))
+            else if (convertTo.Equals(typeof(int)))
             {
                 return GetInt32(values);
             }
-            else if (convertTo.Equals(typeof(long?)))
+            else if (convertTo.Equals(typeof(long)))
             {
                 return GetInt64(values);
             }
-            else if (convertTo.Equals(typeof(DateTime?)))
+            else if (convertTo.Equals(typeof(DateTime)))
             {
                 return GetDateTime(values);
             }
 
             return null;
         }
-        
+
         private static bool? GetBoolean(object value)
         {
             return value is not string s || !bool.TryParse(s, out bool boolean) ? null : (bool?)boolean;
@@ -139,7 +142,19 @@ namespace AD.Api.Core.Ldap
         }
         private static long? GetInt64(object value)
         {
-            return value is not string s || !long.TryParse(s, out long number) ? null : (long?)number;
+            if (value is string s && long.TryParse(s, out long longFromStr))
+            {
+                return longFromStr;
+            }
+            else if (value is byte[] bytes)
+            {
+                return BitConverter.ToInt64(bytes);
+            }
+            else
+            {
+                return null;
+            }
+            //return value is not string s || !long.TryParse(s, out long number) ? null : (long?)number;
         }
         private static string GetString(object value)
         {
@@ -148,14 +163,19 @@ namespace AD.Api.Core.Ldap
 
         public void WriteTo(Utf8JsonWriter writer, JsonSerializerOptions options)
         {
+            writer.WriteStartObject();
             if (_attributes.Count <= 0)
             {
-                writer.WriteStartObject();
                 writer.WriteEndObject();
                 return;
             }
-
-            JsonSerializer.Serialize(writer, _attributes, options);
+            
+            foreach (KeyValuePair<string, object> pair in _attributes)
+            {
+                _converter.WriteTo(writer, options, in pair);
+            }
+            
+            writer.WriteEndObject();
         }
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
         {
@@ -164,6 +184,11 @@ namespace AD.Api.Core.Ldap
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+
+        public void Reset()
+        {
+            _attributes.Clear();
         }
     }
 }

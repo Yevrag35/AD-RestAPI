@@ -2,7 +2,7 @@ using AD.Api.Pooling;
 
 namespace AD.Api.Core.Pooling
 {
-    internal readonly struct PooledItem<T, TPool> : IPooledItem<T>
+    public readonly struct PooledItem<T, TPool> : IPooledItem<T>
         where T : class
         where TPool : class, IPoolLeaseReturner<T>
     {
@@ -15,7 +15,7 @@ namespace AD.Api.Core.Pooling
         /// <inheritdoc/>
         public readonly T Value => _item;
 
-        internal PooledItem(in Guid id, [DisallowNull] T item, [DisallowNull] TPool pool)
+        public PooledItem(in Guid id, [DisallowNull] T item, [DisallowNull] TPool pool)
         {
             ArgumentNullException.ThrowIfNull(item);
             ArgumentNullException.ThrowIfNull(pool);
