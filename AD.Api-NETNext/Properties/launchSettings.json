@@ -4,7 +4,7 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iis": {
-      "applicationUrl": "https://mgtx.yevrag35.com:51474",
+      "applicationUrl": "",
       "sslPort": 0
     },
     "iisExpress": {
@@ -35,7 +35,7 @@
     "IIS": {
         "commandName": "IIS",
         "launchBrowser": true,
-        "applicationUrl": "https://mgtx.yevrag35.com:51474",
+        "applicationUrl": "",
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
