@@ -46,7 +46,7 @@ namespace AD.Api.Strings.Spans
 
         public SpanCharArray(int minimumLength, char separator)
         {
-            SpanPosition[] positionArray = ArrayPool<SpanPosition>.Shared.Rent(16);
+            SpanPosition[] positionArray = ArrayPool<SpanPosition>.Shared.Rent(MULTIPLE);
             _isRented = true;
             _positionArray = positionArray;
             _positions = positionArray;
@@ -112,7 +112,8 @@ namespace AD.Api.Strings.Spans
         }
         public readonly bool Contains(scoped ReadOnlySpan<char> value, StringComparison comparison)
         {
-            for (int i = 0; i < _index; i++)
+            int index = _index;
+            for (int i = 0; i < index; i++)
             {
                 if (this.GetSegment(i).Equals(value, comparison))
                 {
@@ -161,12 +162,13 @@ namespace AD.Api.Strings.Spans
         public bool Remove(scoped ReadOnlySpan<char> value, StringComparison comparison)
         {
             bool removed = false;
-            for (int i = 0; i < _index; i++)
+            int index = _index;
+            for (int i = 0; i < index; i++)
             {
-                ref SpanPosition pos = ref _positions[i];
+                ref readonly SpanPosition pos = ref _positions[i];
                 if (_builder.GetSegment(pos.Index, pos.Length).Equals(value, comparison))
                 {
-                    this.RemoveAt(in i, ref pos);
+                    this.RemoveAt(in i, in pos);
 
                     removed = true;
                     break;
@@ -177,8 +179,8 @@ namespace AD.Api.Strings.Spans
         }
         public void RemoveAt(int index)
         {
-            ref SpanPosition pos = ref _positions[index];
-            this.RemoveAt(in index, ref pos);
+            ref readonly SpanPosition pos = ref _positions[index];
+            this.RemoveAt(in index, in pos);
         }
         private void RemoveAt(in int index, ref readonly SpanPosition pos)
         {

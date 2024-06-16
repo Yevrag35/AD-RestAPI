@@ -42,7 +42,7 @@ namespace AD.Api.Startup
         public static void LoadAll(ActOnReferencer action)
         {
             Referencer referencer = default;
-            action(referencer);
+            action(in referencer);
         }
     }
 }
