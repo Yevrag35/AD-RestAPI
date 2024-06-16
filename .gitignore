@@ -368,3 +368,5 @@ AD.Api-NET6/appsettings.json.modified
 AD.Api-NET6/appsettings.Modified.json
 
 AD.Api.old/*
+
+AD.Api-NETNext/appsettings.Development.json
