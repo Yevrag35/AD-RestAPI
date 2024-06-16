@@ -43,7 +43,12 @@ namespace AD.Api.Core.Ldap.Results
             return entry;
         }
 
-        public IPooledItem<ResultEntryCollection> GetPooledItem(int initialCapacity)
+        public IPooledItem<ResultEntry> GetPooledItem()
+        {
+            ResultEntry item = this.GetItem();
+            return new PooledItem<ResultEntry, ResultEntryPool>(item.LeaseId, item, this);
+        }
+        public IPooledItem<ResultEntryCollection> GetPooledCollection(int initialCapacity)
         {
             if (!_collections.TryTake(out ResultEntryCollection? collection))
             {
@@ -103,7 +108,11 @@ namespace AD.Api.Core.Ldap.Results
             services.AddSingleton<ResultEntryPool>()
                     .AddScoped(x =>
                     {
-                        return x.GetRequiredService<ResultEntryPool>().GetPooledItem(10);
+                        return x.GetRequiredService<ResultEntryPool>().GetPooledItem();
+                    })
+                    .AddScoped(x =>
+                    {
+                        return x.GetRequiredService<ResultEntryPool>().GetPooledCollection(10);
                     });
         }
     }

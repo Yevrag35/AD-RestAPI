@@ -144,7 +144,7 @@ namespace AD.Api.Strings.Spans
         /// <inheritdoc cref="Append(char)"/>
         /// </returns>
         /// <inheritdoc cref="EnsureCapacity(int)" path="/exception"/>
-        public SpanStringBuilder Append<T>(T formattable, int maxLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : ISpanFormattable
+        public SpanStringBuilder Append<T>(T formattable, int maxLength, scoped ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : ISpanFormattable
         {
             this.EnsureCapacity(maxLength);
             formattable.CopyToSlice(_span, ref _position, format, provider);

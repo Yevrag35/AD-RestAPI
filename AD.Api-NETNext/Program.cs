@@ -95,7 +95,16 @@ PropertyConverter.AddToServices(builder.Services, (conversions) =>
     {
         if (value is long longVal)
         {
-            writer.WriteStringValue(DateTime.FromFileTime(longVal));
+            DateTime dt;
+            try
+            {
+                dt = DateTime.FromFileTime(longVal);
+                writer.WriteStringValue(dt);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                writer.WriteNullValue();
+            }
         }
         else if (value is string strVal && DateTime.TryParse(strVal, out DateTime res))
         {
@@ -107,8 +116,27 @@ PropertyConverter.AddToServices(builder.Services, (conversions) =>
         }
     };
 
+    conversions.Add("accountExpires", convertTime);
+    conversions.Add("badPasswordTime", convertTime);
     conversions.Add("pwdLastSet", convertTime);
+    conversions.Add("whenChanged", convertTime);
+    conversions.Add("whenCreated", convertTime);
     conversions.Add("lastLogon", convertTime);
+    conversions.Add("lastLogonTimestamp", convertTime);
+    conversions.Add("userAccountControl", (w, o, v) =>
+    {
+        if (v is int intVal)
+        {
+            UserAccountControl control = (UserAccountControl)intVal;
+            w.WriteNumberValue(intVal);
+            w.WritePropertyName("userAccountControlFlags"u8);
+            JsonSerializer.Serialize(w, control, o);
+        }
+        else
+        {
+            w.WriteNullValue();
+        }
+    });
 });
 
 if (OperatingSystem.IsWindows())
@@ -173,7 +201,7 @@ builder.Services
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.Converters.Add(new ResultEntryConverter());
         options.JsonSerializerOptions.Converters.Add(new ResultEntryCollectionConverter());
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<ResultCode>(JsonNamingPolicy.CamelCase));
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
     });
 //.AddNewtonsoftJson(options =>
 //{

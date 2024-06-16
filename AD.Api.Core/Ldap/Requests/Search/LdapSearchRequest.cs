@@ -90,19 +90,17 @@ namespace AD.Api.Core.Ldap.Requests.Search
                 this.RemoveDefaultAttributes();
             }
         }
-        public bool ApplyConnection([NotNull] ref string? domain, IConnectionService connectionService, [NotNullWhen(true)] out LdapConnection? connection)
+        public LdapConnection ApplyConnection([NotNull] ref string? domain, IConnectionService connectionService)
         {
             domain ??= string.Empty;
 
             if (!connectionService.RegisteredConnections.TryGetValue(domain, out ConnectionContext? context))
             {
-                connection = null;
-                return false;
+                throw new ArgumentException("Domain not registered.");
             }
 
             this.SearchBase = context.DefaultNamingContext;
-            connection = context.CreateConnection();
-            return true;
+            return context.CreateConnection();
         }
         public void RemoveDefaultAttributes()
         {

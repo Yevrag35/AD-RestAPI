@@ -19,6 +19,10 @@ namespace AD.Api.Core.Ldap.Services.Connections
             _dictionary = dictionary.ToFrozenDictionary(dictionary.Comparer);
         }
 
+        public bool ContainsKey([NotNullWhen(false)] string? key)
+        {
+            return string.IsNullOrEmpty(key) || _dictionary.ContainsKey(key);
+        }
         private ref readonly ConnectionContext GetValueOrDefault(string? key)
         {
             key ??= string.Empty;
