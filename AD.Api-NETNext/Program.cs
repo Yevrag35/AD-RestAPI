@@ -12,6 +12,7 @@ using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using Microsoft.IdentityModel.Logging;
 using System.DirectoryServices.Protocols;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -99,6 +100,7 @@ PropertyConverter.AddToServices(builder.Services, (conversions) =>
             try
             {
                 dt = DateTime.FromFileTime(longVal);
+                dt = dt.ToUniversalTime();
                 writer.WriteStringValue(dt);
             }
             catch (ArgumentOutOfRangeException)
@@ -106,7 +108,7 @@ PropertyConverter.AddToServices(builder.Services, (conversions) =>
                 writer.WriteNullValue();
             }
         }
-        else if (value is string strVal && DateTime.TryParse(strVal, out DateTime res))
+        else if (value is string strVal && DateTime.TryParse(strVal, null, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime res))
         {
             writer.WriteStringValue(res);
         }

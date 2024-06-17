@@ -3,6 +3,7 @@ using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Schema;
 using System.Collections;
 using System.DirectoryServices.Protocols;
+using System.Globalization;
 using System.Runtime.Versioning;
 using System.Text.Json;
 
@@ -11,6 +12,7 @@ namespace AD.Api.Core.Ldap.Results
     [SupportedOSPlatform("WINDOWS")]
     public sealed class ResultEntry : IReadOnlyCollection<KeyValuePair<string, object>>
     {
+        private const string DT_FORMAT = "yyyyMMddHHmmss.0'Z'";
         private readonly ISchemaService _schemas;
         private readonly SortedDictionary<string, object> _attributes;
         private readonly PropertyConverter _converter;
@@ -112,7 +114,7 @@ namespace AD.Api.Core.Ldap.Results
             {
                 return GetInt64(values);
             }
-            else if (convertTo.Equals(typeof(DateTime)))
+            else if (convertTo.Equals(typeof(DateTimeOffset)))
             {
                 return GetDateTime(values);
             }
@@ -128,9 +130,24 @@ namespace AD.Api.Core.Ldap.Results
         {
             return value is byte[] byteArray ? byteArray : [];
         }
-        private static DateTime? GetDateTime(object value)
+        private static DateTimeOffset? GetDateTime(object value)
         {
-            return value is not string s || !DateTime.TryParse(s, out DateTime date) ? null : (DateTime?)date;
+            if (value is not string s)
+            {
+                return null;
+            }
+            else if (DateTimeOffset.TryParse(s, out DateTimeOffset fromString))
+            {
+                return fromString;
+            }
+            else if (DateTimeOffset.TryParseExact(s, DT_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset offset))
+            {
+                return offset;
+            }
+            else
+            {
+                return null;
+            }
         }
         private static Guid? GetGuid(object value)
         {

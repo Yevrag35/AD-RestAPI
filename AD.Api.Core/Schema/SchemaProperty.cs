@@ -49,7 +49,7 @@ namespace AD.Api.Core.Schema
                 ActiveDirectorySyntax.DNWithBinary => typeof(Guid),
                 ActiveDirectorySyntax.DNWithString => typeof(string),
                 ActiveDirectorySyntax.Enumeration => typeof(int),
-                ActiveDirectorySyntax.GeneralizedTime => typeof(DateTime),
+                ActiveDirectorySyntax.GeneralizedTime => typeof(DateTimeOffset),
                 ActiveDirectorySyntax.IA5String => typeof(string),
                 ActiveDirectorySyntax.Int => typeof(int),
                 ActiveDirectorySyntax.Int64 => typeof(long),
@@ -61,7 +61,7 @@ namespace AD.Api.Core.Schema
                 ActiveDirectorySyntax.ReplicaLink => typeof(byte[]),
                 ActiveDirectorySyntax.SecurityDescriptor => typeof(byte[]),
                 ActiveDirectorySyntax.Sid => typeof(byte[]),
-                ActiveDirectorySyntax.UtcTime => typeof(DateTime),
+                ActiveDirectorySyntax.UtcTime => typeof(DateTimeOffset),
                 
                 _ => typeof(object),
             };
