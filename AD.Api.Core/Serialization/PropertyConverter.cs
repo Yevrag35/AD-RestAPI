@@ -1,4 +1,7 @@
 using AD.Api.Core.Ldap.Results;
+using AD.Api.Core.Schema;
+using AD.Api.Core.Settings;
+using AD.Api.Statics;
 using Microsoft.Extensions.Options;
 using System.Runtime.Versioning;
 using System.Text.Json;
@@ -6,19 +9,22 @@ using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Cor
 
 namespace AD.Api.Core.Serialization
 {
-    [SupportedOSPlatform("WINDOWS")]
+    //[SupportedOSPlatform("WINDOWS")]
     public sealed class PropertyConverter
     {
         private readonly FrozenDict _dictionary;
+        private readonly GuidAttributesSet _guidAttributes;
         private IServiceScopeFactory _scopeFactory = null!;
 
-        private PropertyConverter(ConversionDictionary dictionary)
+        private PropertyConverter(ConversionDictionary dictionary, GuidAttributesSet guidAttributes)
         {
             _dictionary = dictionary.ToFrozen();
+            _guidAttributes = guidAttributes;
         }
 
-        private void AddScopeFactory(IServiceScopeFactory scopeFactory)
+        public void AddScopeFactory(IServiceScopeFactory scopeFactory)
         {
+            Debug.Assert(_scopeFactory is null);
             _scopeFactory = scopeFactory;
         }
 
@@ -81,9 +87,16 @@ namespace AD.Api.Core.Serialization
                 context.Value = pair.Value;
                 action(writer, ref context);
             }
+            else if (_guidAttributes.Contains(pair.Key) && TryConvertToGuid(pair.Value, out Guid guidValue))
+            {
+                Span<char> chars = stackalloc char[LengthConstants.GUID_FORM_D];
+                _ = guidValue.TryFormat(chars, out int charsWritten);
+                writer.WriteStringValue(chars.Slice(0, charsWritten));
+            }
             else
             {
-                JsonSerializer.Serialize(writer, pair.Value, context.Options);
+                JsonSerializer.Serialize(writer, pair.Value, 
+                    pair.Value?.GetType() ?? SchemaProperty.ObjectType, context.Options);
             }
         }
 
@@ -92,16 +105,34 @@ namespace AD.Api.Core.Serialization
             return new(options, provider);
         }
 
-        public static PropertyConverter AddToServices(IServiceCollection services, Action<IConversionDictionary> addConversions)
+        private static bool TryConvertToGuid(object value, out Guid guid)
+        {
+            if (value is byte[] byteArray && byteArray.Length == 16)
+            {
+                guid = new(byteArray.AsSpan());
+                return true;
+            }
+            else
+            {
+                guid = Guid.Empty;
+                return false;
+            }
+        }
+
+        public static PropertyConverter AddToServices(IServiceCollection services, IConfiguration configuration, Action<IConversionDictionary> addConversions)
         {
             ConversionDictionary dict = new();
             addConversions(dict);
-            PropertyConverter converter = new(dict);
-            services.AddSingleton(p =>
-            {
-                converter.AddScopeFactory(p.GetRequiredService<IServiceScopeFactory>());
-                return converter;
-            });
+            IConfigurationSection guidAttributes = configuration
+                .GetSection("Settings")
+                .GetSection("Serialization")
+                .GetSection("GuidAttributes");
+
+            GuidAttributesSet guidSet = GuidAttributesSet.Create(guidAttributes);
+
+            PropertyConverter converter = new(dict, guidSet);
+            services.AddSingleton(converter)
+                    .AddSingleton(guidSet);
 
             return converter;
         }

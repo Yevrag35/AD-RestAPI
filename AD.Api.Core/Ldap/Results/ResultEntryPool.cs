@@ -1,44 +1,45 @@
+using AD.Api.Actions;
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Pooling;
 using AD.Api.Core.Serialization;
 using AD.Api.Pooling;
 using ConcurrentCollections;
+using Microsoft.Extensions.ObjectPool;
 using System.Collections.Concurrent;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    [SupportedOSPlatform("WINDOWS")]
+    //[SupportedOSPlatform("WINDOWS")]
     [DynamicDependencyRegistration]
-    public sealed class ResultEntryPool : IPoolLeaseReturner<ResultEntry>, IPoolLeaseReturner<ResultEntryCollection>
+    public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<ResultEntryCollection>
     {
-        const int MAX_COL_SIZE = 10;
-        const int MAX_ENT_SIZE = 200;
+        const int MAX_COL_SIZE = 10; const int MAX_ENT_SIZE = 200;
 
         private readonly ConcurrentBag<ResultEntryCollection> _collections;
-        private readonly PropertyConverter _converter;
+        private readonly IStatedCallback<ResultEntry> _createEntry;
+        private readonly IStatedCallback<ResultEntryCollection> _createCollection;
         private readonly ConcurrentBag<ResultEntry> _entries;
         private readonly ConcurrentHashSet<Guid> _leaseIds;
-        private readonly ISchemaService _schemaSvc;
+        
+        private int _colCount; int _entCount;
 
-        public ResultEntryPool(ISchemaService schemaSvc, PropertyConverter converter)
+        int IPoolReturner<ResultEntry>.MaxSize => MAX_ENT_SIZE;
+        int IPoolReturner<ResultEntryCollection>.MaxSize => MAX_COL_SIZE;
+
+        public ResultEntryPool(ISchemaService schemaSvc)
         {
             _collections = [];
-            _converter = converter;
             _entries = [];
-            _leaseIds = new(Environment.ProcessorCount, 10);
-            _schemaSvc = schemaSvc;
+            _leaseIds = new(Environment.ProcessorCount, MAX_COL_SIZE);
+            _createEntry = StatedCallback.Create(schemaSvc, x => new ResultEntry(x));
+            _createCollection = StatedCallback.Create(this, x => new ResultEntryCollection(MAX_COL_SIZE, x));
         }
-
-        public int MaxSize => throw new NotImplementedException();
 
         public ResultEntry GetItem()
         {
-            if (!_entries.TryTake(out ResultEntry? entry))
-            {
-                entry = new(_schemaSvc, _converter);
-            }
+            ResultEntry entry = TakeOrCreate(_entries, ref _entCount, _createEntry);
 
             entry.LeaseId = this.GenerateLease();
             return entry;
@@ -49,46 +50,54 @@ namespace AD.Api.Core.Ldap.Results
             ResultEntry item = this.GetItem();
             return new PooledItem<ResultEntry, ResultEntryPool>(item.LeaseId, item, this);
         }
-        public IPooledItem<ResultEntryCollection> GetPooledCollection(int initialCapacity)
+        public IPooledItem<ResultEntryCollection> GetPooledCollection()
         {
-            if (!_collections.TryTake(out ResultEntryCollection? collection))
-            {
-                collection = new(initialCapacity, this, _converter);
-            }
+            ResultEntryCollection collection = TakeOrCreate(_collections, ref _colCount, _createCollection);
 
             Guid lease = this.GenerateLease();
-
+            collection.LeaseId = lease;
             return new PooledItem<ResultEntryCollection, ResultEntryPool>(in lease, collection, this);
         }
 
         public void Return(ResultEntry? item)
         {
-            if (item is null || !_leaseIds.TryRemove(item.LeaseId))
+            if (!TryReset(item) || !_leaseIds.TryRemove(item.LeaseId))
             {
                 return;
             }
 
-            item.Reset();
-            if (_entries.IsEmpty || _entries.Count < MAX_ENT_SIZE)
-            {
-                item.LeaseId = Guid.Empty;
-                _entries.Add(item);
-            }
+            Return(item, _entries, ref _entCount, MAX_ENT_SIZE);
         }
         void IPoolLeaseReturner<ResultEntry>.Return(Guid itemId, ResultEntry? item)
         {
-            this.Return(item);
+            if (item is null)
+            {
+                _leaseIds.TryRemove(itemId);
+                return;
+            }
+            else if (itemId == item.LeaseId && !_leaseIds.TryRemove(itemId))
+            {
+                return;
+            }
+            else if (itemId != item.LeaseId && !_leaseIds.TryRemove(itemId) && !_leaseIds.TryRemove(item.LeaseId))
+            {
+                return;
+            }
+
+            Return(item, _entries, ref _entCount, MAX_ENT_SIZE);
         }
         public void Return(Guid itemId, ResultEntryCollection? item)
         {
-            if (item is not null)
+            if (_leaseIds.TryRemove(itemId) && TryReset(item))
             {
-                item.ReturnAll();
+                Return(item, _collections, ref _colCount, MAX_COL_SIZE);
             }
-
-            if (_leaseIds.TryRemove(itemId) && item is not null && (_collections.IsEmpty || _collections.Count < MAX_COL_SIZE))
+        }
+        public void Return(ResultEntryCollection? collection)
+        {
+            if (TryReset(collection) && _leaseIds.TryRemove(collection.LeaseId))
             {
-                _collections.Add(item);
+                Return(collection, _collections, ref _colCount, MAX_COL_SIZE);
             }
         }
 
@@ -102,7 +111,32 @@ namespace AD.Api.Core.Ldap.Results
 
             return id;
         }
+        private static void Return<T>([DisallowNull] T item, ConcurrentBag<T> bag, ref int count, [ConstantExpected] int maxBagSize) where T : class
+        {
+            if (count < maxBagSize)
+            {
+                count++;
+                bag.Add(item);
+            }
+        }
+        private static T TakeOrCreate<T>(ConcurrentBag<T> bag, ref int count, IStatedCallback<T> createOnMiss)
+        {
+            if (!bag.TryTake(out T? item))
+            {
+                item = createOnMiss.Invoke();
+            }
+            else
+            {
+                count--;
+            }
 
+            return item;
+        }
+        private static bool TryReset<T>([NotNullWhen(true)] T? item) where T : class, IResettable
+        {
+            return item is not null && item.TryReset();
+        }
+        
         [DynamicDependencyRegistrationMethod]
         private static void AddToServices(IServiceCollection services)
         {
@@ -113,7 +147,7 @@ namespace AD.Api.Core.Ldap.Results
                     })
                     .AddScoped(x =>
                     {
-                        return x.GetRequiredService<ResultEntryPool>().GetPooledCollection(10);
+                        return x.GetRequiredService<ResultEntryPool>().GetPooledCollection();
                     });
         }
     }

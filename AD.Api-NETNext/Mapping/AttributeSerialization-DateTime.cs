@@ -6,6 +6,9 @@ namespace AD.Api.Mapping
 {
     public static partial class AttributeSerialization
     {
+        internal const long MinFileTimeValue = 0L; // January 1, 1601
+        internal const long MaxFileTimeValue = 2650467743999999999L; // DateTime.MaxValue in FILETIME
+
         public static void WriteDateTimeOffset(Utf8JsonWriter writer, ref readonly SerializationContext context)
         {
             if (context.Value is long fileTimeValue)
@@ -24,19 +27,14 @@ namespace AD.Api.Mapping
         }
         private static void WriteDateTimeFromFileTime(Utf8JsonWriter writer, in long fileTime, JsonSerializerOptions options)
         {
-            DateTimeOffset offset;
-            try
-            {
-                DateTime dt = DateTime.FromFileTime(fileTime);
-                offset = new DateTimeOffset(dt.ToUniversalTime());
-            }
-            catch (ArgumentOutOfRangeException)
+            if (MaxFileTimeValue < fileTime || long.IsNegative(fileTime))
             {
                 writer.WriteNullValue();
                 return;
             }
 
-            writer.WriteStringValue(offset);
+            DateTime dt = DateTime.FromFileTimeUtc(fileTime);
+            writer.WriteStringValue(new DateTimeOffset(dt));
         }
     }
 }

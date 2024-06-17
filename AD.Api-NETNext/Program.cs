@@ -93,7 +93,7 @@ builder.Services
          .Register<WellKnownObjectValue>(freeze: true);
     });
 
-var converter = PropertyConverter.AddToServices(builder.Services, (conversions) =>
+PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, builder.Configuration, (conversions) =>
 {
     ReadOnlySpan<byte> timeConvertAttributes = "accountExpires badPasswordTime lastLogon lastLogonTimestamp pwdLastSet whenChanged whenCreated"u8;
 
@@ -141,6 +141,7 @@ builder.Services.AddSwaggerWithOptions(builder.Configuration.GetSection("Swagger
 IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
 var app = builder.Build();
+converter.AddScopeFactory(app.Services.GetRequiredService<IServiceScopeFactory>());
 
 //app.UseExceptionHandler(new ExceptionHandlerOptions
 //{

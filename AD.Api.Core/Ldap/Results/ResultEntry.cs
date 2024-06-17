@@ -1,31 +1,30 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Core.Ldap.Enums;
 using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Serialization;
+using Microsoft.Extensions.ObjectPool;
 using System.Collections;
 using System.DirectoryServices.Protocols;
 using System.Globalization;
 using System.Runtime.Versioning;
-using System.Text.Json;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    [SupportedOSPlatform("WINDOWS")]
-    public sealed class ResultEntry : IReadOnlyCollection<KeyValuePair<string, object>>
+    //[SupportedOSPlatform("WINDOWS")]
+    public sealed class ResultEntry : IReadOnlyCollection<KeyValuePair<string, object>>, IResettable
     {
         private const string DT_FORMAT = "yyyyMMddHHmmss.0'Z'";
-        private readonly ISchemaService _schemas;
         private readonly SortedDictionary<string, object> _attributes;
-        private readonly PropertyConverter _converter;
+        private readonly ISchemaService _schemas;
 
         public int Count => _attributes.Count;
         public Guid LeaseId { get; set; }
 
-        public ResultEntry(ISchemaService schemaService, PropertyConverter converter)
+        public ResultEntry(ISchemaService schemaService)
         {
             _attributes = new(StringComparer.OrdinalIgnoreCase);
             _schemas = schemaService;
-            _converter = converter;
         }
 
         public void AddResult(string domain, SearchResultEntry entry)
@@ -64,63 +63,52 @@ namespace AD.Api.Core.Ldap.Results
                 type = type.GetElementType()!;
             }
 
-            if (type.Equals(typeof(byte[])) || type.Equals(typeof(Guid)))
+            if (type.Equals(typeof(byte)) || type.Equals(SchemaProperty.ByteArrayType) || type.Equals(SchemaProperty.GuidType))
             {
-                object[] vals = attribute.GetValues(typeof(byte[]));
-                return ConvertObject(vals[0], property.RuntimeType);
+                object[] vals = attribute.GetValues(SchemaProperty.ByteArrayType);
+                return ConvertObject(vals[0], property.RuntimeType, property.LdapType);
             }
             else
             {
-                return ConvertObject(attribute.GetValues(typeof(string)), property.RuntimeType);
+                return ConvertObject(attribute.GetValues(SchemaProperty.StringType), property.RuntimeType, property.LdapType);
             }
         }
-        private static object? ConvertObject(object values, Type convertTo)
+        private static object? ConvertObject(object values, Type convertTo, LdapValueType ldapType)
         {
             if (convertTo.IsArray && values is object[] objArr)
             {
-                Type element = convertTo.GetElementType() ?? typeof(object);
+                Type element = convertTo.GetElementType() ?? SchemaProperty.ObjectType;
                 var array = Array.CreateInstance(element, objArr.Length);
                 for (int i = 0; i < objArr.Length; i++)
                 {
-                    array.SetValue(ConvertObject(objArr[i], element), i);
+                    array.SetValue(ConvertObject(objArr[i], element, ldapType), i);
                 }
 
                 return array;
             }
             else if (values is object[] objArr2 && objArr2.Length == 1)
             {
-                return ConvertObject(objArr2[0], convertTo);
-            }
-            else if (convertTo.Equals(typeof(string)))
-            {
-                return GetString(values);
-            }
-            else if (convertTo.Equals(typeof(byte[])))
-            {
-                return values;
-            }
-            else if (convertTo.Equals(typeof(Guid)))
-            {
-                return GetGuid(values);
-            }
-            else if (convertTo.Equals(typeof(bool?)))
-            {
-                return GetBoolean(values);
-            }
-            else if (convertTo.Equals(typeof(int)))
-            {
-                return GetInt32(values);
-            }
-            else if (convertTo.Equals(typeof(long)))
-            {
-                return GetInt64(values);
-            }
-            else if (convertTo.Equals(typeof(DateTimeOffset)))
-            {
-                return GetDateTime(values);
+                return ConvertObject(objArr2[0], convertTo, ldapType);
             }
 
-            return null;
+            return ldapType switch
+            {
+                LdapValueType.String => GetString(values),
+                LdapValueType.ByteArray => GetByteArray(values),
+                LdapValueType.Guid => GetGuid(values),
+                LdapValueType.Boolean => GetBoolean(values),
+                LdapValueType.Integer => GetInt32(values),
+                LdapValueType.Long => GetInt64(values),
+                LdapValueType.DateTime => GetDateTime(values),
+                LdapValueType.Object => values,
+                LdapValueType.StringArray => values as string[],
+                LdapValueType.IntegerArray => values as int[],
+                LdapValueType.LongArray => values as long[],
+                LdapValueType.GuidArray => values as Guid[],
+                LdapValueType.BooleanArray => values as bool[],
+                LdapValueType.ByteTwoRankArray => values as byte[][],
+                _ => null,
+            };
         }
 
         private static bool? GetBoolean(object value)
@@ -188,9 +176,11 @@ namespace AD.Api.Core.Ldap.Results
             return this.GetEnumerator();
         }
 
-        public void Reset()
+        public bool TryReset()
         {
+            this.LeaseId = Guid.Empty;
             _attributes.Clear();
+            return _attributes.Count == 0;
         }
     }
 }
