@@ -1,24 +1,29 @@
 using AD.Api.Collections.Enumerators;
+using AD.Api.Core.Serialization;
 using AD.Api.Pooling;
 using System.Buffers;
 using System.Collections;
 using System.DirectoryServices.Protocols;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text.Json;
+using System.Text.Unicode;
 
 namespace AD.Api.Core.Ldap.Results
 {
     [SupportedOSPlatform("WINDOWS")]
     public sealed class ResultEntryCollection : IEnumerable<ResultEntry>
     {
+        private readonly PropertyConverter _converter;
         private readonly List<ResultEntry> _entries;
         private readonly ResultEntryPool _pool;
 
         public int Count => _entries.Count;
         public string Domain { get; set; }
 
-        internal ResultEntryCollection(int capacity, ResultEntryPool pool)
+        internal ResultEntryCollection(int capacity, ResultEntryPool pool, PropertyConverter converter)
         {
+            _converter = converter;
             this.Domain = string.Empty;
             _entries = new(capacity);
             _pool = pool;
@@ -71,6 +76,11 @@ namespace AD.Api.Core.Ldap.Results
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+
+        public void WriteTo(Utf8JsonWriter writer, JsonSerializerOptions options)
+        {
+            _converter.WriteTo(writer, this, options);
         }
     }
 }

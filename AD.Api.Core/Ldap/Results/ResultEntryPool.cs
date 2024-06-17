@@ -1,6 +1,7 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Pooling;
+using AD.Api.Core.Serialization;
 using AD.Api.Pooling;
 using ConcurrentCollections;
 using System.Collections.Concurrent;
@@ -52,7 +53,7 @@ namespace AD.Api.Core.Ldap.Results
         {
             if (!_collections.TryTake(out ResultEntryCollection? collection))
             {
-                collection = new(initialCapacity, this);
+                collection = new(initialCapacity, this, _converter);
             }
 
             Guid lease = this.GenerateLease();

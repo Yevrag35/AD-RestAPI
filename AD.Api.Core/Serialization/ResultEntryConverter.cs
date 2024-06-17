@@ -8,6 +8,13 @@ namespace AD.Api.Core.Serialization
     [SupportedOSPlatform("WINDOWS")]
     public sealed class ResultEntryConverter : JsonConverter<ResultEntry>
     {
+        private readonly PropertyConverter _converter;
+
+        public ResultEntryConverter(PropertyConverter converter)
+        {
+            _converter = converter;
+        }
+
         public override ResultEntry? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotSupportedException();
@@ -15,13 +22,20 @@ namespace AD.Api.Core.Serialization
 
         public override void Write(Utf8JsonWriter writer, ResultEntry value, JsonSerializerOptions options)
         {
-            value.WriteTo(writer, options);
+            _converter.WriteTo(writer, value, options);
         }
     }
 
     [SupportedOSPlatform("WINDOWS")]
     public sealed class ResultEntryCollectionConverter : JsonConverter<ResultEntryCollection>
     {
+        private readonly PropertyConverter _converter;
+
+        public ResultEntryCollectionConverter(PropertyConverter converter)
+        {
+            _converter = converter;
+        }
+
         public override ResultEntryCollection? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotSupportedException();
@@ -29,19 +43,7 @@ namespace AD.Api.Core.Serialization
 
         public override void Write(Utf8JsonWriter writer, ResultEntryCollection value, JsonSerializerOptions options)
         {
-            writer.WriteStartArray();
-            if (value.Count == 0)
-            {
-                writer.WriteEndArray();
-                return;
-            }
-
-            foreach (ResultEntry entry in value)
-            {
-                entry.WriteTo(writer, options);
-            }
-
-            writer.WriteEndArray();
+            _converter.WriteTo(writer, value, options);
         }
     }
 }

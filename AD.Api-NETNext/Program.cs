@@ -1,16 +1,17 @@
 using AD.Api.Collections;
 using AD.Api.Core.Ldap.Enums;
 using AD.Api.Core.Ldap.Services.Connections;
-using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization;
 using AD.Api.Extensions.Collections;
 using AD.Api.Extensions.Startup;
+using AD.Api.Mapping;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using Microsoft.IdentityModel.Logging;
+using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Globalization;
 using System.Reflection;
@@ -85,60 +86,19 @@ builder.Services
     .AddResolvedServicesFromAssemblies(builder.Configuration, assemblies)
     .AddEnumDictionaryGeneration(x =>
     {
-        x.Register<GroupType>(freeze: true)
+        x.Register<ActiveDirectorySyntax>(freeze: true)
+         .Register<GroupType>(freeze: true)
+         .Register<ResultCode>(freeze: true)
          .Register<UserAccountControl>(freeze: true)
          .Register<WellKnownObjectValue>(freeze: true);
     });
 
-PropertyConverter.AddToServices(builder.Services, (conversions) =>
+var converter = PropertyConverter.AddToServices(builder.Services, (conversions) =>
 {
-    static void convertTime(Utf8JsonWriter writer, JsonSerializerOptions options, object value)
-    {
-        if (value is long longVal)
-        {
-            DateTime dt;
-            try
-            {
-                dt = DateTime.FromFileTime(longVal);
-                dt = dt.ToUniversalTime();
-                writer.WriteStringValue(dt);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                writer.WriteNullValue();
-            }
-        }
-        else if (value is string strVal && DateTime.TryParse(strVal, null, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime res))
-        {
-            writer.WriteStringValue(res);
-        }
-        else
-        {
-            JsonSerializer.Serialize(writer, value, options);
-        }
-    };
+    ReadOnlySpan<byte> timeConvertAttributes = "accountExpires badPasswordTime lastLogon lastLogonTimestamp pwdLastSet whenChanged whenCreated"u8;
 
-    conversions.Add("accountExpires", convertTime);
-    conversions.Add("badPasswordTime", convertTime);
-    conversions.Add("pwdLastSet", convertTime);
-    conversions.Add("whenChanged", convertTime);
-    conversions.Add("whenCreated", convertTime);
-    conversions.Add("lastLogon", convertTime);
-    conversions.Add("lastLogonTimestamp", convertTime);
-    conversions.Add("userAccountControl", (w, o, v) =>
-    {
-        if (v is int intVal)
-        {
-            UserAccountControl control = (UserAccountControl)intVal;
-            w.WriteNumberValue(intVal);
-            w.WritePropertyName("userAccountControlFlags"u8);
-            JsonSerializer.Serialize(w, control, o);
-        }
-        else
-        {
-            w.WriteNullValue();
-        }
-    });
+    conversions.AddMany(timeConvertAttributes, AttributeSerialization.WriteDateTimeOffset);
+    conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
 });
 
 if (OperatingSystem.IsWindows())
@@ -158,42 +118,6 @@ else
     builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
 }
 
-//builder.Services.AddDefaultSchemaAttributes(builder.Configuration.GetSection("Attributes"));
-//builder.Services.AddEncryptionOptions(builder.Configuration.GetSection("Settings").GetSection("Encryption"));
-//builder.Services.AddOperationRestrictions(builder.Configuration.GetSection("Settings").GetSection("Restrictions"));
-//builder.Services.AddSearchDomains(builder.Configuration.GetSection("Domains"));
-//builder.Services.AddSearchDefaultSettings(builder.Configuration.GetSection("Settings").GetSection("SearchDefaults"));
-//builder.Services.AddTextSettingOptions(builder.Configuration, out ITextSettings textSettings);
-
-//builder.Services.AddADApiServices();
-
-//builder.Services
-//    .AddAutoMapper(assemblies);
-//.AddLdapEnumTypes(assemblies);
-
-//builder
-//    .ConfigureJson(x => x.Services.AddControllers(), (config, env, options) =>
-//    {
-//        bool isDev = env.IsDevelopment();
-
-//        IConfigurationSection section = config
-//            .GetRequiredSection("Settings")
-//            .GetRequiredSection("Serialization");
-
-//        var settings = section.Get<SerializationSettings>() ?? throw new JsonException("Unable to deserialize settings.");
-
-//        settings.SetJsonOptions(options.JsonSerializerOptions);
-
-//        options.AllowInputFormatterExceptionMessages = isDev;
-//        options.JsonSerializerOptions.WriteIndented = isDev;
-//        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-
-//        options.JsonSerializerOptions.Converters.AddRange(
-//            new LdapFilterStringConverter(),
-//            new FilterJsonConverter()
-//        );
-//    });
-
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
@@ -201,8 +125,8 @@ builder.Services
         options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
         options.AllowInputFormatterExceptionMessages = builder.Environment.IsDevelopment();
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new ResultEntryConverter());
-        options.JsonSerializerOptions.Converters.Add(new ResultEntryCollectionConverter());
+        options.JsonSerializerOptions.Converters.Add(new ResultEntryConverter(converter));
+        options.JsonSerializerOptions.Converters.Add(new ResultEntryCollectionConverter(converter));
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
     });
 //.AddNewtonsoftJson(options =>

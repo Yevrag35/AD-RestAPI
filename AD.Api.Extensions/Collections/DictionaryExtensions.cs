@@ -1,11 +1,17 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace AD.Api.Collections
 {
     public static class DictionaryExtensions
     {
+        public static void AddMany<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, Span<TKey> keys, TValue value)where TKey : notnull
+        {
+            foreach (TKey key in keys)
+            {
+                dictionary.Add(key, value);
+            }
+        }
+
         public static bool TryGetValue<T>(this IDictionary dictionary, object key, [NotNullWhen(true)] out T? value)
         {
             ArgumentNullException.ThrowIfNull(dictionary);

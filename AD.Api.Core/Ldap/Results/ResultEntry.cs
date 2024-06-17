@@ -1,6 +1,7 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Schema;
+using AD.Api.Core.Serialization;
 using System.Collections;
 using System.DirectoryServices.Protocols;
 using System.Globalization;
@@ -178,22 +179,6 @@ namespace AD.Api.Core.Ldap.Results
             return value is string s ? s : string.Empty;
         }
 
-        public void WriteTo(Utf8JsonWriter writer, JsonSerializerOptions options)
-        {
-            writer.WriteStartObject();
-            if (_attributes.Count <= 0)
-            {
-                writer.WriteEndObject();
-                return;
-            }
-            
-            foreach (KeyValuePair<string, object> pair in _attributes)
-            {
-                _converter.WriteTo(writer, options, in pair);
-            }
-            
-            writer.WriteEndObject();
-        }
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
         {
             return _attributes.GetEnumerator();
