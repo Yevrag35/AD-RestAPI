@@ -142,7 +142,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 }
 
                 using Forest forest = GetForest();
-                defaultContext = new NegotiateContext(forest, DEFAULT);
+                defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT);
                 _ = dict.TryAdd(forest.Name, defaultContext);
                 _ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
                 using var de = forest.RootDomain.GetDirectoryEntry();

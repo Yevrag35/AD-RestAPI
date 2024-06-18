@@ -29,6 +29,7 @@ namespace AD.Api.Core.Schema
             get => _dict.Count;
         }
         public string DomainName { get; }
+        public string DomainKey { get; }
         /// <inheritdoc cref="FrozenDictionary{TKey, TValue}.Keys"/>
         public ImmutableArray<string> Keys
         {
@@ -42,13 +43,14 @@ namespace AD.Api.Core.Schema
             get => _dict.Values;
         }
 
-        internal SchemaClassPropertyDictionary(string domainName, Dictionary<string, SchemaProperty> dictionary)
+        internal SchemaClassPropertyDictionary(string domainKey, string domainName, IDictionary<string, SchemaProperty> dictionary)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(domainName);
             ArgumentNullException.ThrowIfNull(dictionary);
 
-            _dict = dictionary.ToFrozenDictionary(dictionary.Comparer);
+            _dict = dictionary.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
             this.DomainName = domainName;
+            this.DomainKey = domainKey;
         }
 
         [DebuggerStepThrough]

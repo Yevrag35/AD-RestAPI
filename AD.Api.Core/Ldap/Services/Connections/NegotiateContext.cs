@@ -1,4 +1,3 @@
-using AD.Api.Core.Security;
 using AD.Api.Core.Settings;
 using AD.Api.Startup.Exceptions;
 using System.Collections.Concurrent;
@@ -14,8 +13,8 @@ namespace AD.Api.Core.Ldap.Services.Connections
     {
         private readonly ConcurrentDictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
 
-        public NegotiateContext(Forest forest, string connectionName)
-            : this(FromForest(forest, connectionName), connectionName)
+        public NegotiateContext(Forest forest, bool isDefault, string connectionName)
+            : this(FromForest(forest, isDefault, connectionName), connectionName)
         {
         }
         public NegotiateContext(RegisteredDomain domain, string connectionName) : base(domain, connectionName)
@@ -40,7 +39,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
             };
         }
 
-        private static RegisteredDomain FromForest(Forest forest, string connectionName)
+        private static RegisteredDomain FromForest(Forest forest, bool isDefault, string connectionName)
         {
             using DirectoryEntry rootDse = new($"LDAP://{forest.SchemaRoleOwner.Name}/RootDSE");
             string namingContext = GetValue<string>(rootDse, "defaultNamingContext");
@@ -50,6 +49,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
                 IsForestRoot = true,
                 DomainName = forest.Name,
                 Name = connectionName,
+                IsDefault = isDefault,
             };
         }
 

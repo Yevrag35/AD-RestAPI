@@ -3,6 +3,7 @@ using AD.Api.Core.Ldap.Services.Connections;
 using AD.Api.Core.Schema;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Buffers;
 using System.Collections.Frozen;
@@ -23,7 +24,9 @@ namespace AD.Api.Core.Ldap.Services.Schemas
     [DebuggerDisplay("Count = {Count}")]
     public class SchemaService : ISchemaService
     {
-        private readonly FrozenDictionary<string, SchemaClassPropertyDictionary> _library;
+        private FrozenDictionary<string, SchemaClassPropertyDictionary> _library;
+
+        internal string[] ClassNames { get; }
         public int Count => _library.Count;
         public virtual bool IsFunctional => true;
 
@@ -32,10 +35,17 @@ namespace AD.Api.Core.Ldap.Services.Schemas
         protected SchemaService()
         {
             _library = FrozenDictionary<string, SchemaClassPropertyDictionary>.Empty;
+            this.ClassNames = [];
         }
-        public SchemaService(Dictionary<string, SchemaClassPropertyDictionary> dictionary)
+        internal SchemaService(string[] classNames)
         {
-            _library = dictionary.ToFrozenDictionary(dictionary.Comparer);
+            _library = FrozenDictionary<string, SchemaClassPropertyDictionary>.Empty;
+            this.ClassNames = classNames;
+        }
+
+        internal virtual void AddSchemaDictionary(IDictionary<string, SchemaClassPropertyDictionary> dictionary)
+        {
+            _library = dictionary.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
         }
 
         [DynamicDependencyRegistrationMethod]
@@ -43,12 +53,14 @@ namespace AD.Api.Core.Ldap.Services.Schemas
         {
             if (!OperatingSystem.IsWindows())
             {
-                services.AddSingleton<ISchemaService, NoSchema>();
+                services.AddSingleton<SchemaService, NoSchema>();
             }
             else
             {
-                services.AddSingleton<ISchemaService>(CreateSchemaService);
+                services.AddSingleton(CreateSchemaService);
             }
+
+            services.AddSingleton<ISchemaService>(provider => provider.GetRequiredService<SchemaService>());
         }
 
         private static readonly char SPACE = CharConstants.SPACE;
@@ -57,31 +69,34 @@ namespace AD.Api.Core.Ldap.Services.Schemas
         {
             IConnectionService conSvc = provider.GetRequiredService<IConnectionService>();
             string[] classArray = GetClassNames(out int count);
-            Span<string> classNames = classArray.AsSpan(0, count);
-
-            Dictionary<ConnectionContext, SchemaClassPropertyDictionary> constructed = new(1);
-            Dictionary<string, SchemaClassPropertyDictionary> fullDict = new(1, StringComparer.OrdinalIgnoreCase);
-
-            foreach (string key in conSvc.RegisteredConnections.Keys)
-            {
-                ref readonly ConnectionContext context = ref conSvc.RegisteredConnections[key];
-                if (!context.IsForestRoot)
-                {
-                    continue;
-                }
-
-                if (!constructed.TryGetValue(context, out SchemaClassPropertyDictionary? dict))
-                {
-                    dict = SchemaLoader.LoadSchema(context, classNames, in SPACE);
-                    constructed.Add(context, dict);
-                }
-
-                fullDict.Add(key, dict);
-            }
-
-            constructed.Clear();
+            string[] classNames = classArray.AsSpan(0, count).ToArray();
             ArrayPool<string>.Shared.Return(classArray);
-            return new SchemaService(fullDict);
+            return new SchemaService(classNames);
+            //Span<string> classNames = classArray.AsSpan(0, count);
+
+            //Dictionary<ConnectionContext, SchemaClassPropertyDictionary> constructed = new(1);
+            //Dictionary<string, SchemaClassPropertyDictionary> fullDict = new(1, StringComparer.OrdinalIgnoreCase);
+
+            //foreach (string key in conSvc.RegisteredConnections.Keys)
+            //{
+            //    ref readonly ConnectionContext context = ref conSvc.RegisteredConnections[key];
+            //    if (!context.IsForestRoot)
+            //    {
+            //        continue;
+            //    }
+
+            //    if (!constructed.TryGetValue(context, out SchemaClassPropertyDictionary? dict))
+            //    {
+            //        dict = SchemaLoader.LoadSchema(context, classNames, in SPACE);
+            //        constructed.Add(context, dict);
+            //    }
+
+            //    fullDict.Add(key, dict);
+            //}
+
+            //constructed.Clear();
+            ////ArrayPool<string>.Shared.Return(classArray);
+            ////return new SchemaService(fullDict);
         }
 
         private static string[] GetClassNames(out int count)
@@ -112,6 +127,11 @@ namespace AD.Api.Core.Ldap.Services.Schemas
             internal NoSchema()
                 : base()
             {
+            }
+
+            internal override void AddSchemaDictionary(IDictionary<string, SchemaClassPropertyDictionary> dictionary)
+            {
+                return;
             }
         }
     }

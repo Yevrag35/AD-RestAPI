@@ -13,6 +13,7 @@ namespace AD.Api.Core.Ldap.Services.Connections
         private readonly LdapDirectoryIdentifier _identifier;
         public string DefaultNamingContext => _domain.DefaultNamingContext;
         public string DomainName => _domain.DomainName;
+        public bool IsDefault => _domain.IsDefault;
         public bool IsForestRoot => _domain.IsForestRoot;
         public string Name { get; }
 
