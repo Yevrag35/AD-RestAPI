@@ -1,6 +1,4 @@
-using AD.Api.Attributes.Services;
-
-namespace AD.Api.Core.Ldap.Services.Pwds
+namespace AD.Api.Core.Ldap
 {
     //[DynamicDependencyRegistration]
     internal sealed class PasswordChangeService

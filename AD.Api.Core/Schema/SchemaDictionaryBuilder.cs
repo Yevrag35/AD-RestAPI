@@ -1,4 +1,4 @@
-using AD.Api.Core.Ldap.Services.Connections;
+using AD.Api.Core.Ldap;
 using AD.Api.Core.Settings;
 using System.Collections.Concurrent;
 using System.DirectoryServices.ActiveDirectory;
@@ -43,8 +43,6 @@ namespace AD.Api.Core.Schema
 
             try
             {
-                
-
                 using (schemaClass)
                 {
                     var allProps = schemaClass.GetAllProperties();

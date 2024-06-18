@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 
-namespace AD.Api.Core.Ldap.Services.Connections
+namespace AD.Api.Core.Ldap
 {
     public sealed class ContextLibrary : IReadOnlyCollection<ConnectionContext>
     {

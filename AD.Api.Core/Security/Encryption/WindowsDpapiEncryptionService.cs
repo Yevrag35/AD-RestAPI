@@ -1,8 +1,6 @@
 using AD.Api.Core.Security.Accounts;
 using AD.Api.Core.Settings.Credentials;
-using System.Buffers;
 using System.ComponentModel.DataAnnotations;
-using System.DirectoryServices.Protocols;
 using System.Net;
 using System.Runtime.Versioning;
 using System.Security;

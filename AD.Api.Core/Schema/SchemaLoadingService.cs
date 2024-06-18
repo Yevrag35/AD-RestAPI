@@ -1,12 +1,8 @@
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Ldap.Services.Connections;
-using AD.Api.Core.Ldap.Services.Schemas;
+using AD.Api.Core.Ldap;
 using AD.Api.Core.Services;
 using ConcurrentCollections;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
-using ConDict = System.Collections.Concurrent.ConcurrentDictionary<AD.Api.Core.Ldap.Services.Connections.ConnectionContext, AD.Api.Core.Schema.SchemaClassPropertyDictionary>;
 using SchDict = System.Collections.Concurrent.ConcurrentDictionary<string, AD.Api.Core.Schema.SchemaClassPropertyDictionary>;
 
 namespace AD.Api.Core.Schema

@@ -1,12 +1,9 @@
 ﻿using AD.Api.Binding.Attributes;
-using AD.Api.Core.Ldap.Requests.Search;
+using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Results;
-using AD.Api.Core.Ldap.Services.Connections;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OneOf.Types;
 using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Controllers.Users

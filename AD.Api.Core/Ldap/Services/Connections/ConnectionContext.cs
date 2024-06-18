@@ -1,11 +1,10 @@
 using AD.Api.Core.Schema;
-using AD.Api.Core.Security;
 using AD.Api.Core.Settings;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
-namespace AD.Api.Core.Ldap.Services.Connections
+namespace AD.Api.Core.Ldap
 {
     public abstract class ConnectionContext : IEquatable<ConnectionContext>
     {

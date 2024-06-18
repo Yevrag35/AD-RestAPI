@@ -1,5 +1,5 @@
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Ldap.Requests;
+using AD.Api.Core.Ldap;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;

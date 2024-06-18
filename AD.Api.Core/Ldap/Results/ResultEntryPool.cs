@@ -1,7 +1,7 @@
 using AD.Api.Actions;
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Pooling;
+using AD.Api.Core.Schema;
 using AD.Api.Core.Serialization;
 using AD.Api.Pooling;
 using ConcurrentCollections;

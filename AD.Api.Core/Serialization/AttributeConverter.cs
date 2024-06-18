@@ -1,6 +1,5 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap;
-using AD.Api.Core.Ldap.Services.Schemas;
 using AD.Api.Core.Schema;
 using System.Collections.Concurrent;
 using System.DirectoryServices.Protocols;

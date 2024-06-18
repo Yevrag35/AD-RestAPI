@@ -1,11 +1,10 @@
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Ldap.Services.Connections;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using System.DirectoryServices.Protocols;
 
-namespace AD.Api.Core.Ldap.Requests.Search
+namespace AD.Api.Core.Ldap
 {
     [DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
     public sealed class LdapSearchRequest : LdapRequest

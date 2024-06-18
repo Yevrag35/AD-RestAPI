@@ -1,5 +1,4 @@
-﻿using AD.Api.Core.Ldap;
-using AD.Api.Core.Serialization;
+﻿using AD.Api.Core.Serialization;
 using AD.Api.Enums;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;

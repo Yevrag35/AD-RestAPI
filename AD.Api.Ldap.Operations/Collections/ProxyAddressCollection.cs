@@ -1,4 +1,3 @@
-using MG.Collections;
 using System.Collections;
 
 namespace AD.Api.Ldap.Properties

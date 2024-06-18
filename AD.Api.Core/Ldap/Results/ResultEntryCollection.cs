@@ -1,6 +1,5 @@
 using AD.Api.Collections.Enumerators;
 using Microsoft.Extensions.ObjectPool;
-using System.Buffers;
 using System.Collections;
 using System.DirectoryServices.Protocols;
 using System.Runtime.InteropServices;

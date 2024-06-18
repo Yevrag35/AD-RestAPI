@@ -1,16 +1,13 @@
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Ldap.Services.Connections;
-using AD.Api.Core.Schema;
+using AD.Api.Core.Ldap;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
-using Microsoft.Extensions.Logging.Abstractions;
-using System;
 using System.Buffers;
 using System.Collections.Frozen;
 using System.Runtime.Versioning;
 using System.Text;
 
-namespace AD.Api.Core.Ldap.Services.Schemas
+namespace AD.Api.Core.Schema
 {
     public interface ISchemaService
     {

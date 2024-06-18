@@ -3,7 +3,7 @@ using AD.Api.Core.Pooling;
 using AD.Api.Pooling;
 using System.ComponentModel;
 
-namespace AD.Api.Core.Ldap.Requests.Search
+namespace AD.Api.Core.Ldap
 {
     [DynamicDependencyRegistration]
     public sealed class SearchRequestPool : ThreadedPoolBag<LdapSearchRequest>, IPoolBagLeaser<LdapSearchRequest>

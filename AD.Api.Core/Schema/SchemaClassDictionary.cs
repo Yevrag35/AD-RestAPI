@@ -1,12 +1,6 @@
-using AD.Api.Core.Settings;
-using System;
 using System.Collections;
 using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.DirectoryServices.ActiveDirectory;
-using System.Linq;
-using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Schema
 {

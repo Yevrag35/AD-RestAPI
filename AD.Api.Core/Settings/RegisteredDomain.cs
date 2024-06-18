@@ -1,4 +1,3 @@
-using AD.Api.Core.Security;
 using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Core.Settings

@@ -1,6 +1,6 @@
 using System.DirectoryServices.Protocols;
 
-namespace AD.Api.Core.Ldap.Requests
+namespace AD.Api.Core.Ldap
 {
     public abstract class LdapRequest
     {

@@ -1,12 +1,8 @@
 using AD.Api.Core.Security.Accounts;
 using AD.Api.Core.Security.Encryption;
-using AD.Api.Core.Settings.Credentials;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;
 using System.Net;
-using System.Runtime.Versioning;
-using System.Security;
-using System.Text;
 using Encode = System.Text.Encoding;
 
 namespace AD.Api.Core.Security

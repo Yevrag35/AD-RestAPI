@@ -1,23 +1,17 @@
 using AD.Api.Actions;
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Settings;
 using AD.Api.Exceptions;
-using AD.Api.Expressions;
 using AD.Api.Startup.Exceptions;
-using Microsoft.AspNetCore.Mvc;
 using OneOf;
-using System.Collections.Frozen;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
-using System.Linq.Expressions;
-using System.Net;
 using System.Runtime.Versioning;
 
-namespace AD.Api.Core.Ldap.Services.Connections
+namespace AD.Api.Core.Ldap
 {
     public interface IConnectionService
     {

@@ -3,9 +3,7 @@ using AD.Api.Core.Settings.Credentials;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Security;
-using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace AD.Api.Core.Security.Encryption

@@ -1,8 +1,4 @@
-using AD.Api.Core.Ldap.Services.Connections;
-using AD.Api.Core.Settings;
-using AD.Api.Strings.Extensions;
-using System.DirectoryServices.ActiveDirectory;
-using System.DirectoryServices.Protocols;
+using AD.Api.Core.Ldap;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Schema

@@ -1,10 +1,9 @@
-using AD.Api.Core.Ldap.Services.Connections;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;
 
-namespace AD.Api.Core.Ldap.Requests.Search
+namespace AD.Api.Core.Ldap
 {
     public class SearchParameters : IValidatableObject
     {

@@ -6,7 +6,7 @@ using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
-namespace AD.Api.Core.Ldap.Services.Connections
+namespace AD.Api.Core.Ldap
 {
     [SupportedOSPlatform("WINDOWS")]
     public sealed class NegotiateContext : ConnectionContext
