@@ -13,19 +13,23 @@ namespace AD.Api.Mapping
         {
             if (context.Value is long fileTimeValue)
             {
-                WriteDateTimeFromFileTime(writer, in fileTimeValue, context.Options);
+                WriteDateTimeFromFileTime(writer, in fileTimeValue);
                 return;
             }
             else if (context.Value is string strValue && DateTime.TryParse(strValue, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime result))
             {
                 writer.WriteStringValue(new DateTimeOffset(result));
             }
+            else if (context.Value is not null)
+            {
+                JsonSerializer.Serialize(writer, context.Value, context.Value.GetType(), context.Options);
+            }
             else
             {
-                JsonSerializer.Serialize(writer, context.Value, context.Options);
+                writer.WriteNullValue();
             }
         }
-        private static void WriteDateTimeFromFileTime(Utf8JsonWriter writer, in long fileTime, JsonSerializerOptions options)
+        private static void WriteDateTimeFromFileTime(Utf8JsonWriter writer, in long fileTime)
         {
             if (MaxFileTimeValue < fileTime || long.IsNegative(fileTime))
             {

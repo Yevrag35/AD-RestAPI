@@ -4,6 +4,7 @@ using System.Collections.Frozen;
 using System.Collections;
 using System.Collections.ObjectModel;
 using AD.Api.Strings.Extensions;
+using System.Runtime.CompilerServices;
 
 namespace AD.Api.Enums.Internal
 {
@@ -16,7 +17,7 @@ namespace AD.Api.Enums.Internal
         private static readonly SearchValues<char> _splitByChars;
         private readonly IReadOnlyDictionary<string, T> _byNames;
         private readonly IReadOnlyDictionary<T, string> _byValues;
-        private readonly IReadOnlySet<int> _valuesAsInt;
+        private readonly IReadOnlyDictionary<int, T> _valuesAsInt;
 
         /// <inheritdoc />
         public string this[T key]
@@ -39,6 +40,10 @@ namespace AD.Api.Enums.Internal
         public bool HasDefaultName { get; }
         /// <inheritdoc/>
         public bool HasDuplicates { get; }
+        /// <inheritdoc/>
+        public bool IsIntegerBased => _valuesAsInt.Count > 0;
+        /// <inheritdoc/>
+        public bool IsFlagsEnum { get; }
         /// <inheritdoc/>
         public bool IsFrozen { get; }
         /// <inheritdoc/>
@@ -66,6 +71,7 @@ namespace AD.Api.Enums.Internal
                 : dicts.ToReadOnly();
 
             this.HasDefaultName = TryGetDefaultName(in dicts, out string? defaultName);
+            this.IsFlagsEnum = typeof(T).IsDefined(typeof(FlagsAttribute), inherit: false);
             this.DefaultName = defaultName;
             this.HasDuplicates = dicts.HasDuplicates;
             this.IsFrozen = isFrozen;
@@ -99,7 +105,7 @@ namespace AD.Api.Enums.Internal
         [DebuggerStepThrough]
         public bool ContainsEnumByNumber(int number)
         {
-            return _valuesAsInt.Contains(number);
+            return _valuesAsInt.ContainsKey(number);
         }
         /// <inheritdoc/>
         [DebuggerStepThrough]
@@ -168,6 +174,12 @@ namespace AD.Api.Enums.Internal
         }
         /// <inheritdoc/>
         [DebuggerStepThrough]
+        public bool TryGetEnum(int number, out T value)
+        {
+            return _valuesAsInt.TryGetValue(number, out value);
+        }
+        /// <inheritdoc/>
+        [DebuggerStepThrough]
         public bool TryGetName(T key, [NotNullWhen(true)] out string? name)
         {
             return _byValues.TryGetValue(key, out name);
@@ -180,7 +192,7 @@ namespace AD.Api.Enums.Internal
 
             Dictionary<T, string> enumToString = new(names.Length);
             Dictionary<string, T> stringToEnum = new(names.Length, StringComparer.InvariantCultureIgnoreCase);
-            int[] intValues = GetEnumValuesAsInt();
+            Dictionary<int, T> intValues = GetEnumValuesAsInt(names.Length);
 
             for (int i = 0; i < names.Length; i++)
             {
@@ -205,14 +217,27 @@ namespace AD.Api.Enums.Internal
 
             return (enumToString, intValues, stringToEnum, hasDuplicates);
         }
-        private static int[] GetEnumValuesAsInt()
+        private static Dictionary<int, T> GetEnumValuesAsInt(int nameLength)
         {
-            if (!typeof(int).Equals(Enum.GetUnderlyingType(typeof(T))))
+            Type type = typeof(T);
+            if (!typeof(int).Equals(Enum.GetUnderlyingType(type)))
             {
                 return [];
             }
 
-            return Enum.GetValuesAsUnderlyingType<T>() as int[] ?? [];
+            Dictionary<int, T> dict = new(nameLength);
+
+            int[] array = (int[])Enum.GetValuesAsUnderlyingType<T>();
+            foreach (int value in array)
+            {
+                dict.TryAdd(value, GetIntAsEnum(value));
+            }
+
+            return dict;
+        }
+        private static T GetIntAsEnum(int value)
+        {
+            return Unsafe.As<int, T>(ref value);
         }
         [DebuggerStepThrough]
         private static bool TryGetDefaultName(in DictTuple dicts, [NotNullWhen(true)] out string? defaultName)
@@ -224,12 +249,12 @@ namespace AD.Api.Enums.Internal
         [DebuggerStepThrough]
         private readonly struct DictTuple
         {
-            internal readonly IReadOnlyList<int> EnumAsInt { get; }
+            internal readonly IDictionary<int, T> EnumAsInt { get; }
             internal readonly IDictionary<T, string> EnumToString { get; }
             internal readonly IDictionary<string, T> StringToEnum { get; }
             internal readonly bool HasDuplicates { get; }
 
-            internal DictTuple(IDictionary<T, string> enumToString, IReadOnlyList<int> enumAsInt, IDictionary<string, T> stringToEnum, bool hasDupes)
+            internal DictTuple(IDictionary<T, string> enumToString, IDictionary<int, T> enumAsInt, IDictionary<string, T> stringToEnum, bool hasDupes)
             {
                 this.EnumAsInt = enumAsInt;
                 this.EnumToString = enumToString;
@@ -237,24 +262,22 @@ namespace AD.Api.Enums.Internal
                 this.HasDuplicates = hasDupes;
             }
 
-            internal (IReadOnlyDictionary<T, string>, IReadOnlyDictionary<string, T>, IReadOnlySet<int>) ToReadOnly()
+            internal (IReadOnlyDictionary<T, string>, IReadOnlyDictionary<string, T>, IReadOnlyDictionary<int, T>) ToReadOnly()
             {
                 return (
                     new ReadOnlyDictionary<T, string>(this.EnumToString),
                     new ReadOnlyDictionary<string, T>(this.StringToEnum),
-                    this.EnumAsInt.Count > 0
-                        ? new HashSet<int>(this.EnumAsInt)
-                        : EmptyReadOnlySet.GetReadOnly<int>());
+                    this.EnumAsInt.AsReadOnly());
             }
-            internal (IReadOnlyDictionary<T, string>, IReadOnlyDictionary<string, T>, IReadOnlySet<int>) ToFrozen()
+            internal (IReadOnlyDictionary<T, string>, IReadOnlyDictionary<string, T>, IReadOnlyDictionary<int, T>) ToFrozen()
             {
                 return (
                     this.EnumToString.ToFrozenDictionary(),
                     this.StringToEnum.ToFrozenDictionary(StringComparer.InvariantCultureIgnoreCase),
-                    this.EnumAsInt.ToFrozenSet());
+                    this.EnumAsInt.ToFrozenDictionary());
             }
 
-            public static implicit operator DictTuple((IDictionary<T, string> EnumToString, IReadOnlyList<int> EnumsAsInt, IDictionary<string, T> StringToEnum, bool HasDupes) tuple)
+            public static implicit operator DictTuple((IDictionary<T, string> EnumToString, IDictionary<int, T> EnumsAsInt, IDictionary<string, T> StringToEnum, bool HasDupes) tuple)
             {
                 return new(tuple.EnumToString, tuple.EnumsAsInt, tuple.StringToEnum, tuple.HasDupes);
             }

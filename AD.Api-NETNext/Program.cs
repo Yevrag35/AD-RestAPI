@@ -98,6 +98,7 @@ PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, 
     ReadOnlySpan<byte> timeConvertAttributes = "accountExpires badPasswordTime lastLogon lastLogonTimestamp pwdLastSet whenChanged whenCreated"u8;
 
     conversions.AddMany(timeConvertAttributes, AttributeSerialization.WriteDateTimeOffset);
+    conversions.Add("objectSid", AttributeSerialization.WriteObjectSID);
     conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
 });
 

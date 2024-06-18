@@ -8,6 +8,18 @@ namespace AD.Api.Core.Security
     [SupportedOSPlatform("WINDOWS")]
     public sealed class SidString : IEquatable<SidString>
     {
+        private const int SID_MAX_LENGTH = 189;
+        /// <summary>
+        /// 2+2+20+15×(1+10)=189 maximum number of characters in a SID string.
+        /// </summary>
+        /// <remarks>
+        /// <c>S-</c> = 2 characters<br/>
+        /// Revision: <c>1-</c> = 2 characters<br/>
+        /// Identifier Authority = 20 characters (MAX)<br/>
+        /// 15 Sub-authorities separated by <c>-</c> = 10 characters (MAX) each.
+        /// </remarks>
+        public static readonly int MaxSidStringLength = SID_MAX_LENGTH;
+
         private readonly SecurityIdentifier _sid;
         private readonly string _rawString;
         private string? _ldapString;

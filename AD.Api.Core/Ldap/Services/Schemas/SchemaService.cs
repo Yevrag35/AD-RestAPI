@@ -72,31 +72,6 @@ namespace AD.Api.Core.Ldap.Services.Schemas
             string[] classNames = classArray.AsSpan(0, count).ToArray();
             ArrayPool<string>.Shared.Return(classArray);
             return new SchemaService(classNames);
-            //Span<string> classNames = classArray.AsSpan(0, count);
-
-            //Dictionary<ConnectionContext, SchemaClassPropertyDictionary> constructed = new(1);
-            //Dictionary<string, SchemaClassPropertyDictionary> fullDict = new(1, StringComparer.OrdinalIgnoreCase);
-
-            //foreach (string key in conSvc.RegisteredConnections.Keys)
-            //{
-            //    ref readonly ConnectionContext context = ref conSvc.RegisteredConnections[key];
-            //    if (!context.IsForestRoot)
-            //    {
-            //        continue;
-            //    }
-
-            //    if (!constructed.TryGetValue(context, out SchemaClassPropertyDictionary? dict))
-            //    {
-            //        dict = SchemaLoader.LoadSchema(context, classNames, in SPACE);
-            //        constructed.Add(context, dict);
-            //    }
-
-            //    fullDict.Add(key, dict);
-            //}
-
-            //constructed.Clear();
-            ////ArrayPool<string>.Shared.Return(classArray);
-            ////return new SchemaService(fullDict);
         }
 
         private static string[] GetClassNames(out int count)

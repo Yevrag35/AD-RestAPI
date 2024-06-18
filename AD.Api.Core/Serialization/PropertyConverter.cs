@@ -2,8 +2,6 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
-using Microsoft.Extensions.Options;
-using System.Runtime.Versioning;
 using System.Text.Json;
 using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Core.Serialization.SerializerAction>;
 

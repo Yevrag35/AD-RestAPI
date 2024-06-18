@@ -7,11 +7,9 @@ using AD.Api.Pooling;
 using ConcurrentCollections;
 using Microsoft.Extensions.ObjectPool;
 using System.Collections.Concurrent;
-using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    //[SupportedOSPlatform("WINDOWS")]
     [DynamicDependencyRegistration]
     public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<ResultEntryCollection>
     {
@@ -28,12 +26,12 @@ namespace AD.Api.Core.Ldap.Results
         int IPoolReturner<ResultEntry>.MaxSize => MAX_ENT_SIZE;
         int IPoolReturner<ResultEntryCollection>.MaxSize => MAX_COL_SIZE;
 
-        public ResultEntryPool(ISchemaService schemaSvc)
+        public ResultEntryPool(ISchemaService schemaSvc, IAttributeConverter converter)
         {
             _collections = [];
             _entries = [];
             _leaseIds = new(Environment.ProcessorCount, MAX_COL_SIZE);
-            _createEntry = StatedCallback.Create(schemaSvc, x => new ResultEntry(x));
+            _createEntry = StatedCallback.Create(converter, x => new ResultEntry(x));
             _createCollection = StatedCallback.Create(this, x => new ResultEntryCollection(MAX_COL_SIZE, x));
         }
 

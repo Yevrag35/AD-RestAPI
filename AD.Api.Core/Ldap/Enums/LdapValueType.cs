@@ -1,4 +1,4 @@
-namespace AD.Api.Core.Ldap.Enums
+namespace AD.Api.Core.Ldap
 {
     public enum LdapValueType
     {
@@ -17,7 +17,9 @@ namespace AD.Api.Core.Ldap.Enums
         LongArray,
         GuidArray,
         BooleanArray,
+        DateTimeArray,
         ByteTwoRankArray,
+        ObjectArray,
     }
 }
 

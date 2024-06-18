@@ -1,5 +1,8 @@
 ﻿using AD.Api.Core.Ldap;
 using AD.Api.Core.Serialization;
+using AD.Api.Enums;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace AD.Api.Mapping
@@ -10,14 +13,16 @@ namespace AD.Api.Mapping
 
         public static void WriteEnumValue<TEnum>(Utf8JsonWriter writer, ref readonly SerializationContext context) where TEnum : unmanaged, Enum
         {
-            bool isFlag = typeof(TEnum).IsDefined(typeof(FlagsAttribute), inherit: false);
             if (context.Value is not int intVal)
             {
                 writer.WriteNullValue();
                 return;
             }
 
-            if (isFlag)
+            var dict = context.Services.GetRequiredService<IEnumStrings<TEnum>>();
+
+            TEnum enumVal = default;
+            if (dict.IsFlagsEnum)
             {
                 writer.WriteNumberValue(intVal);
                 Span<char> chars = stackalloc char[context.AttributeName.Length + 5];
@@ -25,11 +30,22 @@ namespace AD.Api.Mapping
                 FLAGS.CopyTo(chars.Slice(context.AttributeName.Length));
 
                 writer.WritePropertyName(chars);
+
+                enumVal = ParseFromInt<TEnum>(ref intVal);
+            }
+            else if (!dict.TryGetEnum(intVal, out enumVal))
+            {
+                writer.WriteNumberValue(intVal);
+                return;
             }
 
-            Type enumType = typeof(TEnum);
-            object enumVal = Enum.ToObject(enumType, intVal);
-            JsonSerializer.Serialize(writer, enumVal, enumType, context.Options);
+            JsonSerializer.Serialize(writer, enumVal, context.Options);
+        }
+
+        [DebuggerStepThrough]
+        private static TEnum ParseFromInt<TEnum>(ref int intValue) where TEnum : unmanaged, Enum
+        {
+            return Unsafe.As<int, TEnum>(ref intValue);
         }
     }
 }

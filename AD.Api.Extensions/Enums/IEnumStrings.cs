@@ -69,6 +69,14 @@ namespace AD.Api.Enums
         /// </remarks>
         bool HasDuplicates { get; }
         /// <summary>
+        /// Indicates whether the <typeparamref name="T"/> enumeration is based on <see cref="int"/>.
+        /// </summary>
+        bool IsIntegerBased { get; }
+        /// <summary>
+        /// Indicates whether the <typeparamref name="T"/> enumeration is a flags enumeration.
+        /// </summary>
+        bool IsFlagsEnum { get; }
+        /// <summary>
         /// Indicates whether this collection has been frozen and not just read-only.
         /// </summary>
         bool IsFrozen { get; }
@@ -147,6 +155,23 @@ namespace AD.Api.Enums
         ///     the specified name; otherwise, <see langword="false"/>.
         /// </returns>
         bool TryGetEnum([NotNullWhen(true)] string name, out T value);
+        /// <summary>
+        /// Gets the value of the <typeparamref name="T"/> enumeration that is associated with the 
+        /// specified <see cref="int"/> value.
+        /// </summary>
+        /// <param name="name">
+        ///     The <see cref="int"/> value of the <typeparamref name="T"/> enumeration to get the value of.
+        /// </param>
+        /// <param name="value">
+        ///     When this method returns, contains the value associated with the specified integer value, if the
+        ///     value is found; otherwise, the default value for the type of the <typeparamref name="T"/>.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true"/> if the <typeparamref name="T"/> enumeration contains an value with
+        ///     the specified <see cref="int"/> value; otherwise, <see langword="false"/>. <see langword="false"/> is
+        ///     also returned is <typeparamref name="T"/> is not based on <see cref="int"/>.
+        /// </returns>
+        bool TryGetEnum(int number, out T value);
         /// <summary>
         /// Gets the value of the <typeparamref name="T"/> enumeration that is associated with the 
         /// specified name.
