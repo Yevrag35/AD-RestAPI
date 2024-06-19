@@ -1,4 +1,6 @@
-﻿namespace AD.Api.Components
+﻿using System.Runtime.InteropServices;
+
+namespace AD.Api.Components
 {
     public static class OneOf<T0>
     {
@@ -9,6 +11,7 @@
     }
 
     [DebuggerStepThrough]
+    [StructLayout(LayoutKind.Auto)]
     [DebuggerDisplay(@"\{IsT0={IsT0}, IsT1={IsT1}, Value={Value}\}")]
     public readonly struct OneOf<T0, T1>
     {

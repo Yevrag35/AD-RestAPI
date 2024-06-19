@@ -4,11 +4,10 @@ using AD.Api.Core.Serialization.Json;
 using AD.Api.Core.Settings;
 using AD.Api.Extensions.Collections;
 using AD.Api.Serialization.Json;
-using Microsoft.AspNetCore.Server.IISIntegration;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AD.Api.Startup
+namespace AD.Api
 {
     public static class MvcJsonOptionsExtensions
     {
@@ -16,14 +15,8 @@ namespace AD.Api.Startup
         {
             IConfiguration config = appBuilder.Configuration;
             bool isDevelopment = appBuilder.Environment.IsDevelopment();
-            SerializationSettings settings = GetSerializationSettingsFromConfig(builder.Services, config);
-            LdapEnumConverter enumConverter = LdapEnumConverter.Create(options =>
-            {
-                options.SetNamingPolicy(JsonSpanCamelCaseNamingPolicy.SpanPolicy)
-                       .Exclude<GroupType>()
-                       .Exclude<SamAccountType>()
-                       .Exclude<UserAccountControl>();
-            });
+            LdapEnumConverter enumConverter = ConfigureAndAddEnumConverter(appBuilder);
+            SerializationSettings settings = GetSerializationSettings(builder.Services, appBuilder.Configuration);
 
             return builder.AddJsonOptions(options =>
             {
@@ -31,20 +24,34 @@ namespace AD.Api.Startup
                 options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonSpanCamelCaseNamingPolicy.SpanPolicy;
                 options.JsonSerializerOptions.WriteIndented = settings.WriteIndented;
-                options.JsonSerializerOptions.Converters.Add(enumConverter);
 
-                AddJsonConverters(options.JsonSerializerOptions, converter);
+                options.JsonSerializerOptions.Converters.Add(enumConverter);
+                AddAdditionalJsonConverters(options.JsonSerializerOptions, converter);
             });
         }
 
-        private static void AddJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
+        private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
         {
             options.Converters.AddRange([
                 new ResultEntryConverter(converter),
                 new ResultEntryCollectionConverter(converter),
             ]);
         }
-        private static SerializationSettings GetSerializationSettingsFromConfig(IServiceCollection services, IConfiguration configuration)
+        private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder)
+        {
+            var enumConverter = LdapEnumConverter.Create(options =>
+            {
+                options.SetNamingPolicy(JsonSpanCamelCaseNamingPolicy.SpanPolicy)
+                       .Exclude<GroupType>()
+                       .Exclude<SamAccountType>()
+                       .Exclude<UserAccountControl>();
+            });
+
+            _ = appBuilder.Services.AddSingleton<LdapEnumConverter>(enumConverter);
+            return enumConverter;
+        }
+        
+        private static SerializationSettings GetSerializationSettings(IServiceCollection services, IConfiguration configuration)
         {
             IConfigurationSection section = configuration
                 .GetRequiredSection("Settings")

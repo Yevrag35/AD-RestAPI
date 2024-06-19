@@ -8,6 +8,7 @@ namespace AD.Api.Collections.Enumerators
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [DebuggerStepThrough]
+    [StructLayout(LayoutKind.Auto)]
     public ref struct ArrayRefEnumerator<T>
     {
         private readonly ReadOnlySpan<T> _array;

@@ -1,9 +1,11 @@
 using AD.Api.Extensions.Collections;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace AD.Api.Collections.Enumerators
 {
     [DebuggerStepThrough]
+    [StructLayout(LayoutKind.Auto)]
     public struct ArrayEnumerator<T> : IEnumerator<T>
     {
         private RentedArray<T> _array; int _index; bool _notDisposed;

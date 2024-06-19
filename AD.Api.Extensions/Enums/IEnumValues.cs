@@ -1,4 +1,5 @@
 using AD.Api.Attributes;
+using AD.Api.Enums;
 
 namespace AD.Api.Ldap.Enums
 {
@@ -23,6 +24,7 @@ namespace AD.Api.Ldap.Enums
         string this[TEnum key] { get; }
 
         int EnumCount { get; }
+        IEnumStrings<TEnum> EnumStrings { get; }
         int ValueCount { get; }
 
         /// <inheritdoc cref="IEnumStrings{T}.ContainsEnum(T)"/>

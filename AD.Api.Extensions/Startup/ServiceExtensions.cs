@@ -32,7 +32,7 @@ namespace AD.Api.Startup
         /// </returns>
         /// <inheritdoc cref="AddResolvedServicesFromAssembly(IServiceCollection, Assembly, IConfiguration, in IServiceTypeExclusions)" 
         ///     path="/exception"/>
-        public static IServiceCollection AddResolvedServicesFromAssemblies(this IServiceCollection services, IConfiguration configuration, IEnumerable<Assembly> assemblies, Action<IAddServiceTypeExclusions>? configureExclusions = null)
+        public static IServiceCollection AddResolvedServicesFromAssemblies(this IServiceCollection services, IConfiguration configuration, Assembly[] assemblies, Action<IAddServiceTypeExclusions>? configureExclusions = null)
         {
             IServiceTypeExclusions exclusions = ServiceTypeExclusions.ConfigureFromAction(configureExclusions);
             ServiceResolutionContext context = new(services, configuration, in exclusions);

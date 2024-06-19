@@ -7,13 +7,12 @@ using AD.Api.Extensions.Startup;
 using AD.Api.Mapping;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
-using AD.Api.Startup;
+using AD.Api;
 using Microsoft.IdentityModel.Logging;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using AD.Api.Startup;
 
 #region EXPLICIT LOADS
 
@@ -26,11 +25,7 @@ Referencer.LoadAll((in Referencer referer) =>
 
 #endregion
 
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-{
-    Args = args,
-    ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
-});
+WebApplicationBuilder builder = StartupHelper.CreateWebBuilder(args);
 
 builder.Host.UseDefaultServiceProvider((context, options) =>
 {
@@ -40,16 +35,6 @@ builder.Host.UseDefaultServiceProvider((context, options) =>
 });
 
 Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
-
-builder.Configuration.AddEnvironmentVariables();
-if (!builder.Environment.IsProduction())
-{
-    builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, false);
-}
-else
-{
-    builder.Configuration.AddJsonFile("appsettings.json", true, false);
-}
 
 // Add services to the container.
 
@@ -85,12 +70,13 @@ builder.Services
     })
     .AddEnumDictionaryGeneration(x =>
     {
-        x.Register<ActiveDirectorySyntax>(freeze: true)
-         .Register<GroupType>(freeze: true)
-         .Register<ResultCode>(freeze: true)
-         .Register<SamAccountType>(freeze: true)
-         .Register<UserAccountControl>(freeze: true)
-         .Register<WellKnownObjectValue>(freeze: true);
+        x.Register<ActiveDirectorySyntax>()
+         .Register<FilteredRequestType>()
+         .Register<GroupType>()
+         .Register<ResultCode>()
+         .Register<SamAccountType>()
+         .Register<UserAccountControl>()
+         .Register<WellKnownObjectValue>();
     });
 
 PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, builder.Configuration, (conversions) =>

@@ -1,8 +1,11 @@
+using System.Runtime.InteropServices;
+
 namespace AD.Api.Components
 {
     /// <summary>
     /// A ref struct that keeps track of the number of <see langword="true"/> boolean values that have been set.
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     public ref struct BoolCounter
     {
         private int _count;

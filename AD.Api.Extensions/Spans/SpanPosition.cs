@@ -1,9 +1,12 @@
+using System.Runtime.InteropServices;
+
 namespace AD.Api.Spans
 {
     /// <summary>
     /// A read-only struct that represents a position and length range within a given span.
     /// </summary>
     [DebuggerStepThrough]
+    [StructLayout(LayoutKind.Auto)]
     [DebuggerDisplay(@"\{Index={Index}, Length={Length}\}")]
     public readonly struct SpanPosition : IComparable<int>, IComparable<SpanPosition>, IEquatable<int>, IEquatable<SpanPosition>
     {
@@ -49,6 +52,11 @@ namespace AD.Api.Spans
         public override readonly int GetHashCode()
         {
             return Index.GetHashCode();
+        }
+
+        public readonly SpanPosition ShiftLeft(int length)
+        {
+            return new(Index - length - 1, Length);
         }
 
         public static implicit operator SpanPosition(int start)

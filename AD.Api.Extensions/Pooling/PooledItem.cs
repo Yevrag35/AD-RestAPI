@@ -1,7 +1,9 @@
 using AD.Api.Pooling;
+using System.Runtime.InteropServices;
 
 namespace AD.Api.Core.Pooling
 {
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct PooledItem<T, TPool> : IPooledItem<T>
         where T : class
         where TPool : class, IPoolLeaseReturner<T>

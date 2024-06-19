@@ -204,7 +204,7 @@ namespace AD.Api.Strings.Spans
             for (int i = 0; i < posAtIndex.Length; i++)
             {
                 posAtIndex[i] = i < minusOne
-                    ? posAtIndex[i + 1]
+                    ? posAtIndex[i + 1].ShiftLeft(pos.Length)
                     : default;
             }
 

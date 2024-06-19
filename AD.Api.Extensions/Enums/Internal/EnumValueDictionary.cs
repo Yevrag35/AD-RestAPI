@@ -30,6 +30,7 @@ namespace AD.Api.Enums.Internal
         public string this[TEnum key] => _backing.EnumStrings[key];
 
         public int EnumCount => _backing.EnumStrings.NameCount;
+        public IEnumStrings<TEnum> EnumStrings => _backing.EnumStrings;
         public int ValueCount => _backing.Attributes.Count;
 
         [DebuggerStepThrough]
