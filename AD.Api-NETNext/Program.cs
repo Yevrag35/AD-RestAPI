@@ -1,7 +1,7 @@
 using AD.Api.Collections;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Security.Encryption;
-using AD.Api.Core.Serialization;
+using AD.Api.Core.Serialization.Json;
 using AD.Api.Expressions;
 using AD.Api.Extensions.Startup;
 using AD.Api.Mapping;

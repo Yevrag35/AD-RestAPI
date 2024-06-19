@@ -1,4 +1,5 @@
 using AD.Api.Core.Ldap.Results;
+using AD.Api.Core.Serialization.Json;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;

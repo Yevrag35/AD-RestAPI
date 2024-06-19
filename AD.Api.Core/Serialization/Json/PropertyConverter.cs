@@ -5,9 +5,8 @@ using AD.Api.Statics;
 using System.Text.Json;
 using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Core.Serialization.SerializerAction>;
 
-namespace AD.Api.Core.Serialization
+namespace AD.Api.Core.Serialization.Json
 {
-    //[SupportedOSPlatform("WINDOWS")]
     public sealed class PropertyConverter
     {
         private readonly FrozenDict _dictionary;
@@ -93,7 +92,7 @@ namespace AD.Api.Core.Serialization
             }
             else
             {
-                JsonSerializer.Serialize(writer, pair.Value, 
+                JsonSerializer.Serialize(writer, pair.Value,
                     pair.Value?.GetType() ?? SchemaProperty.ObjectType, context.Options);
             }
         }
@@ -126,7 +125,7 @@ namespace AD.Api.Core.Serialization
                 .GetSection("Serialization")
                 .GetSection("GuidAttributes");
 
-            GuidAttributesSet guidSet = GuidAttributesSet.Create(guidAttributes);
+            var guidSet = GuidAttributesSet.Create(guidAttributes);
 
             PropertyConverter converter = new(dict, guidSet);
             services.AddSingleton(converter)
