@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    //[SupportedOSPlatform("WINDOWS")]
     public sealed class ResultEntryCollection : IEnumerable<ResultEntry>, IResettable
     {
         private readonly List<ResultEntry> _entries;
@@ -70,7 +69,7 @@ namespace AD.Api.Core.Ldap.Results
 
         public IEnumerator<ResultEntry> GetEnumerator()
         {
-            return new ArrayEnumerator<ResultEntry>(CollectionsMarshal.AsSpan(_entries));
+            return _entries.GetEnumerator();
         }
         IEnumerator IEnumerable.GetEnumerator()
         {

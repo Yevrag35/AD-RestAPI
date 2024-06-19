@@ -42,7 +42,7 @@ namespace AD.Api.Core.Serialization
 
         public void ConvertEntry<T>(string domainKey, SearchResultEntry result, [DisallowNull] T dictionary) where T : class, IDictionary<string, object>
         {
-            SchemaClassPropertyDictionary schema = _schemaSvc[domainKey];
+            ref readonly SchemaClassPropertyDictionary schema = ref _schemaSvc[domainKey];
             foreach (DirectoryAttribute attribute in result.Attributes.Values)
             {
                 ConvertAttribute(attribute, schema, dictionary);
@@ -87,14 +87,14 @@ namespace AD.Api.Core.Serialization
                 property.LdapType == LdapValueType.Guid || property.LdapType == LdapValueType.GuidArray)
             {
                 object[] values = attribute.GetValues(SchemaProperty.ByteArrayType);
-                return !property.IsMulti
+                return !property.IsMultiValued
                     ? ConvertObject(values[0], property.RuntimeType, property.LdapType)
                     : ConvertObject(values, property.RuntimeType, property.LdapType);
             }
             else
             {
                 object[] values = attribute.GetValues(SchemaProperty.StringType);
-                return !property.IsMulti && values.Length == 1
+                return !property.IsMultiValued && values.Length == 1
                     ? ConvertObject(values[0], property.RuntimeType, property.LdapType)
                     : ConvertObject(values, property.RuntimeType, property.LdapType);
             }

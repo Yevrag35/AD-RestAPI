@@ -25,9 +25,13 @@ namespace AD.Api.Core.Schema
         private readonly Type _type;
 
         public readonly bool IsEmpty => !_isNotEmpty;
-        public readonly bool IsMulti => _isMulti;
+        /// <inheritdoc/>
+        public readonly bool IsMultiValued => _isMulti;
+        /// <inheritdoc/>
         public readonly LdapValueType LdapType => _ldapType;
+        /// <inheritdoc/>
         public string Name => _name ?? string.Empty;
+        /// <inheritdoc/>
         public Type RuntimeType => _type ?? ObjectType;
 
         [DebuggerStepThrough]
@@ -40,12 +44,6 @@ namespace AD.Api.Core.Schema
             _isMulti = !isSingle;
         }
 
-        [SupportedOSPlatform("WINDOWS")]
-        public static SchemaProperty Create(ActiveDirectorySchemaProperty property)
-        {
-            (Type type, LdapValueType ldapType) = GetConversionType(property.Syntax, property.IsSingleValued);
-            return new(property.Name, type, ldapType, property.IsSingleValued);
-        }
         [SupportedOSPlatform("WINDOWS")]
         public static SchemaProperty Create(string name, ActiveDirectorySyntax syntax, bool isSingleValued)
         {
@@ -80,6 +78,7 @@ namespace AD.Api.Core.Schema
         [SupportedOSPlatform("WINDOWS")]
         private static (Type type, LdapValueType ldapType) MatchSyntaxToTypes(ActiveDirectorySyntax syntax)
         {
+            // LdapValueType.Guid and GuidArray are not valid LDAP types, but will be used during the conversion process.
             switch (syntax)
             {
                 case ActiveDirectorySyntax.AccessPointDN:
@@ -97,9 +96,6 @@ namespace AD.Api.Core.Schema
 
                 case ActiveDirectorySyntax.Bool:
                     return (typeof(bool?), LdapValueType.Boolean);
-
-                //case ActiveDirectorySyntax.DNWithBinary:
-                //    return (GuidType, LdapValueType.Guid);
 
                 case ActiveDirectorySyntax.Enumeration:
                 case ActiveDirectorySyntax.Int:

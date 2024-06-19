@@ -2,6 +2,7 @@ using AD.Api.Collections;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization;
+using AD.Api.Expressions;
 using AD.Api.Extensions.Startup;
 using AD.Api.Mapping;
 using AD.Api.Services;
@@ -19,9 +20,6 @@ using System.Text.Json.Serialization;
 Referencer.LoadAll((in Referencer referer) =>
 {
     referer
-        //.Reference<Add>()
-        //.Reference<And>()
-        //.Reference<LdapPropertyConverter>()
         .Reference<IConnectionService>()
         .Reference<UnsafeDictionary<int>>();
 });
@@ -41,10 +39,10 @@ builder.Host.UseDefaultServiceProvider((context, options) =>
     options.ValidateScopes = isDev;
 });
 
-builder.Configuration
-    .AddEnvironmentVariables()
-    .AddJsonFile("defaultAttributes.json", true, false);
-if (builder.Environment.IsDevelopment())
+Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
+
+builder.Configuration.AddEnvironmentVariables();
+if (!builder.Environment.IsProduction())
 {
     builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, false);
 }
@@ -77,14 +75,20 @@ else
 //    options.DefaultPolicy = policyBuilder.Build();
 //});
 
-Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
 builder.Services
-    .AddResolvedServicesFromAssemblies(builder.Configuration, assemblies)
+    .AddResolvedServicesFromAssemblies(builder.Configuration, assemblies, exclude =>
+    {
+        exclude.Add(typeof(IExpressionCache<,>))
+               .Add<LambdaComparisonVisitor>()
+               .Add<LambdaExpressionEqualityComparer>()
+               .Add<LambdaExpressionHasherVisitor>();
+    })
     .AddEnumDictionaryGeneration(x =>
     {
         x.Register<ActiveDirectorySyntax>(freeze: true)
          .Register<GroupType>(freeze: true)
          .Register<ResultCode>(freeze: true)
+         .Register<SamAccountType>(freeze: true)
          .Register<UserAccountControl>(freeze: true)
          .Register<WellKnownObjectValue>(freeze: true);
     });
@@ -94,7 +98,9 @@ PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, 
     ReadOnlySpan<byte> timeConvertAttributes = "accountExpires badPasswordTime lastLogon lastLogonTimestamp pwdLastSet whenChanged whenCreated"u8;
 
     conversions.AddMany(timeConvertAttributes, AttributeSerialization.WriteDateTimeOffset);
+    conversions.Add("groupType", AttributeSerialization.WriteEnumValue<GroupType>);
     conversions.Add("objectSid", AttributeSerialization.WriteObjectSID);
+    conversions.Add("sAMAccountType", AttributeSerialization.WriteEnumValue<SamAccountType>);
     conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
 });
 

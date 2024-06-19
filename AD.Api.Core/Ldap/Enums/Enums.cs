@@ -31,6 +31,35 @@ namespace AD.Api.Core.Ldap
     }
 
     /// <summary>
+    /// This attribute contains information about every account type object. You can enumerate a list of account types 
+    /// or you can use the Display Information API to create a list. Because computers, normal user accounts, and 
+    /// trust accounts can also be enumerated as user objects, the values for these accounts must be a contiguous range.
+    /// </summary>
+    [Flags]
+    [LdapEnum("sAMAccountType")]
+    public enum SamAccountType
+    {
+        DomainObject = 0x0,
+        GroupObject = 0x10000000,             // 268435456
+        NonSecurityGroupObject = 0x10000001,  // 268435457
+        AliasObject = 0x20000000,             // 536870912
+        NonSecurityAliasObject = 0x20000001,  // 536870913
+        UserObject = 0x30000000,              // 805306368
+        MachineAccount = 0x30000001,          // 805306369
+        TrustedDomainObject = 0x30000002,     // 805306370
+        InterdomainTrustAccount = 0x30000003, // 805306371
+        ComputerObject = 0x30000004,          // 805306372
+        DeletedObject = 0x30000005,           // 805306373
+        InetOrgPerson = 0x30000006,           // 805306374
+        DeletedObjectWithSid = 0x30000007,    // 805306375
+        Unknown = 0x30000008,                 // 805306376
+        ForeignPrincipal = 0x30000009,        // 805306377
+        ApplicationBasicGroup = 0x40000000,   // 1073741824
+        ApplicationQueryGroup = 0x40000001,   // 1073741825
+        AccountTypeMax = 0x7FFFFFFF,          // 2147483647
+    }
+
+    /// <summary>
     /// The UserAccountControl bit flags.
     /// </summary>
     /// <remarks>Specify any combination of the flags to control the specified account.</remarks>
@@ -41,22 +70,22 @@ namespace AD.Api.Core.Ldap
         /// <summary>
         /// The logon script is executed. 
         ///</summary>
-        Script = 1,
+        Script = 0x1,
 
         /// <summary>
         /// The user account is disabled. 
         ///</summary>
-        Disabled = 2,
+        Disabled = 0x2,
 
         /// <summary>
         /// The home directory is required. 
         ///</summary>
-        HomeDirectoryIsRequired = 8,
+        HomeDirectoryIsRequired = 0x8,
 
         /// <summary>
         /// The account is currently locked out. 
         ///</summary>
-        LockedOut = 16,
+        LockedOut = 0x10,   // 16
 
         /// <summary>
         /// The account is not subject to a possibly existing policy regarding the length of password. 
@@ -64,9 +93,9 @@ namespace AD.Api.Core.Ldap
         /// <remarks>
         /// This means an account can have a shorter password than is required or it may even have no password at all, even if 
         /// empty passwords are not allowed. This property is not visible in the normal GUI tools.
-        /// (e.g. - Active Directory Users and Copmputers)
+        /// (e.g. - Active Directory Users and Computers)
         /// </remarks>
-        PasswordNotRequired = 32,
+        PasswordNotRequired = 0x20, // 32
 
         /// <summary>
         /// The account cannot change its password. 
@@ -75,7 +104,7 @@ namespace AD.Api.Core.Ldap
         /// You cannot assign the permission settings of <see cref="CannotChangePassword"/> by directly modifying the 
         /// <see cref="UserAccountControl"/> value.
         /// </remarks>
-        CannotChangePassword = 64,
+        CannotChangePassword = 0x40, // 64
 
         /// <summary>
         /// The user can send an encrypted password. 
@@ -89,7 +118,7 @@ namespace AD.Api.Core.Ldap
         ///     Active Directory environment.  Normally, passwords are stored as irreversible hash values in the AD database. 
         ///     So you should NEVER use this option unless it is absolutely necessary.
         /// </remarks>
-        CanSendEncryptedTextPassword = 128,
+        CanSendEncryptedTextPassword = 0x80, // 128
 
         /// <summary>
         /// Indicates the account is for users whose primary account is in another domain.
@@ -99,31 +128,31 @@ namespace AD.Api.Core.Ldap
         /// to any domain that trusts this domain.
         /// Also known as a local user account.
         /// </remarks>
-        TempDuplicateAccount = 256,
+        TempDuplicateAccount = 0x100, // 256
 
         /// <summary>
         /// This is a default account type that represents a typical user. 
         ///</summary>
-        NormalUser = 512,
+        NormalUser = 0x200, // 512
 
         /// <summary>
         /// This is a permit to trust account for a system domain that trusts other domains. 
         ///</summary>
-        InterDomainTrustAccount = 2048,
+        InterDomainTrustAccount = 0x800, // 2048
 
         /// <summary>
         /// This is a computer account for a computer that is a member of this domain. 
         ///</summary>
-        WorkstationTrustAccount = 4096,
+        WorkstationTrustAccount = 0x1000, // 4096
 
         /// <summary>
         /// This is a computer account for a system backup domain controller that is a member of this domain. 
         ///</summary>
-        ServerTrustAccount = 8192,
+        ServerTrustAccount = 0x2000, // 8192
 
-        Unused1 = 16384,
+        Unused1 = 0x4000, // 16384
 
-        Unused2 = 32768,
+        Unused2 = 0x8000, // 32768
 
         /// <summary>
         /// The password for this account will never expire. 
@@ -131,7 +160,7 @@ namespace AD.Api.Core.Ldap
         ///<remarks>
         /// The account is not subject to an existing policy regarding a forced password change interval.
         /// </remarks>
-        PasswordNeverExpires = 65536,
+        PasswordNeverExpires = 0x10000, // 65536
 
         /// <summary>
         /// Indicates that this is a Majority Node Set (MNS) account.
@@ -139,12 +168,12 @@ namespace AD.Api.Core.Ldap
         /// <remarks>
         /// Such accounts are required for the operation of cluster nodes for Windows Server 2003 (and newer), in which the quorum data is not stored on a shared media drive. This flag should never be set for a user account. 
         /// </remarks>
-        LogonAccountForMNS = 131072,
+        LogonAccountForMNS = 0x20000, // 131072
 
         /// <summary>
         /// The user must log on using a smart card. 
         ///</summary>
-        SmartcardRequired = 262144,
+        SmartcardRequired = 0x40000, // 262144
 
         /// <summary>
         /// The service account (user or computer account), under which a service runs, is trusted for Kerberos delegation. 
@@ -152,13 +181,13 @@ namespace AD.Api.Core.Ldap
         /// <remarks>
         ///     Any such service can impersonate a client requesting the service.
         /// </remarks>
-        TrustedForDelegation = 524288,
+        TrustedForDelegation = 0x80000, // 524288
 
         /// <summary>
         /// The security context of the user will not be delegated to a service even if the service account is set as trusted 
         /// for Kerberos delegation. 
         ///</summary>
-        NeverTrustedForDelegation = 1048576,
+        NeverTrustedForDelegation = 0x100000, // 1048576
 
         /// <summary>
         /// Indicates that, in the Kerberos authentication of the account, ONLY the algorithm DES (Data Encryption Standard) may be used for the generation of tickets.
@@ -167,7 +196,7 @@ namespace AD.Api.Core.Ldap
         /// This should only be set for accounts which don't use a Windows machine to log on to the domain (Windows will always have at least DES and RC4 available).
         /// Since Vista and Windows Server 2008, there is the much more modern AES (Advanced Encryption Standard) algorithm for Kerberos authentication to a domain controller available. For signaling which algorithms are supported for authentication of a specific account, there is now the modern attribute msDS-SupportedEncryptionTypes available
         ///</remarks>
-        UseDESKeyOnly = 2097152,
+        UseDESKeyOnly = 0x200000, // 2097152
 
         /// <summary>
         /// This account does not require Kerberos pre-authentication for logon.
@@ -178,7 +207,7 @@ namespace AD.Api.Core.Ldap
         /// accounts of Windows domain members, this flag flag should NEVER be set, for the pre-authentication prevents certain 
         /// types of dictionary attacks on the Kerberos login.
         /// </remarks>
-        DONT_REQUIRE_PREAUTH = 4194304,
+        DONT_REQUIRE_PREAUTH = 0x400000, // 4194304
 
         /// <summary>
         /// The user password has expired. 
@@ -187,7 +216,7 @@ namespace AD.Api.Core.Ldap
         /// This flag is created by the system using data from the Pwd-Last-Set attribute and the 
         /// domain policy.  This is a constructed attribute so it cannot be used as a filter criterion in LDAP search operations.
         /// </remarks>
-        PasswordExpired = 8388608,
+        PasswordExpired = 0x800000, // 8388608
 
         /// <summary>
         /// The account is enabled for delegation. 
@@ -197,11 +226,11 @@ namespace AD.Api.Core.Ldap
         /// be strictly controlled. This setting enables a service running under the account to assume a client identity and 
         /// authenticate as that user to other remote servers on the network.
         /// </remarks>
-        TrustedToAuthenticateForDelegation = 16777216,
+        TrustedToAuthenticateForDelegation = 0x1000000, // 16777216
 
-        PartialSecretsAccount = 67108864,
+        PartialSecretsAccount = 0x2000000, // 33554432
 
-        UseAESKeys = 134217728
+        UseAESKeys = 0x4000000, // 67108864
     }
 
     public enum WellKnownObjectValue

@@ -65,6 +65,11 @@ namespace AD.Api.Core.Ldap
 
         public void AddAttributes(ReadOnlySpan<char> attributeString)
         {
+            if (attributeString.IsWhiteSpace())
+            {
+                return;
+            }
+
             bool wantsDefault = false;
             char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
             Span<char> defaults = ['d', 'e', 'f', 'a', 'u', 'l', 't', 's'];

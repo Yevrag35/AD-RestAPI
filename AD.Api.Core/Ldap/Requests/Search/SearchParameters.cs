@@ -58,7 +58,7 @@ namespace AD.Api.Core.Ldap
             return parameters.SearchRequest.Value;
         }
 
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             IConnectionService conSvc = validationContext.GetRequiredService<IConnectionService>();
             if (!conSvc.RegisteredConnections.ContainsKey(this.Domain))

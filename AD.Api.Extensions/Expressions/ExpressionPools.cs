@@ -27,7 +27,7 @@ namespace AD.Api.Core.Pooling
             return true;
         }
 
-        [DynamicDependencyRegistrationMethod]
+        //[DynamicDependencyRegistrationMethod]
         [EditorBrowsable(EditorBrowsableState.Never)]
         private static void AddToServices(IServiceCollection services)
         {
