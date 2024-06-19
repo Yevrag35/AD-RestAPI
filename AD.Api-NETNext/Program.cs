@@ -123,15 +123,7 @@ else
 
 builder.Services
     .AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
-        options.AllowInputFormatterExceptionMessages = builder.Environment.IsDevelopment();
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new ResultEntryConverter(converter));
-        options.JsonSerializerOptions.Converters.Add(new ResultEntryCollectionConverter(converter));
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-    });
+    .AddADApiJsonConfiguration(builder, converter);
 //.AddNewtonsoftJson(options =>
 //{
 //    options.AddADApiConfiguration(textSettings);

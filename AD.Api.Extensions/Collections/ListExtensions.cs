@@ -2,16 +2,44 @@
 {
     public static class ListExtensions
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection"></param>
+        /// <param name="items"></param>
+        /// <exception cref="ArgumentNullException"/>
         public static void AddRange<T>(this IList<T> collection, params T[] items)
         {
+            ArgumentNullException.ThrowIfNull(collection);
             if (items is null)
             {
                 return;
             }
 
-            for (int i = 0; i < items.Length; i++)
+            foreach (T item in items)
             {
-                collection.Add(items[i]);
+               collection.Add(item);
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection"></param>
+        /// <param name="items"></param>
+        /// <exception cref="ArgumentNullException"/>
+        public static void AddRange<T>(this IList<T> collection, ReadOnlySpan<T> items)
+        {
+            ArgumentNullException.ThrowIfNull(collection);
+            if (items.IsEmpty)
+            {
+                return;
+            }
+
+            foreach (T item in items)
+            {
+                collection.Add(item);
             }
         }
     }
