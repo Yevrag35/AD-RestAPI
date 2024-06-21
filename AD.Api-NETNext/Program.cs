@@ -13,6 +13,7 @@ using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Reflection;
 using AD.Api.Startup;
+using AD.Api.Constraints;
 
 #region EXPLICIT LOADS
 
@@ -77,6 +78,10 @@ builder.Services
          .Register<SamAccountType>()
          .Register<UserAccountControl>()
          .Register<WellKnownObjectValue>();
+    })
+    .Configure<RouteOptions>(options =>
+    {
+        options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
     });
 
 PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, builder.Configuration, (conversions) =>

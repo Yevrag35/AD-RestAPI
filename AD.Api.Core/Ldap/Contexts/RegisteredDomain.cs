@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AD.Api.Core.Settings
+namespace AD.Api.Core.Ldap
 {
     public sealed class RegisteredDomain
     {

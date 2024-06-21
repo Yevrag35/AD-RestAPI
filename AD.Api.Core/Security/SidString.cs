@@ -85,7 +85,19 @@ namespace AD.Api.Core.Security
         {
             return _ldapString ??= CreateLdapString(_sid);
         }
+        public bool TryFormat(Span<char> destination, out int charsWritten)
+        {
+            if (_ldapString is not null)
+            {
+                _ldapString.TryCopyTo(destination);
+                charsWritten = _ldapString.Length;
+                return true;
+            }
 
+            WriteLdapToSpan(ref destination, _sid, out charsWritten);
+            return true;
+        }
+        
         private static string CreateLdapString(SecurityIdentifier sid)
         {
             SpanStringBuilder builder = new(sid.BinaryLength * 3);
@@ -99,6 +111,19 @@ namespace AD.Api.Core.Security
             ArrayPool<byte>.Shared.Return(borrow);
 
             return result;
+        }
+        private static void WriteLdapToSpan(ref Span<char> destination, SecurityIdentifier sid, out int written)
+        {
+            SpanStringBuilder builder = new(destination);
+
+            byte[] borrow = ArrayPool<byte>.Shared.Rent(sid.BinaryLength);
+            sid.GetBinaryForm(borrow, 0);
+
+            FormatByteArrayToSpan(borrow.AsSpan(0, sid.BinaryLength), ref builder);
+            destination = builder.AsSpan();
+
+            ArrayPool<byte>.Shared.Return(borrow);
+            written = builder.Length;
         }
 
         private static void FormatByteArrayToSpan(Span<byte> byteArray, ref SpanStringBuilder builder)

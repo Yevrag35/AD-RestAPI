@@ -185,9 +185,13 @@ namespace AD.Api.Strings.Spans
 
             return this;
         }
-        public readonly ReadOnlySpan<char> AsSpan()
+        public readonly Span<char> AsSpan()
         {
             return _span.Slice(0, _position);
+        }
+        public readonly Span<char> AsUnwrittenSpan()
+        {
+            return _span.Slice(_position);
         }
 
         public readonly ReadOnlySpan<char> GetSegment(int start, int length)

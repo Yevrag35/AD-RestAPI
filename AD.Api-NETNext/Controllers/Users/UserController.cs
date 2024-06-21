@@ -3,6 +3,7 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
+using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices.Protocols;
 
@@ -13,22 +14,35 @@ namespace AD.Api.Controllers.Users
     public class UserController : ControllerBase
     {
         public IConnectionService Connections { get; }
+        public ILdapFilterService Filters { get; }
 
-        public UserController(IConnectionService connectionService)
+        public UserController(IConnectionService connectionService, ILdapFilterService filters)
         {
             this.Connections = connectionService;
+            this.Filters = filters;
         }
 
         [HttpGet]
-        [Route("{sid}")]
+        [Route("{sid:objectsid}")]
         public IActionResult GetUser(
             [FromServices] IPooledItem<ResultEntry> result,
             [FromQuery] SearchParameters parameters,
             [FromRouteSid] SidString sid)
         {
             LdapConnection connection = parameters.ApplyConnection(this.Connections);
-            string filter = sid.ToLdapString();
-            parameters.ApplyParameters($"(objectSid={filter})");
+            SpanStringBuilder builder = new(stackalloc char[SidString.MaxSidStringLength + 44]);
+            builder = builder.Append(['(', '&'])
+                             .Append("(objectSid=")
+                             .Append(SidString.MaxSidStringLength, sid, (chars, state) =>
+                              {
+                                  state.TryFormat(chars, out int written);
+                                  return written;
+                              })
+                             .Append(')')
+                             .Append(this.Filters.GetFilter(FilteredRequestType.User, addEnclosure: false))
+                             .Append(')');
+
+            parameters.ApplyParameters(builder.Build(), FilteredRequestType.User);
 
             var response = (SearchResponse)connection.SendRequest(parameters);
             if (response.ResultCode != ResultCode.Success || response.Entries.Count > 1)

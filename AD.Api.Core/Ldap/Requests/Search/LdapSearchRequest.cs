@@ -2,6 +2,7 @@ using AD.Api.Attributes.Services;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
+using System.Buffers;
 using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap
@@ -10,7 +11,7 @@ namespace AD.Api.Core.Ldap
     public sealed class LdapSearchRequest : LdapRequest
     {
         private static readonly string _defaultRequestId = Guid.Empty.ToString();
-        private readonly ISearchDefaults _defaults;
+        private readonly IDefaults _defaults;
         private bool _hasDefaults;
         private readonly SearchRequest _request;
         private Guid _requestId;
@@ -54,19 +55,20 @@ namespace AD.Api.Core.Ldap
             set => _request.DistinguishedName = value ?? string.Empty;
         }
 
-        public LdapSearchRequest(ISearchDefaults searchDefaults)
+        public LdapSearchRequest(IDefaults defaults)
         {
             _requestId = Guid.Empty;
-            _defaults = searchDefaults;
+            _defaults = defaults;
             _request = new();
-            ResetRequest(_request, searchDefaults);
+            ResetRequest(_request, in defaults[string.Empty]);
             _hasDefaults = true;
         }
 
-        public void AddAttributes(ReadOnlySpan<char> attributeString)
+        public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
         {
             if (attributeString.IsWhiteSpace())
             {
+                this.AddAttributesFromTypes(types);
                 return;
             }
 
@@ -93,6 +95,35 @@ namespace AD.Api.Core.Ldap
             {
                 this.RemoveDefaultAttributes();
             }
+            else
+            {
+                this.AddAttributesFromTypes(types);
+            }
+        }
+        private void AddAttributesFromTypes(FilteredRequestType? types)
+        {
+            if (!types.HasValue)
+            {
+                return;
+            }
+
+            int count = _defaults.GetAttributeCount(types.Value, includeGlobal: false);
+            if (count <= 0)
+            {
+                return;
+            }
+
+            string[] array = ArrayPool<string>.Shared.Rent(count);
+            Span<string> attributes = array.AsSpan(0, count);
+
+            _defaults.TryGetAllAttributes(types.Value, attributes, includeGlobal: false, out count);
+
+            foreach (string s in attributes.Slice(0, count))
+            {
+                _request.Attributes.Add(s);
+            }
+
+            ArrayPool<string>.Shared.Return(array);
         }
         public LdapConnection ApplyConnection([NotNull] ref string? domain, IConnectionService connectionService)
         {
@@ -113,7 +144,8 @@ namespace AD.Api.Core.Ldap
                 return;
             }
 
-            for (int i = _defaults.Attributes.Length - 1; i >= 0; i--)
+            int i = _defaults.TotalGlobalAttributeCount - 1;
+            for (;i >= 0; i--)
             {
                 _request.Attributes.RemoveAt(i);
             }
@@ -123,10 +155,11 @@ namespace AD.Api.Core.Ldap
         protected override void ResetCore()
         {
             _requestId = Guid.Empty;
-            ResetRequest(_request, _defaults);
+            ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
+            ResetRequest(_request, in defaults);
             _hasDefaults = true;
         }
-        private static void ResetRequest(SearchRequest request, ISearchDefaults defaults)
+        private static void ResetRequest(SearchRequest request, ref readonly ISearchDefaults defaults)
         {
             request.Aliases = defaults.DereferenceAlias;
             request.Attributes.Clear();

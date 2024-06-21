@@ -11,7 +11,18 @@ namespace AD.Api.Core
 {
     public interface IDefaults
     {
-        bool TryGetFirst(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults);
+        int TotalDefaultAttributeCount { get; }
+        int TotalGlobalAttributeCount { get; }
+
+        ref readonly ISearchDefaults this[string key] { get; }
+
+        int GetAttributeCount(FilteredRequestType types);
+        int GetAttributeCount(FilteredRequestType types, bool includeGlobal);
+
+        bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, out int count);
+        bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count);
+
+        bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults);
     }
 
     [DynamicDependencyRegistration]
@@ -19,15 +30,83 @@ namespace AD.Api.Core
     {
         private readonly FrozenDictionary<string, ISearchDefaults> _dictionary;
 
+        public ref readonly ISearchDefaults this[string key] => ref _dictionary[key];
+
         public IEnumStrings<FilteredRequestType> RequestTypes { get; }
+        public int TotalDefaultAttributeCount { get; }
+        public int TotalGlobalAttributeCount { get; }
 
         private DefaultsService(IEnumStrings<FilteredRequestType> types, IDictionary<string, ISearchDefaults> dictionary)
         {
             _dictionary = dictionary.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+            this.TotalGlobalAttributeCount = _dictionary[string.Empty].Attributes.Length;
+            this.TotalDefaultAttributeCount = _dictionary.Values
+                .Where(x => !x.IsGlobal)
+                .Sum(x => x.Attributes.Length);
+
             this.RequestTypes = types;
         }
 
-        public bool TryGetFirst(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults)
+        [DebuggerStepThrough]
+        public int GetAttributeCount(FilteredRequestType types)
+        {
+            return this.GetAttributeCount(types, includeGlobal: true);
+        }
+        public int GetAttributeCount(FilteredRequestType types, bool includeGlobal)
+        {
+            int count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
+            FlagEnumerator<FilteredRequestType> enumerator = new(types);
+
+            while (enumerator.MoveNext())
+            {
+                if (this.RequestTypes.TryGetName(enumerator.Current, out string? name)
+                    &&
+                    _dictionary.TryGetValue(name, out var defaults))
+                {
+                    count += defaults.Attributes.Length;
+                }
+            }
+
+            return count;
+        }
+
+        [DebuggerStepThrough]
+        public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, out int count)
+        {
+            return this.TryGetAllAttributes(types, attributes, includeGlobal: true, out count);
+        }
+        public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count)
+        {
+            FlagEnumerator<FilteredRequestType> enumerator = new(types);
+            count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
+            int nonDefaultCount = 0;
+
+            while (enumerator.MoveNext())
+            {
+                if (this.TryGetDefaultsFromFlag(enumerator.Current, out ISearchDefaults? defaults))
+                {
+                    defaults.Attributes.CopyTo(attributes.Slice(nonDefaultCount));
+                    nonDefaultCount += defaults.Attributes.Length;
+                }
+            }
+
+            if (nonDefaultCount > 0)
+            {
+                if (includeGlobal)
+                {
+                    _dictionary[string.Empty].Attributes.CopyTo(attributes.Slice(nonDefaultCount));
+                }
+
+                count += nonDefaultCount;
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults)
         {
             FlagEnumerator<FilteredRequestType> enumerator = new(types);
             while (enumerator.MoveNext())
@@ -42,6 +121,15 @@ namespace AD.Api.Core
 
             defaults = null;
             return false;
+        }
+
+        private bool TryGetDefaultsFromFlag(FilteredRequestType singleType, [NotNullWhen(true)] out ISearchDefaults? defaults)
+        {
+            defaults = default;
+
+            return this.RequestTypes.TryGetName(singleType, out string? name)
+                   && 
+                   _dictionary.TryGetValue(name, out defaults);
         }
 
         [DynamicDependencyRegistrationMethod]

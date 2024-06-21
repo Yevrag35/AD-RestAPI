@@ -64,11 +64,7 @@ namespace AD.Api.Startup
                             AddService(context.Services, descriptor);
                         }
                     }
-                    catch (DuplicatedServiceException)
-                    {
-                        throw;
-                    }
-                    catch (Exception e)
+                    catch (Exception e) when (e is not DuplicatedServiceException)
                     {
                         throw new AdApiStartupException(typeof(ServiceExtensions), $"Failed to create descriptor for type \"{type.GetName()}\".", e);
                     }
@@ -179,11 +175,12 @@ namespace AD.Api.Startup
 
         #region ADD SERVICE
 
+
+#if DEBUG
         /// <exception cref="DuplicatedServiceException"/>
         /// <exception cref="InvalidOperationException">
         ///     <paramref name="services"/> is read-only.
         /// </exception>
-#if DEBUG
         private static void AddService(IServiceCollection services, ServiceDescriptor descriptor)
         {
             if (!_addedViaAttributes.Add(descriptor))
@@ -224,6 +221,9 @@ namespace AD.Api.Startup
             }
         }
 #else
+        /// <exception cref="InvalidOperationException">
+        ///     <paramref name="services"/> is read-only.
+        /// </exception>
         private static void AddService(IServiceCollection services, ServiceDescriptor descriptor)
         {
             services.Add(descriptor);

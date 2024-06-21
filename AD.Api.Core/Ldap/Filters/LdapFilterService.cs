@@ -1,16 +1,18 @@
 using AD.Api.Attributes;
+using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Enums;
 using AD.Api.Ldap.Enums;
-using System.Runtime.CompilerServices;
+using AD.Api.Strings.Spans;
 
-namespace AD.Api.Core.Ldap.Services
+namespace AD.Api.Core.Ldap
 {
     public interface ILdapFilterService
     {
-
+        string GetFilter(FilteredRequestType types, bool addEnclosure);
     }
 
+    [DependencyRegistration(typeof(ILdapFilterService), Lifetime = ServiceLifetime.Singleton)]
     internal sealed class LdapFilterService : ILdapFilterService
     {
         //private const string COMPUTER_FILTER = "(&(objectClass=computer)(objectCategory=computer))";
@@ -30,39 +32,50 @@ namespace AD.Api.Core.Ldap.Services
             this.RequestTypes = filterValues.EnumStrings;
         }
 
-        //public string AddToFilter(ReadOnlySpan<char> filter, FilteredRequestType types)
-        //{
-        //}
-        //public string GetFilter(FilteredRequestType types)
-        //{
-        //    if (this.RequestTypes.ContainsEnum(types))
-        //    {
-
-        //    }
-        //}
-
-        private int GetEnumerationLength(FilteredRequestType value, out int numberOfFlagsSet)
+        public string GetFilter(FilteredRequestType types, bool addEnclosure)
         {
-            if (this.RequestTypes.TryGetName(value, out string? name))
+            SpanStringBuilder builder = new(stackalloc char[256]);
+            if (addEnclosure)
             {
-                numberOfFlagsSet = 1;
-                return name.Length;
+                builder = builder.Append(['(', '&']);
+            }
+
+            int count = this.GetEnumerationNumber(types, ref builder);
+            if (count <= 0)
+            {
+                builder.Dispose();
+                return string.Empty;
+            }
+
+            if (addEnclosure)
+            {
+                builder = builder.Append(')');
+            }
+
+            string s = builder.Build();
+            return s;
+        }
+
+        private int GetEnumerationNumber(FilteredRequestType value, ref SpanStringBuilder builder)
+        {
+            if (this.FilterValues.TryGetValue(value, out string? filter))
+            {
+                builder = builder.Append(filter);
+                return 1;
             }
 
             // Is a combination of flags
             FlagEnumerator<FilteredRequestType> enumerator = new(value);
-            int length = 0;
 
             while (enumerator.MoveNext())
             {
                 if (this.FilterValues.TryGetValue(enumerator.Current, out string? filterValue))
                 {
-                    length += filterValue.Length;
+                    builder = builder.Append(filterValue);
                 }
             }
 
-            numberOfFlagsSet = enumerator.Count;
-            return length;
+            return enumerator.Count;
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace AD.Api.Core.Settings
+namespace AD.Api.Core.Serialization
 {
     public sealed class SerializationSettings
     {

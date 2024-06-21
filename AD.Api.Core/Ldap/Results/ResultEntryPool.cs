@@ -73,7 +73,8 @@ namespace AD.Api.Core.Ldap.Results
                 _leaseIds.TryRemove(itemId);
                 return;
             }
-            else if (itemId == item.LeaseId && !_leaseIds.TryRemove(itemId))
+
+            if (itemId == item.LeaseId && !_leaseIds.TryRemove(itemId))
             {
                 return;
             }
@@ -81,7 +82,11 @@ namespace AD.Api.Core.Ldap.Results
             {
                 return;
             }
-
+            else if (!item.TryReset())
+            {
+                return;
+            }
+            
             Return(item, _entries, ref _entCount, MAX_ENT_SIZE);
         }
         public void Return(Guid itemId, ResultEntryCollection? item)

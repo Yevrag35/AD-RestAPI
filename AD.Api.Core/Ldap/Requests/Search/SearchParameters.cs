@@ -16,6 +16,9 @@ namespace AD.Api.Core.Ldap
             set => _domain = value;
         }
 
+        [FromServices]
+        public required ILdapFilterService FilterSvc { get; init; }
+
         [FromQuery(Name = "searchBase")]
         public SearchScope? Scope { get; set; }
 
@@ -34,7 +37,7 @@ namespace AD.Api.Core.Ldap
         public string? SortProperty { get; set; }
 
         [FromServices]
-        public IPooledItem<LdapSearchRequest> SearchRequest { get; set; } = null!;
+        public required IPooledItem<LdapSearchRequest> SearchRequest { get; init; }
 
         [MemberNotNull(nameof(Domain))]
         public LdapConnection ApplyConnection(IConnectionService connectionService)
@@ -44,9 +47,11 @@ namespace AD.Api.Core.Ldap
 #pragma warning restore CS8774 // Member must have a non-null value when exiting.
         }
 
-        public void ApplyParameters(string? filter)
+        public void ApplyParameters(string? filter, FilteredRequestType? types = null)
         {
-            this.SearchRequest.Value.AddAttributes(this.Properties);
+            this.SearchRequest.Value.AddAttributes(this.Properties, types);
+            
+
             if (!string.IsNullOrWhiteSpace(filter))
             {
                 this.SearchRequest.Value.Filter = filter;
