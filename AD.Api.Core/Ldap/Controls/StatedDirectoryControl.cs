@@ -13,6 +13,7 @@ namespace AD.Api.Core.Ldap.Controls
     {
         private readonly T _control;
         private bool _adding;
+        private readonly Action<T>? _reset;
 
         public bool AddToRequest
         {
@@ -23,11 +24,15 @@ namespace AD.Api.Core.Ldap.Controls
                 this.IsCritical = value && _control.IsCritical;
             }
         }
+        [MemberNotNullWhen(true, nameof(_reset))]
+        internal bool HasReset { get; }
 
-        public StatedDirectoryControl([DisallowNull] T control)
+        public StatedDirectoryControl([DisallowNull] T control, Action<T>? resetAction = null)
             : base(control.Type, [], false, control.ServerSide)
         {
             _control = control;
+            this.HasReset = resetAction is not null;
+            _reset = resetAction;
         }
 
         [DebuggerStepThrough]
@@ -48,6 +53,11 @@ namespace AD.Api.Core.Ldap.Controls
             }
 
             return _control.GetValue();
+        }
+
+        public void Reset()
+        {
+            _reset?.Invoke(_control);
         }
     }
 }

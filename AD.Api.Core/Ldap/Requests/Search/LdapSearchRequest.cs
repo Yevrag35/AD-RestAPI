@@ -125,7 +125,7 @@ namespace AD.Api.Core.Ldap
 
             ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
 
-            _pageControl = new(new PageResultRequestControl(globals.SizeLimit));
+            _pageControl = new(new PageResultRequestControl(globals.SizeLimit), x => x.Cookie = []);
             ResetRequest(_request, _pageControl, in globals);
             _hasDefaults = true;
         }
@@ -226,6 +226,7 @@ namespace AD.Api.Core.Ldap
         {
             _requestId = Guid.Empty;
             ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
+            _pageSize = 0;
             ResetRequest(_request, _pageControl, in defaults);
             _hasDefaults = true;
         }
@@ -241,12 +242,26 @@ namespace AD.Api.Core.Ldap
             request.TimeLimit = defaults.Timeout;
 
             statedControl.AddToRequest = false;
+            statedControl.Reset();
             request.Controls.Add(statedControl);
         } 
 
         public SearchRequest AsLdapRequest()
         {
             return _request;
+        }
+
+        public void SetCookie(int? pageSize, string? cookie)
+        {
+            if (pageSize.HasValue)
+            {
+                this.PageSize = pageSize.Value;
+                if (!string.IsNullOrWhiteSpace(cookie))
+                {
+                    byte[] cookieBytes = Convert.FromBase64String(cookie);
+                    _pageControl.ChangeState(cookieBytes, (bytes, control) => control.Cookie = bytes);
+                }
+            }
         }
 
         /// <inheritdoc/>

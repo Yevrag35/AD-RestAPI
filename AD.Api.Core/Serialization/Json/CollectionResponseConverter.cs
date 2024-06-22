@@ -1,5 +1,6 @@
 using AD.Api.Serialization.Json;
 using System.Collections;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -45,6 +46,13 @@ namespace AD.Api.Core.Serialization.Json
 
             policy.WritePropertyName(writer, "Count"u8);
             writer.WriteNumberValue(value.Count);
+
+            if (!string.IsNullOrEmpty(value.NextPageUrl))
+            {
+
+               policy.WritePropertyName(writer, "NextPageUrl"u8);
+               writer.WriteStringValue(value.NextPageUrl);
+            }
 
             policy.WritePropertyName(writer, "Data"u8);
             writer.WriteStartArray();

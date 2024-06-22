@@ -3,12 +3,15 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Reflection;
 using AD.Api.Serialization.Json;
+using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Buffers;
 using System.Collections;
 using System.DirectoryServices.Protocols;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -30,7 +33,7 @@ namespace AD.Api.Core.Serialization
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool AddResultCode { get; set; } = true;
-
+        
         public int Count { get; set; }
         public IEnumerable Data
         {
@@ -49,6 +52,8 @@ namespace AD.Api.Core.Serialization
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         [MemberNotNullWhen(true, nameof(_array))]
         internal bool NeedsDisposal => _needsDisposal;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? NextPageUrl { get; private set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public JsonSerializerOptions Options { get; }
 
@@ -86,6 +91,24 @@ namespace AD.Api.Core.Serialization
                 : StatusCodes.Status200OK;
         }
 
+        public void SetCookie(HttpContext httpContext, byte[] cookie)
+        {
+            ReadOnlySpan<char> path = httpContext.Request.GetEncodedPathAndQuery();
+            ReadOnlySpan<char> base64Cookie = WebUtility.UrlEncode(Convert.ToBase64String(cookie));
+            SpanStringBuilder builder = new(stackalloc char[path.Length + base64Cookie.Length + 8]);
+
+            int index = path.IndexOf("cookie=", StringComparison.OrdinalIgnoreCase);
+            if (index >= 0)
+            {
+                path = path.Slice(0, index);
+            }
+
+            builder = builder.Append(path)
+                             .Append("&cookie=")
+                             .Append(base64Cookie);
+
+            this.NextPageUrl = builder.Build();
+        }
         public void SetData<T>(IReadOnlyCollection<T> collection)
         {
             _needsDisposal = false;

@@ -29,9 +29,7 @@ namespace AD.Api.Controllers.Search
             [FromServices] IPooledItem<ResultEntryCollection> results)
         {
             results.Value.Domain = parameters.Domain ?? string.Empty;
-
             LdapConnection connection = parameters.ApplyConnection(this.Connections);
-
             parameters.ApplyParameters(body);
 
             SearchResponse searchResponse;
@@ -76,6 +74,13 @@ namespace AD.Api.Controllers.Search
 
             results.Value.AddRange(searchResponse.Entries);
             response.SetData(searchResponse, results.Value);
+            if (searchResponse.Controls.Length == 1 && searchResponse.Controls[0] is PageResultResponseControl pageControl
+                &&
+                pageControl.Cookie.Length > 0)
+            {
+                response.SetCookie(this.HttpContext, pageControl.Cookie);
+            }
+
             return response;
         }
 

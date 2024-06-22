@@ -14,6 +14,10 @@ namespace AD.Api.Core.Ldap
 
         private string? _domain;
 
+        [FromQuery]
+        [Base64String]
+        public string? Cookie { get; set; }
+
         [FromQuery(Name = "domain")]
         public string? Domain
         {
@@ -24,8 +28,12 @@ namespace AD.Api.Core.Ldap
         [FromServices]
         public required ILdapFilterService FilterSvc { get; init; }
 
-        [FromQuery(Name = "searchBase")]
+        [FromQuery(Name = "scope")]
         public SearchScope? Scope { get; set; }
+
+        [FromQuery]
+        [Range(0, int.MaxValue)]
+        public int? PageSize { get; set; }
 
         [FromQuery(Name = "properties")]
         public string? Properties { get; set; }
@@ -64,8 +72,10 @@ namespace AD.Api.Core.Ldap
 
             if (this.SizeLimit.HasValue)
             {
-                this.SearchRequest.Value.PageSize = this.SizeLimit.Value;
+                this.SearchRequest.Value.SizeLimit = this.SizeLimit.Value;
             }
+
+            this.SearchRequest.Value.SetCookie(this.PageSize, this.Cookie);
 
             if (searchFilter.HasLdapFilter)
             {
