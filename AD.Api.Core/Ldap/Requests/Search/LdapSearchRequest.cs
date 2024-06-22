@@ -1,23 +1,39 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Core.Ldap.Controls;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
+using Microsoft.Extensions.ObjectPool;
 using System.Buffers;
 using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap
 {
     [DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
-    public sealed class LdapSearchRequest : LdapRequest
+    public sealed class LdapSearchRequest : LdapRequest, IResettable
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string _defaultRequestId = Guid.Empty.ToString();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IDefaults _defaults;
-        private bool _hasDefaults;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly SearchRequest _request;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Guid _requestId;
+        private readonly StatedDirectoryControl<PageResultRequestControl> _pageControl;
+        private int _pageSize;
+
+        private bool _hasDefaults;
         protected override DirectoryRequest BackingRequest => _request;
         protected override string DefaultRequestId => _defaultRequestId;
 
+        /// <summary>
+        /// The <see cref="LdapSearchRequest.Filter"/> contains the search filter for the LDAP request.
+        /// </summary>
+        /// <returns>
+        /// The search filter for the LDAP request as a <see cref="string"/> value.
+        /// </returns>
+        /// <inheritdoc cref="SearchRequest.Filter" path="/exception"/>
         public string Filter
         {
             [DebuggerStepThrough]
@@ -25,17 +41,40 @@ namespace AD.Api.Core.Ldap
             [DebuggerStepThrough]
             set => _request.Filter = value ?? string.Empty;
         }
+        public int PageSize
+        {
+            get => _pageSize;
+            set
+            {
+                ArgumentOutOfRangeException.ThrowIfNegative(value, nameof(this.PageSize));
+                _pageSize = value;
+                if (value == 0)
+                {
+                    _pageControl.AddToRequest = false;
+                }
+                else
+                {
+                    _pageControl.AddToRequest = true;
+                    _pageControl.ChangeState(value, (size, control) => control.PageSize = size);
+                }
+            }
+        }
+        /// <summary>
+        /// The <see cref="RequestId"/> contains the unique identifier for the LDAP request.
+        /// </summary>
+        /// <remarks>
+        /// Each request will have its own RequestId per scoped-HTTP request.
+        /// </remarks>
+        /// <returns>
+        /// The requestID for the LDAP request as a <see cref="Guid"/> value.
+        /// </returns>
         public Guid RequestId
         {
             [DebuggerStepThrough]
             get => _requestId;
             set
             {
-                if (value == _requestId)
-                {
-                    return;
-                }
-                else if (value == Guid.Empty)
+                if (value == Guid.Empty)
                 {
                     _request.RequestId = _defaultRequestId;
                     _requestId = Guid.Empty;
@@ -47,6 +86,29 @@ namespace AD.Api.Core.Ldap
                 }
             }
         }
+        /// <inheritdoc cref="SearchRequest.SizeLimit" path="/*[not(self::summary)]"/>
+        /// <summary>
+        ///     <inheritdoc cref="SearchRequest.SizeLimit" path="/summary/text()[1]"/>
+        ///     <see cref="LdapSearchRequest"/>
+        ///     <inheritdoc cref="SearchRequest.SizeLimit" path="/summary/text()[last()]"/>
+        /// </summary>
+        public int SizeLimit
+        {
+            [DebuggerStepThrough]
+            get => _request.SizeLimit;
+            [DebuggerStepThrough]
+            set => _request.SizeLimit = value;
+        }
+        /// <summary>
+        /// Gets or sets the base distinguished name (DN) from which the search will start.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="SearchBase"/> property defines the starting point in the directory
+        /// from which the LDAP search will be conducted. It is specified as a distinguished name (DN).
+        /// </remarks>
+        /// <returns>
+        /// The base distinguished name (DN) for the LDAP search as a <see cref="string"/> value.
+        /// </returns>
         public string SearchBase
         {
             [DebuggerStepThrough]
@@ -60,7 +122,11 @@ namespace AD.Api.Core.Ldap
             _requestId = Guid.Empty;
             _defaults = defaults;
             _request = new();
-            ResetRequest(_request, in defaults[string.Empty]);
+
+            ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
+
+            _pageControl = new(new PageResultRequestControl(globals.SizeLimit));
+            ResetRequest(_request, _pageControl, in globals);
             _hasDefaults = true;
         }
 
@@ -137,7 +203,7 @@ namespace AD.Api.Core.Ldap
             this.SearchBase = context.DefaultNamingContext;
             return context.CreateConnection();
         }
-        public void RemoveDefaultAttributes()
+        private void RemoveDefaultAttributes()
         {
             if (!_hasDefaults)
             {
@@ -152,14 +218,18 @@ namespace AD.Api.Core.Ldap
 
             _hasDefaults = false;
         }
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Resets all search parameters and controls to their default values based on the global defaults.
+        /// </remarks>
         protected override void ResetCore()
         {
             _requestId = Guid.Empty;
             ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
-            ResetRequest(_request, in defaults);
+            ResetRequest(_request, _pageControl, in defaults);
             _hasDefaults = true;
         }
-        private static void ResetRequest(SearchRequest request, ref readonly ISearchDefaults defaults)
+        private static void ResetRequest<T>(SearchRequest request, StatedDirectoryControl<T> statedControl, ref readonly ISearchDefaults defaults) where T : DirectoryControl
         {
             request.Aliases = defaults.DereferenceAlias;
             request.Attributes.Clear();
@@ -169,12 +239,27 @@ namespace AD.Api.Core.Ldap
             request.Scope = defaults.Scope;
             request.SizeLimit = defaults.SizeLimit;
             request.TimeLimit = defaults.Timeout;
+
+            statedControl.AddToRequest = false;
+            request.Controls.Add(statedControl);
+        } 
+
+        public SearchRequest AsLdapRequest()
+        {
+            return _request;
         }
 
-        public static implicit operator SearchRequest(LdapSearchRequest request)
+        /// <inheritdoc/>
+        bool IResettable.TryReset()
         {
-            return request._request;
+            this.Reset();
+            return true;
         }
+
+        //public static implicit operator SearchRequest(LdapSearchRequest request)
+        //{
+        //    return request._request;
+        //}
     }
 }
 

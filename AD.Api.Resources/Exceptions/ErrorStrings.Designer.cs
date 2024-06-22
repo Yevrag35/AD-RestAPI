@@ -115,6 +115,42 @@ namespace AD.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The struct named &apos;{0}&apos; of type &apos;{1}&apos; is empty but was expected not to be..
+        /// </summary>
+        public static string Exception_EmptyStruct {
+            get {
+                return ResourceManager.GetString("Exception_EmptyStruct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The provided struct of type &apos;{0}&apos; is empty but was expected not to be..
+        /// </summary>
+        public static string Exception_EmptyStruct_NoName {
+            get {
+                return ResourceManager.GetString("Exception_EmptyStruct_NoName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The provided struct is empty but was expected not to be..
+        /// </summary>
+        public static string Exception_EmptyStruct_NoName_NoType {
+            get {
+                return ResourceManager.GetString("Exception_EmptyStruct_NoName_NoType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The struct named &apos;{0}&apos; is empty but was expected not to be..
+        /// </summary>
+        public static string Exception_EmptyStruct_NoType {
+            get {
+                return ResourceManager.GetString("Exception_EmptyStruct_NoType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Registration method must have at least the IServiceCollection parameter type..
         /// </summary>
         public static string Exception_InvalidMethodParameters {

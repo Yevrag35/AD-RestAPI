@@ -135,6 +135,18 @@
   <data name="Exception_DuplicatedService" xml:space="preserve">
     <value>A service was attempted to be registered twice in the specified Dependency Injection container and this was not intended -&gt; '{0}'</value>
   </data>
+  <data name="Exception_EmptyStruct" xml:space="preserve">
+    <value>The struct named '{0}' of type '{1}' is empty but was expected not to be.</value>
+  </data>
+  <data name="Exception_EmptyStruct_NoName" xml:space="preserve">
+    <value>The provided struct of type '{0}' is empty but was expected not to be.</value>
+  </data>
+  <data name="Exception_EmptyStruct_NoName_NoType" xml:space="preserve">
+    <value>The provided struct is empty but was expected not to be.</value>
+  </data>
+  <data name="Exception_EmptyStruct_NoType" xml:space="preserve">
+    <value>The struct named '{0}' is empty but was expected not to be.</value>
+  </data>
   <data name="Exception_InvalidMethodParameters" xml:space="preserve">
     <value>Registration method must have at least the IServiceCollection parameter type.</value>
   </data>

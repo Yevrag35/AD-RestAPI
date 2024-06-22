@@ -1,3 +1,4 @@
+using Microsoft.Extensions.ObjectPool;
 using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap
@@ -23,12 +24,17 @@ namespace AD.Api.Core.Ldap
         {
             return this.BackingRequest.RequestId;
         }
+        /// <inheritdoc cref="IResettable.TryReset" path="/*[not(self::returns)]"/>
         public void Reset()
         {
             this.BackingRequest.Controls.Clear();
             this.BackingRequest.RequestId = this.DefaultRequestId;
             this.ResetCore();
         }
+        /// <summary>
+        /// When overriden in a derived class, performs any request-specific reset operations.
+        /// </summary>
+        /// 
         protected abstract void ResetCore();
     }
 }

@@ -1,12 +1,17 @@
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Frozen;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;
+using SR = System.DirectoryServices.Protocols.SearchRequest;
 
 namespace AD.Api.Core.Ldap
 {
     public class SearchParameters : IValidatableObject
     {
+        private static readonly FrozenSet<string> _descOrder =
+            FrozenSet.ToFrozenSet(["desc", "descending", "1"], StringComparer.OrdinalIgnoreCase);
+
         private string? _domain;
 
         [FromQuery(Name = "domain")]
@@ -47,20 +52,42 @@ namespace AD.Api.Core.Ldap
 #pragma warning restore CS8774 // Member must have a non-null value when exiting.
         }
 
-        public void ApplyParameters(string? filter, FilteredRequestType? types = null)
+        public void ApplyParameters(ISearchFilter searchFilter)
         {
-            this.SearchRequest.Value.AddAttributes(this.Properties, types);
-            
+            this.SearchRequest.Value.AddAttributes(this.Properties, searchFilter.RequestBaseType);
 
-            if (!string.IsNullOrWhiteSpace(filter))
+            SR request = this.SearchRequest.Value.AsLdapRequest();
+            if (this.Scope.HasValue)
             {
-                this.SearchRequest.Value.Filter = filter;
+                request.Scope = this.Scope.Value;
+            }
+
+            if (this.SizeLimit.HasValue)
+            {
+                this.SearchRequest.Value.PageSize = this.SizeLimit.Value;
+            }
+
+            if (searchFilter.HasLdapFilter)
+            {
+                request.Filter = searchFilter.LdapFilter;
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchFilter.SearchBase))
+            {
+                request.DistinguishedName = searchFilter.SearchBase;
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.SortProperty))
+            {
+                this.SortDirection ??= string.Empty;
+                SortRequestControl control = new(this.SortProperty, _descOrder.Contains(this.SortDirection));
+                request.Controls.Add(control);
             }
         }
 
-        public static implicit operator SearchRequest(SearchParameters parameters)
+        public static implicit operator SR(SearchParameters parameters)
         {
-            return parameters.SearchRequest.Value;
+            return parameters.SearchRequest.Value.AsLdapRequest();
         }
 
         public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

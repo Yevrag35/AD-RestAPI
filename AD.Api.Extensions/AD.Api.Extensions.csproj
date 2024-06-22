@@ -39,6 +39,5 @@
 	
 	<ItemGroup>
 	  <Folder Include="Exceptions\Services\" />
-	  <Folder Include="Serialization\Json\" />
 	</ItemGroup>
 </Project>
