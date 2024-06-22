@@ -1,4 +1,5 @@
 using AD.Api.Pooling;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Frozen;
 using System.ComponentModel.DataAnnotations;
@@ -14,9 +15,7 @@ namespace AD.Api.Core.Ldap
 
         private string? _domain;
 
-        [FromQuery]
-        [Base64String]
-        public string? Cookie { get; set; }
+        internal ISearchFilter? BackingFilter { get; set; }
 
         [FromQuery(Name = "domain")]
         public string? Domain
@@ -50,7 +49,7 @@ namespace AD.Api.Core.Ldap
         public string? SortProperty { get; set; }
 
         [FromServices]
-        public required IPooledItem<LdapSearchRequest> SearchRequest { get; init; }
+        public required IPooledItem<LdapSearchRequest> SearchRequest { get; set; }
 
         [MemberNotNull(nameof(Domain))]
         public LdapConnection ApplyConnection(IConnectionService connectionService)
@@ -60,8 +59,22 @@ namespace AD.Api.Core.Ldap
 #pragma warning restore CS8774 // Member must have a non-null value when exiting.
         }
 
-        public void ApplyParameters(ISearchFilter searchFilter)
+        public virtual void ApplyParameters(ISearchFilter? searchFilter)
         {
+            if (searchFilter is null)
+            {
+                if (this.BackingFilter is null)
+                {
+                    throw new ArgumentNullException(nameof(searchFilter));
+                }
+
+                searchFilter = this.BackingFilter;
+            }
+            else
+            {
+                this.BackingFilter = searchFilter;
+            }
+
             this.SearchRequest.Value.AddAttributes(this.Properties, searchFilter.RequestBaseType);
 
             SR request = this.SearchRequest.Value.AsLdapRequest();
@@ -70,12 +83,15 @@ namespace AD.Api.Core.Ldap
                 request.Scope = this.Scope.Value;
             }
 
+            if (this.PageSize.HasValue)
+            {
+                this.SearchRequest.Value.PageSize = this.PageSize.Value;
+            }
+
             if (this.SizeLimit.HasValue)
             {
                 this.SearchRequest.Value.SizeLimit = this.SizeLimit.Value;
             }
-
-            this.SearchRequest.Value.SetCookie(this.PageSize, this.Cookie);
 
             if (searchFilter.HasLdapFilter)
             {
@@ -93,6 +109,16 @@ namespace AD.Api.Core.Ldap
                 SortRequestControl control = new(this.SortProperty, _descOrder.Contains(this.SortDirection));
                 request.Controls.Add(control);
             }
+        }
+
+        public void Dissipate()
+        {
+            this.SearchRequest = null!;
+        }
+
+        public void Rehydrate(HttpContext context)
+        {
+            this.SearchRequest = context.RequestServices.GetRequiredService<IPooledItem<LdapSearchRequest>>();
         }
 
         public static implicit operator SR(SearchParameters parameters)

@@ -45,6 +45,10 @@ namespace AD.Api.Core.Ldap.Controls
         {
             action(state, _control);
         }
+        public TValue GetControlValue<TValue>(Func<T, TValue> getFunc)
+        {
+            return getFunc(_control);
+        }
         public override byte[] GetValue()
         {
             if (!this.AddToRequest)

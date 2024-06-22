@@ -3,6 +3,7 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Reflection;
 using AD.Api.Serialization.Json;
+using AD.Api.Statics;
 using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -35,6 +36,9 @@ namespace AD.Api.Core.Serialization
         public bool AddResultCode { get; set; } = true;
         
         public int Count { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public Guid? ContinueKey { get; set; }
+
         public IEnumerable Data
         {
             [DebuggerStepThrough]
@@ -53,7 +57,7 @@ namespace AD.Api.Core.Serialization
         [MemberNotNullWhen(true, nameof(_array))]
         internal bool NeedsDisposal => _needsDisposal;
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? NextPageUrl { get; private set; }
+        public string? NextPageUrl { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public JsonSerializerOptions Options { get; }
 
@@ -91,21 +95,14 @@ namespace AD.Api.Core.Serialization
                 : StatusCodes.Status200OK;
         }
 
-        public void SetCookie(HttpContext httpContext, byte[] cookie)
+        public void SetCookie(HttpContext httpContext, in Guid cookie)
         {
-            ReadOnlySpan<char> path = httpContext.Request.GetEncodedPathAndQuery();
-            ReadOnlySpan<char> base64Cookie = WebUtility.UrlEncode(Convert.ToBase64String(cookie));
-            SpanStringBuilder builder = new(stackalloc char[path.Length + base64Cookie.Length + 8]);
+            this.ContinueKey = cookie;
 
-            int index = path.IndexOf("cookie=", StringComparison.OrdinalIgnoreCase);
-            if (index >= 0)
-            {
-                path = path.Slice(0, index);
-            }
+            SpanStringBuilder builder = new(stackalloc char[12 + LengthConstants.GUID_FORM_D]);
 
-            builder = builder.Append(path)
-                             .Append("&cookie=")
-                             .Append(base64Cookie);
+            builder = builder.Append("/search?continueKey=")
+                             .Append(cookie, LengthConstants.GUID_FORM_D);
 
             this.NextPageUrl = builder.Build();
         }

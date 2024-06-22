@@ -79,6 +79,7 @@ builder.Services
          .Register<UserAccountControl>()
          .Register<WellKnownObjectValue>();
     })
+    .AddMemoryCache()
     .Configure<RouteOptions>(options =>
     {
         options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));

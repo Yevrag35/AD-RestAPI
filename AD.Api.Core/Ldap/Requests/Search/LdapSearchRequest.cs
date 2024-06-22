@@ -130,6 +130,29 @@ namespace AD.Api.Core.Ldap
             _hasDefaults = true;
         }
 
+        //public void CopyTo(LdapSearchRequest other)
+        //{
+        //    ArgumentNullException.ThrowIfNull(other);
+        //    other._request.Attributes.Clear();
+        //    for (int i = 0; i < _request.Attributes.Count; i++)
+        //    {
+        //        _ = other._request.Attributes.Add(_request.Attributes[i]);
+        //    }
+
+        //    other._pageSize = _pageSize;
+        //    other.Filter = this.Filter;
+        //    other.SizeLimit = this.SizeLimit;
+        //    other.SearchBase = this.SearchBase;
+        //    other._hasDefaults = _hasDefaults;
+        //    other._requestId = _requestId;
+        //    other._pageControl.AddToRequest = _pageControl.AddToRequest;
+        //    other._pageControl.ChangeState(this, (s, c) =>
+        //    {
+        //        c.PageSize = s._pageSize;
+        //        c.Cookie = s._pageControl.GetControlValue(x => x.Cookie);
+        //    });
+        //}
+
         public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
         {
             if (attributeString.IsWhiteSpace())
@@ -251,15 +274,18 @@ namespace AD.Api.Core.Ldap
             return _request;
         }
 
-        public void SetCookie(int? pageSize, string? cookie)
+        public byte[] GetCookie()
+        {
+            return _pageControl.GetControlValue(x => x.Cookie);
+        }
+        public void SetCookie(int? pageSize, byte[] cookie)
         {
             if (pageSize.HasValue)
             {
                 this.PageSize = pageSize.Value;
-                if (!string.IsNullOrWhiteSpace(cookie))
+                if (cookie.Length > 0)
                 {
-                    byte[] cookieBytes = Convert.FromBase64String(cookie);
-                    _pageControl.ChangeState(cookieBytes, (bytes, control) => control.Cookie = bytes);
+                    _pageControl.ChangeState(cookie, (bytes, control) => control.Cookie = bytes);
                 }
             }
         }
