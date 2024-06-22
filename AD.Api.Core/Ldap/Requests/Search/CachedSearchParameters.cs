@@ -1,9 +1,12 @@
+using System.DirectoryServices.Protocols;
+
 namespace AD.Api.Core.Ldap.Requests.Search
 {
     public sealed class CachedSearchParameters : SearchParameters
     {
         public byte[] CookieBytes { get; set; }
         public Guid ContinueKey { get; set; }
+        public DirectoryControl[] CopiedControls { get; set; }
 
         [SetsRequiredMembers]
         public CachedSearchParameters(SearchParameters fromOther, byte[] cookie)
@@ -19,6 +22,8 @@ namespace AD.Api.Core.Ldap.Requests.Search
             this.SortProperty = fromOther.SortProperty;
             this.SearchRequest = fromOther.SearchRequest;
             this.BackingFilter = fromOther.BackingFilter;
+
+
         }
 
         public override void ApplyParameters(ISearchFilter? searchFilter)

@@ -36,8 +36,9 @@ namespace AD.Api.Core.Serialization
         public bool AddResultCode { get; set; } = true;
         
         public int Count { get; set; }
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public Guid? ContinueKey { get; set; }
+
+        //[JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        //public Guid? ContinueKey { get; set; }
 
         public IEnumerable Data
         {
@@ -56,8 +57,10 @@ namespace AD.Api.Core.Serialization
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         [MemberNotNullWhen(true, nameof(_array))]
         internal bool NeedsDisposal => _needsDisposal;
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? NextPageUrl { get; set; }
+
+        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        //public string? NextPageUrl { get; set; }
+
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public JsonSerializerOptions Options { get; }
 
@@ -95,17 +98,17 @@ namespace AD.Api.Core.Serialization
                 : StatusCodes.Status200OK;
         }
 
-        public void SetCookie(HttpContext httpContext, in Guid cookie)
-        {
-            this.ContinueKey = cookie;
+        //public void SetCookie(HttpContext httpContext, in Guid cookie)
+        //{
+        //    this.ContinueKey = cookie;
 
-            SpanStringBuilder builder = new(stackalloc char[12 + LengthConstants.GUID_FORM_D]);
+        //    SpanStringBuilder builder = new(stackalloc char[12 + LengthConstants.GUID_FORM_D]);
 
-            builder = builder.Append("/search?continueKey=")
-                             .Append(cookie, LengthConstants.GUID_FORM_D);
+        //    builder = builder.Append("/search?continueKey=")
+        //                     .Append(cookie, LengthConstants.GUID_FORM_D);
 
-            this.NextPageUrl = builder.Build();
-        }
+        //    this.NextPageUrl = builder.Build();
+        //}
         public void SetData<T>(IReadOnlyCollection<T> collection)
         {
             _needsDisposal = false;

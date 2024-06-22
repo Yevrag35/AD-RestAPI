@@ -83,10 +83,10 @@ namespace AD.Api.Core.Ldap
                 request.Scope = this.Scope.Value;
             }
 
-            if (this.PageSize.HasValue)
-            {
-                this.SearchRequest.Value.PageSize = this.PageSize.Value;
-            }
+            //if (this.PageSize.HasValue)
+            //{
+            //    this.SearchRequest.Value.PageSize = this.PageSize.Value;
+            //}
 
             if (this.SizeLimit.HasValue)
             {

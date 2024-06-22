@@ -1,5 +1,4 @@
 ﻿using AD.Api.Core.Ldap;
-using AD.Api.Core.Ldap.Requests.Search;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Serialization;
 using AD.Api.Pooling;
@@ -75,48 +74,48 @@ namespace AD.Api.Controllers.Search
 
             results.Value.AddRange(searchResponse.Entries);
             response.SetData(searchResponse, results.Value);
-            if (searchResponse.Controls.Length > 0)
-            {
-                PageResultResponseControl? control = searchResponse.Controls
-                    .OfType<PageResultResponseControl>()
-                    .FirstOrDefault();
+            //if (searchResponse.Controls.Length > 0)
+            //{
+            //    PageResultResponseControl? control = searchResponse.Controls
+            //        .OfType<PageResultResponseControl>()
+            //        .FirstOrDefault();
 
-                if (control is not null)
-                {
-                    var pagingSvc = this.HttpContext.RequestServices.GetRequiredService<ISearchPagingService>();
-                    if (control.Cookie.Length <= 0)
-                    {
-                        response.ContinueKey = null;
-                        response.NextPageUrl = string.Empty;    // Show the empty URL
-                    }
-                    else
-                    {
-                        Guid cacheKey = pagingSvc.AddRequest(parameters, control.Cookie);
-                        response.SetCookie(this.HttpContext, in cacheKey);
-                    }
-                }
-            }
+            //    if (control is not null)
+            //    {
+            //        var pagingSvc = this.HttpContext.RequestServices.GetRequiredService<ISearchPagingService>();
+            //        if (control.Cookie.Length <= 0)
+            //        {
+            //            response.ContinueKey = null;
+            //            response.NextPageUrl = string.Empty;    // Show the empty URL
+            //        }
+            //        else
+            //        {
+            //            Guid cacheKey = pagingSvc.AddRequest(parameters, control.Cookie);
+            //            response.SetCookie(this.HttpContext, in cacheKey);
+            //        }
+            //    }
+            //}
 
             return response;
         }
 
-        [HttpGet]
-        public IActionResult ContinueSearch(
-            [FromQuery] Guid continueKey,
-            [FromServices] CollectionResponse response,
-            [FromServices] ISearchPagingService pagingSvc,
-            [FromServices] IPooledItem<ResultEntryCollection> results)
-        {
-            if (!pagingSvc.TryGetRequest(continueKey, this.HttpContext, out CachedSearchParameters? parameters))
-            {
-                return this.BadRequest(new
-                {
-                    Message = "Bad continue key",
-                });
-            }
+        //[HttpGet]
+        //public IActionResult ContinueSearch(
+        //    [FromQuery] Guid continueKey,
+        //    [FromServices] CollectionResponse response,
+        //    [FromServices] ISearchPagingService pagingSvc,
+        //    [FromServices] IPooledItem<ResultEntryCollection> results)
+        //{
+        //    if (!pagingSvc.TryGetRequest(continueKey, this.HttpContext, out CachedSearchParameters? parameters))
+        //    {
+        //        return this.BadRequest(new
+        //        {
+        //            Message = "Bad continue key",
+        //        });
+        //    }
 
-            return this.SearchObjects(null!, parameters, response, results);
-        }
+        //    return this.SearchObjects(null!, parameters, response, results);
+        //}
 
         //[HttpPost]
         //[ProducesResponseType(200)]

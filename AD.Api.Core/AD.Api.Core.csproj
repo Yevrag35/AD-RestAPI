@@ -5,6 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Ldap\Requests\SearchPagingService.cs" />
+    <Compile Remove="Ldap\Requests\Search\CachedSearchParameters.cs" />
+  </ItemGroup>
 	
 	<ItemGroup>
 		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
@@ -12,6 +17,11 @@
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Ldap\Requests\SearchPagingService.cs" />
+	  <None Include="Ldap\Requests\Search\CachedSearchParameters.cs" />
 	</ItemGroup>
 	
 	<ItemGroup>
