@@ -64,6 +64,19 @@ namespace AD.Api.Components
                 : f1(state, this.AsT1);
         }
 
+        public bool TryGetT0([NotNullWhen(true)] out T0? t0, [NotNullWhen(false)] out T1? t1)
+        {
+            t0 = this.AsT0;
+            t1 = this.AsT1;
+            return this.IsT0;
+        }
+        public bool TryGetT1([NotNullWhen(true)] out T1? t1, [NotNullWhen(false)] out T0? t0)
+        {
+            t0 = this.AsT0;
+            t1 = this.AsT1;
+            return this.IsT1;
+        }
+
         public static implicit operator OneOf<T0, T1>(T0 item) => new(item);
         public static implicit operator OneOf<T0, T1>(T1 item) => new(item);
     }

@@ -1,3 +1,4 @@
+using AD.Api.Attributes;
 using System.Collections.Frozen;
 
 namespace AD.Api.Statics
@@ -5,6 +6,7 @@ namespace AD.Api.Statics
     /// <summary>
     /// A <see langword="static"/> class containing constants for various maximum character lengths of data types.
     /// </summary>
+    [StaticConstantClass]
     public static class LengthConstants
     {
         // NUMERICAL LENGTHS

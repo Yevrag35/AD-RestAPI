@@ -88,6 +88,15 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The domain &apos;{0}&apos; has not been registered..
+        /// </summary>
+        public static string Response_DomainNotFound {
+            get {
+                return ResourceManager.GetString("Response_DomainNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ???.
         /// </summary>
         public static string SearchDomain_Err_NoDefault {

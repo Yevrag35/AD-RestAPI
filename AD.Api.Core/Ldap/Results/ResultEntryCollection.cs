@@ -4,7 +4,7 @@ using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    public sealed class ResultEntryCollection : IEnumerable<ResultEntry>, IResettable
+    public sealed class ResultEntryCollection : IEnumerable<ResultEntry>, IResettable, ISearchResultEntry
     {
         private readonly List<ResultEntry> _entries;
         private readonly ResultEntryPool _pool;
@@ -72,6 +72,22 @@ namespace AD.Api.Core.Ldap.Results
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+
+        public bool TryApplyResponse(string? domain, [NotNullWhen(true)] SearchResponse? response)
+        {
+            if (response is null)
+            {
+                return false;
+            }
+
+            this.Domain = domain ?? string.Empty;
+            if (response.Entries.Count > 0)
+            {
+                this.AddRange(response.Entries);
+            }
+
+            return true;
         }
     }
 }

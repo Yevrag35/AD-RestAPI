@@ -1,5 +1,11 @@
-﻿namespace AD.Api.Statics
+﻿using AD.Api.Attributes;
+
+namespace AD.Api.Statics
 {
+    /// <summary>
+    /// A <see langword="static"/> constant class for the format strings <see cref="Guid"/> structs.
+    /// </summary>
+    [StaticConstantClass]
     public static class GuidConstants
     {
         public const string B_FORMAT = "B";

@@ -13,12 +13,12 @@ namespace AD.Api.Controllers.Users
     [ApiController]
     public class UserController : ControllerBase
     {
-        public IConnectionService Connections { get; }
+        public IRequestService Requests { get; }
         public ILdapFilterService Filters { get; }
 
-        public UserController(IConnectionService connectionService, ILdapFilterService filters)
+        public UserController(IRequestService requestSvc, ILdapFilterService filters)
         {
-            this.Connections = connectionService;
+            this.Requests = requestSvc;
             this.Filters = filters;
         }
 
@@ -29,7 +29,6 @@ namespace AD.Api.Controllers.Users
             [FromQuery] SearchParameters parameters,
             [FromRouteSid] SidString sid)
         {
-            LdapConnection connection = parameters.ApplyConnection(this.Connections);
             SpanStringBuilder builder = new(stackalloc char[SidString.MaxSidStringLength + 44]);
             builder = builder.Append(['(', '&'])
                              .Append("(objectSid=")
@@ -45,19 +44,27 @@ namespace AD.Api.Controllers.Users
             SearchFilterLite searchFilter = SearchFilterLite.Create(builder.Build(), FilteredRequestType.User);
             parameters.ApplyParameters(searchFilter);
 
-            var response = (SearchResponse)connection.SendRequest(parameters);
-            if (response.ResultCode != ResultCode.Success || response.Entries.Count > 1)
-            {
-                return this.BadRequest(new
-                {
-                    Result = response.ResultCode,
-                    ResultCode = (int)response.ResultCode,
-                    Message = response.ErrorMessage ?? "More than one entry was found.",
-                });
-            }
+            return this.Requests.SendRequestSingle(parameters, this.HttpContext.RequestServices);
 
-            result.Value.AddResult(parameters.Domain, response.Entries[0]);
-            return this.Ok(result.Value);
+            //var response = (SearchResponse)connection.SendRequest(parameters);
+            //if (response.ResultCode != ResultCode.Success || response.Entries.Count != 1)
+            //{
+            //    string msg = string.IsNullOrEmpty(response.ErrorMessage)
+            //        ? response.Entries.Count == 0
+            //            ? "No entries were found."
+            //            : response.Entries.Count > 1
+            //                ? 
+
+            //    return this.BadRequest(new
+            //    {
+            //        Result = response.ResultCode,
+            //        ResultCode = (int)response.ResultCode,
+            //        Message = response.ErrorMessage ?? "More than one entry was found.",
+            //    });
+            //}
+
+            //result.Value.AddResult(parameters.Domain, response.Entries[0]);
+            //return this.Ok(result.Value);
         }
     }
 }

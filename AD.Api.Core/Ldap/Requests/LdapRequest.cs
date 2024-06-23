@@ -36,6 +36,11 @@ namespace AD.Api.Core.Ldap
         /// </summary>
         /// 
         protected abstract void ResetCore();
+
+        public static implicit operator DirectoryRequest(LdapRequest request)
+        {
+            return request.BackingRequest;
+        }
     }
 }
 

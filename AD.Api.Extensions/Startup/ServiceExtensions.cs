@@ -6,6 +6,7 @@ using AD.Api.Reflection;
 using AD.Api.Startup.Exceptions;
 using AD.Api.Startup.Services;
 using AD.Api.Startup.Services.Internal;
+using AD.Api.Attributes;
 
 namespace AD.Api.Startup
 {
@@ -49,7 +50,7 @@ namespace AD.Api.Startup
         /// <exception cref="AdApiStartupException"></exception>
         private static void AddResolvedServicesFromAssembly(Assembly assembly, in ServiceResolutionContext context)
         {
-            foreach (Type type in GetResolvableTypes(assembly, context.Exclusions))
+            foreach (Type type in GetResolvableTypes(assembly, context))
             {
                 if (!type.IsInterface && type.IsDefined(typeof(DynamicDependencyRegistrationAttribute), inherit: false))
                 {
@@ -144,12 +145,17 @@ namespace AD.Api.Startup
                 throw new AdApiStartupException(type, Errors.Exception_InvalidMethodParameters);
             }
         }
-        private static IEnumerable<Type> GetResolvableTypes(Assembly assembly, IServiceTypeExclusions exclusions)
+        private static IEnumerable<Type> GetResolvableTypes(Assembly assembly, ServiceResolutionContext context)
         {
-            return assembly.GetTypes()
+            Type mustHave = context.MustHaveAttribute;
+            IServiceTypeExclusions exclusions = context.Exclusions;
+
+            Type[] types = assembly.GetTypes();
+
+            return types
                 .Where(x => IsProperType(x)
                             &&
-                            x.IsDefined(typeof(AutomaticDependencyInjectionAttribute), inherit: false)
+                            x.IsDefined(mustHave)
                             &&
                             !exclusions.IsExcluded(x));
         }

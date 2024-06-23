@@ -1,3 +1,4 @@
+using AD.Api.Attributes.Services;
 using AD.Api.Startup.Services;
 
 namespace AD.Api.Startup
@@ -12,9 +13,11 @@ namespace AD.Api.Startup
             internal readonly IConfiguration Configuration;
             internal readonly IServiceTypeExclusions Exclusions;
             internal readonly IServiceCollection Services;
+            internal readonly Type MustHaveAttribute;
 
             internal ServiceResolutionContext(IServiceCollection services, IConfiguration configuration, in IServiceTypeExclusions exclusions)
             {
+                MustHaveAttribute = typeof(AutomaticDependencyInjectionAttribute);
                 Services = services;
                 Configuration = configuration;
                 Exclusions = exclusions;

@@ -126,6 +126,9 @@
   <data name="OperationResult_Success" xml:space="preserve">
     <value>The operation result was successful</value>
   </data>
+  <data name="Response_DomainNotFound" xml:space="preserve">
+    <value>The domain '{0}' has not been registered.</value>
+  </data>
   <data name="SearchDomain_Err_NoDefault" xml:space="preserve">
     <value>???</value>
   </data>

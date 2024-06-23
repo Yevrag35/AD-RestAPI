@@ -2,29 +2,21 @@ using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Reflection;
-using AD.Api.Serialization.Json;
-using AD.Api.Statics;
-using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Buffers;
 using System.Collections;
 using System.DirectoryServices.Protocols;
-using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AD.Api.Core.Serialization
+namespace AD.Api.Core.Web
 {
     [DependencyRegistration(Lifetime = ServiceLifetime.Scoped)]
     [JsonConverter(typeof(CollectionResponseConverter))]
     public sealed class CollectionResponse : IActionResult, IDisposable
     {
-        public const string JsonContentType = "application/json; charset=utf-8";
-
         private Array? _array;
         private bool _disposed;
         private readonly ArrayPoolReturnMethodCache _methodCache;
@@ -34,7 +26,7 @@ namespace AD.Api.Core.Serialization
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool AddResultCode { get; set; } = true;
-        
+
         public int Count { get; set; }
 
         //[JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -66,7 +58,7 @@ namespace AD.Api.Core.Serialization
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Enum? Result { get; set; }
-        
+
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public int StatusCode { get; set; } = StatusCodes.Status200OK;
 
@@ -82,10 +74,10 @@ namespace AD.Api.Core.Serialization
         {
             Debug.Assert(!_needsDisposal || !_disposed);
             HttpResponse response = context.HttpContext.Response;
-            response.ContentType = JsonContentType;
+            response.ContentType = JsonConstants.ContentTypeWithCharset;
             response.StatusCode = this.GetStatusCode();
 
-            await JsonSerializer.SerializeAsync(response.Body, this, this.Options, 
+            await JsonSerializer.SerializeAsync(response.Body, this, this.Options,
                 context.HttpContext.RequestAborted)
                 .ConfigureAwait(false);
         }
@@ -115,6 +107,17 @@ namespace AD.Api.Core.Serialization
             this.Data = collection;
             this.Count = collection.Count;
         }
+        public void SetData(SearchResponse response, ISearchResultEntry resultEntries)
+        {
+            if (resultEntries is ResultEntryCollection collection)
+            {
+                this.SetData(response, collection: collection);
+                return;
+            }
+
+            this.SetData(Enumerable.Repeat(resultEntries, 1), 1);
+        }
+
         public void SetData(DirectoryResponse response, ResultEntryCollection collection)
         {
             _needsDisposal = false;
@@ -183,6 +186,6 @@ namespace AD.Api.Core.Serialization
         }
 
         #endregion
-}
     }
+}
 

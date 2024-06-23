@@ -5,7 +5,8 @@ using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    public sealed class ResultEntry : IReadOnlyCollection<KeyValuePair<string, object>>, IResettable
+    [DebuggerDisplay(@"Count = {Count} ({LeaseId})")]
+    public sealed class ResultEntry : IReadOnlyCollection<KeyValuePair<string, object>>, IResettable, ISearchResultEntry
     {
         private readonly SortedDictionary<string, object> _attributes;
         private readonly IAttributeConverter _converter;
@@ -31,6 +32,16 @@ namespace AD.Api.Core.Ldap.Results
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+        public bool TryApplyResponse(string? domain, [NotNullWhen(true)] SearchResponse? response)
+        {
+            if (response is null || response.Entries.Count != 1)
+            {
+                return false;
+            }
+
+            this.AddResult(domain ?? string.Empty, response.Entries[0]);
+            return true;
         }
 
         public bool TryReset()

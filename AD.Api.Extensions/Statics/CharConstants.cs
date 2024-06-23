@@ -1,5 +1,11 @@
+using AD.Api.Attributes;
+
 namespace AD.Api.Statics
 {
+    /// <summary>
+    /// A <see langword="static"/> class for <see langword="char"/> constants.
+    /// </summary>
+    [StaticConstantClass]
     public static class CharConstants
     {
         public const char AMP = '&';

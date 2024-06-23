@@ -1,6 +1,8 @@
+using AD.Api.Components;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Collections.Frozen;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;
@@ -8,21 +10,12 @@ using SR = System.DirectoryServices.Protocols.SearchRequest;
 
 namespace AD.Api.Core.Ldap
 {
-    public class SearchParameters : IValidatableObject
+    public class SearchParameters : RequestParameters<LdapSearchRequest, SearchResponse>, IValidatableObject
     {
         private static readonly FrozenSet<string> _descOrder =
             FrozenSet.ToFrozenSet(["desc", "descending", "1"], StringComparer.OrdinalIgnoreCase);
 
-        private string? _domain;
-
         internal ISearchFilter? BackingFilter { get; set; }
-
-        [FromQuery(Name = "domain")]
-        public string? Domain
-        {
-            get => _domain;
-            set => _domain = value;
-        }
 
         [FromServices]
         public required ILdapFilterService FilterSvc { get; init; }
@@ -50,14 +43,8 @@ namespace AD.Api.Core.Ldap
 
         [FromServices]
         public required IPooledItem<LdapSearchRequest> SearchRequest { get; set; }
-
-        [MemberNotNull(nameof(Domain))]
-        public LdapConnection ApplyConnection(IConnectionService connectionService)
-        {
-#pragma warning disable CS8774 // Member must have a non-null value when exiting.
-            return this.SearchRequest.Value.ApplyConnection(ref _domain, connectionService);
-#pragma warning restore CS8774 // Member must have a non-null value when exiting.
-        }
+        [BindNever]
+        public override LdapSearchRequest Request => this.SearchRequest.Value;
 
         public virtual void ApplyParameters(ISearchFilter? searchFilter)
         {

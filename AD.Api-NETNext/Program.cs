@@ -21,6 +21,7 @@ Referencer.LoadAll((in Referencer referer) =>
 {
     referer
         .Reference<IConnectionService>()
+        .Reference<IRequestService>()
         .Reference<UnsafeDictionary<int>>();
 });
 
