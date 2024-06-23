@@ -1,4 +1,3 @@
-using AD.Api.Core.Settings;
 using AD.Api.Startup.Exceptions;
 using System.Collections.Concurrent;
 using System.DirectoryServices;
@@ -17,7 +16,8 @@ namespace AD.Api.Core.Ldap
             : this(FromForest(forest, isDefault, connectionName), connectionName)
         {
         }
-        public NegotiateContext(RegisteredDomain domain, string connectionName) : base(domain, connectionName)
+        public NegotiateContext(RegisteredDomain domain, string connectionName)
+            : base(domain, connectionName)
         {
             _dirContexts = new(Environment.ProcessorCount, 1);
             bool added = _dirContexts.TryAdd(DirectoryContextType.Domain, new(DirectoryContextType.Domain, domain.DomainName));

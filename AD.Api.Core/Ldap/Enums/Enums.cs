@@ -235,6 +235,9 @@ namespace AD.Api.Core.Ldap
 
     public enum WellKnownObjectValue
     {
+        [BackendValue("A9D1CA15768811D1ADED00C04FD8D5CD")]
+        Users,
+
         [BackendValue("AA312825768811D1ADED00C04FD8D5CD")]
         Computers,
 
@@ -261,9 +264,6 @@ namespace AD.Api.Core.Ldap
 
         [BackendValue("AB1D30F3768811D1ADED00C04FD8D5CD")]
         Systems,
-
-        [BackendValue("A9D1CA15768811D1ADED00C04FD8D5CD")]
-        Users,
 
         [BackendValue("1EB93889E40C45DF9F0C64D23BBB6237")]
         ManagedServiceAccounts

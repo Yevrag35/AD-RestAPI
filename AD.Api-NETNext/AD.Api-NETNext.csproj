@@ -47,6 +47,14 @@
 		<None Include="**\Legacy\**\*.cs" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="config.nlog" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="config.nlog">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+	<ItemGroup>
 	  <None Include="Extensions\InjectServicesExtension.cs" />
 	</ItemGroup>
 
@@ -69,6 +77,7 @@
 	<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageReference Include="Microsoft.Identity.Web" Version="2.19.1" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
@@ -79,5 +88,7 @@
     <ProjectReference Include="..\AD.Api.Core\AD.Api.Core.csproj" />
     <ProjectReference Include="..\AD.Api.Extensions\AD.Api.Extensions.csproj" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="https://json.schemastore.org/appsettings.json" /></VisualStudio></ProjectExtensions>
 
 </Project>

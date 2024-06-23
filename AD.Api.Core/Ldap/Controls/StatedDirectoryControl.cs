@@ -61,7 +61,10 @@ namespace AD.Api.Core.Ldap.Controls
 
         public void Reset()
         {
-            _reset?.Invoke(_control);
+            if (this.HasReset)
+            {
+                _reset(_control);
+            }
         }
     }
 }

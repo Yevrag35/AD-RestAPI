@@ -1,5 +1,8 @@
+using AD.Api.Attributes;
+
 namespace AD.Api.Core.Ldap
 {
+    [StaticConstantClass]
     public static class RootDSEConstants
     {
         public const string CONFIGURATION_NAMING_CONTEXT = "configurationNamingContext";

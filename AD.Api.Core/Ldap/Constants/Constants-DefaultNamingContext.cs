@@ -1,5 +1,8 @@
+using AD.Api.Attributes;
+
 namespace AD.Api.Core.Ldap
 {
+    [StaticConstantClass]
     public static class NamingContextConstants
     {
         public const string AUDITING_POLICY = "auditingPolicy";

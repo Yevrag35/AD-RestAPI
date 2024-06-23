@@ -19,6 +19,7 @@ namespace AD.Api.Controllers.Search
         [ProducesResponseType(400)]
         public IActionResult SearchObjects(
             [FromBody] SearchFilterBody body,
+            [FromServices] WellKnownObjectDictionary wellKnowns,
             [FromQuery] SearchParameters parameters)
         {
             parameters.ApplyParameters(body);
