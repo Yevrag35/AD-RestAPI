@@ -44,7 +44,7 @@ namespace AD.Api.Controllers.Users
             SearchFilterLite searchFilter = SearchFilterLite.Create(builder.Build(), FilteredRequestType.User);
             parameters.ApplyParameters(searchFilter);
 
-            return this.Requests.SendRequestSingle(parameters, this.HttpContext.RequestServices);
+            return this.Requests.FindOne(parameters, this.HttpContext.RequestServices);
 
             //var response = (SearchResponse)connection.SendRequest(parameters);
             //if (response.ResultCode != ResultCode.Success || response.Entries.Count != 1)

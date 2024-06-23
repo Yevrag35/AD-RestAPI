@@ -17,10 +17,10 @@ namespace AD.Api.Core.Ldap
         OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters);
         bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
 
-        IActionResult SendRequestMulti<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+        IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where TResponse : SearchResponse
             where T : LdapRequest;
-        IActionResult SendRequestSingle<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+        IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where T : LdapRequest
             where TResponse : SearchResponse;
     }
@@ -52,7 +52,7 @@ namespace AD.Api.Core.Ldap
         }
 
         // SEARCH REQUESTS
-        public IActionResult SendRequestMulti<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+        public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where TResponse : SearchResponse
             where T : LdapRequest
         {
@@ -66,7 +66,7 @@ namespace AD.Api.Core.Ldap
                 return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, connection, requestServices, isMultiRequest: true);
             }
         }
-        public IActionResult SendRequestSingle<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+        public IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where TResponse : SearchResponse
             where T : LdapRequest
         {

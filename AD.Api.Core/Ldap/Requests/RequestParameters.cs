@@ -1,14 +1,7 @@
 using AD.Api.Components;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System;
-using System.Collections.Generic;
-using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AD.Api.Core.Ldap
 {
@@ -22,14 +15,19 @@ namespace AD.Api.Core.Ldap
         {
             string domain = this.Domain ?? string.Empty;
 
-            OneOf<LdapConnection, IActionResult> oneOf = !connectionService.RegisteredConnections
-                .TryGetValue(domain, out ConnectionContext? context)
-                    ? new DomainNotFoundResult(this.Domain)
-                    : context.CreateConnection();
+            if (!connectionService.RegisteredConnections.TryGetValue(domain, out ConnectionContext? context))
+            {
+                string? origDom = this.Domain;
+                this.Domain = domain;
+                return new DomainNotFoundResult(origDom);
+            }
 
             this.Domain = domain;
-            return oneOf;
+            this.OnApplyingConnection(context);
+            return context.CreateConnection();
         }
+
+        protected abstract void OnApplyingConnection(ConnectionContext context);
     }
 
     public abstract class RequestParameters<T, TResponse> : RequestParameters

@@ -22,7 +22,7 @@ namespace AD.Api.Controllers.Search
             [FromQuery] SearchParameters parameters)
         {
             parameters.ApplyParameters(body);
-            return this.Requests.SendRequestMulti(parameters, this.HttpContext.RequestServices);
+            return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
 
             //SearchResponse searchResponse;
             //try
@@ -107,7 +107,7 @@ namespace AD.Api.Controllers.Search
 
             body.LdapFilter = $"(&(objectClass=user)(objectCategory=person){body.LdapFilter})";
             parameters.ApplyParameters(body);
-            return this.Requests.SendRequestMulti(parameters, this.HttpContext.RequestServices);
+            return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
             //LdapConnection connection = parameters.ApplyConnection(this.Connections);
 
             //var searchResponse = (SearchResponse)connection.SendRequest(parameters);

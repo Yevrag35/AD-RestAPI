@@ -103,6 +103,10 @@ namespace AD.Api.Core.Ldap
             this.SearchRequest = null!;
         }
 
+        protected override void OnApplyingConnection(ConnectionContext context)
+        {
+            this.SearchRequest.Value.ApplyContext(context);
+        }
         public void Rehydrate(HttpContext context)
         {
             this.SearchRequest = context.RequestServices.GetRequiredService<IPooledItem<LdapSearchRequest>>();

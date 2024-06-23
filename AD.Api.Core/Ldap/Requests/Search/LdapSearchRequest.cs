@@ -193,17 +193,9 @@ namespace AD.Api.Core.Ldap
 
             ArrayPool<string>.Shared.Return(array);
         }
-        public LdapConnection ApplyConnection([NotNull] ref string? domain, IConnectionService connectionService)
+        protected override void OnApplyingContext(ConnectionContext context)
         {
-            domain ??= string.Empty;
-
-            if (!connectionService.RegisteredConnections.TryGetValue(domain, out ConnectionContext? context))
-            {
-                throw new ArgumentException("Domain not registered.");
-            }
-
             this.SearchBase = context.DefaultNamingContext;
-            return context.CreateConnection();
         }
         private void RemoveDefaultAttributes()
         {

@@ -24,6 +24,11 @@ namespace AD.Api.Core.Ldap
         {
             return this.BackingRequest.RequestId;
         }
+        public void ApplyContext(ConnectionContext context)
+        {
+            this.OnApplyingContext(context);
+        }
+        protected abstract void OnApplyingContext(ConnectionContext context);
         /// <inheritdoc cref="IResettable.TryReset" path="/*[not(self::returns)]"/>
         public void Reset()
         {
