@@ -1,14 +1,20 @@
+using System.DirectoryServices.Protocols;
 using System.Runtime.InteropServices;
 
 namespace AD.Api.Core.Ldap
 {
     public interface ISearchFilter
     {
-        [MemberNotNullWhen(true, nameof(LdapFilter))]
+        [MemberNotNullWhen(true, nameof(Filter))]
         bool HasLdapFilter { get; }
-        string? LdapFilter { get; }
+        string? Filter { get; }
+        string[]? Properties { get; }
         FilteredRequestType? RequestBaseType { get; }
+        SearchScope? Scope { get; }
         string? SearchBase { get; }
+        int? SizeLimit { get; }
+        string? SortBy { get; }
+        string? SortDirection { get; }
     }
 
     [DebuggerStepThrough]
@@ -24,11 +30,16 @@ namespace AD.Api.Core.Ldap
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly string? _searchBase;
 
-        [MemberNotNullWhen(true, nameof(LdapFilter))]
+        [MemberNotNullWhen(true, nameof(Filter))]
         public bool HasLdapFilter => _hasFilter;
-        public string? LdapFilter => _filter;
+        public string? Filter => _filter;
         public FilteredRequestType? RequestBaseType => _requestType;
         public string? SearchBase => _searchBase;
+        public string[]? Properties => null;
+        public SearchScope? Scope => null;
+        public int? SizeLimit => 1;
+        public string? SortBy => null;
+        public string? SortDirection => null;
 
         private SearchFilterLite(string? filter, FilteredRequestType? requestType, string? searchBase)
         {

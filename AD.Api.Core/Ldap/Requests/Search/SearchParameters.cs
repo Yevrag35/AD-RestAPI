@@ -23,9 +23,9 @@ namespace AD.Api.Core.Ldap
         [FromQuery(Name = "scope")]
         public SearchScope? Scope { get; set; }
 
-        [FromQuery]
-        [Range(0, int.MaxValue)]
-        public int? PageSize { get; set; }
+        //[FromQuery]
+        //[Range(0, int.MaxValue)]
+        //public int? PageSize { get; set; }
 
         [FromQuery(Name = "properties")]
         public string? Properties { get; set; }
@@ -62,10 +62,22 @@ namespace AD.Api.Core.Ldap
                 this.BackingFilter = searchFilter;
             }
 
-            this.SearchRequest.Value.AddAttributes(this.Properties, searchFilter.RequestBaseType);
+            if (searchFilter.Properties is not null)
+            {
+                this.SearchRequest.Value.AddAttributes(searchFilter.Properties, searchFilter.RequestBaseType);
+            }
+            else
+            {
+                this.SearchRequest.Value.AddAttributes(this.Properties, searchFilter.RequestBaseType);
+            }
 
             SR request = this.SearchRequest.Value.AsLdapRequest();
-            if (this.Scope.HasValue)
+            if (searchFilter.Scope.HasValue)
+            {
+                this.Scope = searchFilter.Scope;
+                request.Scope = searchFilter.Scope.Value;
+            }
+            else if (this.Scope.HasValue)
             {
                 request.Scope = this.Scope.Value;
             }
@@ -75,14 +87,19 @@ namespace AD.Api.Core.Ldap
             //    this.SearchRequest.Value.PageSize = this.PageSize.Value;
             //}
 
-            if (this.SizeLimit.HasValue)
+            if (searchFilter.SizeLimit.HasValue)
+            {
+                this.SizeLimit = searchFilter.SizeLimit;
+                this.SearchRequest.Value.SizeLimit = searchFilter.SizeLimit.Value;
+            }
+            else if (this.SizeLimit.HasValue)
             {
                 this.SearchRequest.Value.SizeLimit = this.SizeLimit.Value;
             }
 
             if (searchFilter.HasLdapFilter)
             {
-                request.Filter = searchFilter.LdapFilter;
+                request.Filter = searchFilter.Filter;
             }
 
             if (!string.IsNullOrWhiteSpace(searchFilter.SearchBase))
@@ -90,7 +107,14 @@ namespace AD.Api.Core.Ldap
                 request.DistinguishedName = searchFilter.SearchBase;
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SortProperty))
+            if (!string.IsNullOrWhiteSpace(searchFilter.SortBy))
+            {
+                this.SortProperty = searchFilter.SortBy;
+                this.SortDirection ??= searchFilter.SortDirection ?? string.Empty;
+                SortRequestControl control = new(searchFilter.SortBy, _descOrder.Contains(this.SortDirection));
+                request.Controls.Add(control);
+            }
+            else if (!string.IsNullOrWhiteSpace(this.SortProperty))
             {
                 this.SortDirection ??= string.Empty;
                 SortRequestControl control = new(this.SortProperty, _descOrder.Contains(this.SortDirection));

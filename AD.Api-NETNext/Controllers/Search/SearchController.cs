@@ -19,56 +19,10 @@ namespace AD.Api.Controllers.Search
         [ProducesResponseType(400)]
         public IActionResult SearchObjects(
             [FromBody] SearchFilterBody body,
-            [FromServices] WellKnownObjectDictionary wellKnowns,
             [FromQuery] SearchParameters parameters)
         {
             parameters.ApplyParameters(body);
             return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
-
-            //SearchResponse searchResponse;
-            //try
-            //{
-            //    searchResponse = (SearchResponse)connection.SendRequest(parameters);
-            //}
-            //catch (DirectoryException ex)
-            //{
-            //    response.Error = ex.Message;
-            //    response.AddResultCode = true;
-            //    if (ex is LdapException ldapEx)
-            //    {
-            //        response.StatusCode = StatusCodes.Status400BadRequest;
-            //        response.ErrorCode = ldapEx.ErrorCode;
-            //        response.Result = ResultCode.OperationsError;
-            //    }
-            //    else if (ex is DirectoryOperationException dirEx)
-            //    {
-            //        response.Result = dirEx.Response.ResultCode;
-            //    }
-
-            //    return response;
-            //}
-
-            //if (searchResponse.ResultCode != ResultCode.Success)
-            //{
-            //    return this.BadRequest(new
-            //    {
-            //        Result = searchResponse.ResultCode,
-            //        ResultCode = (int)searchResponse.ResultCode,
-            //        Message = searchResponse.ErrorMessage ?? "No entries were found.",
-            //    });
-            //}
-            //else if (searchResponse.Entries.Count <= 0)
-            //{
-            //    return this.Ok(new
-            //    {
-            //        Result = searchResponse.ResultCode
-            //    });
-            //}
-
-            //results.Value.AddRange(searchResponse.Entries);
-            //response.SetData(searchResponse, results.Value);
-
-            //return response;
         }
 
         //[HttpGet]
@@ -89,11 +43,6 @@ namespace AD.Api.Controllers.Search
         //    return this.SearchObjects(null!, parameters, response, results);
         //}
 
-        //[HttpPost]
-        //[ProducesResponseType(200)]
-        //[ProducesResponseType(400)]
-        //[Route("")]
-
         [HttpPost]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
@@ -102,11 +51,11 @@ namespace AD.Api.Controllers.Search
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            body.LdapFilter = body.LdapFilter[0] != '(' && body.LdapFilter[^1] != ')'
-                ? $"({body.LdapFilter})"
-                : body.LdapFilter;
+            body.Filter = body.Filter[0] != '(' && body.Filter[^1] != ')'
+                ? $"({body.Filter})"
+                : body.Filter;
 
-            body.LdapFilter = $"(&(objectClass=user)(objectCategory=person){body.LdapFilter})";
+            body.Filter = $"(&(objectClass=user)(objectCategory=person){body.Filter})";
             parameters.ApplyParameters(body);
             return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
             //LdapConnection connection = parameters.ApplyConnection(this.Connections);

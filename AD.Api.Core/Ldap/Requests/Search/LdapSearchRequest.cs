@@ -12,6 +12,8 @@ namespace AD.Api.Core.Ldap
     [DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
     public sealed class LdapSearchRequest : LdapRequest, IResettable
     {
+        private const string DEFAULTS = "defaults";
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly string _defaultRequestId = Guid.Empty.ToString();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -142,21 +144,61 @@ namespace AD.Api.Core.Ldap
 
             bool wantsDefault = false;
             char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
-            Span<char> defaults = ['d', 'e', 'f', 'a', 'u', 'l', 't', 's'];
 
             foreach (ReadOnlySpan<char> section in attributeString.SpanSplit(in separator))
             {
-                if (section.Equals(defaults.Slice(0, defaults.Length - 1), StringComparison.OrdinalIgnoreCase)
+                if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
                     ||
-                    section.Equals(defaults, StringComparison.OrdinalIgnoreCase))
+                    section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
                 {
                     wantsDefault = true;
                 }
                 else if (!section.IsWhiteSpace())
                 {
                     string s = section.ToString();
-                    _request.Attributes.Add(s);
+                    _ = _request.Attributes.Add(s);
                 }
+            }
+
+            if (!wantsDefault)
+            {
+                this.RemoveDefaultAttributes();
+            }
+            else
+            {
+                this.AddAttributesFromTypes(types);
+            }
+        }
+        public void AddAttributes(ReadOnlySpan<string> attributes, FilteredRequestType? types)
+        {
+            if (attributes.IsEmpty)
+            {
+                this.AddAttributesFromTypes(types);
+                return;
+            }
+
+            bool wantsDefault = false;
+
+            foreach (string att in attributes)
+            {
+                if (string.IsNullOrWhiteSpace(att))
+                {
+                    continue;
+                }
+
+                ReadOnlySpan<char> working = att;
+                if (working.StartsWith(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase))
+                {
+                    working = working.Slice(DEFAULTS.Length - 1);
+
+                    if (working.IsEmpty || (working.Length == 1 && char.ToUpperInvariant(working[0]) == char.ToUpperInvariant(DEFAULTS[^1])))
+                    {
+                        wantsDefault = true;
+                        continue;
+                    }
+                }
+
+                _ = _request.Attributes.Add(att);
             }
 
             if (!wantsDefault)
