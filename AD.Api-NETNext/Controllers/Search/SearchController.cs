@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Search
 {
-    [Route("search")]
     [ApiController]
     public sealed class SearchController : ControllerBase
     {
@@ -16,6 +15,7 @@ namespace AD.Api.Controllers.Search
         }
 
         [HttpPost]
+        [Route("search")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public IActionResult SearchObjects(
@@ -33,31 +33,48 @@ namespace AD.Api.Controllers.Search
         //    [FromServices] ISearchPagingService pagingSvc,
         //    [FromServices] IPooledItem<ResultEntryCollection> results)
         //{
-        //    if (!pagingSvc.TryGetRequest(continueKey, this.HttpContext, out CachedSearchParameters? parameters))
-        //    {
-        //        return this.BadRequest(new
-        //        {
-        //            Message = "Bad continue key",
-        //        });
-        //    }
-
-        //    return this.SearchObjects(null!, parameters, response, results);
         //}
 
         [HttpPost]
-        [Route("users")]
+        [Route("computers/search")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        public IActionResult SearchComputers(
+            [FromBody] SearchFilterBody body,
+            [FromQuery] SearchParameters parameters)
+        {
+            body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.Computer, true);
+            body.RequestBaseType = FilteredRequestType.Computer;
+
+            parameters.ApplyParameters(body);
+            return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
+        }
+
+        [HttpPost]
+        [Route("groups/search")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        public IActionResult SearchGroups(
+            [FromBody] SearchFilterBody body,
+            [FromQuery] SearchParameters parameters)
+        {
+            body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.Group, true);
+            body.RequestBaseType = FilteredRequestType.Group;
+
+            parameters.ApplyParameters(body);
+            return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
+        }
+
+        [HttpPost]
+        [Route("users/search")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public IActionResult SearchUsers(
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            //body.Filter = body.Filter[0] != '(' && body.Filter[^1] != ')'
-            //    ? $"({body.Filter})"
-            //    : body.Filter;
-
-            //body.Filter = $"(&(objectClass=user)(objectCategory=person){body.Filter})";
             body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.User, true);
+            body.RequestBaseType = FilteredRequestType.User;
 
             parameters.ApplyParameters(body);
             return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);

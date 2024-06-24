@@ -9,39 +9,26 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Users
 {
-    [Route("user")]
+    [Route("users")]
     [ApiController]
     public class UserController : ControllerBase
     {
         public IRequestService Requests { get; }
-        public ILdapFilterService Filters { get; }
 
-        public UserController(IRequestService requestSvc, ILdapFilterService filters)
+        public UserController(IRequestService requestSvc)
         {
             this.Requests = requestSvc;
-            this.Filters = filters;
         }
 
         [HttpGet]
         [Route("{sid:objectsid}")]
         public IActionResult GetUser(
-            [FromServices] IPooledItem<ResultEntry> result,
             [FromQuery] SearchParameters parameters,
             [FromRouteSid] SidString sid)
         {
-            SpanStringBuilder builder = new(stackalloc char[SidString.MaxSidStringLength + 44]);
-            builder = builder.Append(['(', '&'])
-                             .Append("(objectSid=")
-                             .Append(SidString.MaxSidStringLength, sid, (chars, state) =>
-                              {
-                                  state.TryFormat(chars, out int written);
-                                  return written;
-                              })
-                             .Append(')')
-                             .Append(this.Filters.GetFilter(FilteredRequestType.User, addEnclosure: false))
-                             .Append(')');
+            string filter = parameters.FilterSvc.GetFilter(sid, FilteredRequestType.User);
 
-            SearchFilterLite searchFilter = SearchFilterLite.Create(builder.Build(), FilteredRequestType.User);
+            SearchFilterLite searchFilter = SearchFilterLite.Create(filter, FilteredRequestType.User);
             parameters.ApplyParameters(searchFilter);
 
             return this.Requests.FindOne(parameters, this.HttpContext.RequestServices);

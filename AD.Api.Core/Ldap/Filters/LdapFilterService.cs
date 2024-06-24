@@ -1,7 +1,9 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
+using AD.Api.Core.Security;
 using AD.Api.Enums;
+using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap.Filters
 {
@@ -9,6 +11,8 @@ namespace AD.Api.Core.Ldap.Filters
     {
         string AddToFilter(scoped ReadOnlySpan<char> filter, FilteredRequestType types, bool addEnclosure);
         string GetFilter(FilteredRequestType types, bool addEnclosure);
+        [SupportedOSPlatform("WINDOWS")]
+        string GetFilter(SidString sidString, FilteredRequestType types);
     }
 
     [DependencyRegistration(typeof(ILdapFilterService), Lifetime = ServiceLifetime.Singleton)]
@@ -78,6 +82,19 @@ namespace AD.Api.Core.Ldap.Filters
 
             string s = writer.Build();
             return s;
+        }
+
+        [SupportedOSPlatform("WINDOWS")]
+        public string GetFilter(SidString sidString, FilteredRequestType types)
+        {
+            FilterSpanWriter writer = new(stackalloc char[256]);
+            writer = writer.And();
+
+            _ = this.GetEnumerationNumber(types, ref writer);
+            writer.Equal("objectSid"u8, sidString, SidString.MaxSidStringLength, SidString.LdapFormat);
+            writer.EndAll();
+
+            return writer.Build();
         }
         private int GetEnumerationNumber(FilteredRequestType value, ref FilterSpanWriter writer)
         {

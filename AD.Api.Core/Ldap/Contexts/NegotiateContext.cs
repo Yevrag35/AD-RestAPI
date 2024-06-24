@@ -12,12 +12,12 @@ namespace AD.Api.Core.Ldap
     {
         private readonly ConcurrentDictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
 
-        public NegotiateContext(Forest forest, bool isDefault, string connectionName)
-            : this(FromForest(forest, isDefault, connectionName), connectionName)
+        public NegotiateContext(Forest forest, bool isDefault, string connectionName, IServiceProvider services)
+            : this(FromForest(forest, isDefault, connectionName), connectionName, services)
         {
         }
-        public NegotiateContext(RegisteredDomain domain, string connectionName)
-            : base(domain, connectionName)
+        public NegotiateContext(RegisteredDomain domain, string connectionName, IServiceProvider provider)
+            : base(domain, connectionName, provider)
         {
             _dirContexts = new(Environment.ProcessorCount, 1);
             bool added = _dirContexts.TryAdd(DirectoryContextType.Domain, new(DirectoryContextType.Domain, domain.DomainName));

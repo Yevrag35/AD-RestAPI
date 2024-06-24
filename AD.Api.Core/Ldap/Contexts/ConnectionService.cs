@@ -65,7 +65,7 @@ namespace AD.Api.Core.Ldap
                 IConfigurationSection domains = configuration.GetSection("Domains");
                 IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
                 IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
-                var dict = ReadCredentialsFromConfig(domains, encSvc);
+                var dict = ReadCredentialsFromConfig(domains, encSvc, provider);
                 return new ConnectionService(dict, scopeFactory);
             });
         }
@@ -90,7 +90,7 @@ namespace AD.Api.Core.Ldap
                 throw new AdApiStartupException(typeof(ConnectionService), e);
             }
         }
-        private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService)
+        private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService, IServiceProvider provider)
         {
             Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
             ConnectionContext? defaultContext = null;
@@ -118,7 +118,7 @@ namespace AD.Api.Core.Ldap
                     var result = encryptionService.ReadCredentials(domain);
                     results.AddRange(result.Errors);
 
-                    if (TryCreateContextFromResult(domain.Key, info, result, results, out var context))
+                    if (TryCreateContextFromResult(domain.Key, info, result, results, provider, out var context))
                     {
                         SetDefaultContext(context, info, ref defaultContext);
                         _ = dict.TryAdd(domain.Key, context);
@@ -135,7 +135,7 @@ namespace AD.Api.Core.Ldap
                 }
 
                 using Forest forest = GetForest();
-                defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT);
+                defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider);
                 _ = dict.TryAdd(forest.Name, defaultContext);
                 _ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
                 using var de = forest.RootDomain.GetDirectoryEntry();
@@ -164,7 +164,7 @@ namespace AD.Api.Core.Ldap
                 defaultContext = context;
             }
         }
-        private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, [NotNullWhen(true)] out ConnectionContext? context)
+        private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, IServiceProvider provider, [NotNullWhen(true)] out ConnectionContext? context)
         {
             context = null;
             if (result.Errors.Count > 0)
@@ -181,13 +181,13 @@ namespace AD.Api.Core.Ldap
                     return false;
                 }
 
-                context = new NegotiateContext(domain, key);
+                context = new NegotiateContext(domain, key, provider);
                 return true;
             }
 
             if (result.HasCredential && OperatingSystem.IsWindows())
             {
-                context = new ChallengeContext(domain, key, result.Credential);
+                context = new ChallengeContext(domain, key, result.Credential, provider);
                 return true;
             }
 

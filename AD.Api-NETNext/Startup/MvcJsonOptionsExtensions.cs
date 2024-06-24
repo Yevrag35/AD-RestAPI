@@ -14,8 +14,8 @@ namespace AD.Api
         {
             IConfiguration config = appBuilder.Configuration;
             bool isDevelopment = appBuilder.Environment.IsDevelopment();
-            LdapEnumConverter enumConverter = ConfigureAndAddEnumConverter(appBuilder);
             SerializationSettings settings = GetSerializationSettings(builder.Services, appBuilder.Configuration);
+            LdapEnumConverter enumConverter = ConfigureAndAddEnumConverter(appBuilder, settings);
 
             return builder.AddJsonOptions(options =>
             {
@@ -36,11 +36,12 @@ namespace AD.Api
                 new ResultEntryCollectionConverter(converter),
             ]);
         }
-        private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder)
+        private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder, SerializationSettings settings)
         {
             var enumConverter = LdapEnumConverter.Create(options =>
             {
                 options.SetNamingPolicy(JsonSpanCamelCaseNamingPolicy.SpanPolicy)
+                       .SerializeFlagsAsArray(settings.WriteEnumFlagsAsArray)
                        .Exclude<GroupType>()
                        .Exclude<SamAccountType>()
                        .Exclude<UserAccountControl>();

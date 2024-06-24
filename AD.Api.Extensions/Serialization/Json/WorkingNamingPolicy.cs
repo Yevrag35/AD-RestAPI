@@ -7,6 +7,7 @@ namespace AD.Api.Serialization.Json
     public readonly ref struct WorkingNamingPolicy
     {
         readonly JsonSpanCamelCaseNamingPolicy? _spanPolicy;
+        readonly bool _usePolicy;
 
         [MemberNotNullWhen(true, nameof(Policy))]
         public readonly bool HasPolicy { get; }
@@ -14,9 +15,10 @@ namespace AD.Api.Serialization.Json
         public readonly bool IsSpanPolicy { get; }
         public readonly JsonNamingPolicy? Policy;
 
-        public WorkingNamingPolicy(JsonSerializerOptions? options)
+        public WorkingNamingPolicy(JsonSerializerOptions? options, bool useNamingPolicy = true)
         {
             JsonNamingPolicy? pol = options?.PropertyNamingPolicy;
+            _usePolicy = useNamingPolicy;
             bool hasPol = options is not null;
             if (hasPol && pol is JsonSpanCamelCaseNamingPolicy spanPolicy)
             {
@@ -31,7 +33,7 @@ namespace AD.Api.Serialization.Json
         public readonly void WritePropertyName(Utf8JsonWriter writer, string propertyName)
         {
             ArgumentException.ThrowIfNullOrEmpty(propertyName);
-            if (this.HasPolicy)
+            if (_usePolicy && this.HasPolicy)
             {
                 if (this.IsSpanPolicy)
                 {
@@ -47,7 +49,7 @@ namespace AD.Api.Serialization.Json
         public readonly void WritePropertyName(Utf8JsonWriter writer, ReadOnlySpan<char> propertyNameSpan)
         {
             EmptyStructException.ThrowIf(propertyNameSpan.IsEmpty, typeof(ReadOnlySpan<char>));
-            if (this.HasPolicy)
+            if (_usePolicy && this.HasPolicy)
             {
                 if (this.IsSpanPolicy)
                 {
@@ -64,7 +66,7 @@ namespace AD.Api.Serialization.Json
         public readonly void WritePropertyName(Utf8JsonWriter writer, ReadOnlySpan<byte> propertyName)
         {
             EmptyStructException.ThrowIf(propertyName.IsEmpty, typeof(ReadOnlySpan<byte>));
-            if (!this.HasPolicy)
+            if (!_usePolicy || !this.HasPolicy)
             {
                 writer.WritePropertyName(propertyName);
                 return;

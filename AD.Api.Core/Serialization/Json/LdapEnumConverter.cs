@@ -17,29 +17,30 @@ namespace AD.Api.Core.Serialization.Json
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
         ILdapEnumConverterOptions Exclude(Type type);
+        ILdapEnumConverterOptions SerializeFlagsAsArray(bool toggle);
         ILdapEnumConverterOptions SetNamingPolicy(JsonNamingPolicy? namingPolicy);
     }
 
-    public sealed class LdapEnumConverter : JsonConverterFactory
+    public class LdapEnumConverter : JsonConverterFactory
     {
-        private readonly FrozenSet<Type> _avoidNamingPolicy;
         private readonly JsonStringEnumConverter _defaultPolicyConverter;
         private readonly JsonStringEnumConverter _namingPolicyConverter;
+        protected FrozenSet<Type> AvoidNamingPolicy { get; }
 
-        private LdapEnumConverter(LdapEnumConverterOptions options)
+        protected LdapEnumConverter(LdapEnumConverterOptions options)
         {
-            _avoidNamingPolicy = options.Exclusions.Count > 0 ? options.Exclusions.ToFrozenSet() : FrozenSet<Type>.Empty;
+            this.AvoidNamingPolicy = options.Exclusions.Count > 0 ? options.Exclusions.ToFrozenSet() : FrozenSet<Type>.Empty;
             _namingPolicyConverter = new(options.NamingPolicy, options.AllowIntegerValues);
             _defaultPolicyConverter = new(namingPolicy: null, options.AllowIntegerValues);
         }
 
-        public override bool CanConvert(Type typeToConvert)
+        public sealed override bool CanConvert(Type typeToConvert)
         {
             return typeToConvert.IsEnum;
         }
         public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
-            return _avoidNamingPolicy.Contains(typeToConvert)
+            return this.AvoidNamingPolicy.Contains(typeToConvert)
                 ? _defaultPolicyConverter.CreateConverter(typeToConvert, options)
                 : _namingPolicyConverter.CreateConverter(typeToConvert, options);
         }
@@ -49,12 +50,15 @@ namespace AD.Api.Core.Serialization.Json
             LdapEnumConverterOptions options = new();
             configureOptions(options);
 
-            return new(options);
+            return options.FlagsAsArray
+                ? new EnumFlagConverter(options)
+                : new LdapEnumConverter(options);
         }
 
-        private sealed class LdapEnumConverterOptions : ILdapEnumConverterOptions
+        protected internal sealed class LdapEnumConverterOptions : ILdapEnumConverterOptions
         {
             internal bool AllowIntegerValues { get; private set; }
+            internal bool FlagsAsArray { get; private set; }
             internal HashSet<Type> Exclusions { get; }
             internal JsonNamingPolicy? NamingPolicy { get; private set; }
 
@@ -87,6 +91,11 @@ namespace AD.Api.Core.Serialization.Json
                 }
 
                 _ = this.Exclusions.Add(type);
+                return this;
+            }
+            public ILdapEnumConverterOptions SerializeFlagsAsArray(bool toggle)
+            {
+                this.FlagsAsArray = toggle;
                 return this;
             }
             public ILdapEnumConverterOptions SetNamingPolicy(JsonNamingPolicy? namingPolicy)

@@ -23,6 +23,9 @@ namespace AD.Api.Core.Ldap
         IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where T : LdapRequest
             where TResponse : SearchResponse;
+
+        OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
+            where TResponse : DirectoryResponse;
     }
 
     [DependencyRegistration(typeof(IRequestService), Lifetime = ServiceLifetime.Singleton)]
@@ -86,7 +89,7 @@ namespace AD.Api.Core.Ldap
             where TCollection : ISearchResultEntry
             where TResponse : SearchResponse
         {
-            var oneOf = SendForResponse<TResponse>(parameters.Request, connection);
+            var oneOf = this.SendForResponse<TResponse>(parameters.Request, connection);
             if (oneOf.TryGetT1(out IActionResult? error, out TResponse? response))
             {
                 return error;
@@ -110,7 +113,7 @@ namespace AD.Api.Core.Ldap
         }
 
         // REQUEST SENDING
-        private static OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
+        public OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
             where TResponse : DirectoryResponse
         {
             try

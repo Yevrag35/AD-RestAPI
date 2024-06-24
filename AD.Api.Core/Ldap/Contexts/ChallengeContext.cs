@@ -11,8 +11,8 @@ namespace AD.Api.Core.Ldap
         [SupportedOSPlatform("WINDOWS")]
         private readonly Dictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
 
-        public ChallengeContext(RegisteredDomain domain, string connectionName, ILdapCredential credential)
-            : base(domain, connectionName)
+        public ChallengeContext(RegisteredDomain domain, string connectionName, ILdapCredential credential, IServiceProvider services)
+            : base(domain, connectionName, services)
         {
             _credential = credential;
             if (OperatingSystem.IsWindows())

@@ -5,23 +5,25 @@ using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap
 {
-    public abstract class ConnectionContext : IEquatable<ConnectionContext>
+    public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServiceProvider
     {
         private readonly RegisteredDomain _domain;
         private readonly LdapDirectoryIdentifier _identifier;
+        private readonly IServiceProvider _provider;
         public string DefaultNamingContext => _domain.DefaultNamingContext;
         public string DomainName => _domain.DomainName;
         public bool IsDefault => _domain.IsDefault;
         public bool IsForestRoot => _domain.IsForestRoot;
         public string Name { get; }
 
-        protected ConnectionContext(RegisteredDomain domain, string connectionName)
+        protected ConnectionContext(RegisteredDomain domain, string connectionName, IServiceProvider provider)
         {
             ArgumentNullException.ThrowIfNull(domain);
             ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
             _domain = domain;
             this.Name = connectionName;
             _identifier = this.CreateIdentifier(domain);
+            _provider = provider;
         }
 
         public LdapConnection CreateConnection()
@@ -91,8 +93,10 @@ namespace AD.Api.Core.Ldap
             return HashCode.Combine(code, this.IsForestRoot);
         }
 
-        [SupportedOSPlatform("WINDOWS")]
-        public abstract bool TryGetDirectoryContext(DirectoryContextType contextType, [NotNullWhen(true)] out DirectoryContext? directoryContext);
+        public object? GetService(Type serviceType)
+        {
+            return _provider.GetService(serviceType);
+        }
 
         [SupportedOSPlatform("WINDOWS")]
         internal void SetSchemaBuilder(SchemaDictionaryBuilder builder, Action<RegisteredDomain, DirectoryContext, SchemaDictionaryBuilder> action)
@@ -104,6 +108,9 @@ namespace AD.Api.Core.Ldap
 
             action(_domain, context, builder);
         }
+
+        [SupportedOSPlatform("WINDOWS")]
+        public abstract bool TryGetDirectoryContext(DirectoryContextType contextType, [NotNullWhen(true)] out DirectoryContext? directoryContext);
     }
 }
 

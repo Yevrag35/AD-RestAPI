@@ -48,6 +48,8 @@ try
         options.ValidateScopes = isDev;
     });
 
+    IConfiguration config = builder.Configuration;
+
     Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
 
     // Add services to the container.
@@ -98,7 +100,7 @@ try
             options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
         });
 
-    PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, builder.Configuration, (conversions) =>
+    PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, config, (conversions) =>
     {
         ReadOnlySpan<byte> timeConvertAttributes = "accountExpires badPasswordTime lastLogon lastLogonTimestamp pwdLastSet whenChanged whenCreated"u8;
 
@@ -107,11 +109,19 @@ try
         conversions.Add("objectSid", AttributeSerialization.WriteObjectSID);
         conversions.Add("sAMAccountType", AttributeSerialization.WriteEnumValue<SamAccountType>);
         conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
+
+        if (config
+            .GetSection("Settings")
+            .GetSection("Serialization")
+            .GetValue("WriteSimpleObjectClass", false))
+        {
+            conversions.Add("objectClass", AttributeSerialization.WriteObjectClassSimple);
+        }
     });
 
     if (OperatingSystem.IsWindows())
     {
-        IConfigurationSection section = builder.Configuration.GetSection("Settings").GetSection("Encryption");
+        IConfigurationSection section = config.GetSection("Settings").GetSection("Encryption");
         if (section.Exists() && "Certificate".Equals(section.GetValue<string>("Type"), StringComparison.OrdinalIgnoreCase))
         {
             builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
@@ -136,7 +146,7 @@ try
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerWithOptions(builder.Configuration.GetSection("SwaggerInfo"));
+    builder.Services.AddSwaggerWithOptions(config.GetSection("SwaggerInfo"));
 
     IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
