@@ -1,5 +1,4 @@
 using AD.Api.Core.Schema;
-using AD.Api.Core.Settings;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;

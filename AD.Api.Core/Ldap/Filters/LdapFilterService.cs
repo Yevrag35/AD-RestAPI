@@ -2,13 +2,12 @@ using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Enums;
-using AD.Api.Ldap.Enums;
-using AD.Api.Strings.Spans;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap.Filters
 {
     public interface ILdapFilterService
     {
+        string AddToFilter(scoped ReadOnlySpan<char> filter, FilteredRequestType types, bool addEnclosure);
         string GetFilter(FilteredRequestType types, bool addEnclosure);
     }
 
@@ -32,35 +31,59 @@ namespace AD.Api.Core.Ldap
             this.RequestTypes = filterValues.EnumStrings;
         }
 
-        public string GetFilter(FilteredRequestType types, bool addEnclosure)
+        public string AddToFilter(scoped ReadOnlySpan<char> filter, FilteredRequestType types, bool addEnclosure)
         {
-            SpanStringBuilder builder = new(stackalloc char[256]);
-            if (addEnclosure)
+            if (filter.IsWhiteSpace())
             {
-                builder = builder.Append(['(', '&']);
+                return this.GetFilter(types, addEnclosure);
             }
 
-            int count = this.GetEnumerationNumber(types, ref builder);
+            FilterSpanWriter writer = new(filter.Length + 130);
+
+            if (addEnclosure)
+            {
+                writer = writer.And();
+            }
+
+            int count = this.GetEnumerationNumber(types, ref writer);
             if (count <= 0)
             {
-                builder.Dispose();
+                writer.Dispose();
+                return filter.ToString();
+            }
+
+            writer = writer.WriteRaw(filter);
+
+            writer = writer.EndAll();
+
+            string s = writer.Build();
+            return s;
+        }
+        public string GetFilter(FilteredRequestType types, bool addEnclosure)
+        {
+            FilterSpanWriter writer = new(stackalloc char[256]);
+            if (addEnclosure)
+            {
+                writer = writer.And();
+            }
+
+            int count = this.GetEnumerationNumber(types, ref writer);
+            if (count <= 0)
+            {
+                writer.Dispose();
                 return string.Empty;
             }
 
-            if (addEnclosure)
-            {
-                builder = builder.Append(')');
-            }
+            writer = writer.EndAll();
 
-            string s = builder.Build();
+            string s = writer.Build();
             return s;
         }
-
-        private int GetEnumerationNumber(FilteredRequestType value, ref SpanStringBuilder builder)
+        private int GetEnumerationNumber(FilteredRequestType value, ref FilterSpanWriter writer)
         {
             if (this.FilterValues.TryGetValue(value, out string? filter))
             {
-                builder = builder.Append(filter);
+                writer = writer.WriteRaw(filter);
                 return 1;
             }
 
@@ -71,7 +94,7 @@ namespace AD.Api.Core.Ldap
             {
                 if (this.FilterValues.TryGetValue(enumerator.Current, out string? filterValue))
                 {
-                    builder = builder.Append(filterValue);
+                    writer = writer.WriteRaw(filterValue);
                 }
             }
 

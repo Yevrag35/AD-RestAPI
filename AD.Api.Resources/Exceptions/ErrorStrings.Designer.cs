@@ -160,6 +160,33 @@ namespace AD.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to got: .
+        /// </summary>
+        public static string Exception_LdapFilterType_Actual {
+            get {
+                return ResourceManager.GetString("Exception_LdapFilterType_Actual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expected: .
+        /// </summary>
+        public static string Exception_LdapFilterType_Expected {
+            get {
+                return ResourceManager.GetString("Exception_LdapFilterType_Expected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The writer is not in the correct state to append the content - .
+        /// </summary>
+        public static string Exception_LdapFilterType_Prefix {
+            get {
+                return ResourceManager.GetString("Exception_LdapFilterType_Prefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An exception was thrown due to a invalid operation in a AD Api-related library..
         /// </summary>
         public static string Exception_Message_Default {

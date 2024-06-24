@@ -1,6 +1,6 @@
 using AD.Api.Attributes;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap.Filters
 {
     [Flags]
     public enum FilteredRequestType

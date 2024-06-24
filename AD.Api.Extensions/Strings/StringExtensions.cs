@@ -44,6 +44,12 @@ namespace AD.Api.Strings.Extensions
                 : string.Empty;
         }
 
+        [DebuggerStepThrough]
+        public static string OrEmpty(this string? value)
+        {
+            return value ?? string.Empty;
+        }
+
         public static string RemoveSpaces(this string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -84,10 +90,22 @@ namespace AD.Api.Strings.Extensions
                 : Array.Empty<string>();
         }
 
-        [DebuggerStepThrough]
-        public static string OrEmpty(this string? value)
+        public static bool TryCopyTo(this string? value, Span<char> destination, out int charsWritten)
         {
-            return value ?? string.Empty;
+            charsWritten = 0;
+            ReadOnlySpan<char> chars = value;
+            if (chars.IsEmpty)
+            {
+                return true;
+            }
+            else if (chars.Length > destination.Length)
+            {
+                return false;
+            }
+
+            charsWritten = chars.Length;
+            chars.CopyTo(destination);
+            return true;
         }
     }
 }

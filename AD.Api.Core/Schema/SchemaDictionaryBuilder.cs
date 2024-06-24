@@ -1,5 +1,4 @@
 using AD.Api.Core.Ldap;
-using AD.Api.Core.Settings;
 using System.Collections.Concurrent;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.Versioning;

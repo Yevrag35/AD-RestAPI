@@ -1,7 +1,7 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Collections.Enumerators;
-using AD.Api.Ldap.Enums;
+using AD.Api.Enums;
 using System.Collections.Frozen;
 using System.DirectoryServices.Protocols;
 

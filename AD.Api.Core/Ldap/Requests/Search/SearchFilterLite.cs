@@ -1,3 +1,4 @@
+using AD.Api.Core.Ldap.Filters;
 using System.DirectoryServices.Protocols;
 using System.Runtime.InteropServices;
 

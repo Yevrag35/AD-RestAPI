@@ -1,3 +1,4 @@
+using AD.Api.Strings.Extensions;
 using AD.Api.Strings.Spans;
 using System.Buffers;
 using System.Runtime.Versioning;
@@ -6,9 +7,13 @@ using System.Security.Principal;
 namespace AD.Api.Core.Security
 {
     [SupportedOSPlatform("WINDOWS")]
-    public sealed class SidString : IEquatable<SidString>
+    public sealed class SidString : IEquatable<SidString>, ISpanFormattable
     {
+        private static readonly char L_FORMAT = 'L';
         private const int SID_MAX_LENGTH = 189;
+        public static ReadOnlySpan<char> LdapFormat => new(in L_FORMAT);
+        public static ReadOnlySpan<char> SidFormat => default;
+
         /// <summary>
         /// 2+2+20+15×(1+10)=189 maximum number of characters in a SID string.
         /// </summary>
@@ -85,17 +90,29 @@ namespace AD.Api.Core.Security
         {
             return _ldapString ??= CreateLdapString(_sid);
         }
-        public bool TryFormat(Span<char> destination, out int charsWritten)
+        string IFormattable.ToString(string? format, IFormatProvider? provider)
         {
-            if (_ldapString is not null)
+            return this.ToLdapString();
+        }
+        /// <inheritdoc cref="ISpanFormattable.TryFormat(Span{char}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>
+        public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default)
+        {
+            if (!format.IsEmpty && format.Equals(LdapFormat, StringComparison.OrdinalIgnoreCase))
             {
-                _ldapString.TryCopyTo(destination);
-                charsWritten = _ldapString.Length;
-                return true;
+                if (_ldapString is not null)
+                {
+                    return _ldapString.TryCopyTo(destination, out charsWritten);
+                }
+
+                WriteLdapToSpan(ref destination, _sid, out charsWritten);
+                return charsWritten > 0;
             }
 
-            WriteLdapToSpan(ref destination, _sid, out charsWritten);
-            return true;
+            return _sid.Value.TryCopyTo(destination, out charsWritten);
+        }
+        bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            return this.TryFormat(destination, out charsWritten);
         }
         
         private static string CreateLdapString(SecurityIdentifier sid)

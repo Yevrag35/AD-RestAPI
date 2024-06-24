@@ -1,5 +1,5 @@
 using AD.Api.Attributes.Services;
-using AD.Api.Core.Ldap.Controls;
+using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;

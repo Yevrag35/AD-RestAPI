@@ -1,8 +1,6 @@
 using AD.Api.Core.Web;
 using AD.Api.Serialization.Json;
 using System.Collections;
-using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

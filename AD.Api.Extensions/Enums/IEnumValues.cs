@@ -1,7 +1,6 @@
 using AD.Api.Attributes;
-using AD.Api.Enums;
 
-namespace AD.Api.Ldap.Enums
+namespace AD.Api.Enums
 {
     /// <summary>
     /// An interface for a read-only collection of <typeparamref name="TEnum"/> values that have 

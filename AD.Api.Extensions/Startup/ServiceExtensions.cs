@@ -6,7 +6,6 @@ using AD.Api.Reflection;
 using AD.Api.Startup.Exceptions;
 using AD.Api.Startup.Services;
 using AD.Api.Startup.Services.Internal;
-using AD.Api.Attributes;
 
 namespace AD.Api.Startup
 {

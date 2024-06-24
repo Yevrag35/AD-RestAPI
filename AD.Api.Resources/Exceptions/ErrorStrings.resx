@@ -150,6 +150,17 @@
   <data name="Exception_InvalidMethodParameters" xml:space="preserve">
     <value>Registration method must have at least the IServiceCollection parameter type.</value>
   </data>
+  <data name="Exception_LdapFilterType_Actual" xml:space="preserve">
+    <value>got: </value>
+    <comment>Trailing space is intentional</comment>
+  </data>
+  <data name="Exception_LdapFilterType_Expected" xml:space="preserve">
+    <value>expected: </value>
+    <comment>Trailing space is intentional</comment>
+  </data>
+  <data name="Exception_LdapFilterType_Prefix" xml:space="preserve">
+    <value>The writer is not in the correct state to append the content - </value>
+  </data>
   <data name="Exception_Message_Default" xml:space="preserve">
     <value>An exception was thrown due to a invalid operation in a AD Api-related library.</value>
   </data>

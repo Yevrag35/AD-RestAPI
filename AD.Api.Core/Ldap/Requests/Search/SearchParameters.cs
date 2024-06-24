@@ -1,4 +1,4 @@
-using AD.Api.Components;
+using AD.Api.Core.Ldap.Filters;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,5 @@
 using AD.Api.Enums;
 using AD.Api.Enums.Internal;
-using AD.Api.Ldap.Enums;
 
 namespace AD.Api.Services.Enums
 {

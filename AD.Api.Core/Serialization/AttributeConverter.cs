@@ -1,7 +1,7 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Schema;
-using System.Collections.Concurrent;
+using AD.Api.Reflection;
 using System.DirectoryServices.Protocols;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -19,7 +19,7 @@ namespace AD.Api.Core.Serialization
         private const string DT_FORMAT = "yyyyMMddHHmmss.0'Z'";
         private static readonly Type _byteType;
         private static readonly Type _jaggedByteType;
-        private static readonly ConcurrentDictionary<Type, MethodInfo> _methodCache;
+        private static readonly GenericMethodDictionary<Type> _methodCache;
         private static readonly MethodInfo _resizeMethod;
 
         static AttributeConverter()

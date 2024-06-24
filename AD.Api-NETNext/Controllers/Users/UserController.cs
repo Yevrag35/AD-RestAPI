@@ -1,11 +1,11 @@
 ﻿using AD.Api.Binding.Attributes;
 using AD.Api.Core.Ldap;
+using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
 using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Controllers.Users
 {
@@ -45,26 +45,6 @@ namespace AD.Api.Controllers.Users
             parameters.ApplyParameters(searchFilter);
 
             return this.Requests.FindOne(parameters, this.HttpContext.RequestServices);
-
-            //var response = (SearchResponse)connection.SendRequest(parameters);
-            //if (response.ResultCode != ResultCode.Success || response.Entries.Count != 1)
-            //{
-            //    string msg = string.IsNullOrEmpty(response.ErrorMessage)
-            //        ? response.Entries.Count == 0
-            //            ? "No entries were found."
-            //            : response.Entries.Count > 1
-            //                ? 
-
-            //    return this.BadRequest(new
-            //    {
-            //        Result = response.ResultCode,
-            //        ResultCode = (int)response.ResultCode,
-            //        Message = response.ErrorMessage ?? "More than one entry was found.",
-            //    });
-            //}
-
-            //result.Value.AddResult(parameters.Domain, response.Entries[0]);
-            //return this.Ok(result.Value);
         }
     }
 }

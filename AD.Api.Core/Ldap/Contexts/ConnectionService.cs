@@ -2,7 +2,6 @@ using AD.Api.Actions;
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Core.Security.Encryption;
-using AD.Api.Core.Settings;
 using AD.Api.Exceptions;
 using AD.Api.Startup.Exceptions;
 using System.ComponentModel;

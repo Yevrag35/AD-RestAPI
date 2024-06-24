@@ -1,4 +1,5 @@
 ﻿using AD.Api.Core.Ldap;
+using AD.Api.Core.Ldap.Filters;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Search
@@ -44,39 +45,22 @@ namespace AD.Api.Controllers.Search
         //}
 
         [HttpPost]
+        [Route("users")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
-        [Route("users")]
         public IActionResult SearchUsers(
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            body.Filter = body.Filter[0] != '(' && body.Filter[^1] != ')'
-                ? $"({body.Filter})"
-                : body.Filter;
+            //body.Filter = body.Filter[0] != '(' && body.Filter[^1] != ')'
+            //    ? $"({body.Filter})"
+            //    : body.Filter;
 
-            body.Filter = $"(&(objectClass=user)(objectCategory=person){body.Filter})";
+            //body.Filter = $"(&(objectClass=user)(objectCategory=person){body.Filter})";
+            body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.User, true);
+
             parameters.ApplyParameters(body);
             return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
-            //LdapConnection connection = parameters.ApplyConnection(this.Connections);
-
-            //var searchResponse = (SearchResponse)connection.SendRequest(parameters);
-            //if (searchResponse.ResultCode != ResultCode.Success)
-            //{
-            //    return this.BadRequest(new
-            //    {
-            //        Result = searchResponse.ResultCode,
-            //        ResultCode = (int)searchResponse.ResultCode,
-            //        Message = searchResponse.ErrorMessage ?? "No entries were found.",
-            //    });
-            //}
-
-            //results.Value.AddRange(searchResponse.Entries);
-            //response.AddResultCode = true;
-            //response.Result = searchResponse.ResultCode;
-            //response.SetData(results.Value, results.Value.Count);
-
-            //return response;
         }
     }
 }

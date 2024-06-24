@@ -1,6 +1,6 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
-using AD.Api.Core.Ldap;
+using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
 using AD.Api.Enums;
 using AD.Api.Startup.Exceptions;

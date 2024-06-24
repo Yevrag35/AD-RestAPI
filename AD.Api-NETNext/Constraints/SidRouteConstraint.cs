@@ -1,6 +1,4 @@
-﻿
-using AD.Api.Attributes.Services;
-using AD.Api.Core.Security;
+﻿using AD.Api.Core.Security;
 using AD.Api.Statics;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;

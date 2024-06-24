@@ -1,7 +1,6 @@
 ﻿using AD.Api.Core.Ldap;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Serialization.Json;
-using AD.Api.Core.Settings;
 using AD.Api.Extensions.Collections;
 using AD.Api.Serialization.Json;
 using System.Text.Json;
