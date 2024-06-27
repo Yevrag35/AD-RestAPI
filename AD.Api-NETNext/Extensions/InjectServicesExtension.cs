@@ -45,8 +45,7 @@ namespace AD.Api.Services
                         options.IncludeXmlComments(xmlFile, true);
                     }
                 }
-            })
-            .AddSwaggerGenNewtonsoftSupport();
+            });
         }
 
         private static IEnumerable<string> GetXmlCommentFiles(string baseDirectory)

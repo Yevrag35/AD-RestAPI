@@ -1,6 +1,7 @@
 ﻿using AD.Api.Core.Security;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AD.Api.Binding
 {
@@ -11,9 +12,8 @@ namespace AD.Api.Binding
         {
             SuppressValidation = true,
         };
-                
 
-    public Task BindModelAsync(ModelBindingContext bindingContext)
+        public Task BindModelAsync(ModelBindingContext bindingContext)
         {
             ArgumentNullException.ThrowIfNull(bindingContext);
             if (!_strType.Equals(bindingContext.ModelMetadata.UnderlyingOrModelType))
@@ -28,9 +28,10 @@ namespace AD.Api.Binding
                 return Task.CompletedTask;
             }
 
+            SidString ss = GetOrAddSidString(first, bindingContext);
+
             try
             {
-                SidString ss = new(first);
                 var success = ModelBindingResult.Success(ss);
                 bindingContext.Result = success;
                 bindingContext.ValidationState[ss] = _suppress;
@@ -41,6 +42,23 @@ namespace AD.Api.Binding
             }
 
             return Task.CompletedTask;
+        }
+
+        private static SidString GetOrAddSidString(string sidString, ModelBindingContext context)
+        {
+            IMemoryCache cache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
+
+            if (!cache.TryGetValue(sidString, out SidString? constructedSid) || constructedSid is null)
+            {
+                constructedSid = cache.Set(sidString, new SidString(sidString), new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
+                    Priority = CacheItemPriority.Low,
+                    Size = 5L,
+                });
+            }
+
+            return constructedSid;
         }
     }
 }

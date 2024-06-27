@@ -21,7 +21,6 @@ namespace AD.Api.Controllers.System
             [FromQuery] string? domain = null,
             [FromQuery] WellKnownObjectValue? key = null)
         {
-            _logger.Info("Requesting well-known paths...");
             if (key.HasValue)
             {
                 _logger.Info("Requesting well-known path for {WellKnown}...", key.Value);
@@ -37,6 +36,7 @@ namespace AD.Api.Controllers.System
                 });
             }
 
+            _logger.Info("Requesting well-known paths...");
             return this.Ok(dictionary[domain]);
         }
     }

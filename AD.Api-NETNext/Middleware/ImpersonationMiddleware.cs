@@ -24,7 +24,8 @@ namespace AD.Api.Middleware
                 Debug.WriteLine($"User: {impersonated.Name}\tState: {impersonated.ImpersonationLevel}\n");
 
                 await _next(httpContext).ConfigureAwait(false);
-            }).ConfigureAwait(false);
+            })
+            .ConfigureAwait(false);
         }
     }
 

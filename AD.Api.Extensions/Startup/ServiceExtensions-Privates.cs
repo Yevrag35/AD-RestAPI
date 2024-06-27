@@ -1,5 +1,6 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Startup.Services;
+using System.Runtime.Versioning;
 
 namespace AD.Api.Startup
 {
@@ -7,6 +8,8 @@ namespace AD.Api.Startup
     {
         private readonly struct ServiceResolutionContext
         {
+            internal static readonly Type SupportedOSType = typeof(SupportedOSPlatformAttribute);
+
             private readonly object[] _overload1;
             private readonly object[] _overload2;
 

@@ -1,76 +1,61 @@
 using AD.Api.Attributes.Services;
-using System.Collections.Frozen;
+using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
+using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Security
 {
-    public interface ISidResolutionService
+    [SupportedOSPlatform("WINDOWS")]
+    public interface ISidResolutionService : IRestrictedSids
     {
-        FrozenSet<string> RestrictedSIDs { get; }
-        FrozenSet<string> StartsWithSIDRestrictions { get; }
+        SidString GetOrAdd(string securityIdentifier);
     }
 
     [DynamicDependencyRegistration]
-    public sealed class SidResolutionService : ISidResolutionService
+    [SupportedOSPlatform("WINDOWS")]
+    internal class SidResolutionService : ISidResolutionService
     {
-        public FrozenSet<string> RestrictedSIDs { get; } = null!;
-        public FrozenSet<string> StartsWithSIDRestrictions { get; } = null!;
+        private static readonly TimeSpan DEFAULT_EXPIRATION = TimeSpan.FromMinutes(15);
 
-        private SidResolutionService()
+        private readonly IMemoryCache _cache;
+        private readonly IRestrictedSids _restrictedSids;
+
+        public SidResolutionService(IRestrictedSids restricted, IMemoryCache cache)
         {
-            this.RestrictedSIDs = FrozenSet<string>.Empty;
+            _cache = cache;
+            _restrictedSids = restricted;
         }
-        private SidResolutionService(string[] sids)
-        {
-            var groups = EndsWithWildcard(sids);
-            StringComparer comp = StringComparer.OrdinalIgnoreCase;
 
-            foreach (var group in groups)
+        public bool Contains(string securityIdentifier)
+        {
+            return _cache.Get(securityIdentifier) is null && _restrictedSids.Contains(securityIdentifier);
+        }
+        public SidString GetOrAdd(string securityIdentifier)
+        {
+            if (!_cache.TryGetValue(securityIdentifier, out SidString? sid) || sid is null)
             {
-                switch (group.Key)
+                sid = _cache.Set(securityIdentifier, new SidString(securityIdentifier), new MemoryCacheEntryOptions
                 {
-                    case true:
-                        this.StartsWithSIDRestrictions ??= FrozenSet.ToFrozenSet(TrimWildcards(group), comp);
-                        break;
-
-                    case false:
-                        this.RestrictedSIDs ??= FrozenSet.ToFrozenSet(group, comp);
-                        break;
-                }
+                    AbsoluteExpirationRelativeToNow = DEFAULT_EXPIRATION,
+                    Priority = CacheItemPriority.Low,
+                    Size = 5L,
+                });
             }
 
-            this.RestrictedSIDs ??= FrozenSet<string>.Empty;
-            this.StartsWithSIDRestrictions ??= FrozenSet<string>.Empty;
-        }
-
-        private static IEnumerable<IGrouping<bool, string>> EndsWithWildcard(IEnumerable<string> sids)
-        {
-            return sids.GroupBy(x => x.EndsWith('*'));
-        }
-        private static IEnumerable<string> TrimWildcards(IEnumerable<string> sids)
-        {
-            foreach (string str in sids)
-            {
-                ReadOnlySpan<char> chars = str.AsSpan();
-                yield return chars.Slice(0, chars.IndexOf('*')).ToString();
-            }
+            return sid;
         }
 
         [DynamicDependencyRegistrationMethod]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        private static void AddToServices(IServiceCollection services, IConfiguration configuration)
+        private static void AddToServices(IServiceCollection services)
         {
-            IConfigurationSection section = configuration
-                .GetRequiredSection("Settings")
-                .GetRequiredSection("Restrictions")
-                .GetSection("RestrictedSIDs");
-
-            string[]? set = section.Get<string[]>(x => x.ErrorOnUnknownConfiguration = false);
-            SidResolutionService sidSvc = set is not null && set.Length > 0
-                ? new(set)
-                : new();
-
-            _ = services.AddSingleton<ISidResolutionService>(sidSvc);
+            services.AddSingleton<ISidResolutionService>(x =>
+            {
+                RestrictedSids sids = x.GetRequiredService<RestrictedSids>();
+                IMemoryCache cache = x.GetRequiredService<IMemoryCache>();
+                return new SidResolutionService(sids, cache);
+            })
+                .AddSingleton<IRestrictedSids>(x => x.GetRequiredService<ISidResolutionService>());
         }
     }
 }

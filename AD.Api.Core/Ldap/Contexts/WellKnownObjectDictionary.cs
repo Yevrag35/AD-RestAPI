@@ -23,6 +23,7 @@ namespace AD.Api.Core.Ldap
         {
             _values = enumValues;
             string[] atts = [ATT_NAME, OTHER_NAME];
+
             Dictionary<string, FrozenDictionary<WellKnownObjectValue, string>> wkByDomain = new(connections.RegisteredConnections.Count, StringComparer.OrdinalIgnoreCase);
 
             //foreach (IGrouping<string, ConnectionContext> grouping in connections.RegisteredConnections.GroupBy(x => x))

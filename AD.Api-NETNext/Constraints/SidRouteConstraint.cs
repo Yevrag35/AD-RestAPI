@@ -12,7 +12,7 @@ namespace AD.Api.Constraints
 
         public bool Match(HttpContext? httpContext, IRouter? route, string routeKey, RouteValueDictionary values, RouteDirection routeDirection)
         {
-            ISidResolutionService? sidSvc = httpContext?.RequestServices.GetService<ISidResolutionService>();
+            IRestrictedSids? sidSvc = httpContext?.RequestServices.GetService<IRestrictedSids>();
 
             return IsRouteKeyStringValue(routeKey, values, out string? routeValue)
                    &&
@@ -28,15 +28,6 @@ namespace AD.Api.Constraints
             Debug.Assert(result, "The SID has less than the minimum number of required hyphens.");
             return result;
         }
-        private static bool IsRouteKeyStringValue(string routeKey, RouteValueDictionary routeValues, [NotNullWhen(true)] out string? value)
-        {
-            value = routeValues.TryGetValue(routeKey, out object? valueObj)
-                ? valueObj as string
-                : null;
-
-            return !string.IsNullOrWhiteSpace(value);
-        }
-
         private static bool IsProperlyFormatted(ReadOnlySpan<char> value)
         {
             if (SidString.MaxSidStringLength < value.Length)
@@ -52,27 +43,17 @@ namespace AD.Api.Constraints
 
             return HasMinimumNumberOfHyphens(value.Slice(prefix.Length));
         }
-        private static bool IsSidExcluded(string routeValue, ISidResolutionService? sidResolutionService)
+        private static bool IsRouteKeyStringValue(string routeKey, RouteValueDictionary routeValues, [NotNullWhen(true)] out string? value)
         {
-            if (sidResolutionService is null)
-            {
-                return false;
-            }
+            value = routeValues.TryGetValue(routeKey, out object? valueObj)
+                ? valueObj as string
+                : null;
 
-            if (sidResolutionService.RestrictedSIDs.Contains(routeValue))
-            {
-                return true;
-            }
-
-            foreach (string startsWith in sidResolutionService.StartsWithSIDRestrictions)
-            {
-                if (routeValue.StartsWith(startsWith, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return value is not null;
+        }
+        private static bool IsSidExcluded(string routeValue, IRestrictedSids? restrictedSids)
+        {
+            return restrictedSids?.Contains(routeValue) ?? false;
         }
     }
 }

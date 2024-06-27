@@ -156,7 +156,9 @@ namespace AD.Api.Startup
                             &&
                             x.IsDefined(mustHave)
                             &&
-                            !exclusions.IsExcluded(x));
+                            !exclusions.IsExcluded(x)
+                            &&
+                            IsSupportedOSService(x));
         }
 
         private static bool IsServicableAssembly(Assembly assembly)
@@ -176,6 +178,19 @@ namespace AD.Api.Startup
                 // Must be interface or ValueType (struct).
                 return type.IsValueType || type.IsInterface;
             }
+        }
+        private static bool IsSupportedOSService(Type type)
+        {
+            if ( !type.IsDefined(ServiceResolutionContext.SupportedOSType))
+            {
+                return true;
+            }
+
+            CustomAttributeData data = type.GetCustomAttributesData().First(x => x.AttributeType == ServiceResolutionContext.SupportedOSType);
+
+            return data.ConstructorArguments.Count > 0
+                && data.ConstructorArguments[0].Value is string osName
+                && OperatingSystem.IsOSPlatform(osName);
         }
 
         #region ADD SERVICE
