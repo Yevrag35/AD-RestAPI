@@ -21,10 +21,8 @@ namespace AD.Api.Core.Ldap.Filters
         //public readonly FilterTokenType TokenType => _tokenType;
 
         public FilterSpanWriter(int initialCapacity)
+            : this(new SpanStringBuilder(initialCapacity))
         {
-            _builder = new(initialCapacity);
-            _depth = 0;
-            //_tokenType = FilterTokenType.Begin;
         }
         public FilterSpanWriter(Span<char> buffer)
             : this(new SpanStringBuilder(buffer))

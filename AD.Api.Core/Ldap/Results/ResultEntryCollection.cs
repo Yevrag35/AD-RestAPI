@@ -4,7 +4,7 @@ using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap.Results
 {
-    public sealed class ResultEntryCollection : IEnumerable<ResultEntry>, IResettable, ISearchResultEntry
+    public sealed class ResultEntryCollection : IReadOnlyCollection<ResultEntry>, IResettable, ISearchResultEntry
     {
         private readonly List<ResultEntry> _entries;
         private readonly ResultEntryPool _pool;

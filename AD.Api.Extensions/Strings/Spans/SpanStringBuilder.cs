@@ -19,6 +19,7 @@ namespace AD.Api.Strings.Spans
     /// <summary>
     /// A ref struct that provides a way to build strings using a <see cref="Span{char}"/> buffer.
     /// </summary>
+    [DebuggerDisplay(@"\{AsSpan()\}")]
     public ref struct SpanStringBuilder
     {
         const int MULTIPLE = 128;
@@ -44,8 +45,8 @@ namespace AD.Api.Strings.Spans
 
         public SpanStringBuilder(int minimumCapacity)
         {
-            int capacity = AdjustCapacity(in minimumCapacity);
-            char[] array = ArrayPool<char>.Shared.Rent(capacity);
+            AdjustCapacity(ref minimumCapacity);
+            char[] array = ArrayPool<char>.Shared.Rent(minimumCapacity);
             _array = array;
             _isRented = true;
             _span = array;
@@ -280,28 +281,27 @@ namespace AD.Api.Strings.Spans
         [DebuggerStepThrough]
         public override readonly string ToString()
         {
-            string s = _span.Slice(0, _position).ToString();
+            string s = new(_span.Slice(0, _position));
             return s;
         }
 
-        private static int AdjustCapacity(in int capacity)
+        private static void AdjustCapacity(ref int capacity)
         {
-            return (capacity + INCREMENT) & ~INCREMENT;
+            capacity = (capacity + INCREMENT) & ~INCREMENT;
         }
         /// <exception cref="ArgumentOutOfRangeException"/>
         private void EnsureCapacity(int appendLength)
         {
-            ArgumentOutOfRangeException.ThrowIfNegative(appendLength);
             int calculatedLength = _position + appendLength;
             if (calculatedLength > this.Capacity)
             {
                 this.Grow(calculatedLength);
             }
         }
-        private void Grow(int minimumCapacity)
+        private void Grow(int newCapacity)
         {
-            Debug.Assert(minimumCapacity >= this.Capacity);
-            int newCapacity = AdjustCapacity(in minimumCapacity);
+            Debug.Assert(newCapacity >= this.Capacity);
+            AdjustCapacity(ref newCapacity);
             Debug.Assert(newCapacity % MULTIPLE == 0);
 
             char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
