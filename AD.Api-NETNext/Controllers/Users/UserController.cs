@@ -1,10 +1,9 @@
 ﻿using AD.Api.Binding.Attributes;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
-using AD.Api.Core.Ldap.Results;
+using AD.Api.Core.Ldap.Requests.Creation.Users;
+using AD.Api.Core.Ldap.Users;
 using AD.Api.Core.Security;
-using AD.Api.Pooling;
-using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Users
@@ -24,7 +23,7 @@ namespace AD.Api.Controllers.Users
         [Route("{sid:objectsid}")]
         public IActionResult GetUser(
             [FromQuery] SearchParameters parameters,
-            [FromRouteSid] SidString sid)
+            [FromRouteSid(Name = "sid")] SidString sid)
         {
             string filter = parameters.FilterSvc.GetFilter(sid, FilteredRequestType.User);
 
@@ -32,6 +31,32 @@ namespace AD.Api.Controllers.Users
             parameters.ApplyParameters(searchFilter);
 
             return this.Requests.FindOne(parameters, this.HttpContext.RequestServices);
+        }
+
+        [HttpPost]
+        public IActionResult CreateUser(
+            [FromBody] CreateUserRequest request,
+            [FromServices] IUserCreations createSvc,
+            [FromQuery] string? domain = null)
+        {
+            request.RequestServices = this.HttpContext.RequestServices;
+            return createSvc.Create(domain, request)
+                .Match(
+                    state: (request, domain),
+                    (request, success) =>
+                    {
+                        string url = !string.IsNullOrWhiteSpace(request.domain)
+                            ? $"/users/{success.Value}?domain={request.domain}"
+                            : $"/users/{success.Value}";
+
+                        return new CreatedResult(url, new
+                        {
+                            Domain = request.domain ?? string.Empty,
+                            Dn = request.request.GetDistinguishedName().ToString(),
+                            ObjectSid = success.Value,
+                        });
+                    },
+                    (request, error) => error);
         }
     }
 }

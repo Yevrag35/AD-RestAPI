@@ -28,13 +28,13 @@ namespace AD.Api.Core.Extensions
                 dirAttribute = new(kvp.Key, values: []);
                 for (int i = 0; i < nonGenArr.Length; i++)
                 {
-                    valueArray[0] = nonGenArr.GetValue(i);
+                    valueArray[0] = nonGenArr.GetValue(i)?.ToString();
                     dirAttribute.AddRange(valueArray);
                 }
             }
             else
             {
-                valueArray[0] = kvp.Value;
+                valueArray[0] = kvp.Value?.ToString();
                 dirAttribute = new(kvp.Key, valueArray);
             }
 

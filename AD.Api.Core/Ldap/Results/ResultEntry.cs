@@ -11,6 +11,8 @@ namespace AD.Api.Core.Ldap.Results
         private readonly SortedDictionary<string, object> _attributes;
         private readonly IAttributeConverter _converter;
 
+        public object this[string key] => _attributes[key];
+
         public int Count => _attributes.Count;
         public Guid LeaseId { get; set; }
 

@@ -17,6 +17,8 @@ namespace AD.Api.Core.Ldap
         OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters);
         bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
 
+        bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
+
         IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where TResponse : SearchResponse
             where T : LdapRequest;
@@ -53,6 +55,20 @@ namespace AD.Api.Core.Ldap
         {
             return this.Connect(parameters).TryGetT0(out connection, out errorResult);
         }
+        [DebuggerStepThrough]
+        public bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
+        {
+            if (!this.Connections.TryGetConnection(domainKey, out connection))
+            {
+                errorResult = new DomainNotFoundResult(domainKey);
+                return false;
+            }
+            else
+            {
+                errorResult = null;
+                return true;
+            }
+        }
 
         // SEARCH REQUESTS
         public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
@@ -81,8 +97,8 @@ namespace AD.Api.Core.Ldap
             using (connection)
             {
                 return this.SendSearchRequest<T, ResultEntry, TResponse>(parameters, connection, requestServices, isMultiRequest: false);
-            }
         }
+            }
 
         private IActionResult SendSearchRequest<T, TCollection, TResponse>(RequestParameters<T, TResponse> parameters, LdapConnection connection, IServiceProvider requestServices, bool isMultiRequest)
             where T : LdapRequest
@@ -163,7 +179,7 @@ namespace AD.Api.Core.Ldap
             {
                 Error = message,
                 ResultCode = (int)code,
-                Result = _enumStrings[code],
+                Result = code,
             })
             {
                 StatusCode = StatusCodes.Status500InternalServerError,

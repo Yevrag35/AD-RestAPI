@@ -59,7 +59,7 @@ namespace AD.Api.Reflection
             _pools.TryAdd(elementType, pool);
             return pool;
         }
-        private static Type GetElementType(Array array)
+        public static Type GetElementType(Array array)
         {
             return array.GetType().GetElementType() ?? typeof(object);
         }

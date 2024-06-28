@@ -55,6 +55,12 @@ namespace AD.Api.Components
             return item;
         }
 
+        public TOutput Match<TOutput>(Func<T0, TOutput> f0, Func<T1, TOutput> f1)
+        {
+            return this.IsT0
+                ? f0(this.AsT0)
+                : f1(this.AsT1);
+        }
         public TOutput Match<TState, TOutput>(TState state, 
             Func<TState, T0, TOutput> f0,
             Func<TState, T1, TOutput> f1)
