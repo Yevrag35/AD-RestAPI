@@ -1,6 +1,7 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Collections.Enumerators;
+using AD.Api.Core.Ldap.Filters;
 using AD.Api.Enums;
 using System.Collections.Frozen;
 using System.DirectoryServices.Protocols;
@@ -41,10 +42,20 @@ namespace AD.Api.Core.Ldap
             _dictionary = wkByDomain.ToFrozenDictionary(wkByDomain.Comparer);
         }
 
-        public bool TryGetValue(string? domainKey, WellKnownObjectValue type, [NotNullWhen(true)] out string? location)
+        public bool TryGetValue(string? domainKey, FilteredRequestType requestType, [NotNullWhen(true)] out string? location)
+        {
+            if (!HasWellKnownPath(requestType, out WellKnownObjectValue wkValue))
+            {
+                location = null;
+                return false;
+            }
+
+            return this.TryGetValue(domainKey, wellKnownType: wkValue, out location);
+        }
+        public bool TryGetValue(string? domainKey, WellKnownObjectValue wellKnownType, [NotNullWhen(true)] out string? location)
         {
             domainKey ??= string.Empty;
-            if (_dictionary[domainKey].TryGetValue(type, out string? value) && !string.IsNullOrWhiteSpace(value))
+            if (_dictionary[domainKey].TryGetValue(wellKnownType, out string? value) && !string.IsNullOrWhiteSpace(value))
             {
                 location = value;
                 return true;
@@ -53,6 +64,48 @@ namespace AD.Api.Core.Ldap
             {
                 location = null;
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Determines if the specified <see cref="FilteredRequestType"/> would normally have a well-known path in 
+        /// the directory.
+        /// </summary>
+        /// <param name="requestType">The request type to check.</param>
+        /// <param name="value">
+        /// When this method returns, contains the well-known object value for the specified 
+        /// <paramref name="requestType"/> if it exists; otherwise, <see cref="WellKnownObjectValue.None"/>.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the specified <paramref name="requestType"/> has a well-known path; otherwise, 
+        /// <see langword="false"/>.
+        /// </returns>
+        public static bool HasWellKnownPath(FilteredRequestType requestType, out WellKnownObjectValue value)
+        {
+            switch (requestType)
+            {
+                case FilteredRequestType.Any:
+                case FilteredRequestType.Container:
+                case FilteredRequestType.OrganizationalUnit:
+                    goto default;
+
+                case FilteredRequestType.User:
+                case FilteredRequestType.Group:
+                case FilteredRequestType.Contact:
+                    value = WellKnownObjectValue.Users;
+                    return true;
+
+                case FilteredRequestType.Computer:
+                    value = WellKnownObjectValue.Computers;
+                    return true;
+
+                case FilteredRequestType.ManagedServiceAccount:
+                    value = WellKnownObjectValue.ManagedServiceAccounts;
+                    return true;
+
+                default:
+                    value = WellKnownObjectValue.None;
+                    return false;
             }
         }
 

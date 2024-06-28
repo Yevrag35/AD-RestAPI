@@ -235,8 +235,10 @@ namespace AD.Api.Core.Ldap
 
     public enum WellKnownObjectValue
     {
+        None,
+
         [BackendValue("A9D1CA15768811D1ADED00C04FD8D5CD")]
-        Users,
+        Users = 1,
 
         [BackendValue("AA312825768811D1ADED00C04FD8D5CD")]
         Computers,

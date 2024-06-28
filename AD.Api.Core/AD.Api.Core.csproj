@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -20,6 +20,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="**\*-*.cs">
+			<DependentUpon>$([System.Text.RegularExpressions.Regex]::Replace('$([System.String]::Copy(%(Filename)))', '^(.+)\-.+$', '$1.cs'))</DependentUpon>
+		</Compile>
+	</ItemGroup>
 	  <None Include="Ldap\Requests\SearchPagingService.cs" />
 	  <None Include="Ldap\Requests\Search\CachedSearchParameters.cs" />
 	</ItemGroup>
