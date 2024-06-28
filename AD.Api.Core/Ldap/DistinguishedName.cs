@@ -11,6 +11,7 @@ namespace AD.Api.Core.Ldap
     {
         private readonly record struct Constructing(string Name, string Path, bool NeedsComma, bool NeedsPrefix);
 
+        public const string DomainComponentPrefix = "DC=";
         public const string CommonNamePrefix = "CN=";
         public const string OrganizationalUnitPrefix = "OU=";
         private const int MAX_LENGTH = 400;
@@ -138,6 +139,7 @@ namespace AD.Api.Core.Ldap
             if (!this.IsConstructed)
             {
                 _fullValue = this.Construct();
+                this.IsConstructed = true;
             }
 
             return _fullValue;
@@ -172,14 +174,20 @@ namespace AD.Api.Core.Ldap
                 CommonNamePrefix.CopyToSlice(buffer, ref pos);
             }
 
-            state.Name.CopyTo(buffer.Slice(0, pos));
+            state.Name.CopyTo(buffer.Slice(pos));
             if (state.NeedsComma)
             {
                 pos += state.Name.Length;
                 buffer[pos++] = CharConstants.COMMA;
 
-                state.Path.CopyTo(buffer.Slice(0, pos));
+                state.Path.CopyTo(buffer.Slice(pos));
             }
+        }
+        private static bool EqualsAnyPrefix(ReadOnlySpan<char> slice)
+        {
+            return slice.Equals(CommonNamePrefix, StringComparison.OrdinalIgnoreCase)
+                || slice.Equals(OrganizationalUnitPrefix, StringComparison.OrdinalIgnoreCase)
+                || slice.Equals(DomainComponentPrefix, StringComparison.OrdinalIgnoreCase);
         }
         private static ReadOnlySpan<char> EscapeChars(ReadOnlySpan<char> source, Span<char> destination)
         {
@@ -268,10 +276,7 @@ namespace AD.Api.Core.Ldap
                 return false;
             }
 
-            ReadOnlySpan<char> checkSlice = working.Slice(index - 2, 3);
-
-            return checkSlice.Equals(CommonNamePrefix, StringComparison.OrdinalIgnoreCase)
-                || checkSlice.Equals(OrganizationalUnitPrefix, StringComparison.OrdinalIgnoreCase);
+            return EqualsAnyPrefix(working.Slice(index - 2, 3));
         }
         private static bool IsProperComma(ReadOnlySpan<char> working, in int index)
         {
@@ -280,9 +285,7 @@ namespace AD.Api.Core.Ldap
                 return false;
             }
 
-            ReadOnlySpan<char> checkSlice = working.Slice(index + 1, 3);
-            return checkSlice.Equals(CommonNamePrefix, StringComparison.OrdinalIgnoreCase)
-                || checkSlice.Equals(OrganizationalUnitPrefix, StringComparison.OrdinalIgnoreCase);
+            return EqualsAnyPrefix(working.Slice(index + 1, 3));
         }
         private void ResetValue()
         {
