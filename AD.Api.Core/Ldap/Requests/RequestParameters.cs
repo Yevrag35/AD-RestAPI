@@ -1,3 +1,4 @@
+using AD.Api.Binding.Attributes;
 using AD.Api.Components;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace AD.Api.Core.Ldap
 {
     public abstract class RequestParameters
     {
-        [FromQuery]
+        [QueryDomain]
         public virtual string? Domain { get; set; }
 
         [MemberNotNull(nameof(Domain))]

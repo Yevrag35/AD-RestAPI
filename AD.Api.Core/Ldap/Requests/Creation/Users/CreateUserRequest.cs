@@ -6,8 +6,11 @@ using System.Text.Json.Serialization;
 
 using UAC = AD.Api.Core.Ldap.UserAccountControl;
 
-namespace AD.Api.Core.Ldap.Requests.Creation.Users
+namespace AD.Api.Core.Ldap.Users
 {
+    /// <summary>
+    /// A request model for creating a new user in Active Directory.
+    /// </summary>
     public sealed class CreateUserRequest : CreateBody
     {
         private const UAC DEFAULT_UAC = UAC.NormalUser | UAC.Disabled;
@@ -17,7 +20,7 @@ namespace AD.Api.Core.Ldap.Requests.Creation.Users
         [JsonExtensionData]
         public IDictionary<string, object?> Attributes
         {
-            get => _dict ??= CreateAttributesDictionary();
+            get => _dict ??= new(1);
             set => _dict = new(value);
         }
 
@@ -33,6 +36,7 @@ namespace AD.Api.Core.Ldap.Requests.Creation.Users
             init => this.Attributes[AttributeConstants.NAME] = value;
         }
 
+        [NotNull]
         [BindNever]
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public override IServiceProvider? RequestServices { get; set; } = null!;
@@ -75,30 +79,12 @@ namespace AD.Api.Core.Ldap.Requests.Creation.Users
             this.UserPrincipalName = string.Empty;
         }
 
-        private static JsonDictionary CreateAttributesDictionary()
-        {
-            return new(1);
-        }
-
         public bool TryGetAttributes([NotNullWhen(true)] out IReadOnlyDictionary<string, object?>? attributes)
         {
-            if (_dict is not null)
-            {
-                JsonDictionary jsonDict = new(_dict.Count);
-                foreach (KeyValuePair<string, object?> kvp in _dict)
-                {
-                    jsonDict.Add(kvp.Key, kvp.Value);
-                }
-
-                attributes = jsonDict;
-                return true;
-            }
-            else
-            {
-                attributes = null;
-                return false;
-            }
+            attributes = _dict;
+            return attributes is not null;
         }
+        /// <inheritdoc/>
         public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (!IsValidUserPrincipalName(this.UserPrincipalName))
@@ -119,7 +105,7 @@ namespace AD.Api.Core.Ldap.Requests.Creation.Users
             {
                 return true;
             }
-            
+
             int index = userPrincipalName.LastIndexOf('@');
             return index >= 0 && index < userPrincipalName.Length;
         }

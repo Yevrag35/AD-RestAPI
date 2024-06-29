@@ -1,7 +1,6 @@
 ﻿using AD.Api.Binding.Attributes;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
-using AD.Api.Core.Ldap.Requests.Creation.Users;
 using AD.Api.Core.Ldap.Users;
 using AD.Api.Core.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +22,7 @@ namespace AD.Api.Controllers.Users
         [Route("{sid:objectsid}")]
         public IActionResult GetUser(
             [FromQuery] SearchParameters parameters,
-            [FromRouteSid(Name = "sid")] SidString sid)
+            [FromRouteSid] SidString sid)
         {
             string filter = parameters.FilterSvc.GetFilter(sid, FilteredRequestType.User);
 
@@ -37,7 +36,7 @@ namespace AD.Api.Controllers.Users
         public IActionResult CreateUser(
             [FromBody] CreateUserRequest request,
             [FromServices] IUserCreations createSvc,
-            [FromQuery] string? domain = null)
+            [QueryDomain] string? domain = null)
         {
             request.RequestServices = this.HttpContext.RequestServices;
             return createSvc.Create(domain, request)
