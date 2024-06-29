@@ -2,8 +2,10 @@ using AD.Api.Actions;
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Core.Security.Encryption;
+using AD.Api.Core.Web;
 using AD.Api.Exceptions;
 using AD.Api.Startup.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.ActiveDirectory;
@@ -17,6 +19,7 @@ namespace AD.Api.Core.Ldap
         ContextLibrary RegisteredConnections { get; }
 
         OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
+        OneOf<LdapConnection, IActionResult> GetConnection(string? domainKey, string? domainController);
         bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
     }
 
@@ -53,6 +56,22 @@ namespace AD.Api.Core.Ldap
 
             connection = context.CreateConnection();
             return true;
+        }
+        public OneOf<LdapConnection, IActionResult> GetConnection(string? domainKey, string? domainController)
+        {
+            if (!this.RegisteredConnections.TryGetValue(domainKey, out ConnectionContext? context))
+            {
+                return new DomainNotFoundResult(domainKey);
+            }
+
+            try
+            {
+                return context.CreateConnection(domainController);
+            }
+            catch (LdapException e)
+            {
+                return new LdapExceptionResult(e);
+            }
         }
 
         [DynamicDependencyRegistrationMethod]

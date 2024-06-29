@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Ldap\Requests\Creation\LdapCreateRequest.cs" />
     <Compile Remove="Ldap\Requests\SearchPagingService.cs" />
     <Compile Remove="Ldap\Requests\Search\CachedSearchParameters.cs" />
   </ItemGroup>
@@ -27,7 +26,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="Ldap\Requests\Creation\LdapCreateRequest.cs" />
 	  <None Include="Ldap\Requests\SearchPagingService.cs" />
 	  <None Include="Ldap\Requests\Search\CachedSearchParameters.cs" />
 	</ItemGroup>

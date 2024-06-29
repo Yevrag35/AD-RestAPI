@@ -5,16 +5,12 @@ namespace AD.Api.Core.Ldap
     /// <summary>
     /// An interface representing a request to create an LDAP object.
     /// </summary>
-    public interface ICreateRequest
+    public interface ICreateRequest : IServiceProvider
     {
         /// <summary>
         /// Gets the type of request.
         /// </summary>
         FilteredRequestType RequestType { get; }
-        /// <summary>
-        /// <inheritdoc cref="Microsoft.AspNetCore.Http.HttpContext.RequestServices"/>
-        /// </summary>
-        IServiceProvider RequestServices { get; }
         /// <summary>
         /// Indicates whether the object has a parent path specified.
         /// </summary>

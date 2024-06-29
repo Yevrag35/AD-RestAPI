@@ -1,4 +1,5 @@
 using AD.Api.Core.Schema;
+using NLog;
 using System.DirectoryServices.ActiveDirectory;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
@@ -7,8 +8,10 @@ namespace AD.Api.Core.Ldap
 {
     public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServiceProvider
     {
+        static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
         private readonly RegisteredDomain _domain;
-        private readonly LdapDirectoryIdentifier _identifier;
+        private readonly LdapIdentifierDictionary _identifiers;
         private readonly IServiceProvider _provider;
         public string DefaultNamingContext => _domain.DefaultNamingContext;
         public string DomainName => _domain.DomainName;
@@ -22,13 +25,51 @@ namespace AD.Api.Core.Ldap
             ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
             _domain = domain;
             this.Name = connectionName;
-            _identifier = this.CreateIdentifier(domain);
+            var identifier = this.CreateIdentifier(domain);
+            _identifiers = new(domain.DomainName, identifier);
+
             _provider = provider;
         }
 
         public LdapConnection CreateConnection()
         {
-            return this.CreateConnection(_domain, _identifier);
+            return this.CreateConnection(_domain, _identifiers.Default);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="domainController"></param>
+        /// <returns></returns>
+        /// <inheritdoc cref="LdapConnection.Bind()" path="/exception"/>
+        public LdapConnection CreateConnection(string? domainController)
+        {
+            if (string.IsNullOrWhiteSpace(domainController) || _domain.DomainName.Equals(domainController, StringComparison.OrdinalIgnoreCase))
+            {
+                return this.CreateConnection();
+            }
+
+            LdapDirectoryIdentifier identifier = _identifiers.GetOrAdd(domainController);
+            LdapConnection connection = this.CreateConnection(_domain, identifier);
+            try
+            {
+                connection.Bind();
+                return connection;
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                _identifiers.TryRemove(domainController);
+                try
+                {
+                    connection.Dispose();
+                }
+                catch (Exception ie)
+                {
+                    _logger.Warn(ie);
+                }
+
+                throw;
+            }
         }
 
         protected abstract LdapConnection CreateConnection(RegisteredDomain domain, LdapDirectoryIdentifier identifier);

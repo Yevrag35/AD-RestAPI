@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using AD.Api.Extensions;
 using System.Security.Principal;
 
 namespace AD.Api.Middleware
@@ -12,18 +12,21 @@ namespace AD.Api.Middleware
             _next = next;
         }
 
-        public async Task Invoke(HttpContext httpContext)
+        public Task Invoke(HttpContext httpContext)
         {
-            var user = (WindowsIdentity)httpContext.User.Identity!;   
-
-            Debug.WriteLine($"User: {user.Name}\tState: {user.ImpersonationLevel}\n");
-
-            await WindowsIdentity.RunImpersonatedAsync(user.AccessToken, async () =>
+            if (!httpContext.TryGetWindowsIdentity(out WindowsIdentity? wid))
             {
-                var impersonated = WindowsIdentity.GetCurrent();
-                Debug.WriteLine($"User: {impersonated.Name}\tState: {impersonated.ImpersonationLevel}\n");
+                return _next(httpContext);
+            }
 
-                await _next(httpContext).ConfigureAwait(false);
+            return InvokeImpersonatedAsync(httpContext, wid, _next);
+        }
+
+        private static async Task InvokeImpersonatedAsync(HttpContext context, WindowsIdentity identity, RequestDelegate next)
+        {
+            await WindowsIdentity.RunImpersonatedAsync(identity.AccessToken, async () =>
+            {
+                await next(context).ConfigureAwait(false);
             })
             .ConfigureAwait(false);
         }

@@ -4,6 +4,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Users;
 using AD.Api.Core.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AD.Api.Controllers.Users
 {
@@ -34,12 +35,13 @@ namespace AD.Api.Controllers.Users
 
         [HttpPost]
         public IActionResult CreateUser(
-            [FromBody] CreateUserRequest request,
+            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
             [FromServices] IUserCreations createSvc,
-            [QueryDomain] string? domain = null)
+            [QueryDomain] string? domain = null,
+            [FromQuery] string? dc = null)
         {
-            request.RequestServices = this.HttpContext.RequestServices;
-            return createSvc.Create(domain, request)
+            request.SetRequestServices(this.HttpContext);
+            return createSvc.Create(domain, request, dc)
                 .Match(
                     state: (request, domain),
                     (request, success) =>

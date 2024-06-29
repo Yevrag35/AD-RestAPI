@@ -57,7 +57,7 @@ namespace AD.Api.Core.Ldap
                 return OneOf<ResultEntry>.FromT1(error);
             }
 
-            var filterSvc = request.RequestServices.GetRequiredService<ILdapFilterService>();
+            var filterSvc = request.GetRequiredService<ILdapFilterService>();
             string filter = filterSvc.GetFilter(request.RequestType, addEnclosure: true);
 
             SearchRequest search = new(dn.ToString(), filter, SearchScope.Base, [AttributeConstants.OBJECT_SID]);
@@ -80,7 +80,7 @@ namespace AD.Api.Core.Ldap
                 };
             }
 
-            var entry = request.RequestServices.GetRequiredService<IPooledItem<ResultEntry>>();
+            var entry = request.GetRequiredService<IPooledItem<ResultEntry>>();
             entry.Value.AddResult(domainKey ?? string.Empty, searchSuccess.Entries[0]);
 
             return entry.Value;

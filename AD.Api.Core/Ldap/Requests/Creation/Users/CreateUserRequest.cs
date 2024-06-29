@@ -16,7 +16,6 @@ namespace AD.Api.Core.Ldap.Users
         private const UAC DEFAULT_UAC = UAC.NormalUser | UAC.Disabled;
         private JsonDictionary _dict = null!;
 
-        [BindNever]
         [JsonExtensionData]
         public IDictionary<string, object?> Attributes
         {
@@ -35,11 +34,6 @@ namespace AD.Api.Core.Ldap.Users
             get => (string)this.Attributes[AttributeConstants.NAME]!;
             init => this.Attributes[AttributeConstants.NAME] = value;
         }
-
-        [NotNull]
-        [BindNever]
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public override IServiceProvider? RequestServices { get; set; } = null!;
 
         [MaxLength(20, ErrorMessage = "The sAMAccountName length must be 20 characters or less.")]
         public required string SamAccountName

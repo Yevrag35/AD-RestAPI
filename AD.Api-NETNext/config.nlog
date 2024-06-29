@@ -24,7 +24,7 @@
 				archiveAboveSize="500000"
 				maxArchiveFiles="4"
 				writeBom="true"
-				layout="${longdate}|${event-properties:item=EventId:whenEmpty=0}|${level:uppercase=true}|${logger}|${message} ${exception:format=tostring}" />
+				layout="${longdate}|${event-properties:item=EventId:whenEmpty=0}|${level:uppercase=true}|${aspnet-traceidentifier}|${logger}|${message} ${exception:format=tostring}" />
 		
 		<!-- File target for critical log messages with full details -->
 		<target xsi:type="File" name="extFile-web" fileName="Logs\web-ext.log"
@@ -36,8 +36,19 @@
 				archiveAboveSize="500000"
 				maxArchiveFiles="4"
 				writeBom="true"
-				layout="${longdate}|${event-properties:item=EventId:whenEmpty=0}|${level:uppercase=true}|url: ${aspnet-request-url}|action: ${aspnet-mvc-action}|${logger}|${message} ${exception:format=tostring}" />
+				layout="${longdate}|${level:uppercase=true}|${aspnet-traceidentifier}|url: ${aspnet-request-url}|action: ${aspnet-mvc-action}|${logger}|${message} ${exception:format=tostring}" />
 
+		<target xsi:type="File" name="apiRequests" fileName="Logs\web-requests.log"
+				createDirs="true"
+				deleteOldFileOnStartup="true"
+				encoding="utf-8"
+				keepFileOpen="false"
+				archiveNumbering="DateAndSequence"
+				archiveAboveSize="500000"
+				maxArchiveFiles="4"
+				writeBom="true"
+				layout="${longdate}|${aspnet-traceidentifier}|URL: ${aspnet-request-url}|IP: ${aspnet-request-ip}|USER: ${aspnet-user-identity:whenEmpty=Anonymous}|STATUS: ${aspnet-response-statuscode}|${message}" />
+		
 		<!--Console Target for hosting lifetime messages to improve Docker / Visual Studio startup detection -->
 		<target xsi:type="Console" name="lifetimeConsole" layout="${MicrosoftConsoleLayout}" />
 	</targets>
@@ -53,6 +64,7 @@
 		<!-- Skip non-critcial MS logs and so log only AD.API-specific logs (BlackHole) -->
 		<logger name="Microsoft.*" maxlevel="Info" final="true" />
 		<logger name="System.Net.Http.*" maxlevel="Info" final="true" />
+		<logger name="AD.Api.Middleware.RequestLoggerMiddleware" maxlevel="Info" writeTo="apiRequests" final="true" />
 
 		<logger name="*" minlevel="Debug" writeTo="extFile-web" />
 	</rules>

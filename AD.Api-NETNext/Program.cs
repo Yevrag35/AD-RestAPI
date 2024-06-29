@@ -8,6 +8,7 @@ using AD.Api.Core.Serialization.Json;
 using AD.Api.Expressions;
 using AD.Api.Extensions.Startup;
 using AD.Api.Mapping;
+using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
@@ -169,6 +170,8 @@ try
 
     //app.UseAuthentication();
     //app.UseAuthorization();
+
+    app.UseRequestLoggerMiddleware();
 
     //app.UseMultipleSchemaAuthenticationMiddleware();
 

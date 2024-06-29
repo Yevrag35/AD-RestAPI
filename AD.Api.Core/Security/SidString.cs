@@ -38,6 +38,11 @@ namespace AD.Api.Core.Security
             _sid = new SecurityIdentifier(rawString);
             _rawString = rawString;
         }
+        public SidString(byte[] binaryForm)
+        {
+            _sid = new SecurityIdentifier(binaryForm, 0);
+            _rawString = _sid.Value;
+        }
 
         public bool Equals([NotNullWhen(true)] SidString? other)
         {

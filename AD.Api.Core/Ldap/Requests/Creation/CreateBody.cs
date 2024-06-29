@@ -1,5 +1,5 @@
 using AD.Api.Core.Ldap.Filters;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -8,20 +8,20 @@ namespace AD.Api.Core.Ldap
     /// <summary>
     /// Represents a request to create an LDAP object.
     /// </summary>
-    public abstract class CreateBody : ICreateRequest, IValidatableObject
+    public abstract class CreateBody : ICreateRequest, IServiceProvider, IValidatableObject
     {
         private string? _path;
+        private IServiceProvider _requestSvc = null!;
 
         /// <summary>
         /// The specified common name (cn) for the object.
         /// </summary>
-        [Required]
+        [JsonRequired]
         [JsonPropertyName("cn")]
         [MinLength(1, ErrorMessage = "Common names should always be at least 1 character in length.")]
         public required string CommonName { get; set; }
 
         /// <inheritdoc/>
-        [BindNever]
         [MemberNotNullWhen(true, nameof(Path))]
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool HasPath { get; private set; }
@@ -38,9 +38,6 @@ namespace AD.Api.Core.Ldap
             }
         }
 
-        public abstract IServiceProvider RequestServices { get; set; }
-
-        [BindNever]
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public abstract FilteredRequestType RequestType { get; }
 
@@ -48,6 +45,16 @@ namespace AD.Api.Core.Ldap
         public DistinguishedName GetDistinguishedName()
         {
             return new DistinguishedName(this.CommonName, this.Path);
+        }
+
+        public object? GetService(Type serviceType)
+        {
+            return _requestSvc?.GetService(serviceType);
+        }
+
+        public void SetRequestServices(HttpContext context)
+        {
+            _requestSvc = context.RequestServices;
         }
 
         /// <inheritdoc/>
