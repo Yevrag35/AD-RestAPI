@@ -31,12 +31,17 @@
 	</ItemGroup>
 	
 	<ItemGroup>
+	  <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
 	  <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 	  <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
 	  <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
+	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.2" />
+	  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.6.2" />
 	  <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
 	  <PackageReference Include="System.DirectoryServices.Protocols" Version="8.0.0" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.2" />
 	  <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
 	  <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
 	  <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />

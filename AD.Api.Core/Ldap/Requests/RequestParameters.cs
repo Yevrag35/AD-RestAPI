@@ -1,6 +1,6 @@
-using AD.Api.Binding.Attributes;
 using AD.Api.Components;
 using AD.Api.Core.Web;
+using AD.Api.Core.Web.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices.Protocols;
 

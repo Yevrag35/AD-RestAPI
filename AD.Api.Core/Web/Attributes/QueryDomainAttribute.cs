@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http.Metadata;
 
-namespace AD.Api.Binding.Attributes;
+namespace AD.Api.Core.Web.Attributes;
 
 /// <summary>
 /// An attribute decorating a parameter or property to indicate that the value should be

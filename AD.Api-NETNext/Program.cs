@@ -1,8 +1,11 @@
 using AD.Api;
 using AD.Api.Collections;
 using AD.Api.Constraints;
+using AD.Api.Core.Authentication;
+using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
+using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Expressions;
@@ -11,6 +14,7 @@ using AD.Api.Mapping;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
+using AD.Api.Settings;
 using AD.Api.Startup;
 using Microsoft.IdentityModel.Logging;
 using NLog;
@@ -52,6 +56,12 @@ try
     IConfiguration config = builder.Configuration;
 
     Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
+
+    var settings = config
+            .GetSection("CustomJwt")
+            .Get<CustomJwtSettings>();
+
+    Console.Write(settings);
 
     // Add services to the container.
 
@@ -100,6 +110,10 @@ try
         {
             options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
         });
+
+    builder.Services.AddEnumStringDictionary<AuthorizedRole>(out var roles, freeze: true);
+
+    builder.AddJwtAuthentication(roles);
 
     PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, config, (conversions) =>
     {
@@ -167,11 +181,11 @@ try
     }
 
     //app.UseHttpsRedirection();
-
-    //app.UseAuthentication();
-    //app.UseAuthorization();
-
     app.UseRequestLoggerMiddleware();
+    app.UseDomainReaderMiddleware();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     //app.UseMultipleSchemaAuthenticationMiddleware();
 
