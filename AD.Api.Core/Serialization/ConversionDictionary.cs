@@ -5,12 +5,14 @@ using AD.Api.Strings.Extensions;
 using System.Text.Json;
 using PropDict = System.Collections.Generic.Dictionary<string, AD.Api.Core.Serialization.SerializerAction>;
 using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Core.Serialization.SerializerAction>;
+using AD.Api.Core.Settings;
 
 namespace AD.Api.Core.Serialization
 {
     public interface IConversionDictionary
     {
         void Add(string attributeName, SerializerAction action);
+        void Add<T>(IConfigurationSection section, SerializerAction action);
         void AddMany(ReadOnlySpan<string> attributeNames, SerializerAction action);
         void AddMany(ReadOnlySpan<byte> attributeName, SerializerAction action, char separator = ' ');
     }
@@ -31,6 +33,13 @@ namespace AD.Api.Core.Serialization
         public void Add(string key, SerializerAction action)
         {
             _dictionary.Add(key, action);
+        }
+        public void Add<T>(IConfigurationSection section, SerializerAction action)
+        {
+            foreach (string name in AttributeSet.Create<T>(section, action))
+            {
+                _dictionary.Add(name, action);
+            }
         }
         public void AddMany(ReadOnlySpan<string> keys, SerializerAction action)
         {

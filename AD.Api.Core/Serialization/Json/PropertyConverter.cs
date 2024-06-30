@@ -2,6 +2,8 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
+using System.Collections.Frozen;
+using System.Globalization;
 using System.Text.Json;
 using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Core.Serialization.SerializerAction>;
 
@@ -10,13 +12,11 @@ namespace AD.Api.Core.Serialization.Json
     public sealed class PropertyConverter
     {
         private readonly FrozenDict _dictionary;
-        private readonly GuidAttributesSet _guidAttributes;
         private IServiceScopeFactory _scopeFactory = null!;
 
-        private PropertyConverter(ConversionDictionary dictionary, GuidAttributesSet guidAttributes)
+        private PropertyConverter(ConversionDictionary dictionary)
         {
             _dictionary = dictionary.ToFrozen();
-            _guidAttributes = guidAttributes;
         }
 
         public void AddScopeFactory(IServiceScopeFactory scopeFactory)
@@ -84,12 +84,12 @@ namespace AD.Api.Core.Serialization.Json
                 context.Value = pair.Value;
                 action(writer, ref context);
             }
-            else if (_guidAttributes.Contains(pair.Key) && TryConvertToGuid(pair.Value, out Guid guidValue))
-            {
-                Span<char> chars = stackalloc char[LengthConstants.GUID_FORM_D];
-                _ = guidValue.TryFormat(chars, out int charsWritten);
-                writer.WriteStringValue(chars.Slice(0, charsWritten));
-            }
+            //else if (_guidAttributes.Contains(pair.Key) && TryConvertToGuid(pair.Value, out Guid guidValue))
+            //{
+            //    Span<char> chars = stackalloc char[LengthConstants.GUID_FORM_D];
+            //    _ = guidValue.TryFormat(chars, out int charsWritten);
+            //    writer.WriteStringValue(chars.Slice(0, charsWritten));
+            //}
             else
             {
                 JsonSerializer.Serialize(writer, pair.Value,
@@ -102,34 +102,36 @@ namespace AD.Api.Core.Serialization.Json
             return new(options, provider);
         }
 
-        private static bool TryConvertToGuid(object value, out Guid guid)
-        {
-            if (value is byte[] byteArray && byteArray.Length == 16)
-            {
-                guid = new(byteArray.AsSpan());
-                return true;
-            }
-            else
-            {
-                guid = Guid.Empty;
-                return false;
-            }
-        }
+        //private static bool TryConvertToGuid(object value, out Guid guid)
+        //{
+        //    if (value is byte[] byteArray && byteArray.Length == 16)
+        //    {
+        //        guid = new(byteArray.AsSpan());
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        guid = Guid.Empty;
+        //        return false;
+        //    }
+        //}
 
         public static PropertyConverter AddToServices(IServiceCollection services, IConfiguration configuration, Action<IConversionDictionary> addConversions)
         {
             ConversionDictionary dict = new();
             addConversions(dict);
-            IConfigurationSection guidAttributes = configuration
-                .GetSection("Settings")
-                .GetSection("Serialization")
-                .GetSection("GuidAttributes");
 
-            var guidSet = GuidAttributesSet.Create(guidAttributes);
+            //IConfigurationSection serialization = configuration.GetSection("Settings").GetSection("Serialization");
+            //IConfigurationSection guidAttributes = serialization.GetSection("GuidAttributes");
+            //IConfigurationSection dateAttributes = serialization.GetSection("DateTimeAttributes");
 
-            PropertyConverter converter = new(dict, guidSet);
-            services.AddSingleton(converter)
-                    .AddSingleton(guidSet);
+            ////var guidSet = AttributeSet.Create<Guid>(guidAttributes, );
+            //var dateSet = AttributeSet.Create<DateTimeOffset>(dateAttributes, 
+            //    Attrib)
+
+            PropertyConverter converter = new(dict);
+            services.AddSingleton(converter);
+                    //.AddSingleton(guidSet);
 
             return converter;
         }

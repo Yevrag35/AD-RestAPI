@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using NLog;
+using System.Buffers;
 using System.DirectoryServices.Protocols;
 using System.Text.Json;
 
@@ -18,6 +19,7 @@ namespace AD.Api.Middleware
     public class DomainReaderMiddleware
     {
         private const string NOT_REGISTERED = "The requested domain is not registered: {DomainName}";
+        private const int MAX_MSG_LENGTH = 256;
         static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly RequestDelegate _next;
@@ -83,8 +85,15 @@ namespace AD.Api.Middleware
         {
             ReadOnlySpan<char> msg = NOT_REGISTERED;
             msg = msg.Slice(0, msg.IndexOf(['{'], StringComparison.Ordinal));
+            int length = msg.Length + domain.Length + 2;
 
-            Span<char> buffer = stackalloc char[msg.Length + domain.Length + 2];
+            char[]? array = null;
+            bool isRented = false;
+
+            Span<char> buffer = length < MAX_MSG_LENGTH
+                ? stackalloc char[length]
+                : SpanExtensions.RentArray(in length, ref isRented, ref array);
+
             msg.CopyTo(buffer);
             int pos = msg.Length;
             buffer[pos++] = CharConstants.DOUBLE_QUOTE;
@@ -92,6 +101,11 @@ namespace AD.Api.Middleware
             buffer[pos++] = CharConstants.DOUBLE_QUOTE;
 
             writer.WriteStringValue(buffer.Slice(0, pos));
+
+            if (isRented)
+            {
+                ArrayPool<char>.Shared.Return(array!);
+            }
         }
     }
 

@@ -65,28 +65,6 @@ try
 
     // Add services to the container.
 
-    // Add Authentication - Kerberos/Negotiate
-    //builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-    //    .AddNegotiate(options =>
-    //    {
-    //        options.Validate();
-    //    });
-
-    //builder.Services.AddAuthentication()
-    //    //.AddJwtBearer("Auth0", options =>
-    //    //{
-    //    //    options.Audience = "myCustomJwt";
-    //    //    options.Authority = "https://doesnotexist.com";
-    //    //})
-    //    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
-
-    //builder.Services.AddAuthorization(options =>
-    //{
-    //    var policyBuilder = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme); // Auth0
-    //    policyBuilder = policyBuilder.RequireAuthenticatedUser();
-    //    options.DefaultPolicy = policyBuilder.Build();
-    //});
-
     builder.Services
         .AddResolvedServicesFromAssemblies(builder.Configuration, assemblies, exclude =>
         {
@@ -114,21 +92,28 @@ try
                     .AddEnumStringDictionary<ResultCode>(out var resultCodes, freeze: true);
 
     builder.AddJwtAuthentication(roles);
+    // Add Authentication - Kerberos/Negotiate
+    //builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+    //    .AddNegotiate(options =>
+    //    {
+    //        options.Validate();
+    //    });
+    // Add Authentication - EntraID
+    //builder.Services.AddAuthentication()
+    //    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
 
     PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, config, (conversions) =>
     {
-        ReadOnlySpan<byte> timeConvertAttributes = "accountExpires badPasswordTime lastLogon lastLogonTimestamp pwdLastSet whenChanged whenCreated"u8;
+        IConfigurationSection section = config.GetRequiredSection("Settings").GetRequiredSection("Serialization");
 
-        conversions.AddMany(timeConvertAttributes, AttributeSerialization.WriteDateTimeOffset);
+        conversions.Add<Guid>(section.GetSection("GuidAttributes"), AttributeSerialization.WriteGuid);
+        conversions.Add<DateTimeOffset>(section.GetSection("DateTimeAttributes"), AttributeSerialization.WriteDateTimeOffset);
         conversions.Add("groupType", AttributeSerialization.WriteEnumValue<GroupType>);
         conversions.Add("objectSid", AttributeSerialization.WriteObjectSID);
         conversions.Add("sAMAccountType", AttributeSerialization.WriteEnumValue<SamAccountType>);
         conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
 
-        if (config
-            .GetSection("Settings")
-            .GetSection("Serialization")
-            .GetValue("WriteSimpleObjectClass", false))
+        if (section.GetValue("WriteSimpleObjectClass", false))
         {
             conversions.Add("objectClass", AttributeSerialization.WriteObjectClassSimple);
         }
@@ -136,7 +121,7 @@ try
 
     if (OperatingSystem.IsWindows())
     {
-        IConfigurationSection section = config.GetSection("Settings").GetSection("Encryption");
+        IConfigurationSection section = config.GetRequiredSection("Settings").GetSection("Encryption");
         if (section.Exists() && "Certificate".Equals(section.GetValue<string>("Type"), StringComparison.OrdinalIgnoreCase))
         {
             builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
