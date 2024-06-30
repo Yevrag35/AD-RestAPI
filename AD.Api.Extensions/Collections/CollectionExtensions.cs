@@ -4,6 +4,23 @@ namespace AD.Api.Collections
 {
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"/>
+        public static bool IsFixedSize<T>(this ICollection<T> collection)
+        {
+            ArgumentNullException.ThrowIfNull(collection);
+            return collection.IsReadOnly || collection is Array || IsFixedSizeList(collection);
+        }
+        private static bool IsFixedSizeList<T>(this ICollection<T> collection)
+        {
+            return collection is IList nonGenList && nonGenList.IsFixedSize;
+        }
+
         public static bool TryGetFirst<T>(this ICollection collection, [NotNullWhen(true)] out T? value)
         {
             foreach (object? o in collection)

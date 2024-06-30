@@ -100,7 +100,6 @@ try
             x.Register<ActiveDirectorySyntax>()
              .Register<FilteredRequestType>()
              .Register<GroupType>()
-             .Register<ResultCode>()
              .Register<SamAccountType>()
              .Register<UserAccountControl>()
              .Register<WellKnownObjectValue>();
@@ -111,7 +110,8 @@ try
             options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
         });
 
-    builder.Services.AddEnumStringDictionary<AuthorizedRole>(out var roles, freeze: true);
+    builder.Services.AddEnumStringDictionary<AuthorizedRole>(out var roles, freeze: true)
+                    .AddEnumStringDictionary<ResultCode>(out var resultCodes, freeze: true);
 
     builder.AddJwtAuthentication(roles);
 
@@ -168,10 +168,12 @@ try
     var app = builder.Build();
     converter.AddScopeFactory(app.Services.GetRequiredService<IServiceScopeFactory>());
 
-    //app.UseExceptionHandler(new ExceptionHandlerOptions
-    //{
-    //    ExceptionHandler = new ErrorHandlingMiddleware().Invoke
-    //});
+    app.UseExceptionHandler(new ExceptionHandlerOptions()
+    {
+        AllowStatusCode404Response = false,
+        CreateScopeForErrors = false,
+        ExceptionHandler = new ErrorHandlingMiddleware(resultCodes).Invoke,
+    });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -180,16 +182,15 @@ try
         app.UseSwaggerUI();
     }
 
-    //app.UseHttpsRedirection();
-    app.UseRequestLoggerMiddleware();
-    app.UseDomainReaderMiddleware();
+    app.UseHttpsRedirection();
 
-    app.UseAuthentication();
-    app.UseAuthorization();
+    app.UseRequestLoggerMiddleware()
+       .UseDomainReaderMiddleware();
+    //.UseMultipleSchemaAuthenticationMiddleware();
+    //.UseImpersonationMiddleware();
 
-    //app.UseMultipleSchemaAuthenticationMiddleware();
-
-    //app.UseImpersonationMiddleware();
+    app.UseAuthentication()
+       .UseAuthorization();
 
     app.MapControllers();
 
@@ -197,7 +198,7 @@ try
 }
 catch (Exception e)
 {
-    logger.Error(e, "Stopped API because of exception");
+    logger.Error(e, "Stopped API because of fatal exception");
     throw;
 }
 finally

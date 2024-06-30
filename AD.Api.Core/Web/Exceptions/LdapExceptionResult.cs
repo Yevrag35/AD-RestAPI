@@ -8,7 +8,6 @@ namespace AD.Api.Core.Web
         public override string Error { get; }
         public override RCode Result { get; }
         public override int ResultCode { get; }
-        protected override bool IsClientFault { get; }
 
         public LdapExceptionResult(LdapException exception)
             : base(exception)
@@ -16,7 +15,6 @@ namespace AD.Api.Core.Web
             this.Error = exception.Message;
             this.Result = RCode.OperationsError;
             this.ResultCode = exception.ErrorCode;
-            this.IsClientFault = true;
         }
 
         protected override List<string> AddExtendedErrors([DisallowNull] LdapException exception, List<string> messages)

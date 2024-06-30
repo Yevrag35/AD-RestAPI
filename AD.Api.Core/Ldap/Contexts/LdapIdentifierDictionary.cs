@@ -1,5 +1,6 @@
 using AD.Api.Components;
 using AD.Api.Statics;
+using AD.Api.Strings;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.Protocols;
@@ -8,21 +9,17 @@ namespace AD.Api.Core.Ldap
 {
     internal sealed class LdapIdentifierDictionary
     {
-        private readonly record struct DcNameTuple([Required] string DomainController, [Required] string DomainName)
+        private readonly record struct DcNameTuple([Required] string DomainController, [Required] string DomainName) :
+            IStringCreatable<DcNameTuple>
         {
-            public readonly int Length = DomainController.Length + DomainName.Length + 1;
+            public readonly int Length => this.DomainController.Length + this.DomainName.Length + 1;
 
-            public readonly void CopyTo(scoped Span<char> chars)
+            public readonly void WriteTo(scoped Span<char> chars)
             {
                 this.DomainController.CopyTo(chars);
                 int pos = this.DomainController.Length;
                 chars[pos++] = CharConstants.PERIOD;
                 this.DomainName.CopyTo(chars.Slice(pos));
-            }
-
-            public static void CopyTupleTo(Span<char> chars, DcNameTuple state)
-            {
-                state.CopyTo(chars);
             }
         }
 
@@ -56,8 +53,7 @@ namespace AD.Api.Core.Ldap
                 return domainController;
             }
 
-            DcNameTuple tuple = new(domainController, this.DomainName);
-            return string.Create(tuple.Length, tuple, DcNameTuple.CopyTupleTo);
+            return new DcNameTuple(domainController, this.DomainName).CreateString();
         }
         public LdapDirectoryIdentifier GetOrAdd(string? domainController)
         {

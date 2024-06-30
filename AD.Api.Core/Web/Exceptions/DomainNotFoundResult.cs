@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
@@ -10,7 +11,6 @@ namespace AD.Api.Core.Web
         public override string Error { get; }
         public override RCode Result { get; }
         public override int ResultCode { get; }
-        protected override bool IsClientFault { get; }
 
         public DomainNotFoundResult(string? domainSpecified)
         {
@@ -18,7 +18,13 @@ namespace AD.Api.Core.Web
             this.Error = string.Format(Messages.Response_DomainNotFound, domainSpecified);
             this.Result = RCode.Unavailable;
             this.ResultCode = (int)this.Result;
-            this.IsClientFault = !string.IsNullOrEmpty(domainSpecified);
+        }
+
+        protected override int GetStatusCode()
+        {
+            return !string.IsNullOrWhiteSpace(this.DomainRequested)
+                ? StatusCodes.Status400BadRequest
+                : StatusCodes.Status500InternalServerError;
         }
     }
 }

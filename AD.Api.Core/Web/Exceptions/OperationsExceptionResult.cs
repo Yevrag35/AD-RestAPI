@@ -8,7 +8,6 @@ namespace AD.Api.Core.Web
         public override string Error { get; }
         public override RCode Result { get; }
         public override int ResultCode { get; }
-        protected override bool IsClientFault { get; }
 
         public OperationsExceptionResult([DisallowNull] DirectoryOperationException exception)
             : base(exception)
@@ -16,9 +15,6 @@ namespace AD.Api.Core.Web
             this.Error = exception.Message;
             this.Result = exception.Response.ResultCode;
             this.ResultCode = (int)this.Result;
-            this.IsClientFault = exception.Response.ResultCode == RCode.NoSuchObject
-                                 ||
-                                 exception.Response.ResultCode == RCode.NoSuchAttribute;
         }
     }
 }

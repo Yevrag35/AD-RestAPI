@@ -56,6 +56,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include="Extensions\InjectServicesExtension.cs" />
+	  <None Include="Middleware\ErrorHandlingMiddleware.cs" />
 	</ItemGroup>
 
   <!--<ItemGroup>

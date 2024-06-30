@@ -1,5 +1,7 @@
-﻿using AD.Api.Enums;
+﻿using AD.Api.Core.Extensions;
+using AD.Api.Enums;
 using NLog;
+using System.Diagnostics;
 using System.Net;
 
 namespace AD.Api.Middleware
@@ -19,6 +21,10 @@ namespace AD.Api.Middleware
 
         public async Task Invoke(HttpContext httpContext)
         {
+            bool added = httpContext.AddLogTraceId();
+            Debug.Assert(added && httpContext.Response.Headers.ContainsKey(HttpContextExtensions.TRACE_ID_HEADER), 
+                "Why didn't the trace ID get added?");
+
             await _next(httpContext).ConfigureAwait(false);
 
             string codeName = _codes[(HttpStatusCode)httpContext.Response.StatusCode];

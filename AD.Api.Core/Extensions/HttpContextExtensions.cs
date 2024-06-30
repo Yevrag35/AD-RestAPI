@@ -7,16 +7,28 @@ namespace AD.Api.Core.Extensions;
 
 public static class HttpContextExtensions
 {
+    public const string TRACE_ID_HEADER = "X-Trace-Id";
+
     public static void AddNeedsScoping(this HttpContext context, in AuthorizedRole role)
     {
         string roleName = context.RequestServices.GetRequiredService<IEnumStrings<AuthorizedRole>>()[role];
         context.Items[AuthorizationScope.NeedsScoping] = roleName;
     }
+    public static bool AddLogTraceId(this HttpContext context)
+    {
+        string id = GetLogTraceId(context);
+        return !string.IsNullOrWhiteSpace(id) && context.Response.Headers.TryAdd(TRACE_ID_HEADER, id);
+    }
+
     public static AuthorizationScope[] GetScopes(this HttpContext context)
     {
         return context.Items.TryGetValue(AuthorizationScope.CLAIM_TYPE, out object? value) && value is AuthorizationScope[] scopes
             ? scopes
             : [];
+    }
+    public static string GetLogTraceId(this HttpContext context)
+    {
+        return Activity.Current?.Id ?? context.TraceIdentifier;
     }
     public static bool NeedsScoping(this HttpContext context, out AuthorizedRole requiredRole)
     {
