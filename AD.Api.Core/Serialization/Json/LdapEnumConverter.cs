@@ -45,10 +45,10 @@ namespace AD.Api.Core.Serialization.Json
                 : _namingPolicyConverter.CreateConverter(typeToConvert, options);
         }
 
-        public static LdapEnumConverter Create(Action<ILdapEnumConverterOptions> configureOptions)
+        public static LdapEnumConverter Create<T>(T state, Action<ILdapEnumConverterOptions, T> configureOptions)
         {
             LdapEnumConverterOptions options = new();
-            configureOptions(options);
+            configureOptions(options, state);
 
             return options.FlagsAsArray
                 ? new EnumFlagConverter(options)

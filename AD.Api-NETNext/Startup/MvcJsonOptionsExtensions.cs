@@ -10,23 +10,23 @@ namespace AD.Api
 {
     public static class MvcJsonOptionsExtensions
     {
-        public static IMvcBuilder AddADApiJsonConfiguration(this IMvcBuilder builder, IHostApplicationBuilder appBuilder, PropertyConverter converter)
+        public static IMvcBuilder AddApiControllers(this WebApplicationBuilder appBuilder, IConfigurationSection settingsSection, PropertyConverter converter, Func<WebApplicationBuilder, IMvcBuilder> addControllers)
         {
-            IConfiguration config = appBuilder.Configuration;
             bool isDevelopment = appBuilder.Environment.IsDevelopment();
-            SerializationSettings settings = GetSerializationSettings(builder.Services, appBuilder.Configuration);
+            SerializationSettings settings = GetSerializationSettings(appBuilder.Services, settingsSection);
             LdapEnumConverter enumConverter = ConfigureAndAddEnumConverter(appBuilder, settings);
 
-            return builder.AddJsonOptions(options =>
-            {
-                options.AllowInputFormatterExceptionMessages = isDevelopment;
-                options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonSpanCamelCaseNamingPolicy.SpanPolicy;
-                options.JsonSerializerOptions.WriteIndented = settings.WriteIndented;
+            return addControllers(appBuilder)
+                .AddJsonOptions(options =>
+                {
+                    options.AllowInputFormatterExceptionMessages = isDevelopment;
+                    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonSpanCamelCaseNamingPolicy.SpanPolicy;
+                    options.JsonSerializerOptions.WriteIndented = settings.WriteIndented;
 
-                options.JsonSerializerOptions.Converters.Add(enumConverter);
-                AddAdditionalJsonConverters(options.JsonSerializerOptions, converter);
-            });
+                    options.JsonSerializerOptions.Converters.Add(enumConverter);
+                    AddAdditionalJsonConverters(options.JsonSerializerOptions, converter);
+                });
         }
 
         private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
@@ -38,10 +38,10 @@ namespace AD.Api
         }
         private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder, SerializationSettings settings)
         {
-            var enumConverter = LdapEnumConverter.Create(options =>
+            var enumConverter = LdapEnumConverter.Create(settings, (options, state) =>
             {
                 options.SetNamingPolicy(JsonSpanCamelCaseNamingPolicy.SpanPolicy)
-                       .SerializeFlagsAsArray(settings.WriteEnumFlagsAsArray)
+                       .SerializeFlagsAsArray(state.WriteEnumFlagsAsArray)
                        .Exclude<GroupType>()
                        .Exclude<SamAccountType>()
                        .Exclude<UserAccountControl>();
@@ -57,11 +57,26 @@ namespace AD.Api
                 .GetRequiredSection("Settings")
                 .GetSection("Serialization");
 
-            SerializationSettings? settings = section.Get<SerializationSettings>(x => x.ErrorOnUnknownConfiguration = false)
+            SerializationSettings? settings = section.Get<SerializationSettings>()
                 ?? new SerializationSettings
                 {
-                    GuidAttributes = ["ms-DS-ConsistencyGuid", "objectGUID"],
+                    DateTimeAttributes = [
+                        "accountExpires",
+                        "badPasswordTime",
+                        "lastLogon",
+                        "lastLogonTimestamp",
+                        "lockoutTime",
+                        "pwdLastSet",
+                        "whenChanged",
+                        "whenCreated",
+                    ],
+                    GuidAttributes = [
+                        "ms-DS-ConsistencyGuid",
+                        "objectGUID",
+                    ],
+                    WriteEnumFlagsAsArray = false,
                     WriteIndented = true,
+                    WriteSimpleObjectClass = true,
                 };
 
             services.AddSingleton(settings);

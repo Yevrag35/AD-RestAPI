@@ -21,7 +21,6 @@ namespace AD.Api.Core.Authentication
         bool TryAddScopesToContext(HttpContext context, AuthorizedRole requiredRole);
     }
 
-    [DependencyRegistration(typeof(IAuthorizationService), Lifetime = ServiceLifetime.Singleton)]
     internal sealed class AuthorizationService : IAuthorizationService
     {
         static readonly Logger _logger = LogManager.GetCurrentClassLogger();
@@ -116,6 +115,14 @@ namespace AD.Api.Core.Authentication
             }
 
             return flag;
+        }
+    }
+
+    public static class AuthorizationServiceExtensions
+    {
+        public static IServiceCollection AddAuthorizationService(this IServiceCollection services)
+        {
+            return services.AddSingleton<IAuthorizationService, AuthorizationService>();
         }
     }
 }

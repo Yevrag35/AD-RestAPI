@@ -102,36 +102,13 @@ namespace AD.Api.Core.Serialization.Json
             return new(options, provider);
         }
 
-        //private static bool TryConvertToGuid(object value, out Guid guid)
-        //{
-        //    if (value is byte[] byteArray && byteArray.Length == 16)
-        //    {
-        //        guid = new(byteArray.AsSpan());
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        guid = Guid.Empty;
-        //        return false;
-        //    }
-        //}
-
         public static PropertyConverter AddToServices(IServiceCollection services, IConfiguration configuration, Action<IConversionDictionary> addConversions)
         {
             ConversionDictionary dict = new();
             addConversions(dict);
 
-            //IConfigurationSection serialization = configuration.GetSection("Settings").GetSection("Serialization");
-            //IConfigurationSection guidAttributes = serialization.GetSection("GuidAttributes");
-            //IConfigurationSection dateAttributes = serialization.GetSection("DateTimeAttributes");
-
-            ////var guidSet = AttributeSet.Create<Guid>(guidAttributes, );
-            //var dateSet = AttributeSet.Create<DateTimeOffset>(dateAttributes, 
-            //    Attrib)
-
             PropertyConverter converter = new(dict);
             services.AddSingleton(converter);
-                    //.AddSingleton(guidSet);
 
             return converter;
         }

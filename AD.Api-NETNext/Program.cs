@@ -14,8 +14,9 @@ using AD.Api.Mapping;
 using AD.Api.Middleware;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
-using AD.Api.Settings;
 using AD.Api.Startup;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using NLog;
 using NLog.Web;
@@ -53,20 +54,15 @@ try
         options.ValidateScopes = isDev;
     });
 
-    IConfiguration config = builder.Configuration;
+    ConfigurationManager config = builder.Configuration;
+    IConfigurationSection settingsSection = config.GetRequiredSection("Settings");
+    IServiceCollection services = builder.Services;
 
     Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
 
-    var settings = config
-            .GetSection("CustomJwt")
-            .Get<CustomJwtSettings>();
-
-    Console.Write(settings);
-
     // Add services to the container.
-
     builder.Services
-        .AddResolvedServicesFromAssemblies(builder.Configuration, assemblies, exclude =>
+        .AddResolvedServicesFromAssemblies(config, assemblies, exclude =>
         {
             exclude.Add(typeof(IExpressionCache<,>))
                    .Add<LambdaComparisonVisitor>()
@@ -78,29 +74,18 @@ try
             x.Register<ActiveDirectorySyntax>()
              .Register<FilteredRequestType>()
              .Register<GroupType>()
-             .Register<SamAccountType>()
+             .Register<SamAccountType>(freeze: false)
              .Register<UserAccountControl>()
              .Register<WellKnownObjectValue>();
         })
+        .AddEnumStringDictionary<ResultCode>(out var resultCodes)
+        // Add Authentication/Authorization
+        .AddApiAuthenticationAuthorization(config, out Action<WebApplication>? builderCallback)
         .AddMemoryCache()
         .Configure<RouteOptions>(options =>
         {
             options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
         });
-
-    builder.Services.AddEnumStringDictionary<AuthorizedRole>(out var roles, freeze: true)
-                    .AddEnumStringDictionary<ResultCode>(out var resultCodes, freeze: true);
-
-    builder.AddJwtAuthentication(roles);
-    // Add Authentication - Kerberos/Negotiate
-    //builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-    //    .AddNegotiate(options =>
-    //    {
-    //        options.Validate();
-    //    });
-    // Add Authentication - EntraID
-    //builder.Services.AddAuthentication()
-    //    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAD"));
 
     PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, config, (conversions) =>
     {
@@ -136,29 +121,18 @@ try
         builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
     }
 
-    builder.Services
-        .AddControllers()
-        .AddADApiJsonConfiguration(builder, converter);
-    //.AddNewtonsoftJson(options =>
-    //{
-    //    options.AddADApiConfiguration(textSettings);
-    //});
+    builder.AddApiControllers(settingsSection, converter, b => b.Services.AddControllers());
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerWithOptions(config.GetSection("SwaggerInfo"));
 
+    // Only show PII in development.
     IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
-    var app = builder.Build();
+    // Build the application.
+    WebApplication app = builder.Build();
     converter.AddScopeFactory(app.Services.GetRequiredService<IServiceScopeFactory>());
-
-    app.UseExceptionHandler(new ExceptionHandlerOptions()
-    {
-        AllowStatusCode404Response = false,
-        CreateScopeForErrors = false,
-        ExceptionHandler = new ErrorHandlingMiddleware(resultCodes).Invoke,
-    });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -167,12 +141,19 @@ try
         app.UseSwaggerUI();
     }
 
+    app.UseExceptionHandler(new ExceptionHandlerOptions()
+    {
+        AllowStatusCode404Response = false,
+        CreateScopeForErrors = false,
+        ExceptionHandler = new ErrorHandlingMiddleware(resultCodes).Invoke,
+    });
+
     app.UseHttpsRedirection();
 
     app.UseRequestLoggerMiddleware()
        .UseDomainReaderMiddleware();
-    //.UseMultipleSchemaAuthenticationMiddleware();
-    //.UseImpersonationMiddleware();
+
+    builderCallback?.Invoke(app);
 
     app.UseAuthentication()
        .UseAuthorization();
@@ -183,7 +164,7 @@ try
 }
 catch (Exception e)
 {
-    logger.Error(e, "Stopped API because of fatal exception");
+    logger.Error(e, "Stopped API because of fatal exception -");
     throw;
 }
 finally

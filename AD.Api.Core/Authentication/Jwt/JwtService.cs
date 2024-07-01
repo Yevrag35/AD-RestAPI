@@ -1,8 +1,10 @@
-using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Enums;
+using AD.Api.Startup.Exceptions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Collections.Frozen;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.Versioning;
 using System.Security.Claims;
@@ -18,7 +20,6 @@ namespace AD.Api.Core.Authentication.Jwt
     }
 
     [SupportedOSPlatform("WINDOWS")]
-    [DependencyRegistration(typeof(IJwtService), Lifetime = ServiceLifetime.Singleton)]
     internal sealed class JwtService : IJwtService
     {
         private readonly IAuthorizationService _authorizations;
@@ -99,4 +100,6 @@ namespace AD.Api.Core.Authentication.Jwt
             return (base64Length * 3) / 4;
         }
     }
+
+    
 }
