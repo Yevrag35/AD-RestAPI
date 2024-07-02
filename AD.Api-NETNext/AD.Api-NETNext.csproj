@@ -93,6 +93,7 @@
   <ItemGroup>
     <Folder Include="Controllers\Groups\" />
     <Folder Include="Controllers\Computers\" />
+    <Folder Include="Services\Authorization\" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="https://json.schemastore.org/appsettings.json" /></VisualStudio></ProjectExtensions>

@@ -54,7 +54,6 @@ namespace AD.Api
         private static SerializationSettings GetSerializationSettings(IServiceCollection services, IConfiguration configuration)
         {
             IConfigurationSection section = configuration
-                .GetRequiredSection("Settings")
                 .GetSection("Serialization");
 
             SerializationSettings? settings = section.Get<SerializationSettings>()

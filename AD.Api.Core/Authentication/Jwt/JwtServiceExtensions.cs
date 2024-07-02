@@ -21,7 +21,7 @@ namespace AD.Api.Core.Authentication.Jwt
                 ?? throw new AdApiStartupException(typeof(JwtServiceExtensions), 
                     new NullReferenceException($"{nameof(CustomJwtSettings)} cannot be null."));
 
-            return services.AddAuthorizationService()
+            return services.AddJwtAuthorizer()
                            .AddJsonFileAuthorization(settings)
                            .AddJwtAuthorization(roles);
         }

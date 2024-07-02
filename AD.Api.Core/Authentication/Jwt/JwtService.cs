@@ -22,14 +22,14 @@ namespace AD.Api.Core.Authentication.Jwt
     [SupportedOSPlatform("WINDOWS")]
     internal sealed class JwtService : IJwtService
     {
-        private readonly IAuthorizationService _authorizations;
+        private readonly JwtAuthorizationService _authorizations;
         private readonly JwtSecurityTokenHandler _handler;
         private readonly TokenValidationParameters _parameters;
         private readonly IEnumStrings<AuthorizedRole> _roles;
         private readonly CustomJwtSettings _settings;
         private readonly SigningCredentials _signingCreds;
 
-        public JwtService(CustomJwtSettings settings, IAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles)
+        public JwtService(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles)
         {
             _handler = new();
             _roles = roles;
@@ -100,6 +100,4 @@ namespace AD.Api.Core.Authentication.Jwt
             return (base64Length * 3) / 4;
         }
     }
-
-    
 }

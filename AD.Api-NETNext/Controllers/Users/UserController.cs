@@ -44,7 +44,7 @@ namespace AD.Api.Controllers.Users
         public IActionResult CreateUser(
             [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
             [FromServices] IUserCreations createSvc,
-            [FromServices] IAuthorizationService authSvc,
+            [FromServices] IAuthorizer authSvc,
             [QueryDomain] string? domain = null,
             [FromQuery] string? dc = null)
         {

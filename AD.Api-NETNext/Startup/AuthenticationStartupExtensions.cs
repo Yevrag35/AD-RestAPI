@@ -6,6 +6,7 @@ using AD.Api.Middleware;
 using AD.Api.Services.Enums;
 using AD.Api.Startup.Exceptions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
@@ -14,12 +15,11 @@ namespace AD.Api.Startup
 {
     internal static class AuthenticationStartupExtensions
     {
-        private const string D = "D";
-
         internal static IServiceCollection AddApiAuthenticationAuthorization(this IServiceCollection services, ConfigurationManager configuration, out Action<WebApplication>? callback)
         {
             services.AddEnumStringDictionary<AuthorizedRole>(out var roles);
             IConfigurationSection authSection = configuration.GetRequiredSection("Authentication");
+            callback = null;
 
             string? authType = authSection.GetValue("Type", string.Empty)?.ToUpperInvariant();
             switch (authType)
@@ -27,7 +27,7 @@ namespace AD.Api.Startup
                 case "AD":
                 case "NEGOTIATE":
                 case "NTLM":
-                    AddNegotiate(services);
+                    AddNegotiate(services, roles);
                     break;
 
                 case "AAD":
@@ -64,10 +64,25 @@ namespace AD.Api.Startup
         {
             services.AddJwtAuthentication(authorizationSection, roles);
         }
-        private static void AddNegotiate(IServiceCollection services)
+        private static void AddNegotiate(IServiceCollection services, IEnumStrings<AuthorizedRole> enumStrings)
         {
-            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+            services.AddSingleton<IAuthorizer, NegotiateAuthorizer>()
+                    .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                     .AddNegotiate(o => o.Validate());
+
+            services.AddAuthorization(x =>
+            {
+                var policy = new AuthorizationPolicyBuilder(NegotiateDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+
+                x.FallbackPolicy = policy;
+
+                foreach (AuthorizedRole role in enumStrings.Values)
+                {
+                    x.AddPolicy(enumStrings[role], policy);
+                }
+            });
         }
 
         private static IConfigurationSection GetEntraIDSection(IConfiguration configuration)

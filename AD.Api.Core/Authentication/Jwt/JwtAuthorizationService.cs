@@ -1,48 +1,47 @@
-using AD.Api.Attributes.Services;
 using AD.Api.Collections.Enumerators;
-using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Core.Extensions;
 using AD.Api.Core.Web.Attributes;
 using AD.Api.Enums;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NLog;
 using System.Collections.Frozen;
 using System.Security.Claims;
 
-namespace AD.Api.Core.Authentication
+namespace AD.Api.Core.Authentication.Jwt
 {
-    public interface IAuthorizationService
-    {
-        IReadOnlyDictionary<string, AuthorizationScope> Scopes { get; }
-        IReadOnlyDictionary<string, AuthorizedUser> Users { get; }
-
-        bool IsAuthorized(HttpContext context, string? parentPath);
-        bool IsAuthorized(string? userName, WorkingScope scope);
-        bool TryAddScopesToContext(HttpContext context, AuthorizedRole requiredRole);
-    }
-
-    internal sealed class AuthorizationService : IAuthorizationService
+    internal sealed class JwtAuthorizationService : IAuthorizer
     {
         static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public FrozenDictionary<string, AuthorizationScope> Scopes { get; }
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        IReadOnlyDictionary<string, AuthorizationScope> IAuthorizationService.Scopes => this.Scopes;
-
         public FrozenDictionary<string, AuthorizedUser> Users { get; }
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        IReadOnlyDictionary<string, AuthorizedUser> IAuthorizationService.Users => this.Users;
-
         public IEnumStrings<AuthorizedRole> RoleEnums { get; }
 
-        public AuthorizationService(FrozenDictionary<string, AuthorizationScope> scopes, FrozenDictionary<string, AuthorizedUser> users, IEnumStrings<AuthorizedRole> enumStrings)
+        public JwtAuthorizationService(FrozenDictionary<string, AuthorizationScope> scopes, FrozenDictionary<string, AuthorizedUser> users, IEnumStrings<AuthorizedRole> enumStrings)
         {
             this.Scopes = scopes;
             this.Users = users;
             this.RoleEnums = enumStrings;
         }
 
-        public bool TryAddScopesToContext(HttpContext context, AuthorizedRole requiredRole)
+        public void Authorize(AuthorizationFilterContext context, AuthorizedRole role)
+        {
+            if (!(context.HttpContext.User.Identity?.IsAuthenticated).GetValueOrDefault())
+            {
+                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
+                return;
+            }
+
+            Claim? claim = context.HttpContext.User.FindFirst(ClaimTypes.Role);
+            if (claim is null || !this.RoleEnums.TryGetEnum(claim.Value, out AuthorizedRole aRole) || !aRole.HasFlag(role) && !this.TryAddScopesToContext(context.HttpContext, role))
+            {
+                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
+            }
+        }
+        private bool TryAddScopesToContext(HttpContext context, AuthorizedRole requiredRole)
         {
             Claim? scopeClaim = context.User.FindFirst(AuthorizationScope.CLAIM_TYPE);
             if (scopeClaim is null)
@@ -51,7 +50,7 @@ namespace AD.Api.Core.Authentication
             }
 
             string[] scopes = scopeClaim.Value.Split(", ", StringSplitOptions.RemoveEmptyEntries);
-            AuthorizationScope[] authScopes = new AuthorizationScope[scopes.Length];
+            var authScopes = new AuthorizationScope[scopes.Length];
 
             for (int i = 0; i < scopes.Length; i++)
             {
@@ -81,13 +80,13 @@ namespace AD.Api.Core.Authentication
             WorkingScope scope = new(domain, parentPath ?? string.Empty, requiredRole);
             return this.IsAuthorized(name, scope);
         }
-        public bool IsAuthorized(string? userName, WorkingScope scope)
+        private bool IsAuthorized(string? userName, WorkingScope scope)
         {
             if (scope.RequiredRole == AuthorizedRole.None)
             {
                 return true;
             }
-            
+
             if (string.IsNullOrWhiteSpace(userName) || !this.Users.TryGetValue(userName, out AuthorizedUser? user))
             {
                 _logger.Warn("User {Name} not found in the authorization library.", userName);
@@ -120,9 +119,10 @@ namespace AD.Api.Core.Authentication
 
     public static class AuthorizationServiceExtensions
     {
-        public static IServiceCollection AddAuthorizationService(this IServiceCollection services)
+        public static IServiceCollection AddJwtAuthorizer(this IServiceCollection services)
         {
-            return services.AddSingleton<IAuthorizationService, AuthorizationService>();
+            return services.AddSingleton<JwtAuthorizationService>()
+                           .AddSingleton<IAuthorizer>(x => x.GetRequiredService<JwtAuthorizationService>());
         }
     }
 }

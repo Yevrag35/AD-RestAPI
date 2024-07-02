@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
-using IAuthSvc = AD.Api.Core.Authentication.IAuthorizationService;
 
 namespace AD.Api.Authentication
 {
@@ -29,21 +28,7 @@ namespace AD.Api.Authentication
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            if (!context.HttpContext.User.IsAuthenticated())
-            {
-                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
-                return;
-            }
-
-            var authSvc = context.HttpContext.RequestServices.GetRequiredService<IAuthSvc>();
-            var enumStrings = context.HttpContext.RequestServices.GetRequiredService<IEnumStrings<AuthorizedRole>>();
-            string domain = (string)context.HttpContext.Items[QueryDomainAttribute.ModelName]!;
-
-            Claim? role = context.HttpContext.User.FindFirst(ClaimTypes.Role);
-            if (role is null || !enumStrings.TryGetEnum(role.Value, out AuthorizedRole aRole) || !aRole.HasFlag(this.Role) && !authSvc.TryAddScopesToContext(context.HttpContext, this.Role))
-            {
-                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);   
-            }
+            context.HttpContext.RequestServices.GetService<IAuthorizer>()?.Authorize(context, this.Role);
         }
     }
 }
