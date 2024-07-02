@@ -1,10 +1,7 @@
 using AD.Api.Components;
 using AD.Api.Enums;
-using AD.Api.Startup.Exceptions;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.Collections.Frozen;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.Versioning;
 using System.Security.Claims;

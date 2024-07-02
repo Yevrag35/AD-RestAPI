@@ -4,6 +4,7 @@ using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Enums;
 using AD.Api.Middleware;
 using AD.Api.Services.Enums;
+using AD.Api.Services.Jwt;
 using AD.Api.Startup.Exceptions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
@@ -57,7 +58,8 @@ namespace AD.Api.Startup
         {
             IConfigurationSection entraIDSection = GetEntraIDSection(configuration);
 
-            services.AddAuthentication()
+            services.AddSingleton<IJwtService, NoJwtService>()
+                    .AddAuthentication()
                     .AddMicrosoftIdentityWebApi(entraIDSection);
         }
         private static void AddCustomJwt(IServiceCollection services, IConfigurationSection authorizationSection, IEnumStrings<AuthorizedRole> roles)
@@ -67,6 +69,7 @@ namespace AD.Api.Startup
         private static void AddNegotiate(IServiceCollection services, IEnumStrings<AuthorizedRole> enumStrings)
         {
             services.AddSingleton<IAuthorizer, NegotiateAuthorizer>()
+                    .AddSingleton<IJwtService, NoJwtService>()
                     .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                     .AddNegotiate(o => o.Validate());
 

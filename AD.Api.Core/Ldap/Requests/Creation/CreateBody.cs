@@ -10,7 +10,7 @@ namespace AD.Api.Core.Ldap
     /// </summary>
     public abstract class CreateBody : ICreateRequest, IServiceProvider, IValidatableObject
     {
-        private string? _path;
+        private DistinguishedName? _constructedDn;
         private IServiceProvider _requestSvc = null!;
 
         /// <summary>
@@ -19,7 +19,15 @@ namespace AD.Api.Core.Ldap
         [JsonRequired]
         [JsonPropertyName("cn")]
         [MinLength(1, ErrorMessage = "Common names should always be at least 1 character in length.")]
-        public required string CommonName { get; set; }
+        public required string CommonName
+        {
+            get => _constructedDn?.CommonName ?? string.Empty;
+            set
+            {
+                _constructedDn ??= new();
+                _constructedDn.CommonName = value;
+            }
+        }
 
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(Path))]
@@ -30,11 +38,20 @@ namespace AD.Api.Core.Ldap
         /// </summary>
         public string? Path
         {
-            get => _path;
+            get => _constructedDn?.Path ?? string.Empty;
             set
             {
-                _path = value;
-                this.HasPath = !string.IsNullOrWhiteSpace(value);
+                _constructedDn ??= new();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    _constructedDn.Path = value;
+                    this.HasPath = true;
+                }
+                else
+                {
+                    _constructedDn.Path = string.Empty;
+                    this.HasPath = false;
+                }
             }
         }
 
@@ -44,7 +61,7 @@ namespace AD.Api.Core.Ldap
         /// <inheritdoc/>
         public DistinguishedName GetDistinguishedName()
         {
-            return new DistinguishedName(this.CommonName, this.Path);
+            return _constructedDn ??= new();
         }
 
         public object? GetService(Type serviceType)

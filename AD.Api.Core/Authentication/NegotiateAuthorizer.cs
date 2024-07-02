@@ -9,7 +9,6 @@ namespace AD.Api.Core.Authentication
         {
             return;
         }
-
         public bool IsAuthorized(HttpContext context, string? parentPath)
         {
             return true;
