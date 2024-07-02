@@ -1,7 +1,8 @@
-﻿using AD.Api.Core.Ldap;
+﻿using AD.Api.Components;
+using AD.Api.Core;
+using AD.Api.Core.Ldap;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Core.Web;
-using AD.Api.Core.Web.Attributes;
 using AD.Api.Enums;
 using AD.Api.Serialization.Json;
 using AD.Api.Spans;
@@ -35,7 +36,7 @@ namespace AD.Api.Middleware
 
         public Task Invoke(HttpContext httpContext)
         {
-            StringValues domain = httpContext.Request.Query[QueryDomainAttribute.ModelName];
+            StringValues domain = httpContext.Request.Query[DomainQuery.DomainModelName];
             if (domain.Count > 0 && !_connections.RegisteredConnections.TryGetValue(domain[0], out var context))
             {
                 return this.WriteErrorBodyAsync(httpContext, domain[0]); 
@@ -45,7 +46,7 @@ namespace AD.Api.Middleware
                 context = _connections.RegisteredConnections[string.Empty];
             }
 
-            httpContext.Items.TryAdd(QueryDomainAttribute.ModelName, context.DomainName);
+            httpContext.Items.TryAdd(DomainQuery.DomainModelName, context.DomainName);
 
             return _next(httpContext);
         }

@@ -112,7 +112,7 @@ namespace AD.Api.Core.Ldap
             }
 
             TCollection collection = requestServices.GetRequiredService<IPooledItem<TCollection>>().Value;
-            if (!collection.TryApplyResponse(parameters.Domain, response))
+            if (!collection.TryApplyResponse(parameters.Info.Domain, response))
             {
                 return this.SendCustomExceptionResult(response, isMultiRequest);
             }

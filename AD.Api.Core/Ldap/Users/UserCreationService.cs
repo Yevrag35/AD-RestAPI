@@ -5,14 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Frozen;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
-using System.Security.Principal;
 
 namespace AD.Api.Core.Ldap.Users
 {
     public interface IUserCreations
     {
         [SupportedOSPlatform("WINDOWS")]
-        OneOf<SidString, IActionResult> Create(string? domainKey, CreateUserRequest request, string? domainController = null);
+        OneOf<SidString, IActionResult> Create(string? domainKey, CreateUserRequest request, IServiceProvider provider, string? domainController = null);
     }
 
     [DependencyRegistration(typeof(IUserCreations), Lifetime = ServiceLifetime.Singleton)]
@@ -24,8 +23,9 @@ namespace AD.Api.Core.Ldap.Users
         }
 
         [SupportedOSPlatform("WINDOWS")]
-        public OneOf<SidString, IActionResult> Create(string? domainKey, CreateUserRequest request, string? domainController = null)
+        public OneOf<SidString, IActionResult> Create(string? domainKey, CreateUserRequest request, IServiceProvider provider, string? domainController = null)
         {
+            request.SetRequestServices(provider);
             var conOneOf = this.Requests.Connections.GetConnection(domainKey, domainController);
             if (conOneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
             {

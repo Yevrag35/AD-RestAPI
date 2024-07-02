@@ -69,9 +69,9 @@ namespace AD.Api.Core.Ldap
             return _requestSvc?.GetService(serviceType);
         }
 
-        public void SetRequestServices(HttpContext context)
+        public void SetRequestServices(IServiceProvider provider)
         {
-            _requestSvc = context.RequestServices;
+            _requestSvc = provider;
         }
 
         /// <inheritdoc/>

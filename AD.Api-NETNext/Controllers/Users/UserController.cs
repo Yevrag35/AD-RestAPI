@@ -1,5 +1,8 @@
-﻿using AD.Api.Authentication;
+﻿using AD.Api.Attributes;
+using AD.Api.Authentication;
 using AD.Api.Binding.Attributes;
+using AD.Api.Components;
+using AD.Api.Core;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Core.Extensions;
@@ -7,7 +10,8 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Users;
 using AD.Api.Core.Security;
-using AD.Api.Core.Web.Attributes;
+using AD.Api.Spans;
+using AD.Api.Statics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -17,55 +21,58 @@ namespace AD.Api.Controllers.Users
     [ApiController]
     public class UserController : ControllerBase
     {
-        public IRequestService Requests { get; }
+        public IUserSearcher UserSearcher { get; }
 
-        public UserController(IRequestService requestSvc)
+        public UserController(IUserSearcher searcher)
         {
-            this.Requests = requestSvc;
+            this.UserSearcher = searcher;
         }
 
         [HttpGet]
         [Route("{sid:objectsid}")]
-        [AuthenticatedUser(AuthorizedRole.Reader)]
+        [JwtAuth(AuthorizedRole.Reader)]
         public IActionResult GetUser(
             [FromQuery] SearchParameters parameters,
             [FromRouteSid] SidString sid)
         {
-            string filter = parameters.FilterSvc.GetFilter(sid, FilteredRequestType.User);
-
-            SearchFilterLite searchFilter = SearchFilterLite.Create(filter, FilteredRequestType.User);
-            parameters.ApplyParameters(searchFilter);
-
-            return this.Requests.FindOne(parameters, this.HttpContext.RequestServices);
+            return this.UserSearcher.GetOneUser(sid, parameters, this.HttpContext.RequestServices);
         }
 
+        private const string SID_ROUTE_PREFIX = "/users/";
         [HttpPost]
-        [AuthenticatedUser(AuthorizedRole.UserCreator, possibleScoped: true)]
+        [JwtAuth(AuthorizedRole.UserCreator, possiblyScoped: true)]
         public IActionResult CreateUser(
             [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
             [FromServices] IUserCreations createSvc,
             [FromServices] IAuthorizer authSvc,
-            [QueryDomain] string? domain = null,
-            [FromQuery] string? dc = null)
+            [Domain] DomainQuery info)
         {
             if (!authSvc.IsAuthorized(this.HttpContext, request.Path))
             {
                 return new ForbidResult();
             }
 
-            request.SetRequestServices(this.HttpContext);
-            return createSvc.Create(domain, request, dc)
+            return createSvc.Create(info.Domain, request, this.HttpContext.RequestServices, info.DomainController)
                 .Match(
-                    state: (request, domain),
+                    state: (request, info),
                     (request, success) =>
                     {
-                        string url = !string.IsNullOrWhiteSpace(request.domain)
-                            ? $"/users/{success.Value}?domain={request.domain}"
-                            : $"/users/{success.Value}";
+                        int length = request.info.UrlQueryLength + success.Value.Length + SID_ROUTE_PREFIX.Length + 1;
+                        Span<char> chars = stackalloc char[length];
+                        int pos = 0;
 
-                        return new CreatedResult(url, new
+                        SID_ROUTE_PREFIX.CopyToSlice(chars, ref pos);
+                        success.Value.CopyToSlice(chars, ref pos);
+                        if (request.info != DomainQuery.Default)
                         {
-                            Domain = request.domain ?? string.Empty,
+                            chars[pos++] = CharConstants.QUESTION;
+                            request.info.AppendAsQuery(chars.Slice(pos), out int written);
+                            pos += written;
+                        }
+
+                        return new CreatedResult(new string(chars.Slice(0, pos)), new
+                        {
+                            Domain = request.info,
                             Dn = request.request.GetDistinguishedName().ToString(),
                             ObjectSid = success.Value,
                         });

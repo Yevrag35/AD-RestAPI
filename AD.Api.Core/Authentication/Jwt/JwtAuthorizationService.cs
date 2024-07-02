@@ -1,6 +1,5 @@
 using AD.Api.Collections.Enumerators;
 using AD.Api.Core.Extensions;
-using AD.Api.Core.Web.Attributes;
 using AD.Api.Enums;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -73,7 +72,7 @@ namespace AD.Api.Core.Authentication.Jwt
                 return true;
             }
 
-            string domain = (string?)context.Items[QueryDomainAttribute.ModelName] ?? string.Empty;
+            string domain = (string?)context.Items[DomainQuery.DomainModelName] ?? string.Empty;
 
             string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 

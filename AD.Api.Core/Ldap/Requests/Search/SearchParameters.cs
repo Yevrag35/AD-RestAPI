@@ -17,9 +17,6 @@ namespace AD.Api.Core.Ldap
 
         internal ISearchFilter? BackingFilter { get; set; }
 
-        [FromServices]
-        public required ILdapFilterService FilterSvc { get; init; }
-
         [FromQuery(Name = "scope")]
         public SearchScope? Scope { get; set; }
 
@@ -144,9 +141,9 @@ namespace AD.Api.Core.Ldap
         public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             IConnectionService conSvc = validationContext.GetRequiredService<IConnectionService>();
-            if (!conSvc.RegisteredConnections.ContainsKey(this.Domain))
+            if (!conSvc.RegisteredConnections.ContainsKey(this.Info.Domain))
             {
-                yield return new ValidationResult($"'{this.Domain}' - Domain not found", [nameof(this.Domain)]);
+                yield return new ValidationResult($"'{this.Info.Domain}' - Domain not found", [nameof(this.Info.Domain)]);
             }
         }
     }

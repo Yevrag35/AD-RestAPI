@@ -1,4 +1,6 @@
-﻿using AD.Api.Core.Ldap;
+﻿using AD.Api.Authentication;
+using AD.Api.Core.Authentication;
+using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,15 +9,18 @@ namespace AD.Api.Controllers.Search
     [ApiController]
     public sealed class SearchController : ControllerBase
     {
+        public ILdapFilterService Filters { get; }
         public IRequestService Requests { get; }
 
-        public SearchController(IRequestService requests)
+        public SearchController(ILdapFilterService filterSvc, IRequestService requests)
         {
+            this.Filters = filterSvc;
             this.Requests = requests;
         }
 
         [HttpPost]
         [Route("search")]
+        [JwtAuth(AuthorizedRole.Reader)]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public IActionResult SearchObjects(
@@ -37,13 +42,14 @@ namespace AD.Api.Controllers.Search
 
         [HttpPost]
         [Route("computers/search")]
+        [JwtAuth(AuthorizedRole.Reader)]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public IActionResult SearchComputers(
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.Computer, true);
+            body.Filter = this.Filters.AddToFilter(body.Filter, FilteredRequestType.Computer, true);
             body.RequestBaseType = FilteredRequestType.Computer;
 
             parameters.ApplyParameters(body);
@@ -52,13 +58,14 @@ namespace AD.Api.Controllers.Search
 
         [HttpPost]
         [Route("groups/search")]
+        [JwtAuth(AuthorizedRole.Reader)]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public IActionResult SearchGroups(
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.Group, true);
+            body.Filter = this.Filters.AddToFilter(body.Filter, FilteredRequestType.Group, true);
             body.RequestBaseType = FilteredRequestType.Group;
 
             parameters.ApplyParameters(body);
@@ -67,13 +74,14 @@ namespace AD.Api.Controllers.Search
 
         [HttpPost]
         [Route("users/search")]
+        [JwtAuth(AuthorizedRole.Reader)]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public IActionResult SearchUsers(
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            body.Filter = parameters.FilterSvc.AddToFilter(body.Filter, FilteredRequestType.User, true);
+            body.Filter = this.Filters.AddToFilter(body.Filter, FilteredRequestType.User, true);
             body.RequestBaseType = FilteredRequestType.User;
 
             parameters.ApplyParameters(body);
