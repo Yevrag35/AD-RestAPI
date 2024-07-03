@@ -40,6 +40,10 @@
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
 	<ItemGroup>
 		<Compile Remove="**\Legacy\**\*.cs" />
 	</ItemGroup>

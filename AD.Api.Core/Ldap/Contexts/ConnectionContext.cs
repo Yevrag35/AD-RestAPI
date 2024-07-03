@@ -1,3 +1,4 @@
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Schema;
 using NLog;
 using System.DirectoryServices.ActiveDirectory;
@@ -31,9 +32,15 @@ namespace AD.Api.Core.Ldap
             _provider = provider;
         }
 
-        public LdapConnection CreateConnection()
+        public LdapConnection CreateConnection(bool forceSsl = false)
         {
-            return this.CreateConnection(_domain, _identifiers.Default);
+            LdapDirectoryIdentifier identifier = _identifiers.Default;
+            if (forceSsl)
+            {
+                identifier = identifier.ToSSL();
+            }
+
+            return this.CreateConnection(_domain, identifier);
         }
         /// <summary>
         /// 
@@ -41,14 +48,19 @@ namespace AD.Api.Core.Ldap
         /// <param name="domainController"></param>
         /// <returns></returns>
         /// <inheritdoc cref="LdapConnection.Bind()" path="/exception"/>
-        public LdapConnection CreateConnection(string? domainController)
+        public LdapConnection CreateConnection(string? domainController, bool forceSsl = false)
         {
             if (string.IsNullOrWhiteSpace(domainController) || _domain.DomainName.Equals(domainController, StringComparison.OrdinalIgnoreCase))
             {
-                return this.CreateConnection();
+                return this.CreateConnection(forceSsl);
             }
 
             LdapDirectoryIdentifier identifier = _identifiers.GetOrAdd(domainController);
+            if (forceSsl)
+            {
+                identifier = identifier.ToSSL();
+            }
+
             LdapConnection connection = this.CreateConnection(_domain, identifier);
             try
             {

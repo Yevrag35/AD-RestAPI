@@ -1,5 +1,7 @@
+using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Security.Accounts;
 using AD.Api.Core.Settings.Credentials;
+using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Runtime.Versioning;
@@ -12,6 +14,10 @@ namespace AD.Api.Core.Security.Encryption
     [SupportedOSPlatform("WINDOWS")]
     public sealed class WindowsDpapiEncryptionService : IEncryptionService
     {
+        public WindowsDpapiEncryptionService()
+        {
+        }
+
         private EncryptionResult<DpApiEncryptedCredential> Encrypt(DpApiEncryptedCredential credential, Encoding encoding)
         {
             if (string.IsNullOrWhiteSpace(credential.UserName) && !string.IsNullOrWhiteSpace(credential.EncryptedUserName))

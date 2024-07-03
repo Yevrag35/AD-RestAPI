@@ -22,7 +22,7 @@ namespace AD.Api.Core.Ldap
             }
 
             this.OnApplyingConnection(context);
-            return context.CreateConnection();
+            return context.CreateConnection(this.Info.DomainController);
         }
 
         protected abstract void OnApplyingConnection(ConnectionContext context);

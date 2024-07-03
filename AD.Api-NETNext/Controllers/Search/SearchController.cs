@@ -2,11 +2,13 @@
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Search
 {
     [ApiController]
+    [Authorize]
     public sealed class SearchController : ControllerBase
     {
         public ILdapFilterService Filters { get; }

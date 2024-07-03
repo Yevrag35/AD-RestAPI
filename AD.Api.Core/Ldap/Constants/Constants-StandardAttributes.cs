@@ -26,6 +26,7 @@ namespace AD.Api.Core.Ldap
         public const string PWD_LAST_SET = "pwdLastSet";
         public const string SAM_ACCOUNT_NAME = "sAMAccountName";
         public const string SURNAME = "sn";
+        public const string UNICODE_PW = "unicodePwd";
         public const string USER_ACCOUNT_CONTROL = "userAccountControl";
         public const string USER_PRINCIPAL_NAME = "userPrincipalName";
         public const string WHEN_CHANGED = "whenChanged";

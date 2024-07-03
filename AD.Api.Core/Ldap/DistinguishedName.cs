@@ -1,4 +1,5 @@
 using AD.Api.Core.Ldap.Filters;
+using AD.Api.Statics;
 using System.Buffers;
 
 namespace AD.Api.Core.Ldap
@@ -144,6 +145,51 @@ namespace AD.Api.Core.Ldap
             }
 
             return _fullValue;
+        }
+
+        public static DistinguishedName Parse(ReadOnlySpan<char> distinguishedName)
+        {
+            if (distinguishedName.IsWhiteSpace())
+            {
+                return new();
+            }
+
+            int index = distinguishedName.IndexOf(',');
+            if (index <= 0 || index >= distinguishedName.Length - 3)
+            {
+                return new(distinguishedName.ToString());
+            }
+            else if (distinguishedName[index - 1] == CharConstants.BACKSLASH)
+            {
+                ReadOnlySpan<char> working = distinguishedName.Slice(index + 1);
+                while (index >= 0 && index < working.Length - 3)
+                {
+                    index = working.IndexOf(',');
+                    if (index > 0 && working[index - 1] != CharConstants.BACKSLASH)
+                    {
+                        index = index + (distinguishedName.Length - working.Length);
+                        break;
+                    }
+                    else if (index >= working.Length)
+                    {
+                        index = -1;
+                        break;
+                    }
+                    else
+                    {
+                        working = working.Slice(index + 1);
+                    }
+                }
+
+                if (index < 0)
+                {
+                    return new(distinguishedName.ToString());
+                }
+            }
+
+            ReadOnlySpan<char> commonName = distinguishedName.Slice(0, index);
+            ReadOnlySpan<char> parentPath = distinguishedName.Slice(index + 1);
+            return new(commonName.ToString(), parentPath.ToString());
         }
     }
 }

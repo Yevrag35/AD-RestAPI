@@ -1,4 +1,5 @@
 ﻿using AD.Api.Core.Ldap;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
 
@@ -6,6 +7,7 @@ namespace AD.Api.Controllers.System
 {
     [Route("system")]
     [ApiController]
+    [Authorize]
     public sealed class SystemController : ControllerBase
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();

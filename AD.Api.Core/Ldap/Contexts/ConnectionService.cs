@@ -19,7 +19,7 @@ namespace AD.Api.Core.Ldap
         ContextLibrary RegisteredConnections { get; }
 
         OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
-        OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target);
+        OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool forceSsl = false);
         bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
     }
 
@@ -57,7 +57,7 @@ namespace AD.Api.Core.Ldap
             connection = context.CreateConnection();
             return true;
         }
-        public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target)
+        public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool forceSsl = false)
         {
             if (!this.RegisteredConnections.TryGetValue(target.Domain, out ConnectionContext? context))
             {
@@ -66,7 +66,7 @@ namespace AD.Api.Core.Ldap
 
             try
             {
-                return context.CreateConnection(target.DomainController);
+                return context.CreateConnection(target.DomainController, forceSsl);
             }
             catch (LdapException e)
             {
