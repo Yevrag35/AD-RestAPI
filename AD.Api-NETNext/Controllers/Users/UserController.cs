@@ -15,69 +15,44 @@ using AD.Api.Statics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace AD.Api.Controllers.Users
+namespace AD.Api.Controllers.Users;
+
+[Route(ROUTE_NAME)]
+[ApiController]
+public class UserController : ControllerBase
 {
-    [Route("users")]
-    [ApiController]
-    public class UserController : ControllerBase
+    private const string ROUTE_NAME = "users";
+    public IUserSearcher UserSearcher { get; }
+
+    public UserController(IUserSearcher searcher)
     {
-        public IUserSearcher UserSearcher { get; }
+        this.UserSearcher = searcher;
+    }
 
-        public UserController(IUserSearcher searcher)
+    [HttpGet]
+    [Route("{sid:objectsid}")]
+    [JwtAuth(AuthorizedRole.Reader)]
+    public IActionResult GetUser(
+        [FromQuery] SearchParameters parameters,
+        [FromRouteSid] SidString sid)
+    {
+        return this.UserSearcher.GetOneUser(sid, parameters, this.HttpContext.RequestServices);
+    }
+
+    private const string SID_ROUTE_PREFIX = "/" + ROUTE_NAME + "/";
+    [HttpPost]
+    [JwtAuth(AuthorizedRole.UserCreator, possiblyScoped: true)]
+    public IActionResult CreateUser(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
+        [FromServices] IUserCreations createSvc,
+        [FromServices] IAuthorizer authSvc,
+        [Domain] DomainQuery target)
+    {
+        if (!authSvc.IsAuthorized(this.HttpContext, request.Path))
         {
-            this.UserSearcher = searcher;
+            return new ForbidResult();
         }
 
-        [HttpGet]
-        [Route("{sid:objectsid}")]
-        [JwtAuth(AuthorizedRole.Reader)]
-        public IActionResult GetUser(
-            [FromQuery] SearchParameters parameters,
-            [FromRouteSid] SidString sid)
-        {
-            return this.UserSearcher.GetOneUser(sid, parameters, this.HttpContext.RequestServices);
-        }
-
-        private const string SID_ROUTE_PREFIX = "/users/";
-        [HttpPost]
-        [JwtAuth(AuthorizedRole.UserCreator, possiblyScoped: true)]
-        public IActionResult CreateUser(
-            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
-            [FromServices] IUserCreations createSvc,
-            [FromServices] IAuthorizer authSvc,
-            [Domain] DomainQuery info)
-        {
-            if (!authSvc.IsAuthorized(this.HttpContext, request.Path))
-            {
-                return new ForbidResult();
-            }
-
-            return createSvc.Create(info.Domain, request, this.HttpContext.RequestServices, info.DomainController)
-                .Match(
-                    state: (request, info),
-                    (request, success) =>
-                    {
-                        int length = request.info.UrlQueryLength + success.Value.Length + SID_ROUTE_PREFIX.Length + 1;
-                        Span<char> chars = stackalloc char[length];
-                        int pos = 0;
-
-                        SID_ROUTE_PREFIX.CopyToSlice(chars, ref pos);
-                        success.Value.CopyToSlice(chars, ref pos);
-                        if (request.info != DomainQuery.Default)
-                        {
-                            chars[pos++] = CharConstants.QUESTION;
-                            request.info.AppendAsQuery(chars.Slice(pos), out int written);
-                            pos += written;
-                        }
-
-                        return new CreatedResult(new string(chars.Slice(0, pos)), new
-                        {
-                            Domain = request.info,
-                            Dn = request.request.GetDistinguishedName().ToString(),
-                            ObjectSid = success.Value,
-                        });
-                    },
-                    (request, error) => error);
-        }
+        return createSvc.Create(in target, request, SID_ROUTE_PREFIX);
     }
 }

@@ -5,7 +5,7 @@ namespace AD.Api.Core.Ldap
     /// <summary>
     /// An interface representing a request to create an LDAP object.
     /// </summary>
-    public interface ICreateRequest : IServiceProvider
+    public interface ICreateRequest
     {
         /// <summary>
         /// Gets the type of request.

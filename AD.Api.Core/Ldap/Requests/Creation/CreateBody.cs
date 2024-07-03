@@ -8,10 +8,9 @@ namespace AD.Api.Core.Ldap
     /// <summary>
     /// Represents a request to create an LDAP object.
     /// </summary>
-    public abstract class CreateBody : ICreateRequest, IServiceProvider, IValidatableObject
+    public abstract class CreateBody : ICreateRequest, IValidatableObject
     {
         private DistinguishedName? _constructedDn;
-        private IServiceProvider _requestSvc = null!;
 
         /// <summary>
         /// The specified common name (cn) for the object.
@@ -62,16 +61,6 @@ namespace AD.Api.Core.Ldap
         public DistinguishedName GetDistinguishedName()
         {
             return _constructedDn ??= new();
-        }
-
-        public object? GetService(Type serviceType)
-        {
-            return _requestSvc?.GetService(serviceType);
-        }
-
-        public void SetRequestServices(IServiceProvider provider)
-        {
-            _requestSvc = provider;
         }
 
         /// <inheritdoc/>

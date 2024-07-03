@@ -1,10 +1,8 @@
-﻿using AD.Api.Components;
-using AD.Api.Core;
+﻿using AD.Api.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Primitives;
-using System.Diagnostics.CodeAnalysis;
 
 namespace AD.Api.Binding
 {
@@ -31,7 +29,7 @@ namespace AD.Api.Binding
             string? dc = GetDomainControllerValue(query);
             try
             {
-                ModelBindingResult success = DomainQuery.Create(domain, dc, out DomainQuery model);
+                ModelBindingResult success = DomainQuery.Create(domain, dc, context.RequestServices, out DomainQuery model);
                 bindingContext.Result = success;
                 bindingContext.ValidationState[model] = _suppress;
             }

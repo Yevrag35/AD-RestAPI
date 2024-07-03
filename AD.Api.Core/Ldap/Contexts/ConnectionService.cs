@@ -19,7 +19,7 @@ namespace AD.Api.Core.Ldap
         ContextLibrary RegisteredConnections { get; }
 
         OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
-        OneOf<LdapConnection, IActionResult> GetConnection(string? domainKey, string? domainController);
+        OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target);
         bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
     }
 
@@ -57,16 +57,16 @@ namespace AD.Api.Core.Ldap
             connection = context.CreateConnection();
             return true;
         }
-        public OneOf<LdapConnection, IActionResult> GetConnection(string? domainKey, string? domainController)
+        public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target)
         {
-            if (!this.RegisteredConnections.TryGetValue(domainKey, out ConnectionContext? context))
+            if (!this.RegisteredConnections.TryGetValue(target.Domain, out ConnectionContext? context))
             {
-                return new DomainNotFoundResult(domainKey);
+                return new DomainNotFoundResult(target.Domain);
             }
 
             try
             {
-                return context.CreateConnection(domainController);
+                return context.CreateConnection(target.DomainController);
             }
             catch (LdapException e)
             {
@@ -96,7 +96,7 @@ namespace AD.Api.Core.Ldap
                 contexts[string.Empty] = defaultContext;
             }
         }
-        
+
         [SupportedOSPlatform("WINDOWS")]
         private static Forest GetForest()
         {
@@ -150,7 +150,7 @@ namespace AD.Api.Core.Ldap
             {
                 if (!OperatingSystem.IsWindows())
                 {
-                    throw new AdApiStartupException(typeof(ConnectionService), "No domains were found in the configuration.");   
+                    throw new AdApiStartupException(typeof(ConnectionService), "No domains were found in the configuration.");
                 }
 
                 using Forest forest = GetForest();
