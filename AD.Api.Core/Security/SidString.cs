@@ -9,6 +9,9 @@ using System.Security.Principal;
 
 namespace AD.Api.Core.Security;
 
+/// <summary>
+/// Represents a security identifier (SID) string and provides methods for formatting and comparison.
+/// </summary>
 public sealed class SidString : IEquatable<SidString>, ISpanFormattable
 {
     private static readonly char L_FORMAT = 'L';
@@ -17,7 +20,7 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
     public static ReadOnlySpan<char> SidFormat => default;
 
     /// <summary>
-    /// 2+2+20+15(1+10)=189 maximum number of characters in a SID string.
+    /// The maximum number of characters in a SID string.
     /// </summary>
     /// <remarks>
     /// <c>S-</c> = 2 characters<br/>
@@ -25,47 +28,47 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
     /// Identifier Authority = 20 characters (MAX)<br/>
     /// 15 Sub-authorities separated by <c>-</c> = 10 characters (MAX) each.
     /// </remarks>
+    /// <value>
+    /// <c>189</c>
+    /// </value>
     public static readonly int MaxSidStringLength = SID_MAX_LENGTH;
 
     private readonly string _rawString;
     private string? _ldapString;
 
     /// <summary>
-    /// The string representation of the SID in Security Descriptor Definition Language
-    /// (SDDL) format.
+    /// Gets the string representation of the SID in Security Descriptor Definition Language (SDDL) format.
     /// </summary>
     public string Value => _rawString;
 
     /// <summary>
-    /// Creates a new instance of <see cref="SidString"/> from a string in the Security Descriptor
-    /// Definition Language (SDDL) format.
+    /// Initializes a new instance of the <see cref="SidString"/> class from a string in the Security Descriptor Definition Language (SDDL) format.
     /// </summary>
     /// <param name="sddlForm">
     /// The string representation of the SID in Security Descriptor Definition Language (SDDL) format.
     /// </param>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException">Thrown if the <paramref name="sddlForm"/> is null, empty, or does not start with 'S-'.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if the <paramref name="sddlForm"/> is null.</exception>
     public SidString(string sddlForm)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sddlForm);
         if (sddlForm.Length > SID_MAX_LENGTH)
         {
-            throw new ArgumentException("The length of the SID string is oo long.", nameof(sddlForm));
+            throw new ArgumentException("The length of the SID string is too long.", nameof(sddlForm));
         }
-        else if (!sddlForm.AsSpan().StartsWith(['S', '-'], StringComparison.OrdinalIgnoreCase))
+        else if (!sddlForm.AsSpan().StartsWith("S-".AsSpan(), StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException("The SID string does not start with 'S-'.", nameof(sddlForm));
         }
 
         _rawString = sddlForm.ToUpperInvariant();
     }
+
     /// <summary>
-    /// Creates a new instance of <see cref="SidString"/> from a binary form of a SID.
+    /// Initializes a new instance of the <see cref="SidString"/> class from a binary form of a SID.
     /// </summary>
-    /// <param name="binaryForm"></param>
-    /// <exception cref="ArgumentOutOfRangeException">
-    ///     Thrown if the length of <paramref name="binaryForm"/> is less than 8.
-    /// </exception>
+    /// <param name="binaryForm">The binary representation of the SID.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the length of <paramref name="binaryForm"/> is less than 8.</exception>
     public SidString(byte[] binaryForm)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(binaryForm.Length, 8, nameof(binaryForm));
@@ -74,6 +77,11 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
         _rawString = new string(span.Slice(0, written));
     }
 
+    /// <summary>
+    /// Indicates whether the current SID string is equal to another SID string.
+    /// </summary>
+    /// <param name="other">The SID string to compare to this instance.</param>
+    /// <returns><see langword="true"/> if the current SID string is equal to the <paramref name="other"/> parameter; otherwise, <see langword="false"/>.</returns>
     public bool Equals([NotNullWhen(true)] SidString? other)
     {
         if (RefEqualsOrNull(this, other, out bool result))
@@ -83,6 +91,12 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
 
         return StringComparer.OrdinalIgnoreCase.Equals(_rawString, other._rawString);
     }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current SID string.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current SID string.</param>
+    /// <returns><see langword="true"/> if the specified object is equal to the current SID string; otherwise, <see langword="false"/>.</returns>
     public override bool Equals(object? obj)
     {
         if (RefEqualsOrNull(this, obj, out bool result))
@@ -98,10 +112,22 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
             return false;
         }
     }
+
+    /// <summary>
+    /// Returns a hash code for the current SID string.
+    /// </summary>
+    /// <returns>A hash code for the current SID string.</returns>
     public override int GetHashCode()
     {
         return StringComparer.OrdinalIgnoreCase.GetHashCode(_rawString);
     }
+
+    /// <summary>
+    /// Formats the binary form of a SID into its string representation.
+    /// </summary>
+    /// <param name="destination">The destination span to write the formatted SID string.</param>
+    /// <param name="sidBytes">The binary representation of the SID.</param>
+    /// <returns>The number of characters written to the destination span.</returns>
     public static int FormatSpan(Span<char> destination, ReadOnlySpan<byte> sidBytes)
     {
         if (sidBytes.Length < 8)
@@ -124,6 +150,7 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
         int position = 0;
         Span<char> start = ['S', CharConstants.HYPHEN];
         start.CopyToSlice(destination, ref position);
+
         _ = revision.TryFormat(destination.Slice(position), out int written);
         position += written;
         destination[position++] = CharConstants.HYPHEN;
@@ -144,6 +171,13 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
         return position;
     }
 
+    /// <summary>
+    /// Checks if two objects are reference equals or if the other object is null.
+    /// </summary>
+    /// <param name="this">The current SID string instance.</param>
+    /// <param name="other">The object to compare.</param>
+    /// <param name="result">The result of the reference equality or null check.</param>
+    /// <returns><see langword="true"/> if the objects are reference equals or if the other object is null; otherwise, <see langword="false"/>.</returns>
     private static bool RefEqualsOrNull(SidString @this, [NotNullWhen(false)] object? other, out bool result)
     {
         if (ReferenceEquals(@this, other))
@@ -163,18 +197,25 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
         }
     }
 
+    /// <summary>
+    /// Gets the LDAP string representation of the SID.
+    /// </summary>
+    /// <returns>The LDAP string representation of the SID.</returns>
     [SupportedOSPlatform("WINDOWS")]
     public string ToLdapString()
     {
         return _ldapString ??= CreateLdapString(new SecurityIdentifier(_rawString));
     }
+
+    /// <inheritdoc cref="IFormattable.ToString(string?, IFormatProvider?)"/>
     [SupportedOSPlatform("WINDOWS")]
     string IFormattable.ToString(string? format, IFormatProvider? provider)
     {
         return this.ToLdapString();
     }
-    [SupportedOSPlatform("WINDOWS")]
+
     /// <inheritdoc cref="ISpanFormattable.TryFormat(Span{char}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>
+    [SupportedOSPlatform("WINDOWS")]
     public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default)
     {
         if (!format.IsEmpty && format.Equals(LdapFormat, StringComparison.OrdinalIgnoreCase))
@@ -190,12 +231,19 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
 
         return _rawString.TryCopyTo(destination, out charsWritten);
     }
+
+    /// <inheritdoc cref="ISpanFormattable.TryFormat(Span{char}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>
     [SupportedOSPlatform("WINDOWS")]
     bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
     {
         return this.TryFormat(destination, out charsWritten);
     }
 
+    /// <summary>
+    /// Creates an LDAP string representation of the specified <see cref="SecurityIdentifier"/>.
+    /// </summary>
+    /// <param name="sid">The <see cref="SecurityIdentifier"/> to create the LDAP string for.</param>
+    /// <returns>The LDAP string representation of the specified <see cref="SecurityIdentifier"/>.</returns>
     [SupportedOSPlatform("WINDOWS")]
     private static string CreateLdapString(SecurityIdentifier sid)
     {
@@ -211,6 +259,12 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
 
         return result;
     }
+
+    /// <summary>
+    /// Formats a byte array into a span using hexadecimal representation.
+    /// </summary>
+    /// <param name="byteArray">The byte array to format.</param>
+    /// <param name="builder">The span builder to append the formatted byte array.</param>
     private static void FormatByteArrayToSpan(Span<byte> byteArray, ref SpanStringBuilder builder)
     {
         foreach (byte b in byteArray)
@@ -224,6 +278,12 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
             });
         }
     }
+
+    /// <summary>
+    /// Gets the hexadecimal character for the specified value.
+    /// </summary>
+    /// <param name="i">The value to convert to a hexadecimal character.</param>
+    /// <returns>The hexadecimal character for the specified value.</returns>
     private static char GetHexValue(int i)
     {
         return i < 10
@@ -231,6 +291,12 @@ public sealed class SidString : IEquatable<SidString>, ISpanFormattable
             : (char)(i - 10 + 'A');
     }
 
+    /// <summary>
+    /// Writes the LDAP string representation of the specified <see cref="SecurityIdentifier"/> to the destination span.
+    /// </summary>
+    /// <param name="destination">The destination span to write the LDAP string to.</param>
+    /// <param name="sid">The <see cref="SecurityIdentifier"/> to create the LDAP string for.</param>
+    /// <param name="written">The number of characters written to the destination span.</param>
     [SupportedOSPlatform("WINDOWS")]
     private static void WriteLdapToSpan(ref Span<char> destination, SecurityIdentifier sid, out int written)
     {
