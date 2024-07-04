@@ -4,6 +4,7 @@ using AD.Api.Core;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Passwords;
+using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Users
@@ -23,12 +24,39 @@ namespace AD.Api.Controllers.Users
         }
 
         [HttpPut]
+        [Route("change")]
+        [JwtAuth(AuthorizedRole.PasswordChanger, possiblyScoped: true)]
+        public IActionResult ChangePassword(
+            [FromBody] PasswordChangeRequest request,
+            [Domain] DomainQuery target)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return new ApiBadRequestResult(this.ModelState);
+            }
+
+            DistinguishedName dn = DistinguishedName.Parse(request.DistinguishedName);
+
+            if (!_authorizer.IsAuthorized(this.HttpContext, dn.Path))
+            {
+                return new ForbidResult();
+            }
+
+            return _changeSvc.Change(in target, request);
+        }
+
+        [HttpPut]
         [Route("reset")]
         [JwtAuth(AuthorizedRole.PasswordResetter, possiblyScoped: true)]
         public IActionResult ResetPassword(
             [FromBody] PasswordResetRequest request,
             [Domain] DomainQuery target)
         {
+            if (!this.ModelState.IsValid)
+            {
+                return new ApiBadRequestResult(this.ModelState);
+            }
+
             DistinguishedName dn = DistinguishedName.Parse(request.DistinguishedName);
 
             if (!_authorizer.IsAuthorized(this.HttpContext, dn.Path))

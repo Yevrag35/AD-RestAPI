@@ -45,6 +45,14 @@ namespace AD.Api.Core.Ldap
             }
         }
 
+        private DistinguishedName(ReadOnlySpan<char> fullDn, ReadOnlySpan<char> cnSpan, ReadOnlySpan<char> parentSpan)
+        {
+            _fullValue = fullDn.ToString();
+            _commonName = cnSpan.ToString();
+            _parentPath = parentSpan.ToString();
+            this.IsConstructed = true;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -187,7 +195,7 @@ namespace AD.Api.Core.Ldap
 
             ReadOnlySpan<char> commonName = distinguishedName.Slice(0, index);
             ReadOnlySpan<char> parentPath = distinguishedName.Slice(index + 1);
-            return new(commonName.ToString(), parentPath.ToString());
+            return new(distinguishedName, commonName, parentPath);
         }
 
         //private static bool IsEscapedAt(in int index, ReadOnlySpan<char> value)

@@ -35,6 +35,7 @@ namespace AD.Api
                 new ResultEntryConverter(converter),
                 new ResultEntryCollectionConverter(converter),
                 new SidStringConverter(),
+                new StringValuesConverter(),
             ]);
         }
         private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder, SerializationSettings settings)

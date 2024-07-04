@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Web
@@ -9,6 +10,11 @@ namespace AD.Api.Core.Web
 
         public ApiBadRequestResult(string message, ResultCode resultCode)
             : base(message, in resultCode)
+        {
+            this.StatusCode = this.StaticStatusCode;
+        }
+        public ApiBadRequestResult(ModelStateDictionary failedModelState)
+            : base(new ModelStateErrorBody(failedModelState))
         {
             this.StatusCode = this.StaticStatusCode;
         }

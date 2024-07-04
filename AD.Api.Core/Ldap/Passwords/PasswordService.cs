@@ -13,7 +13,7 @@ namespace AD.Api.Core.Ldap.Passwords
     }
     public interface IPasswordChangeService : IPasswordService
     {
-
+        IActionResult Change(in DomainQuery target, PasswordChangeRequest request);
     }
     public interface IPasswordResetService : IPasswordService
     {
@@ -32,6 +32,25 @@ namespace AD.Api.Core.Ldap.Passwords
             _requests = requests;
         }
 
+        public IActionResult Change(in DomainQuery target, PasswordChangeRequest request)
+        {
+            if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out LdapConnection? connection))
+            {
+                return error;
+            }
+
+            using (connection)
+            {
+                ModifyRequest modify = new(request.DistinguishedName);
+
+                _decryptor.EncodePasswordChange(request.OldPassword, request.NewPassword, modify);
+
+                var oneOf = _requests.SendForResponse<ModifyResponse>(modify, connection);
+                return oneOf.Match(
+                    f0: success => new AcceptedResult(),
+                    f1: fail => fail);
+            }
+        }
         public IActionResult Reset(in DomainQuery target, PasswordResetRequest request)
         {
             if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out LdapConnection? connection))
@@ -41,7 +60,6 @@ namespace AD.Api.Core.Ldap.Passwords
 
             using (connection)
             {
-                connection.SessionOptions.SecureSocketLayer = true;
                 ModifyRequest modify = new(request.DistinguishedName);
 
                 _decryptor.EncodePasswordReset(request.NewPassword, modify);
@@ -55,9 +73,13 @@ namespace AD.Api.Core.Ldap.Passwords
 
         private sealed class NoPasswordOperationService : IPasswordChangeService, IPasswordResetService
         {
+            public IActionResult Change(in DomainQuery target, PasswordChangeRequest request)
+            {
+                return new ApiBadRequestResult("Password change operations are disabled.", ResultCode.UnwillingToPerform);
+            }
             public IActionResult Reset(in DomainQuery target, PasswordResetRequest request)
             {
-                return new ApiBadRequestResult("Password operations are disabled.", ResultCode.UnwillingToPerform);
+                return new ApiBadRequestResult("Password reset operations are disabled.", ResultCode.UnwillingToPerform);
             }
         }
 
