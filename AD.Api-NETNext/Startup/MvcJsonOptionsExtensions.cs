@@ -34,6 +34,7 @@ namespace AD.Api
             options.Converters.AddRange([
                 new ResultEntryConverter(converter),
                 new ResultEntryCollectionConverter(converter),
+                new SidStringConverter(),
             ]);
         }
         private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder, SerializationSettings settings)

@@ -22,8 +22,6 @@ namespace AD.Api.Core.Ldap
         private readonly SearchRequest _request;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Guid _requestId;
-        //private readonly StatedDirectoryControl<PageResultRequestControl> _pageControl;
-        //private int _pageSize;
 
         private bool _hasDefaults;
         protected override DirectoryRequest BackingRequest => _request;
@@ -31,38 +29,6 @@ namespace AD.Api.Core.Ldap
 
         public int ControlCount => _request.Controls.Count;
 
-        ///// <summary>
-        ///// The <see cref="LdapSearchRequest.Filter"/> contains the search filter for the LDAP request.
-        ///// </summary>
-        ///// <returns>
-        ///// The search filter for the LDAP request as a <see cref="string"/> value.
-        ///// </returns>
-        ///// <inheritdoc cref="SearchRequest.Filter" path="/exception"/>
-        //public string Filter
-        //{
-        //    [DebuggerStepThrough]
-        //    get => (string)_request.Filter;
-        //    [DebuggerStepThrough]
-        //    set => _request.Filter = value ?? string.Empty;
-        //}
-        //public int PageSize
-        //{
-        //    get => _pageSize;
-        //    set
-        //    {
-        //        ArgumentOutOfRangeException.ThrowIfNegative(value, nameof(this.PageSize));
-        //        _pageSize = value;
-        //        if (value == 0)
-        //        {
-        //            _pageControl.AddToRequest = false;
-        //        }
-        //        else
-        //        {
-        //            _pageControl.AddToRequest = true;
-        //            _pageControl.ChangeState(value, (size, control) => control.PageSize = size);
-        //        }
-        //    }
-        //}
         /// <summary>
         /// The <see cref="RequestId"/> contains the unique identifier for the LDAP request.
         /// </summary>
@@ -129,7 +95,6 @@ namespace AD.Api.Core.Ldap
 
             ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
 
-            //_pageControl = new(new PageResultRequestControl(globals.SizeLimit), x => x.Cookie = []);
             ResetRequest(_request, in globals);
             _hasDefaults = true;
         }
@@ -276,10 +241,6 @@ namespace AD.Api.Core.Ldap
             request.Scope = defaults.Scope;
             request.SizeLimit = defaults.SizeLimit;
             request.TimeLimit = defaults.Timeout;
-
-            //statedControl.AddToRequest = false;
-            //statedControl.Reset();
-            //request.Controls.Add(statedControl);
         }
 
         public SearchRequest AsLdapRequest()
@@ -287,38 +248,12 @@ namespace AD.Api.Core.Ldap
             return _request;
         }
 
-        //public byte[] GetCookie()
-        //{
-        //    return _pageControl.GetControlValue(x => x.Cookie);
-        //}
-        //public void SetCookie(int? pageSize, byte[] cookie)
-        //{
-        //    if (pageSize.HasValue)
-        //    {
-        //        this.PageSize = pageSize.Value;
-        //        if (cookie.Length > 0)
-        //        {
-        //            foreach (DirectoryControl control in _request.Controls.OfType<SortRequestControl>())
-        //            {
-        //                control.IsCritical = false;
-        //            }
-
-        //            _pageControl.ChangeState(cookie, (bytes, control) => control.Cookie = bytes);
-        //        }
-        //    }
-        //}
-
         /// <inheritdoc/>
         bool IResettable.TryReset()
         {
             this.Reset();
             return true;
         }
-
-        //public static implicit operator SearchRequest(LdapSearchRequest request)
-        //{
-        //    return request._request;
-        //}
     }
 }
 

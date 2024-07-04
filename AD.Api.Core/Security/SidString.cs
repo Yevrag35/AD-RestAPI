@@ -13,6 +13,7 @@ namespace AD.Api.Core.Security;
 /// <remarks>
 /// Like the Windows-only 'SecurityIdentifier' implementation, this class is designed to be immutable.
 /// </remarks>
+[DebuggerDisplay(@"\{{Value,nq}\}")]
 public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, ISpanFormattable
 {
     private static readonly char L_FORMAT = 'L';
@@ -347,6 +348,69 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
     }
 
     /// <summary>
+    /// Determines if the length of the given read-only <see cref="byte"/> span is within the acceptable range of 
+    /// constructing a <see cref="SidString"/>.
+    /// </summary>
+    /// <param name="value">The byte span to check.</param>
+    /// <returns>
+    /// <see langword="true"/> if the length of the given byte span is within the acceptable range; otherwise,
+    /// <see langword="false"/>.
+    /// </returns>
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsByteLengthInRange(ReadOnlySpan<byte> value)
+    {
+        return value.Length >= MinBinaryLength && value.Length <= MaxBinaryLength;
+    }
+    /// <summary>
+    /// Determines if the length of the given read-only <see cref="char"/> span is within the acceptable range of 
+    /// constructing a <see cref="SidString"/>.
+    /// </summary>
+    /// <param name="value">The char span to check.</param>
+    /// <returns>
+    /// <see langword="true"/> if the length of the given char span is within the acceptable range; otherwise,
+    /// <see langword="false"/>.
+    /// </returns>
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsCharLengthInRange(ReadOnlySpan<char> value)
+    {
+        return value.Length >= MinSidStringLength && value.Length <= MaxSidStringLength;
+    }
+    /// <summary>
+    /// Determines if the length of a given array or span of type <typeparamref name="T"/> is within the acceptable 
+    /// range of constructing a <see cref="SidString"/>.
+    /// </summary>
+    /// <param name="value">The char span to check.</param>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="length"/> is within the acceptable range; otherwise, if it is not -or-
+    /// <typeparamref name="T"/> is not <see cref="char"/> nor <see cref="byte"/>, <see langword="false"/>.
+    /// </returns>
+    [DebuggerStepThrough]
+    public static bool IsLengthInRange<T>(in int length) where T : struct
+    {
+        int min;
+        int max;
+        Type type = typeof(T);
+        if (typeof(char).Equals(type))
+        {
+            min = MinSidStringLength;
+            max = MaxSidStringLength;
+        }
+        else if (typeof(byte).Equals(type))
+        {
+            min = MinBinaryLength;
+            max = MaxBinaryLength;
+        }
+        else
+        {
+            return false;
+        }
+
+        return length >= min && length <= max;
+    }
+
+    /// <summary>
     /// Gets the LDAP string representation of the SID.
     /// </summary>
     /// <returns>The LDAP string representation of the SID.</returns>
@@ -393,7 +457,7 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
     /// <inheritdoc cref="ISpanFormattable.TryFormat(Span{char}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>
     bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
     {
-        return this.TryFormat(destination, out charsWritten);
+        return this.TryFormat(destination, out charsWritten, format);
     }
     /// <summary>
     /// Attempts to parse the specified read-only span of characters into a fully-formed <see cref="SidString"/> object.
@@ -473,18 +537,7 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
             : (char)(i - 10 + 'A');
     }
 
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsByteLengthInRange(ReadOnlySpan<byte> value)
-    {
-        return value.Length >= MinBinaryLength && value.Length <= MaxBinaryLength;
-    }
-    [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsCharLengthInRange(ReadOnlySpan<char> value)
-    {
-        return value.Length >= MinSidStringLength && value.Length <= MaxSidStringLength;
-    }
+    
 
     [DebuggerStepThrough]
     private static void ThrowIfLengthNotInRange(ReadOnlySpan<byte> value, [CallerArgumentExpression(nameof(value))] string? paramName = null)

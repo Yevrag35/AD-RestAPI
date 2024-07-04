@@ -1,4 +1,3 @@
-using AD.Api.Core.Ldap.Filters;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,10 +18,6 @@ namespace AD.Api.Core.Ldap
 
         [FromQuery(Name = "scope")]
         public SearchScope? Scope { get; set; }
-
-        //[FromQuery]
-        //[Range(0, int.MaxValue)]
-        //public int? PageSize { get; set; }
 
         [FromQuery(Name = "properties")]
         public string? Properties { get; set; }
@@ -78,11 +73,6 @@ namespace AD.Api.Core.Ldap
             {
                 request.Scope = this.Scope.Value;
             }
-
-            //if (this.PageSize.HasValue)
-            //{
-            //    this.SearchRequest.Value.PageSize = this.PageSize.Value;
-            //}
 
             if (searchFilter.SizeLimit.HasValue)
             {

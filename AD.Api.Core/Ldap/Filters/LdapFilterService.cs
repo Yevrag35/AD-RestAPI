@@ -80,7 +80,7 @@ namespace AD.Api.Core.Ldap.Filters
             writer = writer.And();
 
             _ = this.GetEnumerationNumber(types, ref writer);
-            writer.Equal("objectSid"u8, sidString, SidString.MaxSidStringLength, SidString.LdapFormat);
+            writer.Equal("objectSid"u8, sidString, sidString.LdapStringLength, SidString.LdapFormat);
             writer.EndAll();
 
             return writer.Build();

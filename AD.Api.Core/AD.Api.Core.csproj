@@ -6,11 +6,6 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Ldap\Requests\SearchPagingService.cs" />
-    <Compile Remove="Ldap\Requests\Search\CachedSearchParameters.cs" />
-  </ItemGroup>
 	
 	<ItemGroup>
 		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
@@ -24,11 +19,6 @@
 		<Compile Update="**\*-*.cs">
 			<DependentUpon>$([System.Text.RegularExpressions.Regex]::Replace('$([System.String]::Copy(%(Filename)))', '^(.+)\-.+$', '$1.cs'))</DependentUpon>
 		</Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Ldap\Requests\SearchPagingService.cs" />
-	  <None Include="Ldap\Requests\Search\CachedSearchParameters.cs" />
 	</ItemGroup>
 	
 	<ItemGroup>

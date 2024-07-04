@@ -317,7 +317,6 @@ namespace AD.Api.Core.Serialization
             {
                 return null;
             }
-            //return value is not string s || !long.TryParse(s, out long number) ? null : (long?)number;
         }
         private static string GetString(object? value)
         {

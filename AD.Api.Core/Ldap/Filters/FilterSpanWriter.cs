@@ -13,12 +13,9 @@ namespace AD.Api.Core.Ldap.Filters
     {
         private SpanStringBuilder _builder;
         private int _depth;
-        //private IFilterTypeValues _filterValues;
-        //private FilterTokenType _tokenType;
 
         public readonly int Depth => _depth;
         public readonly int Length => _builder.Length;
-        //public readonly FilterTokenType TokenType => _tokenType;
 
         public FilterSpanWriter(int initialCapacity)
             : this(new SpanStringBuilder(initialCapacity))
@@ -32,7 +29,6 @@ namespace AD.Api.Core.Ldap.Filters
         {
             _builder = builder;
             _depth = 0;
-            //_tokenType = FilterTokenType.Begin;
         }
 
         public FilterSpanWriter And()

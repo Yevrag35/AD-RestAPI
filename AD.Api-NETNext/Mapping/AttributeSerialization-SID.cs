@@ -9,8 +9,6 @@ namespace AD.Api.Mapping
 {
     public static partial class AttributeSerialization
     {
-        
-
         public static void WriteObjectSID(Utf8JsonWriter writer, ref readonly SerializationContext context)
         {
             if (context.Value is not byte[] sidBytes)
@@ -24,42 +22,10 @@ namespace AD.Api.Mapping
 
         private static void WriteSid(Utf8JsonWriter writer, ReadOnlySpan<byte> sidBytes)
         {
-            if (sidBytes.Length < 8 || sidBytes[0] != 1)
-            {
-                Debug.Fail("Invalid SID byte array.");
-                writer.WriteNullValue();
-                return;
-            }
+            Span<char> chars = stackalloc char[SidString.MaxSidStringLength];
+            int written = SidString.FormatSpan(chars, sidBytes);
 
-            int revision = sidBytes[0];
-            int subAuthorityCount = sidBytes[1];
-            long identifierAuthority = (long)sidBytes.Slice(2, 6)[0] << 40 |
-                                       (long)sidBytes.Slice(2, 6)[1] << 32 |
-                                       (long)sidBytes.Slice(2, 6)[2] << 24 |
-                                       (long)sidBytes.Slice(2, 6)[3] << 16 |
-                                       (long)sidBytes.Slice(2, 6)[4] << 8 |
-                                       sidBytes.Slice(2, 6)[5];
-
-            char separator = CharConstants.HYPHEN;
-            SpanStringBuilder builder = new(stackalloc char[SidString.MaxSidStringLength]);
-            builder = builder.Append(['S', separator])
-                             .Append(revision)
-                             .Append(separator)
-                             .Append(identifierAuthority);
-
-            for (int i = 0; i < subAuthorityCount; i++)
-            {
-                uint subAuth = BitConverter.ToUInt32(sidBytes.Slice(8 + i * 4, 4));
-                int length = subAuth.GetLength() + 1;
-                builder = builder.Append(length, subAuth, (chars, state) =>
-                {
-                    chars[0] = CharConstants.HYPHEN;
-                    _ = state.TryFormat(chars.Slice(1), out _);
-                });
-            }
-
-            writer.WriteStringValue(builder.AsSpan());
-            builder.Dispose();
+            writer.WriteStringValue(chars.Slice(0, written));
         }
         private static void WriteNonByteSid(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
