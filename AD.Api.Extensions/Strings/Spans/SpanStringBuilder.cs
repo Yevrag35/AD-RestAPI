@@ -195,6 +195,19 @@ namespace AD.Api.Strings.Spans
             return _span.Slice(_position);
         }
 
+        /// <summary>
+        /// Copies the contents of this builder to a destination <see cref="Span{char}"/>.
+        /// </summary>
+        /// <param name="destination">The destination span to copy the contents to.</param>
+        /// <returns>
+        /// The number of <see cref="char"/> elements copied to the destination span.
+        /// </returns>
+        public readonly int CopyTo(scoped Span<char> destination)
+        {
+            _span.Slice(0, _position).CopyTo(destination);
+            return _position;
+        }
+
         public readonly ReadOnlySpan<char> GetSegment(int start, int length)
         {
             return _span.Slice(start, length);

@@ -8,7 +8,6 @@ namespace AD.Api.Core.Security
     /// <summary>
     /// Defines a service for resolving and caching SID (Security Identifier) strings.
     /// </summary>
-    [SupportedOSPlatform("WINDOWS")]
     public interface ISidResolutionService : IRestrictedSids
     {
         /// <summary>
@@ -23,7 +22,6 @@ namespace AD.Api.Core.Security
     /// Provides a service for resolving and caching SID (Security Identifier) strings.
     /// </summary>
     [DynamicDependencyRegistration]
-    [SupportedOSPlatform("WINDOWS")]
     internal class SidResolutionService : ISidResolutionService
     {
         private static readonly TimeSpan DEFAULT_EXPIRATION = TimeSpan.FromMinutes(15);
@@ -57,11 +55,19 @@ namespace AD.Api.Core.Security
         /// </summary>
         /// <param name="securityIdentifier">The security identifier to resolve.</param>
         /// <returns>A <see cref="SidString"/> representing the resolved security identifier.</returns>
+        /// <exception cref="ArgumentException"><paramref name="securityIdentifier"/> is not valid.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="securityIdentifier"/> is null.</exception>
         public SidString GetOrAdd(string securityIdentifier)
         {
+            ArgumentNullException.ThrowIfNull(securityIdentifier);
             if (!_cache.TryGetValue(securityIdentifier, out SidString? sid) || sid is null)
             {
-                sid = _cache.Set(securityIdentifier, new SidString(securityIdentifier), new MemoryCacheEntryOptions
+                if (!SidString.TryParse(securityIdentifier, out sid))
+                {
+                    throw new ArgumentException("The security identifier is not valid.", nameof(securityIdentifier));
+                }
+
+                _ = _cache.Set(securityIdentifier, sid, new MemoryCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = DEFAULT_EXPIRATION,
                     Priority = CacheItemPriority.Low,

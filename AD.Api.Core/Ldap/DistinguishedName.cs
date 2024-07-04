@@ -1,5 +1,6 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Statics;
+using AD.Api.Strings.Extensions;
 using System.Buffers;
 
 namespace AD.Api.Core.Ldap
@@ -154,42 +155,51 @@ namespace AD.Api.Core.Ldap
                 return new();
             }
 
-            int index = distinguishedName.IndexOf(',');
-            if (index <= 0 || index >= distinguishedName.Length - 3)
+            int index = 0;
+            while (index < distinguishedName.Length)
             {
-                return new(distinguishedName.ToString());
-            }
-            else if (distinguishedName[index - 1] == CharConstants.BACKSLASH)
-            {
-                ReadOnlySpan<char> working = distinguishedName.Slice(index + 1);
-                while (index >= 0 && index < working.Length - 3)
+                int commaIndex = distinguishedName.Slice(index).IndexOf(',');
+                if (commaIndex < 0)
                 {
-                    index = working.IndexOf(',');
-                    if (index > 0 && working[index - 1] != CharConstants.BACKSLASH)
-                    {
-                        index = index + (distinguishedName.Length - working.Length);
-                        break;
-                    }
-                    else if (index >= working.Length)
-                    {
-                        index = -1;
-                        break;
-                    }
-                    else
-                    {
-                        working = working.Slice(index + 1);
-                    }
-                }
-
-                if (index < 0)
-                {
+                    // No commas found at all, return the full DN as common name.
                     return new(distinguishedName.ToString());
                 }
+
+                // Adjust index relative to the original span.
+                index += commaIndex;
+
+                // Check if the comma is escaped
+                if (!distinguishedName.IsEscapedAt(in index))
+                {
+                    // Found an unescaped comma.
+                    break;
+                }
+
+                index++;
+            }
+
+            if (index < 0 || index >= distinguishedName.Length - 3)
+            {
+                // No valid comma found or comma is at an invalid position.
+                Debug.Fail("What is this?");
+                return new(distinguishedName.ToString());
             }
 
             ReadOnlySpan<char> commonName = distinguishedName.Slice(0, index);
             ReadOnlySpan<char> parentPath = distinguishedName.Slice(index + 1);
             return new(commonName.ToString(), parentPath.ToString());
         }
+
+        //private static bool IsEscapedAt(in int index, ReadOnlySpan<char> value)
+        //{
+        //    int backslashCount = 0;
+        //    // Count the number of backslashes preceding the index.
+        //    for (int i = index - 1; i >= 0 && CharConstants.BACKSLASH == value[i]; i--)
+        //    {
+        //        backslashCount++;
+        //    }
+
+        //    return 0 != backslashCount % 2;
+        //}
     }
 }

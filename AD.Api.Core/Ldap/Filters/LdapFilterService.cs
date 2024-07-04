@@ -3,7 +3,6 @@ using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Core.Security;
 using AD.Api.Enums;
-using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap.Filters
 {
@@ -11,21 +10,12 @@ namespace AD.Api.Core.Ldap.Filters
     {
         string AddToFilter(scoped ReadOnlySpan<char> filter, FilteredRequestType types, bool addEnclosure);
         string GetFilter(FilteredRequestType types, bool addEnclosure);
-        [SupportedOSPlatform("WINDOWS")]
         string GetFilter(SidString sidString, FilteredRequestType types);
     }
 
     [DependencyRegistration(typeof(ILdapFilterService), Lifetime = ServiceLifetime.Singleton)]
     internal sealed class LdapFilterService : ILdapFilterService
     {
-        //private const string COMPUTER_FILTER = "(&(objectClass=computer)(objectCategory=computer))";
-        //private const string CONTACT_FILTER = "(&(objectClass=contact)(objectCategory=contact))";
-        //private const string CONTAINER_FILTER = "(&(objectClass=container)(objectCategory=container))";
-        //private const string GROUP_FILTER = "(&(objectClass=group)(objectCategory=group))";
-        //private const string MSA_FILTER = "(&(objectClass=msDS-ManagedServiceAccount)(objectCategory=msDS-ManagedServiceAccount))";
-        //private const string ORGANIZATIONAL_UNIT_FILTER = "(&(objectClass=organizationalUnit)(objectCategory=organizationalUnit))";
-        //private const string USER_FILTER = "(&(objectClass=user)(objectCategory=person))";
-
         public IEnumValues<FilteredRequestType, BackendValueAttribute, string> FilterValues { get; }
         public IEnumStrings<FilteredRequestType> RequestTypes { get; }
 
@@ -84,7 +74,6 @@ namespace AD.Api.Core.Ldap.Filters
             return s;
         }
 
-        [SupportedOSPlatform("WINDOWS")]
         public string GetFilter(SidString sidString, FilteredRequestType types)
         {
             FilterSpanWriter writer = new(stackalloc char[256]);

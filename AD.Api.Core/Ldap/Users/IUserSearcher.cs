@@ -25,7 +25,6 @@ namespace AD.Api.Core.Ldap.Users
             _requestSvc = requestSvc;
         }
 
-        [SupportedOSPlatform("WINDOWS")]
         public IActionResult GetOneUser(SidString userSid, SearchParameters parameters, IServiceProvider provider)
         {
             string filter = _filterSvc.GetFilter(userSid, FilteredRequestType.User);
