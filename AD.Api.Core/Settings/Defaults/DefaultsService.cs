@@ -1,5 +1,4 @@
 using AD.Api.Attributes.Services;
-using AD.Api.Components;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
 using AD.Api.Enums;
@@ -55,11 +54,9 @@ namespace AD.Api.Core
         public int GetAttributeCount(FilteredRequestType types, bool includeGlobal)
         {
             int count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
-            FlagEnumerator<FilteredRequestType> enumerator = new(types);
-
-            while (enumerator.MoveNext())
+            foreach (FilteredRequestType flag in types.EnumerateFlags())
             {
-                if (this.RequestTypes.TryGetName(enumerator.Current, out string? name)
+                if (this.RequestTypes.TryGetName(flag, out string? name)
                     &&
                     _dictionary.TryGetValue(name, out var defaults))
                 {
@@ -77,13 +74,12 @@ namespace AD.Api.Core
         }
         public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count)
         {
-            FlagEnumerator<FilteredRequestType> enumerator = new(types);
             count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
             int nonDefaultCount = 0;
 
-            while (enumerator.MoveNext())
+            foreach (FilteredRequestType flag in types.EnumerateFlags())
             {
-                if (this.TryGetDefaultsFromFlag(enumerator.Current, out ISearchDefaults? defaults))
+                if (this.TryGetDefaultsFromFlag(flag, out ISearchDefaults? defaults))
                 {
                     defaults.Attributes.CopyTo(attributes.Slice(nonDefaultCount));
                     nonDefaultCount += defaults.Attributes.Length;
@@ -108,10 +104,9 @@ namespace AD.Api.Core
         }
         public bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults)
         {
-            FlagEnumerator<FilteredRequestType> enumerator = new(types);
-            while (enumerator.MoveNext())
+            foreach (FilteredRequestType flag in types.EnumerateFlags())
             {
-                if (this.RequestTypes.TryGetName(enumerator.Current, out string? name)
+                if (this.RequestTypes.TryGetName(flag, out string? name)
                     &&
                     _dictionary.TryGetValue(name, out defaults))
                 {

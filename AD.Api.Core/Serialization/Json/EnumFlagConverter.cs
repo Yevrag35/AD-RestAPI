@@ -1,4 +1,5 @@
 using AD.Api.Components;
+using AD.Api.Enums;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -87,10 +88,9 @@ namespace AD.Api.Core.Serialization.Json
             public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
             {
                 writer.WriteStartArray();
-                FlagEnumerator<T> enumerator = new(value);
-                while (enumerator.MoveNext())
+                foreach (T flag in value.EnumerateFlags())
                 {
-                    _converter.Write(writer, enumerator.Current, options);
+                    _converter.Write(writer, flag, options);
                 }
 
                 writer.WriteEndArray();

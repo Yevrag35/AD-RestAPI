@@ -165,25 +165,21 @@ namespace AD.Api.Core.Ldap
                     ? StatusCodes.Status500InternalServerError
                     : StatusCodes.Status400BadRequest;
 
+            bool isZero = response.Entries.Count == 0;
+
             ResultCode code = isMultiRequest
                 ? ResultCode.Other
-                : response.Entries.Count > 0
+                : !isZero
                     ? ResultCode.ResultsTooLarge
                     : ResultCode.NoSuchObject;
 
             string message = isMultiRequest
                 ? "The request failed to apply the response for serialization."
-                : $"The wrong amount of results were returned. Excepted only 1 result and got {response.Entries.Count}.";
+                : isZero
+                    ? "The requested object was not found in the directory."
+                    : $"The wrong amount of results were returned. Expected one (1) result and got {response.Entries.Count}.";
 
-            return new ObjectResult(new
-            {
-                Error = message,
-                ResultCode = (int)code,
-                Result = code,
-            })
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-            };
+            return new ApiBadRequestResult(message, code);
         }
     }
 }
