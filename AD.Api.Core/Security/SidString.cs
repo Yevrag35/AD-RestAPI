@@ -3,6 +3,7 @@ using AD.Api.Spans;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using AD.Api.Strings.Spans;
+using System.Collections;
 using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Security;
@@ -14,7 +15,11 @@ namespace AD.Api.Core.Security;
 /// Like the Windows-only 'SecurityIdentifier' implementation, this class is designed to be immutable.
 /// </remarks>
 [DebuggerDisplay(@"\{{Value,nq}\}")]
-public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, ISpanFormattable
+public sealed class SidString : 
+    IComparable<SidString>,
+    IEquatable<SidString>,
+    ISpanFormattable,
+    IStructuralEquatable
 {
     private static readonly char L_FORMAT = 'L';
     private const int SID_CHAR_MAX_LENGTH = 189;
@@ -191,10 +196,7 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
     /// Initializes a new instance of the <see cref="SidString"/> class from a binary form of a SID.
     /// </summary>
     /// <param name="binaryForm">The binary representation of the SID.</param>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The length of <paramref name="binaryForm"/> is less than <see cref="MinBinaryLength"/> or greater than
-    /// <see cref="MaxBinaryLength"/>.
-    /// </exception>
+    /// <inheritdoc cref="ThrowIfLengthNotInRange(ReadOnlySpan{byte}, string?)" path="/exception"/>
     public SidString(ReadOnlySpan<byte> binaryForm)
     {
         ThrowIfLengthNotInRange(binaryForm);
@@ -213,13 +215,14 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
     /// Initializes a new instance of the <see cref="SidString"/> class from a binary form of a SID.
     /// </summary>
     /// <param name="binaryForm">The binary representation of the SID.</param>
+    /// <param name="copyArray">
+    /// Indicates whether make a deep copy of <paramref name="binaryForm"/> or to use the array as-is. Only set
+    /// to <see langword="false"/> if this <see cref="SidString"/> will be short-lived.
+    /// </param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="binaryForm"/> is null.
     /// </exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The length of <paramref name="binaryForm"/> is less than <see cref="MinBinaryLength"/> or greater than
-    /// <see cref="MaxBinaryLength"/>.
-    /// </exception>
+    /// <inheritdoc cref="ThrowIfLengthNotInRange(ReadOnlySpan{byte}, string?)" path="/exception"/>
     public SidString(byte[] binaryForm, bool copyArray)
     {
         ArgumentNullException.ThrowIfNull(binaryForm);
@@ -235,6 +238,7 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
         if (!copyArray)
         {
             _binaryForm = binaryForm;
+            return;
         }
 
         _binaryForm = new byte[binaryForm.Length];
@@ -297,6 +301,21 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
     }
 
     #endregion
+
+    /// <summary>
+    /// Copies the binary form of the SID to the specified destination span.
+    /// </summary>
+    /// <param name="destination">
+    /// The destination span to copy the binary form of the SID to.
+    /// </param>
+    /// <returns>
+    /// The number of bytes copied to the destination span.
+    /// </returns>
+    public int CopyTo(Span<byte> destination)
+    {
+        _binaryForm.CopyTo(destination);
+        return _binaryForm.Length;
+    }
 
     /// <summary>
     /// Formats the binary form of a SID into its string representation.
@@ -425,6 +444,33 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
         return this.ToLdapString();
     }
 
+    /// <summary>
+    /// Attempts to copy the binary form of the <see cref="SidString"/> to the specified destination span.
+    /// </summary>
+    /// <param name="destination">
+    /// The destination span to copy the binary form of the <see cref="SidString"/> to.
+    /// </param>
+    /// <param name="bytesWritten">
+    /// When this method returns, contains the number of bytes written to the destination span, if the operation was
+    /// successful; otherwise, <c>0</c>. This parameter is passed uninitialized.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the operation was successful; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool TryCopyTo(Span<byte> destination, out int bytesWritten)
+    {
+        if (!_binaryForm.AsSpan().TryCopyTo(destination))
+        {
+            bytesWritten = 0;
+            return false;
+        }
+        else
+        {
+            bytesWritten = _binaryForm.Length;
+            return true;
+        }
+    }
+
     /// <inheritdoc cref="ISpanFormattable.TryFormat(Span{char}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>
     public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default)
     {
@@ -537,8 +583,7 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
             : (char)(i - 10 + 'A');
     }
 
-    
-
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     [DebuggerStepThrough]
     private static void ThrowIfLengthNotInRange(ReadOnlySpan<byte> value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
     {
@@ -547,6 +592,7 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
             throw new ArgumentOutOfRangeException(paramName, "The given byte array's length is not within the acceptable range.");
         }
     }
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     [DebuggerStepThrough]
     private static void ThrowIfLengthNotInRange(ReadOnlySpan<char> value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
     {
@@ -612,5 +658,18 @@ public sealed class SidString : IComparable<SidString>, IEquatable<SidString>, I
     private static void WriteLdapToSpan(ref SpanStringBuilder builder, SidString sid)
     {
         FormatByteArrayToSpan(sid._binaryForm, ref builder);
+    }
+
+    /// <inheritdoc/>
+    [DebuggerStepThrough]
+    bool IStructuralEquatable.Equals(object? other, IEqualityComparer comparer)
+    {
+        return ((IStructuralEquatable)_binaryForm).Equals(other, comparer);
+    }
+    /// <inheritdoc/>
+    [DebuggerStepThrough]
+    int IStructuralEquatable.GetHashCode(IEqualityComparer comparer)
+    {
+        return ((IStructuralEquatable)_binaryForm).GetHashCode(comparer);
     }
 }

@@ -1,8 +1,10 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Security;
 using AD.Api.Enums;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AD.Api.Core.Ldap.Filters
 {
@@ -11,18 +13,22 @@ namespace AD.Api.Core.Ldap.Filters
         string AddToFilter(scoped ReadOnlySpan<char> filter, FilteredRequestType types, bool addEnclosure);
         string GetFilter(FilteredRequestType types, bool addEnclosure);
         string GetFilter(SidString sidString, FilteredRequestType types);
+        string GetFilter(SidString sidString, FilteredRequestType types, bool noCache);
     }
 
     [DependencyRegistration(typeof(ILdapFilterService), Lifetime = ServiceLifetime.Singleton)]
     internal sealed class LdapFilterService : ILdapFilterService
     {
+        private readonly IMemoryCache _cache;
+
         public IEnumValues<FilteredRequestType, BackendValueAttribute, string> FilterValues { get; }
         public IEnumStrings<FilteredRequestType> RequestTypes { get; }
 
-        public LdapFilterService(IEnumValues<FilteredRequestType, BackendValueAttribute, string> filterValues)
+        public LdapFilterService(IEnumValues<FilteredRequestType, BackendValueAttribute, string> filterValues, IMemoryCache cache)
         {
             this.FilterValues = filterValues;
             this.RequestTypes = filterValues.EnumStrings;
+            _cache = cache;
         }
 
         public string AddToFilter(scoped ReadOnlySpan<char> filter, FilteredRequestType types, bool addEnclosure)
@@ -74,8 +80,18 @@ namespace AD.Api.Core.Ldap.Filters
             return s;
         }
 
+        [DebuggerStepThrough]
         public string GetFilter(SidString sidString, FilteredRequestType types)
         {
+            return this.GetFilter(sidString, types, noCache: false);
+        }
+        public string GetFilter(SidString sidString, FilteredRequestType types, bool noCache)
+        {
+            if (!noCache && this.TryGetFilterFromCache(sidString, out string? filter))
+            {
+                return filter;
+            }
+
             FilterSpanWriter writer = new(stackalloc char[256]);
             writer = writer.And();
 
@@ -83,7 +99,22 @@ namespace AD.Api.Core.Ldap.Filters
             writer.Equal("objectSid"u8, sidString, sidString.LdapStringLength, SidString.LdapFormat);
             writer.EndAll();
 
-            return writer.Build();
+            filter = writer.Build();
+
+            return !noCache
+                ? this.AddFilterToCache(sidString, filter)
+                : filter;
+        }
+
+        [DebuggerStepThrough]
+        private string AddFilterToCache(SidString sidString, string filter)
+        {
+            return _cache.Set(sidString, filter, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6),
+                Priority = CacheItemPriority.Low,
+                Size = Math.Max((long)Math.Floor(filter.Length / 3d), 3L),
+            });
         }
         private int GetEnumerationNumber(FilteredRequestType value, ref FilterSpanWriter writer)
         {
@@ -105,6 +136,11 @@ namespace AD.Api.Core.Ldap.Filters
             }
 
             return enumerator.Count;
+        }
+        [DebuggerStepThrough]
+        private bool TryGetFilterFromCache(SidString sidString, [NotNullWhen(true)] out string? filter)
+        {
+            return _cache.TryGetValueOrRemove(sidString, out filter);
         }
     }
 }

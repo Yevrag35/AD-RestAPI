@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-//using IFilterTypeValues = AD.Api.Enums.IEnumStrings<AD.Api.Core.Ldap.Filters.FilterTokenType>;
 
 namespace AD.Api.Core.Ldap.Filters
 {
@@ -84,7 +83,7 @@ namespace AD.Api.Core.Ldap.Filters
         }
         public FilterSpanWriter Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> value)
         {
-            int count = Encoding.UTF8.GetCharCount(utf8PropertyName);
+            int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
             Span<char> nameChars = stackalloc char[count];
             count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
@@ -92,7 +91,7 @@ namespace AD.Api.Core.Ldap.Filters
         }
         public FilterSpanWriter Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, scoped ReadOnlySpan<char> value)
         {
-            int count = Encoding.UTF8.GetCharCount(utf8PropertyName);
+            int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
             Span<char> nameChars = stackalloc char[count];
             count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
@@ -100,7 +99,7 @@ namespace AD.Api.Core.Ldap.Filters
         }
         public FilterSpanWriter Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<byte> utf8Value)
         {
-            int count = Encoding.UTF8.GetCharCount(utf8Value);
+            int count = Encoding.UTF8.GetMaxCharCount(utf8Value.Length);
             Span<char> valChars = stackalloc char[count];
             count = Encoding.UTF8.GetChars(utf8PropertyName, valChars);
 
@@ -119,7 +118,7 @@ namespace AD.Api.Core.Ldap.Filters
         public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value)
             where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
         {
-            int count = Encoding.UTF8.GetCharCount(utf8PropertyName);
+            int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
             Span<char> nameChars = stackalloc char[count];
             count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
@@ -142,7 +141,7 @@ namespace AD.Api.Core.Ldap.Filters
         public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, T value)
             where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
         {
-            int count = Encoding.UTF8.GetCharCount(utf8PropertyName);
+            int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
             Span<char> nameChars = stackalloc char[count];
             count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
@@ -164,7 +163,7 @@ namespace AD.Api.Core.Ldap.Filters
         public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
             where T : ISpanFormattable
         {
-            int count = Encoding.UTF8.GetCharCount(utf8PropertyName);
+            int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
             Span<char> nameChars = stackalloc char[count];
             count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 

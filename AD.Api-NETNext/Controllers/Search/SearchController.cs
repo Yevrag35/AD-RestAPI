@@ -83,9 +83,9 @@ namespace AD.Api.Controllers.Search
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)
         {
-            body.Filter = this.Filters.AddToFilter(body.Filter, FilteredRequestType.User, true);
             body.RequestBaseType = FilteredRequestType.User;
 
+            body.Filter = this.Filters.AddToFilter(body.Filter, FilteredRequestType.User, true);
             parameters.ApplyParameters(body);
             return this.Requests.FindAll(parameters, this.HttpContext.RequestServices);
         }
