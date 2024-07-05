@@ -26,6 +26,10 @@ namespace AD.Api.Core.Ldap
             where T : LdapRequest
             where TResponse : SearchResponse;
 
+        OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
+            where TResponse : SearchResponse
+            where T : LdapRequest;
+
         OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
             where TResponse : DirectoryResponse;
     }
@@ -85,11 +89,13 @@ namespace AD.Api.Core.Ldap
                 return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, connection, requestServices, isMultiRequest: true);
             }
         }
+
         public IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where TResponse : SearchResponse
             where T : LdapRequest
         {
-            if (!this.TryConnect(parameters, out LdapConnection? connection, out IActionResult? error))
+            var oneOf = this.Connections.GetConnection(parameters.Info);
+            if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
             {
                 return error;
             }
@@ -97,8 +103,28 @@ namespace AD.Api.Core.Ldap
             using (connection)
             {
                 return this.SendSearchRequest<T, ResultEntry, TResponse>(parameters, connection, requestServices, isMultiRequest: false);
-        }
             }
+         }
+        public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
+            where TResponse : SearchResponse
+            where T : LdapRequest
+        {
+            var oneOf = parameters.ApplyConnection(this.Connections);
+            if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
+            {
+                return OneOf<ConnectedResponse>.FromT1(error);
+            }
+
+            var responseOr = this.SendForResponse<TResponse>(parameters.Request, connection);
+            if (responseOr.TryGetT1(out error, out TResponse? isGood))
+            {
+                connection.Dispose();
+                return OneOf<ConnectedResponse>.FromT1(error);
+            }
+
+            TResponse response = isGood;
+            return ConnectedResponse.Continue(connection, response, parameters.Info);
+        }
 
         private IActionResult SendSearchRequest<T, TCollection, TResponse>(RequestParameters<T, TResponse> parameters, LdapConnection connection, IServiceProvider requestServices, bool isMultiRequest)
             where T : LdapRequest
