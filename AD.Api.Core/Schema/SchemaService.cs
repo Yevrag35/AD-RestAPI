@@ -64,32 +64,15 @@ namespace AD.Api.Core.Schema
         [SupportedOSPlatform("WINDOWS")]
         private static SchemaService CreateSchemaService(IServiceProvider provider)
         {
-            IConnectionService conSvc = provider.GetRequiredService<IConnectionService>();
-            string[] classArray = GetClassNames(out int count);
-            string[] classNames = classArray.AsSpan(0, count).ToArray();
-            ArrayPool<string>.Shared.Return(classArray);
-            return new SchemaService(classNames);
-        }
-
-        private static string[] GetClassNames(out int count)
-        {
-            //["user", "computer", "organizationalUnit", "configuration", "RootDSE", "container", "group"];
-            ReadOnlySpan<byte> bytes = "user computer organizationalUnit configuration container group"u8;
-            Encoding e = Encoding.UTF8;
-            Span<char> chars = stackalloc char[e.GetCharCount(bytes)];
-            int written = e.GetChars(bytes, chars);
-            chars = chars.Slice(0, written);
-            count = chars.Count(SPACE) + 1;
-
-            string[] array = ArrayPool<string>.Shared.Rent(count);
-            int index = 0;
-            foreach (ReadOnlySpan<char> section in chars.SpanSplit(in SPACE))
-            {
-                array[index++] = section.Trim().ToString();
-            }
-
-            count = index;
-            return array;
+            return new SchemaService([
+                "user",
+                "computer",
+                "organizationalUnit",
+                "configuration",
+                "container",
+                "contact",
+                "group"
+            ]);
         }
 
         private sealed class NoSchema : SchemaService
