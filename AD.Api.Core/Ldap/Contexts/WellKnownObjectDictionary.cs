@@ -120,7 +120,7 @@ namespace AD.Api.Core.Ldap
 
             foreach (WellKnownObjectValue wk in enumValues.EnumStrings.Values)
             {
-                string guid = enumValues.GetValue(wk, string.Empty);
+                string guid = enumValues.GetValueOrDefault(wk, string.Empty);
                 string location = MatchLocationToGuid(guid, locations);
 
                 dict.TryAdd(wk, location);

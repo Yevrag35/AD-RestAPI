@@ -8,7 +8,7 @@ namespace AD.Api.Core.Security.Accounts;
 /// <summary>
 /// Represents an account name and provides a method to set credentials.
 /// </summary>
-public interface IAccountName
+public interface IAccountName : IValidatableObject
 {
     /// <summary>
     /// Sets the network credential properties such as UserName and Domain for the account.
@@ -107,6 +107,10 @@ public abstract class AccountName : IAccountName, IValidatableObject
         public void SetCredential(NetworkCredential credential)
         {
             Debug.Fail("EmptyName should never be used to set credentials.");
+        }
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            return [];
         }
     }
 }

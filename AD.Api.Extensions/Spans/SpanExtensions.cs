@@ -117,7 +117,7 @@ namespace AD.Api.Spans
         }
 
         [DebuggerStepThrough]
-        public static Span<T> RentArray<T>(in int length, scoped ref bool isRented, scoped ref T[]? array)
+        public static Span<T> RentArray<T>(scoped in int length, scoped ref bool isRented, scoped ref T[]? array)
         {
             Debug.Fail("Take a look at this ^");
             array = ArrayPool<T>.Shared.Rent(length);

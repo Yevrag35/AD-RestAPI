@@ -7,6 +7,7 @@ public sealed class PasswordResetRequest
 {
     [Required]
     [MinLength(4, ErrorMessage = "The distinguished name must be at least 4 characters long.")]
+    [JsonRequired]
     [JsonPropertyName("dn")]
     public required string DistinguishedName { get; init; }
 

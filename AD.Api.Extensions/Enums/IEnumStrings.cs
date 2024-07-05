@@ -1,5 +1,44 @@
+using AD.Api.Enums.Internal;
+
 namespace AD.Api.Enums
 {
+    /// <summary>
+    /// A <see langword="static"/> factory class for creating <see cref="IEnumStrings{TEnum}"/> instances.
+    /// </summary>
+    [DebuggerStepThrough]
+    public static class EnumStrings
+    {
+        /// <summary>
+        /// Creates a new instance of <see cref="IEnumStrings{TEnum}"/> for the specified enumeration type
+        /// <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">The type of enumeration the resulting dictionary will house.</typeparam>
+        /// <returns>
+        /// A new instance of <see cref="IEnumStrings{TEnum}"/> for <typeparamref name="TEnum"/>.
+        /// </returns>
+        public static IEnumStrings<TEnum> Create<TEnum>() where TEnum : unmanaged, Enum
+        {
+            return Create<TEnum>(freeze: false);
+        }
+        /// <summary>
+        /// Creates a new instance of <see cref="IEnumStrings{TEnum}"/> for the specified enumeration type
+        /// <typeparamref name="TEnum"/>.
+        /// </summary>
+        /// <typeparam name="TEnum">The type of enumeration the resulting dictionary will house.</typeparam>
+        /// <param name="freeze">
+        /// Indicates whether to freeze the backend dictionaries for better read/lookup performance at the cost of 
+        /// startup time and memory.  Do not specify <see langword="true"/> if you plan to create the resulting 
+        /// <see cref="IEnumStrings{TEnum}"/> instance multiple times.
+        /// </param>
+        /// <returns>
+        /// A new instance of <see cref="IEnumStrings{TEnum}"/> for <typeparamref name="TEnum"/>.
+        /// </returns>
+        public static IEnumStrings<TEnum> Create<TEnum>(bool freeze) where TEnum : unmanaged, Enum
+        {
+            return new ESDictionary<TEnum>(freeze);
+        }
+    }
+
     public interface IEnumStrings
     {
         /// <summary>

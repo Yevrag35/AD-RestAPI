@@ -2,6 +2,7 @@ using AD.Api.Attributes;
 using System.Buffers;
 using System.Collections.Frozen;
 using System.Collections;
+using AD.Api.Reflection;
 
 namespace AD.Api.Enums.Internal
 {
@@ -53,6 +54,44 @@ namespace AD.Api.Enums.Internal
             return _backing.EnumStrings.ContainsEnum(key);
         }
 
+        /// <inheritdoc/>
+        public IEnumerable<TValue> GetAllValues()
+        {
+            foreach (var kvp in _backing.EnumStrings.OrderBy(x => x.Value))
+            {
+                yield return _backing.Attributes[kvp.Key].Value;
+            }
+        }
+
+        public Dictionary<TValue, TEnum> ToValueDictionary(IEqualityComparer<TValue>? equalityComparer)
+        {
+            if (equalityComparer is null)
+            {
+                Debug.Fail("You should use the default equality comparer if you don't have a specific reason not to.");
+                if (!typeof(IEquatable<TValue>).IsAssignableFrom(typeof(TValue)))
+                {
+                    throw new InvalidOperationException($"{typeof(TValue).GetName()} must implement IEquatable<T> to use the default equality comparer.");
+                }
+                else if (typeof(string).Equals(typeof(TValue)))
+                {
+                    equalityComparer = (IEqualityComparer<TValue>)StringComparer.OrdinalIgnoreCase;
+                }
+                else
+                {
+                    equalityComparer = EqualityComparer<TValue>.Default;
+                }
+            }
+
+            Dictionary<TValue, TEnum> dictionary = new(_backing.Attributes.Count, equalityComparer);
+            foreach (var kvp in _backing.EnumStrings)
+            {
+                TValue value = _backing.Attributes[kvp.Key].Value;
+                _ = dictionary.TryAdd(value, kvp.Value);
+            }
+
+            return dictionary;
+        }
+
         [DebuggerStepThrough]
         public IEnumerator<TEnum> GetEnumerator()
         {
@@ -66,11 +105,20 @@ namespace AD.Api.Enums.Internal
 
         [DebuggerStepThrough]
         [return: NotNullIfNotNull(nameof(defaultValue))]
-        public TValue? GetValue(TEnum key, [AllowNull] TValue defaultValue = default)
+        public TValue? GetValueOrDefault(TEnum key, [AllowNull] TValue defaultValue = default)
         {
             return this.TryGetAttribute(key, out TAtt? attribute)
                 ? attribute.Value
                 : defaultValue;
+        }
+
+        public TValue GetValue(TEnum key)
+        {
+            return this.TryGetAttribute(key, out TAtt? attribute)
+                ? attribute.Value
+                : _backing.EnumStrings.HasDefaultName
+                    ? _backing.Attributes[_backing.EnumStrings.DefaultName].Value
+                    : throw new ArgumentException("The specified enumeration key is not defined and no default value exists.", nameof(key));
         }
         [DebuggerStepThrough]
         public bool TryGetAttribute(TEnum key, [NotNullWhen(true)] out TAtt? attribute)
@@ -124,8 +172,11 @@ namespace AD.Api.Enums.Internal
             Dictionary<string, TAtt> nameToAtt = new(fields.Length, StringComparer.OrdinalIgnoreCase);
             foreach (FieldInfo fi in fields)
             {
-                var att = fi.GetCustomAttributes<TAtt>(inherit: false).First();
-                nameToAtt.TryAdd(fi.Name, att);
+                var att = fi.GetCustomAttributes<TAtt>(inherit: false).FirstOrDefault();
+                if (att is not null)
+                {
+                    _ = nameToAtt.TryAdd(fi.Name, att);
+                }
             }
 
             return nameToAtt;
