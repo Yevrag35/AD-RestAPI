@@ -75,7 +75,7 @@ public enum RelativeNameType
 /// </remarks>
 [StructLayout(LayoutKind.Auto)]
 [DynamicDependencyRegistration]
-public readonly struct RelativeName
+public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatable<string>
 {
     private const int DN_SPAN_LIMIT = 256;  // Maximum stackalloc length of a distinguished name.
     private const int MINIMUM_NAME_INDEX = 3;   // Minimum index for a valid attributed name.
@@ -148,6 +148,38 @@ public readonly struct RelativeName
         span.CopyTo(buffer.Slice(prefix.Length));
         return buffer.Slice(0, span.Length + prefix.Length);
     }
+
+    /// <summary>
+    /// Creates a new <see cref="RelativeName"/> instance from the specified span of characters prepending the
+    /// specified <see cref="RelativeNameType"/> prefix if it is not already present.
+    /// </summary>
+    /// <param name="value">The span of characters that makes up the relative name.</param>
+    /// <param name="nameType">The type of relative name the instance will prepend.</param>
+    /// <returns>
+    /// A new <see cref="RelativeName"/> instance with the specified 
+    /// <paramref name="nameType"/> and <paramref name="value"/>.
+    /// </returns>
+    public static RelativeName Create(ReadOnlySpan<char> value, RelativeNameType nameType)
+    {
+        if (value.IsWhiteSpace() || !AttributeStrings.TryGetValue(nameType, out string? prefix))
+        {
+            return Empty;
+        }
+
+        int index = prefix.Length + 1;
+        if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return new(nameType, value.ToString(), in index);
+        }
+
+        value = value.Trim();
+        Span<char> chars = stackalloc char[value.Length + prefix.Length];
+        prefix.CopyTo(chars);
+        value.CopyTo(chars.Slice(prefix.Length));
+
+        return new(nameType, new string(chars), in index);
+    }
+
     public ReadOnlySpan<char> GetName()
     {
         return _notEmpty ? _value.AsSpan(_nameStartIndex) : [];
@@ -167,7 +199,6 @@ public readonly struct RelativeName
         Debug.Fail("This should be unreachable...");
         return RelativeNameType.CommonName;
     }
-
     private static bool TryGetRelativeNameType(ReadOnlySpan<char> prefix, out RelativeNameType result)
     {
         if (prefix.Length >= 2 && prefix.Length <= 7 && !prefix.ContainsAnyExcept(UniqueAttributeChars))
@@ -252,6 +283,29 @@ public readonly struct RelativeName
 
     //    return result;
     //}
+
+    /// <summary>
+    /// Attempts to determine the relative name type from the specified span of characters.
+    /// </summary>
+    /// <param name="value">The read-only span of characters to check.</param>
+    /// <param name="result">
+    /// When this method returns, contains the relative name type if <paramref name="value"/> is prefaced with a valid
+    /// attribute value. This parameter is passed uninitialized.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="value"/> is prefaced with a valid attribute value; 
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    public static bool TryReadRelativeNameType(ReadOnlySpan<char> value, out RelativeNameType result)
+    {
+        if (value.IsWhiteSpace() || !TryGetRelativeNameType(value, out result))
+        {
+            result = default;
+            return false;
+        }
+
+        return true;
+    }
 
     /// <summary>
     /// 

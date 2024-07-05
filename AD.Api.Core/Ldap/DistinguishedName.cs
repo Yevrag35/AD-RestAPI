@@ -180,6 +180,12 @@ public sealed partial class DistinguishedName : IEquatable<DistinguishedName>
         return StringComparer.OrdinalIgnoreCase.GetHashCode(this.ToString());
     }
 
+    public int GetNumberOfRelativeNames()
+    {
+        ReadOnlySpan<char> dn = this.ToString();
+        return CountNumberOfRelativeNames(dn);
+    }
+
     private void ResetValue()
     {
         _fullValue = null;

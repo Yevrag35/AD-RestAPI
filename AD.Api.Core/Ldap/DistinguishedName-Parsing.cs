@@ -3,8 +3,6 @@ using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using AD.Api.Strings.Spans;
 using System.Buffers;
-using System.Drawing;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Ldap;
 
@@ -13,9 +11,40 @@ public sealed partial class DistinguishedName
     static readonly char COMMA = CharConstants.COMMA;
 
     /// <summary>
+    /// Counts the number of <see cref="RelativeName"/> components in the provided span of characters if it were
+    /// to be split.
+    /// </summary>
+    /// <param name="path">
+    /// The span of characters to count the number of <see cref="RelativeName"/> components in.
+    /// </param>
+    /// <returns>
+    /// The number of <see cref="RelativeName"/> components that would make up the distinguished name if parsed.
+    /// </returns>
+    public static int CountNumberOfRelativeNames(ReadOnlySpan<char> path)
+    {
+        if (path.IsEmpty)
+        {
+            return 0;
+        }
+
+        int count = 1;
+        for (int i = 0; i < path.Length; i++)
+        {
+            if (COMMA == path[i] && !path.IsEscapedAt(in i))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// Splits the current <see cref="DistinguishedName"/> into its constituent <see cref="RelativeName"/> components.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>
+    /// An array of <see cref="RelativeName"/> components that make up the <see cref="DistinguishedName"/>.
+    /// </returns>
     /// <exception cref="ArgumentException"/>
     public RelativeName[] Split()
     {
@@ -39,7 +68,6 @@ public sealed partial class DistinguishedName
             ? TrySplit(_fullValue, destination, out namesWritten)
             : TrySplit(this.ToString(), destination, out namesWritten);
     }
-
     public static DistinguishedName Join(ReadOnlySpan<RelativeName> relativeNames)
     {
         if (relativeNames.IsEmpty)
@@ -139,6 +167,7 @@ public sealed partial class DistinguishedName
         return array;
     }
 
+    
     public static bool TrySplit(ReadOnlySpan<char> path, Span<RelativeName> destination, out int namesWritten)
     {
         if (destination.IsEmpty)
