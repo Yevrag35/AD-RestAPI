@@ -15,7 +15,7 @@ namespace AD.Api.Core.Security;
 /// Like the Windows-only 'SecurityIdentifier' implementation, this class is designed to be immutable.
 /// </remarks>
 [DebuggerDisplay(@"\{{Value,nq}\}")]
-public sealed class SidString : 
+public sealed class SidString :
     IComparable<SidString>,
     IEquatable<SidString>,
     ISpanFormattable,
@@ -57,7 +57,7 @@ public sealed class SidString :
     /// <c>68</c>
     /// </value>
     public static readonly int MaxBinaryLength = MinBinaryLength + (MaxSubAuthorities * 4);
-    
+
     /// <summary>
     /// The format specifier for the LDAP string representation of the SID.
     /// </summary>
@@ -69,7 +69,7 @@ public sealed class SidString :
     /// </returns>
     public static ReadOnlySpan<char> LdapFormat => new(in L_FORMAT);
     /// <summary>
-    /// The format specifier for the Security Descriptor Definition Language (SDDL) string representation of the SID 
+    /// The format specifier for the Security Descriptor Definition Language (SDDL) string representation of the SID
     /// which is default.
     /// </summary>
     /// <returns>
@@ -90,7 +90,7 @@ public sealed class SidString :
     /// </value>
     public static readonly int MaxSidStringLength = SID_CHAR_MAX_LENGTH;
     /// <summary>
-    /// The minimum number of characters in any given SID string in Security Descriptor Definition Language (SDDL) 
+    /// The minimum number of characters in any given SID string in Security Descriptor Definition Language (SDDL)
     /// format.
     /// </summary>
     public const int MinSidStringLength = 7;
@@ -110,7 +110,7 @@ public sealed class SidString :
     /// </returns>
     public int BinaryLength => _binaryForm.Length;
     /// <summary>
-    /// Gets the number of characters that would make up the LDAP filter string representation of this 
+    /// Gets the number of characters that would make up the LDAP filter string representation of this
     /// <see cref="SidString"/>.
     /// </summary>
     /// <returns>
@@ -132,7 +132,7 @@ public sealed class SidString :
     #region CONSTRUCTORS
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SidString"/> class from the pre-validated character and 
+    /// Initializes a new instance of the <see cref="SidString"/> class from the pre-validated character and
     /// binary values.
     /// </summary>
     /// <remarks>
@@ -155,7 +155,7 @@ public sealed class SidString :
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SidString"/> class from a string in the Security Descriptor 
+    /// Initializes a new instance of the <see cref="SidString"/> class from a string in the Security Descriptor
     /// Definition Language (SDDL) format.
     /// </summary>
     /// <param name="sddlForm">
@@ -166,7 +166,7 @@ public sealed class SidString :
     /// </exception>
     /// <exception cref="ArgumentNullException"><paramref name="sddlForm"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// The length of <paramref name="sddlForm"/> is greater than <see cref="MaxSidStringLength"/> or 
+    /// The length of <paramref name="sddlForm"/> is greater than <see cref="MaxSidStringLength"/> or
     /// less than <see cref="MinSidStringLength"/>.
     /// </exception>
     /// <exception cref="FormatException">
@@ -181,7 +181,7 @@ public sealed class SidString :
         {
             throw new ArgumentException("The SID string does not start with 'S-'.", nameof(sddlForm));
         }
-        
+
         Span<byte> bytes = stackalloc byte[MaxBinaryLength];
         if (!TryConvertSidStringToBinary(sddlForm, bytes, out int written))
         {
@@ -367,7 +367,7 @@ public sealed class SidString :
     }
 
     /// <summary>
-    /// Determines if the length of the given read-only <see cref="byte"/> span is within the acceptable range of 
+    /// Determines if the length of the given read-only <see cref="byte"/> span is within the acceptable range of
     /// constructing a <see cref="SidString"/>.
     /// </summary>
     /// <param name="value">The byte span to check.</param>
@@ -376,13 +376,12 @@ public sealed class SidString :
     /// <see langword="false"/>.
     /// </returns>
     [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsByteLengthInRange(ReadOnlySpan<byte> value)
     {
         return value.Length >= MinBinaryLength && value.Length <= MaxBinaryLength;
     }
     /// <summary>
-    /// Determines if the length of the given read-only <see cref="char"/> span is within the acceptable range of 
+    /// Determines if the length of the given read-only <see cref="char"/> span is within the acceptable range of
     /// constructing a <see cref="SidString"/>.
     /// </summary>
     /// <param name="value">The char span to check.</param>
@@ -391,13 +390,12 @@ public sealed class SidString :
     /// <see langword="false"/>.
     /// </returns>
     [DebuggerStepThrough]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsCharLengthInRange(ReadOnlySpan<char> value)
     {
         return value.Length >= MinSidStringLength && value.Length <= MaxSidStringLength;
     }
     /// <summary>
-    /// Determines if the length of a given array or span of type <typeparamref name="T"/> is within the acceptable 
+    /// Determines if the length of a given array or span of type <typeparamref name="T"/> is within the acceptable
     /// range of constructing a <see cref="SidString"/>.
     /// </summary>
     /// <param name="value">The char span to check.</param>
@@ -510,7 +508,7 @@ public sealed class SidString :
     /// </summary>
     /// <param name="value">The read-only span to parse.</param>
     /// <param name="sid">
-    /// When this method returns, contains the <see cref="SidString"/> object parsed from the read-only span, 
+    /// When this method returns, contains the <see cref="SidString"/> object parsed from the read-only span,
     /// if the parse operation was successful; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns>

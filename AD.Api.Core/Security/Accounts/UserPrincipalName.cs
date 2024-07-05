@@ -1,68 +1,84 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 
-namespace AD.Api.Core.Security.Accounts
+namespace AD.Api.Core.Security.Accounts;
+
+/// <summary>
+/// Represents an account name formatted as a User Principal Name (e.g., UserName@Domain).
+/// </summary>
+public sealed class UserPrincipalName : AccountName
 {
-    public sealed class UserPrincipalName : AccountName
+    /// <summary>
+    /// Gets or sets the user principal name.
+    /// </summary>
+    public required string Value { get; init; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserPrincipalName"/> class.
+    /// </summary>
+    public UserPrincipalName()
     {
-        public required string Value { get; init; }
+    }
 
-        public UserPrincipalName()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserPrincipalName"/> class with the specified user principal name.
+    /// </summary>
+    /// <param name="value">The user principal name.</param>
+    [SetsRequiredMembers]
+    public UserPrincipalName(string value)
+    {
+        this.Value = value;
+    }
+
+    /// <summary>
+    /// Sets the user principal name as the user name in the provided network credential, with an empty domain.
+    /// </summary>
+    /// <param name="credential">The network credential whose properties are to be set.</param>
+    public override void SetCredential(NetworkCredential credential)
+    {
+        credential.Domain = string.Empty;
+        credential.UserName = this.Value;
+    }
+
+    /// <summary>
+    /// Returns the username in the User Principal Name format.
+    /// </summary>
+    /// <returns>A <see cref="string"/> in the User Principal Name format: <c>UserName@Domain</c>.</returns>
+    public override string ToString()
+    {
+        return this.Value;
+    }
+
+    /// <summary>
+    /// Tries to validate the User Principal Name.
+    /// </summary>
+    /// <param name="context">The validation context.</param>
+    /// <param name="badResult">The validation result if the validation fails.</param>
+    /// <returns><see langword="true"/> if the name is valid; otherwise, <see langword="false"/>.</returns>
+    protected override bool TryValidateName(ValidationContext context, [NotNullWhen(false)] out ValidationResult? badResult)
+    {
+        badResult = null;
+        if (string.IsNullOrWhiteSpace(this.Value) || this.Value.Length <= 3)
         {
+            badResult = new ValidationResult("User Principal Names must be in the format: UserName@Domain.", new[] { nameof(this.Value) });
+            return false;
         }
-        [SetsRequiredMembers]
-        public UserPrincipalName(string value)
+
+        ReadOnlySpan<char> chars = this.Value.AsSpan();
+        int atIndex = chars.IndexOf('@');
+        if (atIndex <= 0)
         {
-            this.Value = value;
+            badResult = new ValidationResult("User Principal Names must be in the format: UserName@Domain.", new[] { nameof(this.Value) });
+            return false;
         }
 
-        public override void SetCredential(NetworkCredential credential)
+        chars = chars.Slice(atIndex);
+        if (chars.Length <= 1)
         {
-            credential.Domain = string.Empty;
-            credential.UserName = this.Value;
+            badResult = new ValidationResult("User Principal Names must have a domain name.", new[] { nameof(this.Value) });
+            return false;
         }
 
-        /// <summary>
-        /// Returns the username in the User Principal Name format.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="string"/> in the User Principal Name format: <c>UserName@Domain</c>.
-        /// </returns>
-        public override string ToString()
-        {
-            return this.Value;
-        }
-
-        protected override bool TryValidateName(ValidationContext context, [NotNullWhen(false)] out ValidationResult? badResult)
-        {
-            badResult = null;
-            if (string.IsNullOrWhiteSpace(this.Value) || this.Value.Length <= 3)
-            {
-                badResult = new ValidationResult("User Principal Names must be in the format: UserName@Domain.", 
-                    [nameof(this.Value)]);
-
-                return false;
-            }
-
-            ReadOnlySpan<char> chars = this.Value.AsSpan();
-            int atIndex = chars.IndexOf('@');
-            if (atIndex <= 0)
-            {
-                badResult = new ValidationResult("User Principal names must be in the format: UserName@Domain.", 
-                    [nameof(this.Value)]);
-
-                return false;
-            }
-
-            chars = chars.Slice(atIndex);
-            if (chars.Length <= 1)
-            {
-                badResult = new ValidationResult("User principal names must have a domain name.", [nameof(this.Value)]);
-                return false;
-            }
-
-            return true;
-        }
+        return true;
     }
 }
-
