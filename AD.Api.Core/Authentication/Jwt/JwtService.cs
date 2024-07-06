@@ -1,6 +1,8 @@
 using AD.Api.Components;
+using AD.Api.Core.Extensions;
 using AD.Api.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.Versioning;
@@ -13,21 +15,23 @@ namespace AD.Api.Core.Authentication.Jwt
 {
     public interface IJwtService
     {
-        OneOf<string, IActionResult> CreateToken(IJwtLogin loginRequest);
+        OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest);
     }
 
     [SupportedOSPlatform("WINDOWS")]
     internal sealed class JwtService : IJwtService
     {
         private readonly JwtAuthorizationService _authorizations;
+        private readonly IMemoryCache _cache;
         private readonly JwtSecurityTokenHandler _handler;
         private readonly TokenValidationParameters _parameters;
         private readonly IEnumStrings<AuthorizedRole> _roles;
         private readonly CustomJwtSettings _settings;
         private readonly SigningCredentials _signingCreds;
 
-        public JwtService(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles)
+        public JwtService(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles, IMemoryCache cache)
         {
+            _cache = cache;
             _handler = new();
             _roles = roles;
             _settings = settings;
@@ -50,7 +54,7 @@ namespace AD.Api.Core.Authentication.Jwt
             };
         }
 
-        public OneOf<string, IActionResult> CreateToken(IJwtLogin loginRequest)
+        public OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
         {
             Span<byte> byteBuffer = stackalloc byte[GetMaxBytes(loginRequest.Key.Length)];
             _ = Convert.TryFromBase64String(loginRequest.Key, byteBuffer, out int written);
@@ -69,10 +73,16 @@ namespace AD.Api.Core.Authentication.Jwt
                 return new UnauthorizedResult();
             }
 
-            return this.GenerateToken(user);
+            if (_cache.TryGetValueOrRemove(user.UserHash, out BearerToken? bearerToken))
+            {
+
+            }
+
+            bearerToken = this.GenerateToken(user);
+            return bearerToken;
         }
 
-        private string GenerateToken(AuthorizedUser user)
+        private BearerToken GenerateToken(AuthorizedUser user)
         {
             SecurityTokenDescriptor descriptor = new()
             {
@@ -89,7 +99,14 @@ namespace AD.Api.Core.Authentication.Jwt
             };
 
             SecurityToken token = _handler.CreateToken(descriptor);
-            return _handler.WriteToken(token);
+            string jwToken = _handler.WriteToken(token);
+
+            return new BearerToken
+            {
+                Expires = descriptor.Expires.GetValueOrDefault(),
+                Roles = user.Roles,
+                Token = jwToken,
+            };
         }
 
         private static int GetMaxBytes(int base64Length)

@@ -11,7 +11,7 @@ namespace AD.Api.Services.Jwt
             Message = "JWT authentication is not supported in this configuration.",
         })
         {
-            StatusCode = StatusCodes.Status422UnprocessableEntity,
+            StatusCode = StatusCodes.Status403Forbidden,
         };
 
         public OneOf<string, IActionResult> CreateToken(IJwtLogin loginRequest)
