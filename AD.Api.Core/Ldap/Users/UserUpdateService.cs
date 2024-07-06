@@ -18,15 +18,15 @@ namespace AD.Api.Core.Ldap.Users
             _schemaSvc = schemaSvc;
         }
 
-        public IActionResult UpdateUser(ConnectedResponse response, in DomainQuery target, IReadOnlyDictionary<string, JsonElement> updates)
-        {
-            if (string.IsNullOrWhiteSpace(response.FoundObject) || updates.Count <= 0)
-            {
-                return new ApiBadRequestResult("No updates provided or no user found.", ResultCode.NoSuchObject);
-            }
+        //public IActionResult UpdateUser(ConnectedResponse response, in DomainQuery target, IReadOnlyDictionary<string, JsonElement> updates)
+        //{
+        //    if (string.IsNullOrWhiteSpace(response.FoundObject) || updates.Count <= 0)
+        //    {
+        //        return new ApiBadRequestResult("No updates provided or no user found.", ResultCode.NoSuchObject);
+        //    }
 
             
-        }
+        //}
     }
 }
 

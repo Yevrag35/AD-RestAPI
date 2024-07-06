@@ -1,8 +1,9 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Schema;
+using AD.Api.Core.Serialization.Json.Ldap;
 using AD.Api.Reflection;
-using System.DirectoryServices.Protocols;
+using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -14,6 +15,7 @@ namespace AD.Api.Core.Serialization
     }
 
     [DependencyRegistration(typeof(IAttributeConverter), Lifetime = ServiceLifetime.Singleton)]
+    //[DynamicDependencyRegistration]
     internal sealed class AttributeConverter : IAttributeConverter
     {
         private const string DT_FORMAT = "yyyyMMddHHmmss.0'Z'";
@@ -342,6 +344,25 @@ namespace AD.Api.Core.Serialization
         }
 
         #endregion
+
+        //[DynamicDependencyRegistrationMethod]
+        //[EditorBrowsable(EditorBrowsableState.Never)]
+        //private static void AddToServices(IServiceCollection services)
+        //{
+        //    services.AddSingleton(x =>
+        //    {
+        //        ISchemaService schemaSvc = x.GetRequiredService<ISchemaService>();
+        //        AttributeConverter converter = new(schemaSvc);
+        //        IEnumerable<IJsonAttributeConverter> converters = x.GetRequiredService<IEnumerable<IJsonAttributeConverter>>();
+
+        //        foreach (IJsonAttributeConverter jsonConverter in converters)
+        //        {
+        //            jsonConverter.SetConverter(converter);
+        //        }
+
+        //        return converter;
+        //    });
+        //}
     }
 }
 

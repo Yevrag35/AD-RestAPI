@@ -1,6 +1,7 @@
 ﻿using AD.Api.Core.Ldap;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Serialization.Json;
+using AD.Api.Core.Serialization.Json.Ldap;
 using AD.Api.Extensions.Collections;
 using AD.Api.Serialization.Json;
 using System.Text.Json;
@@ -32,6 +33,7 @@ namespace AD.Api
         private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
         {
             options.Converters.AddRange([
+                new AddValueConverter(),
                 new ResultEntryConverter(converter),
                 new ResultEntryCollectionConverter(converter),
                 new SidStringConverter(),
