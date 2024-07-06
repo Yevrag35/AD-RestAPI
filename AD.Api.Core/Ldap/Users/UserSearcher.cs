@@ -5,16 +5,13 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices.Protocols;
-using System.Runtime.Versioning;
-using System.Text.Json;
 
 namespace AD.Api.Core.Ldap.Users
 {
     public interface IUserSearcher
     {
         IActionResult GetOneUser(SidString userSid, SearchParameters parameters, IServiceProvider provider);
-        OneOf<ConnectedResponse, IActionResult> GetOneUserAndContinue(SidString userSid, in DomainQuery target);
+        OneOf<ConnectedResponse, IActionResult> GetOneUserAndContinue(SidString userSid, in DomainQuery target, bool forceSSL = false);
     }
 
     [DependencyRegistration(typeof(IUserSearcher), Lifetime = ServiceLifetime.Singleton)]
@@ -29,7 +26,7 @@ namespace AD.Api.Core.Ldap.Users
             _requestSvc = requestSvc;
         }
 
-        public OneOf<ConnectedResponse, IActionResult> GetOneUserAndContinue(SidString userSid, in DomainQuery target)
+        public OneOf<ConnectedResponse, IActionResult> GetOneUserAndContinue(SidString userSid, in DomainQuery target, bool forceSSL = false)
         {
             string filter = _filterSvc.GetFilter(userSid, FilteredRequestType.User);
             SearchFilterLite searchFilter = SearchFilterLite.Create(filter, FilteredRequestType.User);

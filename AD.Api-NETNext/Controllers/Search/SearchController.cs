@@ -2,6 +2,7 @@
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
+using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,8 +24,8 @@ namespace AD.Api.Controllers.Search
         [HttpPost]
         [Route("search")]
         [JwtAuth(AuthorizedRole.Reader)]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(CollectionResponse))]
+        [ProducesResponseType(400, Type = typeof(ApiBadRequestResult))]
         public IActionResult SearchObjects(
             [FromBody] SearchFilterBody body,
             [FromQuery] SearchParameters parameters)

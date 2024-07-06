@@ -3,6 +3,7 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Operations;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Security;
+using AD.Api.Core.Serialization;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,13 +17,13 @@ namespace AD.Api.Core.Ldap.Users
     [DependencyRegistration(typeof(IUserUpdateService), Lifetime = ServiceLifetime.Singleton)]
     internal sealed class UserUpdateService : IUserUpdateService
     {
+        private readonly IAttributeConverter _converter;
         private readonly IRequestService _requestSvc;
-        private readonly ISchemaService _schemaSvc;
 
-        public UserUpdateService(IRequestService requestSvc, ISchemaService schemaSvc)
+        public UserUpdateService(IRequestService requestSvc, IAttributeConverter converter)
         {
             _requestSvc = requestSvc;
-            _schemaSvc = schemaSvc;
+            _converter = converter;
         }
 
         public IActionResult UpdateUser(SidString sidString, IEditOperation operation, ConnectedResponse continuation, in DomainQuery target)

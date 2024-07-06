@@ -1,4 +1,5 @@
 ﻿using AD.Api.Core;
+using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -23,13 +24,14 @@ namespace AD.Api.Binding
             }
 
             HttpContext context = bindingContext.HttpContext;
+            bool ldapRequiresSSL = EndpointRequiresSSL(context.GetEndpoint()?.Metadata);
             IQueryCollection query = context.Request.Query;
 
             string domain = GetQueryValue(query, DomainQuery.DomainModelName, string.Empty);
             string? dc = GetDomainControllerValue(query);
             try
             {
-                ModelBindingResult success = DomainQuery.Create(domain, dc, context.RequestServices, out DomainQuery model);
+                ModelBindingResult success = DomainQuery.Create(domain, dc, ldapRequiresSSL, context.RequestServices, out DomainQuery model);
                 bindingContext.Result = success;
                 bindingContext.ValidationState[model] = _suppress;
             }
@@ -41,6 +43,15 @@ namespace AD.Api.Binding
             return Task.CompletedTask;
         }
 
+        private static bool EndpointRequiresSSL(EndpointMetadataCollection? metadata)
+        {
+            if (metadata is null)
+            {
+                return false;
+            }
+
+            return metadata.GetMetadata<ILdapRequireSSLMetadata>()?.IsForced ?? false;
+        }
         private static string? GetDomainControllerValue(IQueryCollection query)
         {
             string? dc = GetQueryValue(query, DomainQuery.DomainControllerModelName, null);

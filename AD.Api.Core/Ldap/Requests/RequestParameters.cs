@@ -2,6 +2,7 @@ using AD.Api.Binding.Attributes;
 using AD.Api.Components;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap
@@ -22,7 +23,7 @@ namespace AD.Api.Core.Ldap
             }
 
             this.OnApplyingConnection(context);
-            return context.CreateConnection(this.Info.DomainController);
+            return context.CreateConnection(this.Info.DomainController, this.Info.RequiresSSL);
         }
 
         protected abstract void OnApplyingConnection(ConnectionContext context);

@@ -1,11 +1,13 @@
 using AD.Api.Collections.Enumerators;
 using AD.Api.Core.Extensions;
+using AD.Api.Core.Ldap;
 using AD.Api.Enums;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NLog;
+using System.Buffers;
 using System.Collections.Frozen;
 using System.Security.Claims;
 
@@ -65,7 +67,36 @@ namespace AD.Api.Core.Authentication.Jwt
             return false;
         }
 
-        public bool IsAuthorized(HttpContext context, string? parentPath)
+        public bool IsAuthorized(HttpContext context, string? fullDN)
+        {
+            if (!context.NeedsScoping(out AuthorizedRole requiredRole) || requiredRole == AuthorizedRole.None)
+            {
+                return true;
+            }
+
+            string domain = (string?)context.Items[DomainQuery.DomainModelName] ?? string.Empty;
+            string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+            int nameCount = DistinguishedName.CountNumberOfRelativeNames(fullDN);
+            var array = ArrayPool<RelativeName>.Shared.Rent(nameCount);
+            Span<RelativeName> span = array.AsSpan(0, nameCount);
+            try
+            {
+                if (!DistinguishedName.TrySplit(fullDN, span, out int written))
+                {
+                    return false;
+                }
+
+                DistinguishedName dn = DistinguishedName.Join(span.Slice(1));
+                WorkingScope scope = new(domain, dn.ToString(), requiredRole);
+                return this.IsAuthorized(name, scope);
+            }
+            finally
+            {
+                ArrayPool<RelativeName>.Shared.Return(array);
+            }
+        }
+        public bool IsAuthorizedByParent(HttpContext context, string? parentPath)
         {
             if (!context.NeedsScoping(out AuthorizedRole requiredRole))
             {

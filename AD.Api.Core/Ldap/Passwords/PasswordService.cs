@@ -4,20 +4,23 @@ using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.ComponentModel;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap.Passwords
 {
     public interface IPasswordService
     {
+        /// <summary>
+        /// Indicates whether the service for the given functionality is enabled by configuration.
+        /// </summary>
+        bool IsFunctional { get; }
     }
     public interface IPasswordChangeService : IPasswordService
     {
-        IActionResult Change(in DomainQuery target, PasswordChangeRequest request);
+        IActionResult Change(in DomainQuery target, IPasswordRequest request);
     }
     public interface IPasswordResetService : IPasswordService
     {
-        IActionResult Reset(in DomainQuery target, PasswordResetRequest request);
+        IActionResult Reset(in DomainQuery target, IPasswordRequest request);
     }
 
     [DynamicDependencyRegistration]
@@ -26,22 +29,36 @@ namespace AD.Api.Core.Ldap.Passwords
         private readonly PasswordHandler _decryptor;
         private readonly IRequestService _requests;
 
+        public bool IsFunctional => true;
+
         public PasswordService(IRequestService requests, IOptions<PasswordOperationSettings> options)
         {
             _decryptor = PasswordHandler.CreateService(options.Value);
             _requests = requests;
         }
 
-        public IActionResult Change(in DomainQuery target, PasswordChangeRequest request)
+        public IActionResult Change(in DomainQuery target, IPasswordRequest request)
         {
-            if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out LdapConnection? connection))
+            if (request.IsResetting())
+            {
+                return new ApiBadRequestResult("Password reset requests must use the reset endpoint.", ResultCode.UnwillingToPerform);
+            }
+
+            LdapConnection? connection = null;
+            bool dontDispose = false;
+            if (request.TryGetContinuation(out var continuation))
+            {
+                connection = continuation.ActiveConnection;
+                dontDispose = true;
+            }
+            else if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out connection))
             {
                 return error;
             }
 
-            using (connection)
+            try
             {
-                ModifyRequest modify = new(request.DistinguishedName);
+                ModifyRequest modify = new(request.GetDistinguishedName());
 
                 _decryptor.EncodePasswordChange(request.OldPassword, request.NewPassword, modify);
 
@@ -50,17 +67,36 @@ namespace AD.Api.Core.Ldap.Passwords
                     f0: success => new AcceptedResult(),
                     f1: fail => fail);
             }
+            finally
+            {
+                if (!dontDispose)
+                {
+                    connection.Dispose();
+                }
+            }
         }
-        public IActionResult Reset(in DomainQuery target, PasswordResetRequest request)
+        public IActionResult Reset(in DomainQuery target, IPasswordRequest request)
         {
-            if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out LdapConnection? connection))
+            if (!request.IsResetting())
+            {
+                return new ApiBadRequestResult("Password change requests must use the change endpoint.", ResultCode.UnwillingToPerform);
+            }
+
+            LdapConnection? connection = null;
+            bool dontDispose = false;
+            if (request.TryGetContinuation(out var continuation))
+            {
+                connection = continuation.ActiveConnection;
+                dontDispose = true;
+            }
+            else if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out connection))
             {
                 return error;
             }
 
-            using (connection)
+            try
             {
-                ModifyRequest modify = new(request.DistinguishedName);
+                ModifyRequest modify = new(request.GetDistinguishedName());
 
                 _decryptor.EncodePasswordReset(request.NewPassword, modify);
 
@@ -69,15 +105,24 @@ namespace AD.Api.Core.Ldap.Passwords
                     f0: success => new AcceptedResult(),
                     f1: fail => fail);
             }
+            finally
+            {
+                if (!dontDispose)
+                {
+                    connection.Dispose();
+                }
+            }
         }
 
         private sealed class NoPasswordOperationService : IPasswordChangeService, IPasswordResetService
         {
-            public IActionResult Change(in DomainQuery target, PasswordChangeRequest request)
+            public bool IsFunctional => false;
+
+            public IActionResult Change(in DomainQuery target, IPasswordRequest request)
             {
                 return new ApiBadRequestResult("Password change operations are disabled.", ResultCode.UnwillingToPerform);
             }
-            public IActionResult Reset(in DomainQuery target, PasswordResetRequest request)
+            public IActionResult Reset(in DomainQuery target, IPasswordRequest request)
             {
                 return new ApiBadRequestResult("Password reset operations are disabled.", ResultCode.UnwillingToPerform);
             }
@@ -128,7 +173,6 @@ namespace AD.Api.Core.Ldap.Passwords
                         .AddSingleton<PasswordService>();
             }
         }
-
 
         private static void AddPasswordService<TService>(IServiceCollection services, IConfigurationSection section, ref bool allEnabled, ref bool allDisabled)
             where TService : class, IPasswordService

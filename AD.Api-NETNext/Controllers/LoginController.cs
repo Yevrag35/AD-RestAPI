@@ -7,7 +7,7 @@ namespace AD.Api.Controllers
 {
     [Route("login")]
     [ApiController]
-    [AllowAnonymous]
+    [Authorize]
     public sealed class LoginController : ControllerBase
     {
         private readonly IJwtService _jwtSvc;
@@ -18,6 +18,7 @@ namespace AD.Api.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public IActionResult Login([FromBody] LoginBody body)
         {
             var oneOf = _jwtSvc.CreateToken(body);

@@ -1,5 +1,6 @@
 ﻿using AD.Api.Spans;
 using AD.Api.Statics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AD.Api.Core;
@@ -14,11 +15,13 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
 
     public readonly string Domain { get; }
     public readonly string? DomainController { get; }
+    public readonly bool RequiresSSL { get; }
     public readonly int UrlQueryLength { get; }
 
-    internal DomainQuery(string domain, string? domainController, IServiceProvider provider)
+    internal DomainQuery(string domain, string? domainController, bool forceSSL, IServiceProvider provider)
     {
         domain ??= string.Empty;
+        this.RequiresSSL = forceSSL;
         _services = provider;
         this.Domain = domain;
         if (string.IsNullOrWhiteSpace(domainController))
@@ -62,8 +65,20 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
         charsWritten = pos;
     }
 
-    public static readonly DomainQuery Default = new(string.Empty, null, null!);
+    public static readonly DomainQuery Default = new(string.Empty, null, false, null!);
 
+    //private IEnumerable<KeyValuePair<string, string?>> EnumerateQueryComponents()
+    //{
+    //    if (!string.IsNullOrWhiteSpace(this.Domain))
+    //    {
+    //        yield return new(DomainModelName, this.Domain);
+    //    }
+
+    //    if (!string.IsNullOrWhiteSpace(this.DomainController))
+    //    {
+    //        yield return new(DomainControllerModelName, this.DomainController);
+    //    }
+    //}
     public bool Equals(DomainQuery other)
     {
         return StringComparer.OrdinalIgnoreCase.Equals(this.Domain, other.Domain)
@@ -85,9 +100,25 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
         return _services?.GetService(serviceType);
     }
 
-    internal static ModelBindingResult Create(string domain, string? domainController, IServiceProvider provider, out DomainQuery result)
+    public QueryString ToQueryString()
     {
-        result = new DomainQuery(domain, domainController, provider);
+        if (string.IsNullOrWhiteSpace(this.Domain) && string.IsNullOrWhiteSpace(this.DomainController))
+        {
+            return QueryString.Empty;
+        }
+
+        string queryString = string.Create(this.UrlQueryLength, this, (chars, state) =>
+        {
+            chars[0] = CharConstants.QUESTION;
+            state.AppendAsQuery(chars.Slice(1), out _);
+        });
+
+        return new QueryString(queryString);
+    }
+
+    internal static ModelBindingResult Create(string domain, string? domainController, bool forceSsl, IServiceProvider provider, out DomainQuery result)
+    {
+        result = new DomainQuery(domain, domainController, forceSsl, provider);
         return ModelBindingResult.Success(result);
     }
 
