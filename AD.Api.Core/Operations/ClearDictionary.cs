@@ -1,7 +1,8 @@
 
 namespace AD.Api.Core.Operations;
 
-public sealed class ClearDictionary : EditOperationDictionary<DirectoryAttributeModification>
+public sealed class ClearDictionary : EditOperationDictionary<DirectoryAttributeModification>,
+    IModificationCreator<ClearDictionary>
 {
     public ClearDictionary()
         : base(1)
@@ -22,5 +23,10 @@ public sealed class ClearDictionary : EditOperationDictionary<DirectoryAttribute
     protected override IEnumerable<DirectoryAttributeModification> EnumerateModifications(IEnumerable<DirectoryAttributeModification> values)
     {
         return values;
+    }
+
+    public static DirectoryAttributeModification CreateModification(string propertyName)
+    {
+        return GetModification(propertyName, DirectoryAttributeOperation.Delete);
     }
 }

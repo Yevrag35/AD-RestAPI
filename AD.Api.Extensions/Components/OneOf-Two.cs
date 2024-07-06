@@ -2,11 +2,15 @@
 
 namespace AD.Api.Components
 {
-    public static class OneOf<T0>
+    public static class OneOf<T>
     {
-        public static OneOf<T0, T1> FromT1<T1>(T1 item)
+        public static OneOf<T0, T> FromT0<T0>(T0 item0)
         {
-            return new(item);
+            return new(item0);
+        }
+        public static OneOf<T, T1> FromT1<T1>(T1 item1)
+        {
+            return new(item1);
         }
     }
 
@@ -15,6 +19,8 @@ namespace AD.Api.Components
     [DebuggerDisplay(@"\{IsT0={IsT0}, IsT1={IsT1}, Value={Value}\}")]
     public readonly struct OneOf<T0, T1>
     {
+        private readonly int _index;
+
         public readonly T0? AsT0 { get; }
         public readonly T1? AsT1 { get; }
         [MemberNotNullWhen(true, nameof(AsT0))]
@@ -23,12 +29,42 @@ namespace AD.Api.Components
         [MemberNotNullWhen(false, nameof(AsT0))]
         [MemberNotNullWhen(true, nameof(AsT1))]
         public readonly bool IsT1 { get; }
+
+        public readonly int Index => _index;
         public readonly object Value { get; }
 
         private OneOf(object? obj)
         {
             ArgumentNullException.ThrowIfNull(obj);
             this.Value = obj;
+        }
+        internal OneOf(T0? item0, T1? item1, int index)
+        {
+            this.AsT0 = item0;
+            this.AsT1 = item1;
+            switch (index)
+            {
+                case 0:
+                    this.IsT0 = true;
+                    this.IsT1 = false;
+                    this.Value = item0!;
+                    break;
+
+                case 1:
+                    this.IsT0 = false;
+                    this.IsT1 = true;
+                    this.Value = item1!;
+                    break;
+
+                case 2:
+                    index = 1;
+                    goto case 1;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _index = index;
         }
         public OneOf(T0 item)
             : this(obj: CastToObject(item))
@@ -38,6 +74,7 @@ namespace AD.Api.Components
 
             this.AsT1 = default;
             this.IsT1 = false;
+            _index = 0;
         }
         public OneOf(T1 item)
             : this(obj: CastToObject(item))
@@ -47,6 +84,7 @@ namespace AD.Api.Components
 
             this.AsT0 = default;
             this.IsT0 = false;
+            _index = 1;
         }
 
         private static object CastToObject<T>(T item)
@@ -55,6 +93,22 @@ namespace AD.Api.Components
             return item;
         }
 
+        public readonly void Match<TState>(TState state, Action<TState, T0> a0, Action<TState, T1> a1)
+        {
+            switch (_index)
+            {
+                case 0:
+                    a0(state, this.AsT0!);
+                    break;
+
+                case 1:
+                    a1(state, this.AsT1!);
+                    break;
+
+                default:
+                    break;
+            }
+        }
         public TOutput Match<TOutput>(Func<T0, TOutput> f0, Func<T1, TOutput> f1)
         {
             return this.IsT0

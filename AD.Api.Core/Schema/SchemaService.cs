@@ -60,7 +60,7 @@ namespace AD.Api.Core.Schema
             services.AddSingleton<ISchemaService>(provider => provider.GetRequiredService<SchemaService>());
         }
 
-        private static readonly char SPACE = CharConstants.SPACE;
+        //private static readonly char SPACE = CharConstants.SPACE;
         [SupportedOSPlatform("WINDOWS")]
         private static SchemaService CreateSchemaService(IServiceProvider provider)
         {

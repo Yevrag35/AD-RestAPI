@@ -1,4 +1,5 @@
 ﻿using AD.Api.Core.Serialization;
+using AD.Api.Statics;
 using System.Globalization;
 using System.Text.Json;
 
@@ -6,9 +7,6 @@ namespace AD.Api.Mapping
 {
     public static partial class AttributeSerialization
     {
-        internal const long MinFileTimeValue = 0L; // January 1, 1601
-        internal const long MaxFileTimeValue = 2650467743999999999L; // DateTime.MaxValue in FILETIME
-
         public static void WriteDateTimeOffset(Utf8JsonWriter writer, ref readonly SerializationContext context)
         {
             if (context.Value is long fileTimeValue)
@@ -31,7 +29,7 @@ namespace AD.Api.Mapping
         }
         private static void WriteDateTimeFromFileTime(Utf8JsonWriter writer, in long fileTime)
         {
-            if (MaxFileTimeValue < fileTime || long.IsNegative(fileTime))
+            if (LengthConstants.MaximumFileTimeValue < fileTime || long.IsNegative(fileTime))
             {
                 writer.WriteNullValue();
                 return;

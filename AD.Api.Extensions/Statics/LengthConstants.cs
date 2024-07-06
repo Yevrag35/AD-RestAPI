@@ -73,6 +73,9 @@ namespace AD.Api.Statics
         /// </summary>
         public const int GUID_FORM_X = 68;
 
+        public const long MinimumFileTimeValue = 0L; // January 1, 1601
+        public const long MaximumFileTimeValue = 2_650_467_743_999_999_999L; // DateTime.MaxValue in FILETIME
+
         private static readonly FrozenDictionary<Type, int> _byTypeLookup;
 
         static LengthConstants()
