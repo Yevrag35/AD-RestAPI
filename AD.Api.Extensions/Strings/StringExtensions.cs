@@ -30,33 +30,19 @@ namespace AD.Api.Strings.Extensions
         /// </returns>
         public static readonly string CommaSpace = COMMA_SPACE;
 
-        [DebuggerStepThrough]
-        public static string Format<T0, T1>(this string? value, T0 arg0, T1 arg1, IFormatProvider? provider = null)
-            where T0 : notnull
-            where T1 : notnull
-        {
-            return !string.IsNullOrEmpty(value)
-                ? string.Format(
-                    provider: provider,
-                    format: value,
-                    arg0.ToString(),
-                    arg1.ToString())
-                : string.Empty;
-        }
-
         /// <summary>
-        /// Determines if the character at the specified index of this <see cref="string"/> is escaped with 
+        /// Determines if the character at the specified index of this <see cref="string"/> is escaped with
         /// the specified escape character.
         /// </summary>
         /// <param name="value">The string of characters where the indexed character occurs.</param>
         /// <param name="index">
-        ///     The index of the character within the span where the preceding characters will be check. 
+        ///     The index of the character within the span where the preceding characters will be check.
         /// </param>
         /// <param name="escapeChar">
         ///     The character that is marked as the escape character in the span.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the character at the specified index is found to be escaped; 
+        /// <see langword="true"/> if the character at the specified index is found to be escaped;
         /// otherwise, if it is not escaped or the <see cref="string"/> value is <see langword="null"/>, empty,
         /// or whitespace, <see langword="false"/>.
         /// </returns>
@@ -74,13 +60,13 @@ namespace AD.Api.Strings.Extensions
         /// </summary>
         /// <param name="spanValue">The span of characters where the indexed character occurs.</param>
         /// <param name="index">
-        ///     The index of the character within the span where the preceding characters will be check. 
+        ///     The index of the character within the span where the preceding characters will be checked.
         /// </param>
         /// <param name="escapeChar">
         ///     The character that is marked as the escape character in the span.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the character at the specified index is found to be escaped; 
+        /// <see langword="true"/> if the character at the specified index is found to be escaped;
         /// otherwise, <see langword="false"/>.
         /// </returns>
         public static bool IsEscapedAt(this ReadOnlySpan<char> spanValue, in int index, char escapeChar = CharConstants.BACKSLASH)
@@ -99,46 +85,6 @@ namespace AD.Api.Strings.Extensions
         public static string OrEmpty(this string? value)
         {
             return value ?? string.Empty;
-        }
-
-        public static string RemoveSpaces(this string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-            else if (!value.Contains(CharConstants.SPACE))
-            {
-                return value ?? string.Empty;
-            }
-            else if (value.Length > MAX_LENGTH)
-            {
-                return value.Replace(SPACE_STR, string.Empty);
-            }
-
-            ReadOnlySpan<char> chars = value.AsSpan().Trim();
-            Span<char> tempChars = stackalloc char[chars.Length];
-            tempChars.Fill(CharConstants.SPACE);
-            int charCount = 0;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                char c = chars[i];
-                if (!c.Equals(CharConstants.SPACE))
-                {
-                    tempChars[charCount] = c;
-                    charCount++;
-                }
-            }
-
-            return new string(tempChars.Trim());
-        }
-
-        [DebuggerStepThrough]
-        public static string[] SplitByNewLine(this string? value, StringSplitOptions options = DEFAULT)
-        {
-            return !string.IsNullOrWhiteSpace(value)
-                ? value.Split(Environment.NewLine, DEFAULT)
-                : Array.Empty<string>();
         }
 
         public static bool TryCopyTo(this string? value, Span<char> destination, out int charsWritten)
