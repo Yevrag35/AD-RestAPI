@@ -7,8 +7,6 @@ namespace AD.Api.Core.Serialization.Json.Ldap
 {
     public sealed class ReplaceOperationConverter : EditOperationConverter<ReplaceDictionary, DirectoryAttributeModification[]>
     {
-        protected override JsonTokenType StartingTokenType => JsonTokenType.StartObject;
-        
         protected override ReplaceDictionary CreateCollection()
         {
             return [];
@@ -51,6 +49,10 @@ namespace AD.Api.Core.Serialization.Json.Ldap
             }
 
             ArrayPool<OneOf<string, byte[], string[]>>.Shared.Return(array);
+        }
+        protected override bool IsProperStartToken(JsonTokenType type)
+        {
+            return JsonTokenType.StartObject == type;
         }
         public override void Write(Utf8JsonWriter writer, ReplaceDictionary value, JsonSerializerOptions options)
         {

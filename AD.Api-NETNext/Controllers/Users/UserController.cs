@@ -6,6 +6,7 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Ldap.Users;
+using AD.Api.Core.Operations;
 using AD.Api.Core.Security;
 using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
@@ -60,31 +61,25 @@ public class UserController : ControllerBase
     [Route("{sid:objectsid}")]
     [JwtAuth(AuthorizedRole.UserEditor, possiblyScoped: true)]
     public IActionResult UpdateUser(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] object body,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] EditObjectRequest body,
         [FromServices] IAuthorizer authorizer,
+        [FromServices] IUserUpdateService updateSvc,
         [FromRouteSid] SidString sid,
         [Domain] DomainQuery target)
     {
-        //if (!authSvc.IsAuthorized(this.HttpContext, request.Path))
-        //{
-        //    return new ForbidResult();
-        //}
 
         var oneOf = this.UserSearcher.GetOneUserAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
         }
-        
-        if (!continueWith.TryGetResponse(out SearchResponse? searchResult) || searchResult.Entries.Count == 0)
+
+        DistinguishedName dn = DistinguishedName.Parse(continueWith.FoundObject);
+        if (!authorizer.IsAuthorized(this.HttpContext, dn.Path))
         {
-            return new NotFoundResult();
+            return new ForbidResult();
         }
 
-        return this.Ok(new
-        {
-            dn = searchResult.Entries[0].Attributes[AttributeConstants.DISTINGUISHED_NAME].GetValues(typeof(string))[0],
-        });
-        
+        return updateSvc.UpdateUser(sid, body, continueWith, in target);
     }
 }

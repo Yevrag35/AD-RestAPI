@@ -15,13 +15,13 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
     where T : EditOperationDictionary<TValue>
     where TValue : notnull
 {
-    protected abstract JsonTokenType StartingTokenType { get; }
-
     protected abstract T CreateCollection();
+    protected abstract void Deserialize(ref Utf8JsonReader reader, T collection, JsonSerializerOptions options);
+    protected abstract bool IsProperStartToken(JsonTokenType type);
     public sealed override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         T collection = this.CreateCollection();
-        if (reader.TokenType != this.StartingTokenType)
+        if (!this.IsProperStartToken(reader.TokenType))
         {
             return collection;
         }
@@ -34,9 +34,6 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
         this.Deserialize(ref reader, collection, options);
         return collection;
     }
-
-    protected abstract void Deserialize(ref Utf8JsonReader reader, T collection, JsonSerializerOptions options);
-
     protected OneOf<string, byte[], string[]> ReadValue(string key, ref Utf8JsonReader reader, JsonSerializerOptions options)
     {
         return reader.TokenType switch

@@ -21,6 +21,11 @@ namespace AD.Api.Collections
             return collection is IList nonGenList && nonGenList.IsFixedSize;
         }
 
+        public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IReadOnlyCollection<T>? collection)
+        {
+            return collection is null || collection.Count <= 0;
+        }
+
         public static bool TryGetFirst<T>(this ICollection collection, [NotNullWhen(true)] out T? value)
         {
             foreach (object? o in collection)

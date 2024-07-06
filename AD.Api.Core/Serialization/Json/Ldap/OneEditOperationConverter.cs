@@ -7,16 +7,12 @@ namespace AD.Api.Core.Serialization.Json.Ldap;
 public sealed class OneEditOperationConverter<T> : EditOperationConverter<T, DirectoryAttributeModification>
     where T : EditOperationDictionary<DirectoryAttributeModification>, IAppendableSingleOperation, new()
 {
-    protected override JsonTokenType StartingTokenType => JsonTokenType.StartObject;
-
     protected override T CreateCollection()
     {
         return new();
     }
     protected override void Deserialize(ref Utf8JsonReader reader, T collection, JsonSerializerOptions options)
     {
-        
-
         while (reader.TokenType == JsonTokenType.PropertyName)
         {
             string key = reader.GetString() ?? throw new JsonException("Property keys cannot be null or empty");
@@ -33,7 +29,10 @@ public sealed class OneEditOperationConverter<T> : EditOperationConverter<T, Dir
             }
         }
     }
-
+    protected override bool IsProperStartToken(JsonTokenType type)
+    {
+        return JsonTokenType.StartObject == type;
+    }
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();

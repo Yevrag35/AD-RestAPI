@@ -34,6 +34,7 @@ namespace AD.Api
         private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
         {
             options.Converters.AddRange([
+                new ClearOperationConverter(),
                 new OneEditOperationConverter<AddDictionary>(),
                 new OneEditOperationConverter<RemoveDictionary>(),
                 new OneEditOperationConverter<SetDictionary>(),

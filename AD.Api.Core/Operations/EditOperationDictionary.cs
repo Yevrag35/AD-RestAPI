@@ -1,6 +1,4 @@
 using AD.Api.Components;
-using AD.Api.Strings.Extensions;
-using Microsoft.IdentityModel.Abstractions;
 using System.Collections;
 
 namespace AD.Api.Core.Operations;
@@ -34,7 +32,7 @@ public abstract class EditOperationDictionary : IEditOperation
     public abstract void ApplyToRequest(ModifyRequest request);
 }
 
-public abstract class EditOperationDictionary<T> : EditOperationDictionary, IEditOperation, IEnumerable<T> where T : notnull
+public abstract class EditOperationDictionary<T> : EditOperationDictionary, IEditOperation, IReadOnlyCollection<T> where T : notnull
 {
     private readonly Dictionary<string, T> _dict;
 
