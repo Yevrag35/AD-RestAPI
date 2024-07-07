@@ -68,10 +68,17 @@ namespace AD.Api.Startup
         }
         private static void AddNegotiate(IServiceCollection services, IEnumStrings<AuthorizedRole> enumStrings)
         {
+            var noTokens = new NoJwtService();
             services.AddSingleton<IAuthorizer, NegotiateAuthorizer>()
-                    .AddSingleton<IJwtService, NoJwtService>()
+                    .AddSingleton<IJwtService>(noTokens)
                     .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-                    .AddNegotiate(o => o.Validate());
+                    .AddNegotiate(o => o.Validate())
+                    .AddJwtBearer(x =>
+                    {
+                        x.TimeProvider = TimeProvider.System;
+                        x.TokenHandlers.Clear();
+                        x.TokenHandlers.Add(noTokens);
+                    });
 
             services.AddAuthorization(x =>
             {

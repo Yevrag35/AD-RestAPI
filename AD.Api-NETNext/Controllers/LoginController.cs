@@ -1,7 +1,9 @@
 ﻿using AD.Api.Authentication;
 using AD.Api.Core.Authentication.Jwt;
+using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
 
 namespace AD.Api.Controllers
 {
@@ -19,12 +21,20 @@ namespace AD.Api.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public IActionResult Login([FromBody] LoginBody body)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BearerToken))]
+        [ProducesResponseType(StatusCodes.Status501NotImplemented, Type = typeof(ApiExceptionResult))]
+        public async Task <IActionResult> Login([FromBody] LoginBody body)
         {
             var oneOf = _jwtSvc.CreateToken(body);
-            return oneOf.Match(
-                success => new OkObjectResult(new { Key = success }),
-                fail => fail);
+            return await oneOf.Match(
+                success => Task.FromResult<IActionResult>(new OkObjectResult(success)),
+                async fail =>
+                {
+                    int randomDelay = RandomNumberGenerator.GetInt32(50, 801);
+                    await Task.Delay(randomDelay).ConfigureAwait(false);
+                    return fail;
+                })
+                .ConfigureAwait(false);
         }
     }
 }

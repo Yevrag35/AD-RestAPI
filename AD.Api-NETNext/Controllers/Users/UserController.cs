@@ -18,7 +18,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AD.Api.Controllers.Users;
 
-[Authorize]
+[ApiAuthorize]
 [ApiController]
 [Route(ROUTE_NAME)]
 public sealed class UserController : ControllerBase

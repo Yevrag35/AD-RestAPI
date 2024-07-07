@@ -70,6 +70,15 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to JWT authentication is not enabled..
+        /// </summary>
+        public static string JWT_NotEnabled {
+            get {
+                return ResourceManager.GetString("JWT_NotEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An exception occurred performing the operation.
         /// </summary>
         public static string OperationResult_DefaultError {

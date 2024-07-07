@@ -115,6 +115,7 @@ try
         }
         else
         {
+
             builder.Services.AddSingleton<IEncryptionService, WindowsDpapiEncryptionService>();
         }
     }

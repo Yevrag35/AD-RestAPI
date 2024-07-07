@@ -1,5 +1,7 @@
 using AD.Api.Core.Security.Accounts;
 using AD.Api.Core.Settings.Credentials;
+using AD.Api.Strings;
+using System.Buffers.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Security;
@@ -13,8 +15,6 @@ namespace AD.Api.Core.Security.Encryption
         public IEncryptionResult ReadCredentials(IConfigurationSection connectionSection)
         {
             EncryptionResult<CertificateEncryptedCredential> result = EncryptedCredential.FromSettings<CertificateEncryptedCredential>(connectionSection, this);
-
-
 
             if (result.HasCredential && result.Errors.Count <= 0)
             {
@@ -31,19 +31,22 @@ namespace AD.Api.Core.Security.Encryption
                 throw new ArgumentException("The certificate encryption service must work with the proper credentials.");
             }
 
-            byte[] plainBytes = Decrypt(encryptedPassword);
+            byte[] plainBytes = this.Decrypt(encryptedPassword);
             SecureString securePass = ReadInPlainBytes(plainBytes, encoding);
 
             networkCredential.SecurePassword = securePass;
             Array.Clear(plainBytes);
         }
 
-        private static byte[] Decrypt(ReadOnlySpan<char> encryptedChars)
+        public byte[] Decrypt(ReadOnlySpan<char> encryptedBase64Chars)
         {
-            int minLength = ((encryptedChars.Length * 3) + 3) / 4;
-            Span<byte> span = stackalloc byte[minLength];
+            int maxLength = Base64.IsValid(encryptedBase64Chars)
+                ? Base64Extensions.GetByteLength(encryptedBase64Chars)
+                : Encoding.UTF8.GetMaxByteCount(encryptedBase64Chars.Length);
 
-            span = ReadOutEncrypted(encryptedChars, span);
+            Span<byte> span = stackalloc byte[maxLength];
+
+            span = ReadOutEncrypted(encryptedBase64Chars, span);
             EnvelopedCms cms = new();
             cms.Decode(span);
             try
@@ -61,7 +64,7 @@ namespace AD.Api.Core.Security.Encryption
         {
             if (string.IsNullOrWhiteSpace(credential.UserName) && !string.IsNullOrWhiteSpace(credential.EncryptedUserName))
             {
-                byte[] rawUserName = Decrypt(credential.EncryptedUserName);
+                byte[] rawUserName = this.Decrypt(credential.EncryptedUserName);
                 credential.UserAccountName = AccountName.Parse(rawUserName, encoding);
                 Array.Clear(rawUserName);
             }

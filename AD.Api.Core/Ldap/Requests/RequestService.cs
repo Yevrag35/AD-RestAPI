@@ -94,7 +94,7 @@ namespace AD.Api.Core.Ldap
             where TResponse : SearchResponse
             where T : LdapRequest
         {
-            var oneOf = this.Connections.GetConnection(parameters.Info);
+            var oneOf = parameters.ApplyConnection(this.Connections);
             if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
             {
                 return error;

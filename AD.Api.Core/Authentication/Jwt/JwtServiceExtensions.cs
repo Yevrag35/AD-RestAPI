@@ -1,15 +1,14 @@
 using AD.Api.Enums;
 using AD.Api.Startup.Exceptions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using NLog;
 using System.Collections.Frozen;
-using System.Runtime.Versioning;
 using System.Security.Claims;
 
 namespace AD.Api.Core.Authentication.Jwt
 {
-    [SupportedOSPlatform("WINDOWS")]
     public static class JwtServiceExtensions
     {
         static readonly Logger _logger = LogManager.GetCurrentClassLogger();
@@ -21,16 +20,22 @@ namespace AD.Api.Core.Authentication.Jwt
                 ?? throw new AdApiStartupException(typeof(JwtServiceExtensions), 
                     new NullReferenceException($"{nameof(CustomJwtSettings)} cannot be null."));
 
-            return services.AddJwtAuthorizer()
-                           .AddJsonFileAuthorization(settings)
+            services.AddAuthentication()
+                    .AddScheme<AuthenticationSchemeOptions, NoNegotiateHandler>("Negotiate", null);
+
+            return services.AddSingleton<IJwtService, JwtService>()
+                           .AddJwtAuthorizer()
+                           .AddJsonFileAuthorization(settings, out var users, out var scopes)
+                           .AddJwtAuthentication(authorizationSection, roles, settings, users, scopes)
                            .AddJwtAuthorization(roles);
+                           //.AddSingleton<JwtCache>();
         }
 
-        private static IServiceCollection AddJsonFileAuthorization(this IServiceCollection services, CustomJwtSettings settings)
+        private static IServiceCollection AddJsonFileAuthorization(this IServiceCollection services, CustomJwtSettings settings, out FrozenDictionary<string, AuthorizedUser> users, out FrozenDictionary<string, AuthorizationScope> scopes)
         {
             JsonRoleBasedAccessControl rbac = settings.RBAC;
-            var scopes = rbac.Scopes.ToFrozenDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
-            var users = rbac.Users.ToFrozenDictionary(x => x.UserName, StringComparer.OrdinalIgnoreCase);
+            scopes = rbac.Scopes.ToFrozenDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
+            users = rbac.Users.ToFrozenDictionary(x => x.UserName, StringComparer.OrdinalIgnoreCase);
 
             bool hasBadScopes = false;
             HashSet<string> set = new(5, StringComparer.OrdinalIgnoreCase);
@@ -58,6 +63,20 @@ namespace AD.Api.Core.Authentication.Jwt
             return services.AddSingleton(scopes)
                            .AddSingleton(users)
                            .AddSingleton(settings);
+        }
+        private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfigurationSection authorizeSection, IEnumStrings<AuthorizedRole> enumStrings, CustomJwtSettings settings, FrozenDictionary<string, AuthorizedUser> users, FrozenDictionary<string, AuthorizationScope> scopes) 
+        {
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(x =>
+                    {
+                        JwtAuthorizationService authSvc = new(scopes, users, enumStrings);
+                        JwtService handler = new(settings, authSvc, enumStrings);
+                        x.TokenHandlers.Clear();
+                        x.TokenHandlers.Add(handler);
+                    });
+
+            return services;
         }
         private static IServiceCollection AddJwtAuthorization(this IServiceCollection 
             services, IEnumStrings<AuthorizedRole> roles)

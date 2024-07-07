@@ -70,12 +70,28 @@ namespace AD.Api.Core.Authentication.Jwt
     }
     public sealed class AuthorizedUser
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly string[] _scopes = [];
+
         public required string UserName { get; init; }
         public string UserDisplayName { get; set; } = string.Empty;
         public required string UserHash { get; init; }
         public required HashType HashType { get; init; }
         public required AuthorizedRole Roles { get; init; }
-        public string[] Scopes { get; init; } = [];
+        public string[] Scopes
+        {
+            get => _scopes;
+            init
+            {
+                if (value is null)
+                {
+                    return;
+                }
+
+                Array.Sort(value, StringComparer.OrdinalIgnoreCase);
+                _scopes = value;
+            }
+        }
     }
 }
 
