@@ -16,6 +16,7 @@ using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using NLog;
@@ -85,7 +86,8 @@ try
         .Configure<RouteOptions>(options =>
         {
             options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
-        });
+        })
+        .TryAddSingleton(TimeProvider.System);
 
     PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, config, (conversions) =>
     {

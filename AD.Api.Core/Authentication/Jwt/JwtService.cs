@@ -22,14 +22,14 @@ namespace AD.Api.Core.Authentication.Jwt
     internal sealed class JwtService : IJwtService
     {
         private readonly JwtAuthorizationService _authorizations;
-        private readonly IMemoryCache _cache;
+        private readonly JwtCache _cache;
         private readonly JwtSecurityTokenHandler _handler;
         private readonly TokenValidationParameters _parameters;
         private readonly IEnumStrings<AuthorizedRole> _roles;
         private readonly CustomJwtSettings _settings;
         private readonly SigningCredentials _signingCreds;
 
-        public JwtService(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles, IMemoryCache cache)
+        public JwtService(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles, JwtCache cache)
         {
             _cache = cache;
             _handler = new();
@@ -84,18 +84,17 @@ namespace AD.Api.Core.Authentication.Jwt
 
         private BearerToken GenerateToken(AuthorizedUser user)
         {
+            DateTimeOffset expiration = _cache.GetExpirationStamp();
             SecurityTokenDescriptor descriptor = new()
             {
-                Subject = new ClaimsIdentity(
-                    [
-                        new Claim(ClaimTypes.NameIdentifier, user.UserName),
-                        new Claim(ClaimTypes.Role, _roles[user.Roles]),
-                        new Claim(ClaimTypes.Name, user.UserDisplayName),
-                        new Claim("scopes", string.Join(", ", user.Scopes.Order())),
-                    ]
-                ),
-                Expires = DateTime.UtcNow.Add(_settings.TokenLifetime),
+                Expires = expiration.DateTime,
                 SigningCredentials = _signingCreds,
+                Subject = new ClaimsIdentity([
+                    new(ClaimTypes.NameIdentifier, user.UserName),
+                    new(ClaimTypes.Role, _roles[user.Roles]),
+                    new(ClaimTypes.Name, user.UserDisplayName),
+                    new("scopes", string.Join(", ", user.Scopes.Order())),
+                ]),
             };
 
             SecurityToken token = _handler.CreateToken(descriptor);
@@ -103,7 +102,7 @@ namespace AD.Api.Core.Authentication.Jwt
 
             return new BearerToken
             {
-                Expires = descriptor.Expires.GetValueOrDefault(),
+                Expires = expiration,
                 Roles = user.Roles,
                 Token = jwToken,
             };

@@ -2,7 +2,6 @@ using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Authentication.Jwt
 {
-    [SupportedOSPlatform("WINDOWS")]
     public sealed class CustomJwtSettings
     {
         public required string SigningKey { get; init; }
