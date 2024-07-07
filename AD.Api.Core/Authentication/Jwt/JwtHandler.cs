@@ -18,15 +18,7 @@ using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace AD.Api.Core.Authentication.Jwt
 {
-    public interface IJwtService
-    {
-        bool IsFunctional { get; }
-        TimeProvider Clock { get; set; }
-
-        OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest);
-    }
-
-    internal sealed class JwtService : TokenHandler, IJwtService
+    internal sealed class JwtHandler : TokenHandler
     {
         private readonly JwtAuthorizationService _authorizations;
         //private readonly JwtCache _cache;
@@ -42,14 +34,13 @@ namespace AD.Api.Core.Authentication.Jwt
             get => _clock;
             set => _clock = value ?? TimeProvider.System;
         }
-        public bool IsFunctional => true;
         public override int MaximumTokenSizeInBytes
         {
             get => _handler.MaximumTokenSizeInBytes;
             set => _handler.MaximumTokenSizeInBytes = value;
         }
 
-        public JwtService(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles)
+        public JwtHandler(CustomJwtSettings settings, JwtAuthorizationService authorizations, IEnumStrings<AuthorizedRole> roles)
         {
             //_cache = new()
             _clock = TimeProvider.System;
@@ -74,7 +65,7 @@ namespace AD.Api.Core.Authentication.Jwt
             };
         }
 
-        public OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
+        internal OneOf<(BearerToken, AuthorizedUser), IActionResult> CreateToken(IJwtLogin loginRequest)
         {
             Span<byte> byteBuffer = stackalloc byte[Base64Extensions.GetByteLength(loginRequest.Key.Length)];
             _ = Convert.TryFromBase64String(loginRequest.Key, byteBuffer, out int written);
@@ -93,7 +84,7 @@ namespace AD.Api.Core.Authentication.Jwt
                 return new UnauthorizedResult();
             }
 
-            return this.GenerateToken(user);
+            return (this.GenerateToken(user), user);
         }
 
         private BearerToken GenerateToken(AuthorizedUser user)

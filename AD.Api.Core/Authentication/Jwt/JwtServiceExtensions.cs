@@ -23,12 +23,11 @@ namespace AD.Api.Core.Authentication.Jwt
             services.AddAuthentication()
                     .AddScheme<AuthenticationSchemeOptions, NoNegotiateHandler>("Negotiate", null);
 
-            return services.AddSingleton<IJwtService, JwtService>()
-                           .AddJwtAuthorizer()
+            return services.AddJwtAuthorizer()
                            .AddJsonFileAuthorization(settings, out var users, out var scopes)
                            .AddJwtAuthentication(authorizationSection, roles, settings, users, scopes)
-                           .AddJwtAuthorization(roles);
-                           //.AddSingleton<JwtCache>();
+                           .AddJwtAuthorization(roles)
+                           .AddSingleton<IJwtService, JwtCache>();
         }
 
         private static IServiceCollection AddJsonFileAuthorization(this IServiceCollection services, CustomJwtSettings settings, out FrozenDictionary<string, AuthorizedUser> users, out FrozenDictionary<string, AuthorizationScope> scopes)
@@ -66,12 +65,15 @@ namespace AD.Api.Core.Authentication.Jwt
         }
         private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfigurationSection authorizeSection, IEnumStrings<AuthorizedRole> enumStrings, CustomJwtSettings settings, FrozenDictionary<string, AuthorizedUser> users, FrozenDictionary<string, AuthorizationScope> scopes) 
         {
+            JwtAuthorizationService authSvc = new(scopes, users, enumStrings);
+            JwtHandler handler = new(settings, authSvc, enumStrings);
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddSingleton(handler)
+                    .AddSingleton(authSvc)
+                    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(x =>
                     {
-                        JwtAuthorizationService authSvc = new(scopes, users, enumStrings);
-                        JwtService handler = new(settings, authSvc, enumStrings);
+                        x.TimeProvider = handler.Clock;
                         x.TokenHandlers.Clear();
                         x.TokenHandlers.Add(handler);
                     });

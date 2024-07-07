@@ -151,8 +151,7 @@ namespace AD.Api.Core.Authentication.Jwt
     {
         public static IServiceCollection AddJwtAuthorizer(this IServiceCollection services)
         {
-            return services.AddSingleton<JwtAuthorizationService>()
-                           .AddSingleton<IAuthorizer>(x => x.GetRequiredService<JwtAuthorizationService>());
+            return services.AddSingleton<IAuthorizer>(x => x.GetRequiredService<JwtAuthorizationService>());
         }
     }
 }

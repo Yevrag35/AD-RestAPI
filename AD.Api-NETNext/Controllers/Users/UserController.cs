@@ -52,7 +52,7 @@ public sealed class UserController : ControllerBase
     [JwtAuth(AuthorizedRole.UserCreator, possiblyScoped: true)]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CreatedResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult CreateUser(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
         [FromServices] IUserCreations createSvc,
@@ -76,7 +76,7 @@ public sealed class UserController : ControllerBase
     [JwtAuth(AuthorizedRole.UserEditor, possiblyScoped: true)]
     [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult UpdateUser(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] EditObjectRequest body,
         [FromServices] IUserUpdateService updateSvc,
@@ -94,8 +94,7 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        DistinguishedName dn = DistinguishedName.Parse(continueWith.FoundObject);
-        if (!this.Authorizer.IsAuthorizedByParent(this.HttpContext, dn.Path))
+        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject))
         {
             return new ForbidResult();
         }

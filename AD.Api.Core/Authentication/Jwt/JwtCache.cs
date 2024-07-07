@@ -1,19 +1,34 @@
 ﻿using AD.Api.Collections;
+using AD.Api.Components;
 using AD.Api.Core.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 
 namespace AD.Api.Core.Authentication.Jwt;
 
-internal sealed class JwtCache
+public interface IJwtService
+{
+    bool IsFunctional { get; }
+    TimeProvider Clock { get; }
+
+    OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest);
+}
+
+
+internal sealed class JwtCache : IJwtService
 {
     private readonly ConcurrentDictionary<string, TokenKey> _keys;
+    private readonly JwtHandler _handler;
     private readonly IMemoryCache _cache;
     private readonly TimeSpan _lifetime;
     private readonly TimeSpan _renewThreshold;
-    internal TimeProvider Clock { get; }
-    public JwtCache(IMemoryCache cache, TimeProvider clock, CustomJwtSettings settings)
+    public TimeProvider Clock { get; }
+    public bool IsFunctional => true;
+
+    public JwtCache(JwtHandler handler, TimeProvider clock, IMemoryCache cache, CustomJwtSettings settings)
     {
+        _handler = handler;
         this.Clock = clock;
         _cache = cache;
         _lifetime = settings.TokenLifetime;
@@ -35,6 +50,13 @@ internal sealed class JwtCache
             Priority = CacheItemPriority.High,
             Size = 10L,
         });
+    }
+    public OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
+    {
+        var oneOf = _handler.CreateToken(loginRequest);
+        return oneOf.Match(this,
+            f0: (cache, result) => cache.AddToken(result.Item2, result.Item1),
+            f1: (cache, fail) => OneOf<BearerToken>.FromT1(fail));
     }
     private static TokenKey CreateTokenKey(string key)
     {
