@@ -1,257 +1,230 @@
+using AD.Api.Collections.Enumerators;
+using AD.Api.Spans;
+using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
-using System.Buffers;
+using System;
+using System.Collections;
+using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 
 namespace AD.Api.Core.Ldap;
 
 /// <summary>
-/// Represents a distinguished name, with separate components for the common name and parent path.
+/// Represents an LDAP distinguished name (DN) with the ability to split into its individual relative names.
 /// </summary>
-public sealed partial class DistinguishedName : IEquatable<DistinguishedName>
+[StructLayout(LayoutKind.Auto)]
+public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
 {
-    /// <summary>
-    /// Prefix for domain component in a distinguished name.
-    /// </summary>
-    public const string DomainComponentPrefix = "DC=";
+    private static readonly char COMMA = CharConstants.COMMA;
+    private readonly int _length;
+    private readonly bool _notDefault;
+    private readonly ImmutableArray<RelativeName> _segments;
 
     /// <summary>
-    /// Prefix for common name in a distinguished name.
+    /// An empty distinguished name containing no relative names and of zero length.
     /// </summary>
-    public const string CommonNamePrefix = "CN=";
+    public static readonly DistinguishedName Empty = new(default);
 
     /// <summary>
-    /// Prefix for organizational unit in a distinguished name.
+    /// Gets the <see cref="RelativeName"/> component at the specified index.
     /// </summary>
-    public const string OrganizationalUnitPrefix = "OU=";
-
-    private const int MAX_LENGTH = 400;
-
-    private string? _fullValue;
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string _commonName;
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string _parentPath;
-
-    //private static readonly char[] _dnChars = ;
+    /// <param name="index">
+    /// The zero-based index of the <see cref="RelativeName"/> component to get.
+    /// </param>
+    /// <returns>
+    /// The <see cref="RelativeName"/> component at the specified index.
+    /// </returns>
+    public ref readonly RelativeName this[int index] => ref _segments.AsSpan()[index];
 
     /// <summary>
-    /// Characters that need to be escaped in a distinguished name.
+    /// Gets the number of <see cref="RelativeName"/> components in the distinguished name.
     /// </summary>
-    public static readonly SearchValues<char> EscapedChars = SearchValues.Create([',', '\\', '=', '+', '>', '<', ';', '"']);
-
-    [MemberNotNullWhen(true, nameof(_fullValue))]
-    private bool IsConstructed { get; set; }
-
+    public readonly int Count => _segments.Length;
     /// <summary>
-    /// Gets or sets the common name component of the distinguished name.
+    /// Indicates whether the distinguished name is empty or default-initialized.
     /// </summary>
-    public string CommonName
+    public readonly bool IsEmpty => !_notDefault && _segments.IsEmpty;
+    /// <summary>
+    /// Gets the <see cref="string"/> length of the entire distinguished name.
+    /// </summary>
+    public readonly int Length => _length;
+
+    private DistinguishedName(ImmutableArray<RelativeName> segments, in int length)
     {
-        get => _commonName;
-        set
+        _notDefault = true;
+        _length = length;
+        _segments = segments;
+    }
+    public DistinguishedName(ReadOnlySpan<RelativeName> segments)
+    {
+        _notDefault = true;
+        if (segments.IsEmpty)
         {
-            SetFieldValue(value, ref _commonName);
-            this.ResetValue();
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the parent path component of the distinguished name.
-    /// </summary>
-    public string Path
-    {
-        get => _parentPath;
-        set
-        {
-            SetFieldValue(value, ref _parentPath);
-            this.ResetValue();
-        }
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DistinguishedName"/> class with empty common name and parent path.
-    /// </summary>
-    public DistinguishedName()
-    {
-        _commonName = string.Empty;
-        _parentPath = string.Empty;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DistinguishedName"/> class with the specified common name and parent path.
-    /// </summary>
-    /// <param name="commonName">The common name component.</param>
-    /// <param name="parentPath">The parent path component.</param>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="commonName"/> is null or whitespace.</exception>
-    public DistinguishedName(string commonName, string? parentPath)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(commonName);
-        SetFieldValue(commonName, ref _commonName);
-        SetFieldValue(parentPath, ref _parentPath);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DistinguishedName"/> class with the specified path.
-    /// </summary>
-    /// <param name="path">The full distinguished name path.</param>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="path"/> is null or whitespace.</exception>
-    public DistinguishedName(string path)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        SetFieldValue(_commonName, ref _commonName);
-        _parentPath = string.Empty;
-    }
-
-    private DistinguishedName(ReadOnlySpan<char> fullDn, ReadOnlySpan<char> cnSpan, ReadOnlySpan<char> parentSpan)
-    {
-        _fullValue = fullDn.ToString();
-        _commonName = cnSpan.ToString();
-        _parentPath = parentSpan.ToString();
-        this.IsConstructed = true;
-    }
-
-    private string Construct()
-    {
-        scoped ReadOnlySpan<char> name = _commonName;
-        if (name.IsWhiteSpace())
-        {
-            return _parentPath;
-        }
-
-        int extras = !string.IsNullOrWhiteSpace(_parentPath) ? 1 : 0;
-        bool needsComma = extras == 1;
-        bool needsPrefix = !name.StartsWith(CommonNamePrefix, StringComparison.OrdinalIgnoreCase);
-        if (needsPrefix)
-        {
-            extras += CommonNamePrefix.Length;
-        }
-
-        int length = _commonName.Length + _parentPath.Length + extras;
-
-        Constructing state = new(_commonName, _parentPath, needsComma, needsPrefix);
-        return string.Create(length, state, ConstructingFullValue);
-    }
-
-    /// <summary>
-    /// Determines whether the specified <see cref="DistinguishedName"/> is equal to the current <see cref="DistinguishedName"/>.
-    /// </summary>
-    /// <param name="other">The <see cref="DistinguishedName"/> to compare with the current <see cref="DistinguishedName"/>.</param>
-    /// <returns><see langword="true"/> if the specified <see cref="DistinguishedName"/> is equal to the current <see cref="DistinguishedName"/>; otherwise, <see langword="false"/>.</returns>
-    public bool Equals(DistinguishedName? other)
-    {
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-        else if (other is null)
-        {
-            return false;
+            _segments = [];
+            _length = 0;
         }
         else
         {
-            return this.ToString().Equals(other.ToString(), StringComparison.OrdinalIgnoreCase);
+            _segments = ImmutableArray.Create(segments);
+            _length = GetTotalLength(segments);
         }
+    }
+
+    public readonly ImmutableArray<RelativeName> AsImmutableArray()
+    {
+        return !this.IsEmpty ? _segments : [];
+    }
+    public readonly ReadOnlySpan<RelativeName> AsSpan()
+    {
+        return _segments.AsSpan();
+    }
+    public readonly ReadOnlySpan<RelativeName> AsSpan(int start)
+    {
+        return !this.IsEmpty ? _segments.AsSpan(start, _segments.Length - start) : [];
+    }
+    public readonly ReadOnlySpan<RelativeName> AsSpan(int start, int length)
+    {
+        return !this.IsEmpty ? _segments.AsSpan(start, length) : [];
+    }
+    public readonly int CopyTo(Span<char> destination)
+    {
+        return CopyTo(_segments.AsSpan(), destination);
+    }
+    public readonly int CopyTo(Span<char> destination, int relativeNameIndex)
+    {
+        return this.CopyTo(destination, relativeNameIndex, this.Count - relativeNameIndex);
+    }
+    public readonly int CopyTo(Span<char> destination, int relativeNameIndex, int relativeNameLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(destination.Length, this.Length, nameof(destination));
+        return CopyTo(_segments.AsSpan(relativeNameIndex, relativeNameLength), destination);
+    }
+    public ArrayRefEnumerator<RelativeName> GetEnumerator()
+    {
+        ReadOnlySpan<RelativeName> span = _segments.AsSpan();
+        return new ArrayRefEnumerator<RelativeName>(span);
+    }
+    readonly IEnumerator<RelativeName> IEnumerable<RelativeName>.GetEnumerator()
+    {
+        ImmutableArray<RelativeName> segs = _segments;
+        return new ArrayEnumerator<RelativeName>(segs.AsSpan());
+    }
+    readonly IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable<RelativeName>)this).GetEnumerator();
     }
 
     /// <summary>
-    /// Determines whether the specified object is equal to the current <see cref="DistinguishedName"/>.
+    /// 
     /// </summary>
-    /// <param name="obj">The object to compare with the current <see cref="DistinguishedName"/>.</param>
-    /// <returns><see langword="true"/> if the specified object is equal to the current <see cref="DistinguishedName"/>; otherwise, <see langword="false"/>.</returns>
-    public override bool Equals(object? obj)
+    /// <returns></returns>
+    public readonly ReadOnlySpan<RelativeName> GetParentSegments()
     {
-        if (obj is DistinguishedName dn)
+        if (this.IsEmpty || _segments.Length <= 1)
         {
-            return this.Equals(dn);
+            return [];
         }
-        else
-        {
-            return false;
-        }
-    }
 
+        return _segments.AsSpan(1, _segments.Length - 1);
+    }
     /// <summary>
-    /// Serves as a hash function for the <see cref="DistinguishedName"/> type.
+    /// 
     /// </summary>
-    /// <returns>A hash code for the current <see cref="DistinguishedName"/>.</returns>
-    public override int GetHashCode()
+    /// <returns></returns>
+    public readonly string GetParent()
     {
-        return StringComparer.OrdinalIgnoreCase.GetHashCode(this.ToString());
-    }
+        ReadOnlySpan<RelativeName> parentSegments = this.GetParentSegments();
+        if (parentSegments.IsEmpty)
+        {
+            return string.Empty;
+        }
+        else if (parentSegments.Length == 1)
+        {
+            return parentSegments[0].Value;
+        }
 
-    public int GetNumberOfRelativeNames()
-    {
-        ReadOnlySpan<char> dn = this.ToString();
-        return CountNumberOfRelativeNames(dn);
+        ref readonly RelativeName first = ref _segments.AsSpan(0, 1)[0];
+        int length = _length - first.Value.Length - 1;
+        return ToString(parentSegments, in length);
     }
-
-    private void ResetValue()
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public readonly DistinguishedName ToParent()
     {
-        _fullValue = null;
-        this.IsConstructed = false;
+        if (this.IsEmpty || _segments.Length <= 1)
+        {
+            return Empty;
+        }
+
+        ref readonly RelativeName first = ref this[0];
+        if (first.AttributeType == RelativeNameType.DomainComponent)
+        {
+            return Empty;
+        }
+
+        int length = _length - first.Value.Length - 1;
+        return new(ImmutableArray.Create(_segments, 1, _segments.Length - 1), in length);
     }
 
     /// <summary>
     /// Returns the string representation of the full distinguished name.
     /// </summary>
     /// <returns>The string representation of the full distinguished name.</returns>
-    public override string ToString()
+    public override readonly string ToString()
     {
-        if (!this.IsConstructed)
-        {
-            _fullValue = this.Construct();
-            this.IsConstructed = true;
-        }
-
-        return _fullValue;
+        return ToString(_segments.AsSpan(), in _length);
     }
 
+    #region STATIC METHODS
     /// <summary>
-    /// Parses a fully-formed distinguished name string into a <see cref="DistinguishedName"/> object.
+    /// Counts the number of <see cref="RelativeName"/> components in the provided span of characters if it were
+    /// to be split.
     /// </summary>
-    /// <param name="distinguishedName">The distinguished name string to parse.</param>
-    /// <returns>A <see cref="DistinguishedName"/> object.</returns>
-    public static DistinguishedName Parse(ReadOnlySpan<char> distinguishedName)
+    /// <param name="path">
+    /// The span of characters to count the number of <see cref="RelativeName"/> components in.
+    /// </param>
+    /// <returns>
+    /// The number of <see cref="RelativeName"/> components that would make up the distinguished name if parsed.
+    /// </returns>
+    public static int CountNumberOfRelativeNames(ReadOnlySpan<char> path)
     {
-        if (distinguishedName.IsWhiteSpace())
+        if (path.IsEmpty)
         {
-            return new DistinguishedName();
+            return 0;
         }
 
-        int index = 0;
-        while (index < distinguishedName.Length)
+        int count = 1;
+        for (int i = 0; i < path.Length; i++)
         {
-            int commaIndex = distinguishedName.Slice(index).IndexOf(',');
-            if (commaIndex < 0)
+            if (COMMA == path[i] && !path.IsEscapedAt(in i))
             {
-                // No commas found at all, return the full DN as common name.
-                return new DistinguishedName(distinguishedName.ToString());
+                count++;
             }
-
-            // Adjust index relative to the original span.
-            index += commaIndex;
-
-            // Check if the comma is escaped.
-            if (!distinguishedName.IsEscapedAt(in index))
-            {
-                // Found an unescaped comma.
-                break;
-            }
-
-            index++;
         }
 
-        if (index < 0 || index >= distinguishedName.Length - 3)
-        {
-            // No valid comma found or comma is at an invalid position.
-            Debug.Fail("What is this?");
-            return new DistinguishedName(distinguishedName.ToString());
-        }
-
-        ReadOnlySpan<char> commonName = distinguishedName.Slice(0, index);
-        ReadOnlySpan<char> parentPath = distinguishedName.Slice(index + 1);
-        return new DistinguishedName(distinguishedName, commonName, parentPath);
+        return count;
     }
-}
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="segments"></param>
+    /// <returns></returns>
+    public static string ToString(ReadOnlySpan<RelativeName> segments)
+    {
+        if (segments.IsEmpty)
+        {
+            return string.Empty;
+        }
+        else if (segments.Length == 1)
+        {
+            return segments[0].Value;
+        }
 
+        int length = GetTotalLength(segments);
+        return ToString(segments, in length);
+    }
+
+    #endregion
+}

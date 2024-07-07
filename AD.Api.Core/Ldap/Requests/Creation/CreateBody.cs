@@ -10,7 +10,7 @@ namespace AD.Api.Core.Ldap
     /// </summary>
     public abstract class CreateBody : ICreateRequest, IValidatableObject
     {
-        private DistinguishedName? _constructedDn;
+        private DistinguishedNameOld? _constructedDn;
 
         /// <summary>
         /// The specified common name (cn) for the object.
@@ -58,7 +58,7 @@ namespace AD.Api.Core.Ldap
         public abstract FilteredRequestType RequestType { get; }
 
         /// <inheritdoc/>
-        public DistinguishedName GetDistinguishedName()
+        public DistinguishedNameOld GetDistinguishedName()
         {
             return _constructedDn ??= new();
         }

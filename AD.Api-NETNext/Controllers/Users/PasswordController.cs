@@ -40,7 +40,7 @@ public sealed class PasswordController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        DistinguishedName dn = DistinguishedName.Parse(request.DistinguishedName);
+        DistinguishedNameOld dn = DistinguishedNameOld.Parse(request.DistinguishedName);
 
         if (!_authorizer.IsAuthorizedByParent(this.HttpContext, dn.Path))
         {
@@ -62,7 +62,7 @@ public sealed class PasswordController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        DistinguishedName dn = DistinguishedName.Parse(request.DistinguishedName);
+        DistinguishedNameOld dn = DistinguishedNameOld.Parse(request.DistinguishedName);
 
         if (!_authorizer.IsAuthorizedByParent(this.HttpContext, dn.Path))
         {

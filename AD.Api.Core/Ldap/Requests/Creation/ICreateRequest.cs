@@ -22,7 +22,7 @@ namespace AD.Api.Core.Ldap
         /// <returns>
         /// The distinguished name for the object.
         /// </returns>
-        DistinguishedName GetDistinguishedName();
+        DistinguishedNameOld GetDistinguishedName();
     }
 }
 

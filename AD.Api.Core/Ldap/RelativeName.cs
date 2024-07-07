@@ -93,6 +93,10 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     public static readonly IEnumValues<RelativeNameType, BackendValueAttribute, string> AttributeStrings;
     private static readonly FrozenDictionary<string, RelativeNameType> _attributeValues;
     public static readonly RelativeName Empty;
+    /// <summary>
+    /// Characters that need to be escaped in a distinguished name.
+    /// </summary>
+    public static readonly SearchValues<char> EscapedChars = SearchValues.Create([',', '\\', '=', '+', '>', '<', ';', '"']);
     public static readonly SearchValues<char> UniqueAttributeChars;
     static RelativeName()
     {
@@ -159,20 +163,27 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// A new <see cref="RelativeName"/> instance with the specified 
     /// <paramref name="nameType"/> and <paramref name="value"/>.
     /// </returns>
-    public static RelativeName Create(ReadOnlySpan<char> value, RelativeNameType nameType)
+    public static RelativeName Create(scoped ReadOnlySpan<char> value, RelativeNameType nameType)
     {
         if (value.IsWhiteSpace() || !AttributeStrings.TryGetValue(nameType, out string? prefix))
         {
             return Empty;
         }
 
+        value = value.Trim();
+
         int index = prefix.Length + 1;
+        value = EscapeChars(value, stackalloc char[value.Length * 2]);
+        if (value.IsEmpty)
+        {
+            throw new ArgumentException("The specified distinguished name is invalid - make sure to escape any special characters.", nameof(value));
+        }
+
         if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
             return new(nameType, value.ToString(), in index);
         }
 
-        value = value.Trim();
         Span<char> chars = stackalloc char[value.Length + prefix.Length];
         prefix.CopyTo(chars);
         value.CopyTo(chars.Slice(prefix.Length));
@@ -233,57 +244,6 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         return true;
     }
 
-    ///// <summary>
-    ///// 
-    ///// </summary>
-    ///// <param name="value"></param>
-    ///// <param name="nameTypeIfNotPresent"></param>
-    ///// <returns></returns>
-    ///// <exception cref="ArgumentException"/>
-    //public static RelativeName ParseOne(ReadOnlySpan<char> value, RelativeNameType nameTypeIfNotPresent = RelativeNameType.CommonName)
-    //{
-    //    scoped ReadOnlySpan<char> span = value;
-    //    if (span.IsWhiteSpace())
-    //    {
-    //        return Empty;
-    //    }
-
-    //    char[]? array = null;
-    //    bool isRented = false;
-
-    //    int index = span.IndexOf('=');
-    //    scoped ReadOnlySpan<char> prefix;
-    //    if (index + 1 >= span.Length)
-    //    {
-    //        return Empty;
-    //    }
-        
-    //    if (index < MINIMUM_NAME_INDEX)
-    //    {
-    //        int length = span.Length + 3;
-    //        Span<char> buffer = length < DN_SPAN_LIMIT
-    //            ? stackalloc char[length]
-    //            : SpanExtensions.RentArray(in length, ref isRented, ref array);
-
-    //        prefix = default;
-    //        span = BuildPrefix(in nameTypeIfNotPresent, buffer, span, ref prefix);
-    //    }
-    //    else
-    //    {
-    //        prefix = span.Slice(0, index);
-    //        nameTypeIfNotPresent = GetRelativeNameType(prefix);
-    //    }
-
-    //    RelativeName result = new(nameTypeIfNotPresent, span.ToString(), index);
-
-    //    if (isRented)
-    //    {
-    //        ArrayPool<char>.Shared.Return(array!);
-    //    }
-
-    //    return result;
-    //}
-
     /// <summary>
     /// Attempts to determine the relative name type from the specified span of characters.
     /// </summary>
@@ -329,6 +289,13 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         int index = span.IndexOf('=') + 1;
         scoped ReadOnlySpan<char> prefix;
         if (index >= span.Length)
+        {
+            result = Empty;
+            return false;
+        }
+
+        span = EscapeChars(span, stackalloc char[span.Length * 2]);
+        if (span.IsEmpty)
         {
             result = Empty;
             return false;

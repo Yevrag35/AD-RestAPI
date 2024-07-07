@@ -1,173 +1,78 @@
-using AD.Api.Spans;
-using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using AD.Api.Strings.Spans;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Drawing;
 
 namespace AD.Api.Core.Ldap;
 
-public sealed partial class DistinguishedName
+public readonly partial struct DistinguishedName
 {
-    static readonly char COMMA = CharConstants.COMMA;
-
-    /// <summary>
-    /// Counts the number of <see cref="RelativeName"/> components in the provided span of characters if it were
-    /// to be split.
-    /// </summary>
-    /// <param name="path">
-    /// The span of characters to count the number of <see cref="RelativeName"/> components in.
-    /// </param>
-    /// <returns>
-    /// The number of <see cref="RelativeName"/> components that would make up the distinguished name if parsed.
-    /// </returns>
-    public static int CountNumberOfRelativeNames(ReadOnlySpan<char> path)
+    public static DistinguishedName Parse(ReadOnlySpan<char> distinguishedName)
     {
-        if (path.IsEmpty)
+        if (distinguishedName.IsWhiteSpace())
         {
-            return 0;
+            return Empty;
         }
 
-        int count = 1;
-        for (int i = 0; i < path.Length; i++)
+        int count = CountNumberOfRelativeNames(distinguishedName);
+        RelativeName[] array = ArrayPool<RelativeName>.Shared.Rent(count);
+        Span<RelativeName> span = array.AsSpan(0, count);
+
+        if (!TrySplit(distinguishedName, span, out int namesWritten))
         {
-            if (COMMA == path[i] && !path.IsEscapedAt(in i))
-            {
-                count++;
-            }
+            ArrayPool<RelativeName>.Shared.Return(array);
+            return Empty;
         }
 
-        return count;
+        span = span.Slice(0, namesWritten);
+        DistinguishedName dn = new(span);
+        ArrayPool<RelativeName>.Shared.Return(array);
+        return dn;
     }
 
-    /// <summary>
-    /// Splits the current <see cref="DistinguishedName"/> into its constituent <see cref="RelativeName"/> components.
-    /// </summary>
-    /// <returns>
-    /// An array of <see cref="RelativeName"/> components that make up the <see cref="DistinguishedName"/>.
-    /// </returns>
-    /// <exception cref="ArgumentException"/>
-    public RelativeName[] Split()
-    {
-        return this.IsConstructed
-            ? Split(_fullValue)
-            : Split(this.ToString());
-    }
-    /// <summary>
-    /// Attempts to split the current <see cref="DistinguishedName"/> into its constituent <see cref="RelativeName"/> 
-    /// components and write them to the provided span.
-    /// </summary>
-    /// <param name="destination">The span to write the <see cref="RelativeName"/> parts to.</param>
-    /// <param name="namesWritten">
-    /// When this method returns, contains the number of <see cref="RelativeName"/> parts written to 
-    /// <paramref name="destination"/>.
-    /// </param>
-    /// <returns></returns>
-    public bool TrySplit(Span<RelativeName> destination, out int namesWritten)
-    {
-        return this.IsConstructed
-            ? TrySplit(_fullValue, destination, out namesWritten)
-            : TrySplit(this.ToString(), destination, out namesWritten);
-    }
-    public static DistinguishedName Join(ReadOnlySpan<RelativeName> relativeNames)
-    {
-        if (relativeNames.IsEmpty)
-        {
-            return new();
-        }
-        else if (relativeNames.Length == 1)
-        {
-            return new(relativeNames[0].Value);
-        }
-
-        int length = GetLength(relativeNames) + relativeNames.Length - 1;
-        char[]? array = null;
-        bool isRented = false;
-        Span<char> span = length < MAX_LENGTH
-            ? stackalloc char[length]
-            : SpanExtensions.RentArray(in length, ref isRented, ref array);
-
-        ref readonly RelativeName first = ref relativeNames[0];
-        first.Value.CopyTo(span);
-        span[first.Value.Length] = COMMA;
-        int pos = first.Value.Length + 1;
-
-        relativeNames = relativeNames.Slice(1);
-        if (relativeNames.Length >= 2)
-        {
-            foreach (RelativeName name in relativeNames.Slice(0, relativeNames.Length - 1))
-            {
-                name.Value.CopyToSlice(span, ref pos);
-                span[pos++] = COMMA;
-            }
-        }
-
-        relativeNames[^1].Value.CopyToSlice(span, ref pos);
-        int minusFirst = pos - first.Value.Length - 1;
-
-        DistinguishedName result = new(span.Slice(0, pos), first.Value, span.Slice(first.Value.Length + 1, minusFirst));
-        
-        if (isRented)
-        {
-            ArrayPool<char>.Shared.Return(array!);
-        }
-
-        return result;
-    }
-
-    private static int GetLength(ReadOnlySpan<RelativeName> span)
-    {
-        int length = 0;
-        foreach (RelativeName name in span)
-        {
-            length += name.Value.Length;
-        }
-
-        return length;
-    }
-    
     /// <summary>
     /// 
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"/>
-    public static RelativeName[] Split(ReadOnlySpan<char> path)
+    public static ImmutableArray<RelativeName> Split(ReadOnlySpan<char> path)
     {
-        SpanCharArray list = new(path.Length, COMMA);
+        int count = CountNumberOfRelativeNames(path);
+        RelativeName[] array = ArrayPool<RelativeName>.Shared.Rent(count);
 
         int start = 0;
+        int n = 0;
         int i = 0;
         for (i = 0; i < path.Length; i++)
         {
             if (COMMA == path[i] && !path.IsEscapedAt(in i))
             {
-                list.Add(path.Slice(start, i - start));
+                ReadOnlySpan<char> slice = path.Slice(start, i - start);
+                if (!RelativeName.TryParseOne(slice, out RelativeName rn))
+                {
+                    throw new ArgumentException($"Invalid distinguished name component - make sure to escape any special characters: {slice.ToString()}", nameof(path));
+                }
+
+                array[n++] = rn;
                 start = i + 1;
             }
         }
 
-        if (start < path.Length)
-        {
-            list.Add(path.Slice(start));
-        }
+        ImmutableArray<RelativeName> result = ImmutableArray.Create(array.AsSpan(0, n));
+        ArrayPool<RelativeName>.Shared.Return(array);
 
-        RelativeName[] array = new RelativeName[list.Count];
-        for (i = 0; i < list.Count; i++)
-        {
-            ReadOnlySpan<char> current = list[i];
-            if (!RelativeName.TryParseOne(current, out RelativeName name))
-            {
-                throw new ArgumentException($"Invalid distinguished name component: {current.ToString()}", nameof(path));
-            }
-
-            array[i] = name;
-        }
-
-        list.Dispose();
-        return array;
+        return result;
     }
-
-    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="destination"></param>
+    /// <param name="namesWritten"></param>
+    /// <returns></returns>
     public static bool TrySplit(ReadOnlySpan<char> path, Span<RelativeName> destination, out int namesWritten)
     {
         if (destination.IsEmpty)
@@ -176,46 +81,43 @@ public sealed partial class DistinguishedName
             return false;
         }
 
-        SpanCharArray list = new(path.Length, COMMA);
-
-        try
+        int count = CountNumberOfRelativeNames(path);
+        if (count < destination.Length)
         {
-            int start = 0;
-            int i = 0;
-            for (i = 0; i < path.Length; i++)
-            {
-                if (COMMA == path[i] && !path.IsEscapedAt(in i))
-                {
-                    list.Add(path.Slice(start, i - start));
-                    start = i + 1;
-                }
-            }
+            namesWritten = 0;
+            return false;
+        }
 
-            if (destination.Length < list.Count)
+        int start = 0;
+        namesWritten = 0;
+        int i = 0;
+        for (i = 0; i < path.Length; i++)
+        {
+            if (COMMA == path[i] && !path.IsEscapedAt(in i))
             {
-                namesWritten = 0;
-                return false;
-            }
-
-            for (i = 0; i < list.Count; i++)
-            {
-                ReadOnlySpan<char> current = list[i];
-                if (!RelativeName.TryParseOne(current, out RelativeName name))
+                ReadOnlySpan<char> slice = path.Slice(start, i - start);
+                if (!RelativeName.TryParseOne(slice, out RelativeName rn))
                 {
-                    namesWritten = 0;
+                    Debug.Fail($"Invalid distinguished name component: {slice.ToString()}");
                     return false;
                 }
 
-                destination[i] = name;
+                destination[namesWritten++] = rn;
+                start = i + 1;
+            }
+        }
+
+        if (start < path.Length)
+        {
+            if (!RelativeName.TryParseOne(path.Slice(start), out RelativeName last))
+            {
+                Debug.Fail($"Invalid distinguished name component: {last.ToString()}");
+                return false;
             }
 
-            namesWritten = list.Count;
-            return true;
+            destination[namesWritten++] = last;
         }
-        finally
-        {
-            list.Dispose();
-        }
+
+        return true;
     }
 }
-

@@ -1,35 +1,11 @@
-using AD.Api.Spans;
+using AD.Api.Collections.Enumerators;
 using AD.Api.Statics;
+using AD.Api.Strings.Extensions;
 
 namespace AD.Api.Core.Ldap
 {
-    public sealed partial class DistinguishedName
+    public readonly partial struct RelativeName
     {
-        private readonly record struct Constructing(string Name, string Path, bool NeedsComma, bool NeedsPrefix);
-
-        private static void ConstructingFullValue(Span<char> buffer, Constructing state)
-        {
-            int pos = 0;
-            if (state.NeedsPrefix)
-            {
-                CommonNamePrefix.CopyToSlice(buffer, ref pos);
-            }
-
-            state.Name.CopyTo(buffer.Slice(pos));
-            if (state.NeedsComma)
-            {
-                pos += state.Name.Length;
-                buffer[pos++] = CharConstants.COMMA;
-
-                state.Path.CopyTo(buffer.Slice(pos));
-            }
-        }
-        private static bool EqualsAnyPrefix(ReadOnlySpan<char> slice)
-        {
-            return slice.Equals(CommonNamePrefix, StringComparison.OrdinalIgnoreCase)
-                || slice.Equals(OrganizationalUnitPrefix, StringComparison.OrdinalIgnoreCase)
-                || slice.Equals(DomainComponentPrefix, StringComparison.OrdinalIgnoreCase);
-        }
         private static ReadOnlySpan<char> EscapeChars(ReadOnlySpan<char> source, Span<char> destination)
         {
             if (!source.ContainsAny(EscapedChars) && CharConstants.POUND != source[0])
@@ -46,6 +22,11 @@ namespace AD.Api.Core.Ldap
             }
 
             destination = EscapeCharacters(source, destination, ref position);
+            if (destination.IsEmpty)
+            {
+                return []; // Will be treated as invalid;
+            }
+
             destination = EscapeSpaces(destination, ref position);
 
             return destination.Slice(0, position);
@@ -65,7 +46,16 @@ namespace AD.Api.Core.Ldap
                 switch (c)
                 {
                     case CharConstants.EQUALS:
-                        if (IsProperEquals(working, in i))
+                        if (!IsProperEquals(working, in i))
+                        {
+                            return []; // Will be treated as invalid;
+                        }
+
+                        buffer[position++] = c;
+                        break;
+
+                    case CharConstants.COMMA:
+                        if (working.IsEscapedAt(in i))
                         {
                             buffer[position++] = c;
                             break;
@@ -73,8 +63,8 @@ namespace AD.Api.Core.Ldap
 
                         goto default;
 
-                    case CharConstants.COMMA:
-                        if (IsProperComma(working, in i))
+                    case CharConstants.BACKSLASH:
+                        if (working.IsEscapedAt(i + 1))
                         {
                             buffer[position++] = c;
                             break;
@@ -112,35 +102,23 @@ namespace AD.Api.Core.Ldap
         }
         private static bool IsProperEquals(ReadOnlySpan<char> working, in int index)
         {
-            if (index < 2)
+            if (index < 2 || index >= working.Length - 1)
             {
                 return false;
             }
 
-            return EqualsAnyPrefix(working.Slice(index - 2, 3));
+            return IsValidPrefixNoError(working.Slice(0, index));
         }
-        private static bool IsProperComma(ReadOnlySpan<char> working, in int index)
+        private static bool IsValidPrefixNoError(ReadOnlySpan<char> working)
         {
-            if (index + 3 >= working.Length)
+            ArrayRefEnumerator<string> enumerator = new(_attributeValues.Keys.AsSpan());
+            bool flag = false;
+            while (enumerator.MoveNext(in flag))
             {
-                return false;
+                flag = working.Equals(enumerator.Current.AsSpan(0, enumerator.Current.Length - 1), StringComparison.OrdinalIgnoreCase);
             }
 
-            return EqualsAnyPrefix(working.Slice(index + 1, 3));
-        }
-        private static void SetFieldValue(string? newValue, [NotNull] ref string? field)
-        {
-            field ??= string.Empty;
-            scoped ReadOnlySpan<char> newVal = newValue.AsSpan();
-
-            if (newVal.IsWhiteSpace() || newVal.Equals(field, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            newVal = EscapeChars(newVal, stackalloc char[newVal.Length * 2]);
-            field = newVal.ToString();
+            return flag;
         }
     }
 }
-

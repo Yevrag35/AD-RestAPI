@@ -77,17 +77,17 @@ namespace AD.Api.Core.Authentication.Jwt
             string domain = (string?)context.Items[DomainQuery.DomainModelName] ?? string.Empty;
             string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
-            int nameCount = DistinguishedName.CountNumberOfRelativeNames(fullDN);
+            int nameCount = DistinguishedNameOld.CountNumberOfRelativeNames(fullDN);
             var array = ArrayPool<RelativeName>.Shared.Rent(nameCount);
             Span<RelativeName> span = array.AsSpan(0, nameCount);
             try
             {
-                if (!DistinguishedName.TrySplit(fullDN, span, out int written))
+                if (!DistinguishedNameOld.TrySplit(fullDN, span, out int written))
                 {
                     return false;
                 }
 
-                DistinguishedName dn = DistinguishedName.Join(span.Slice(1));
+                DistinguishedNameOld dn = DistinguishedNameOld.Join(span.Slice(1));
                 WorkingScope scope = new(domain, dn.ToString(), requiredRole);
                 return this.IsAuthorized(name, scope);
             }
