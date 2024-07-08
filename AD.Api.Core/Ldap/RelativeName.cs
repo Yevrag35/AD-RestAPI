@@ -80,7 +80,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     private const int DN_SPAN_LIMIT = 256;  // Maximum stackalloc length of a distinguished name.
     private const int MINIMUM_NAME_INDEX = 3;   // Minimum index for a valid attributed name.
     /// <summary>
-    /// A read-only dictionary of the <see cref="RelativeNameType"/> attribute values and their LDAP string 
+    /// A read-only dictionary of the <see cref="RelativeNameType"/> attribute values and their LDAP string
     /// representations.
     /// </summary>
     /// <remarks>
@@ -160,7 +160,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// <param name="value">The span of characters that makes up the relative name.</param>
     /// <param name="nameType">The type of relative name the instance will prepend.</param>
     /// <returns>
-    /// A new <see cref="RelativeName"/> instance with the specified 
+    /// A new <see cref="RelativeName"/> instance with the specified
     /// <paramref name="nameType"/> and <paramref name="value"/>.
     /// </returns>
     public static RelativeName Create(scoped ReadOnlySpan<char> value, RelativeNameType nameType)
@@ -253,7 +253,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// attribute value. This parameter is passed uninitialized.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> if <paramref name="value"/> is prefaced with a valid attribute value; 
+    /// <see langword="true"/> if <paramref name="value"/> is prefaced with a valid attribute value;
     /// otherwise, <see langword="false"/>.
     /// </returns>
     public static bool TryReadRelativeNameType(ReadOnlySpan<char> value, out RelativeNameType result)
@@ -268,7 +268,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="value"></param>
     /// <param name="result"></param>
@@ -334,7 +334,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// Returns the attributed string representation of the relative name.
     /// </summary>
     /// <returns>
-    /// The attributed string representation of the relative name in the format with no separating commas: 
+    /// The attributed string representation of the relative name in the format with no separating commas:
     /// <c>AttributeType=Name</c>.
     /// </returns>
     public override string ToString()

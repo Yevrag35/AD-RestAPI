@@ -34,12 +34,23 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
     /// <returns>
     /// The <see cref="RelativeName"/> component at the specified index.
     /// </returns>
-    public ref readonly RelativeName this[int index] => ref _segments.AsSpan()[index];
+    public ref readonly RelativeName this[int index] => ref _segments.AsSpan(index, 1)[0];
 
     /// <summary>
     /// Gets the number of <see cref="RelativeName"/> components in the distinguished name.
     /// </summary>
     public readonly int Count => _segments.Length;
+    /// <summary>
+    /// Indicates whether the distinguished name has a parent component.
+    /// </summary>
+    public readonly bool HasParent
+    {
+        get
+        {
+            ref readonly RelativeName first = ref this.GetFirst();
+            return !first.IsEmpty && first.AttributeType != RelativeNameType.DomainComponent;
+        }
+    }
     /// <summary>
     /// Indicates whether the distinguished name is empty or default-initialized.
     /// </summary>
@@ -48,6 +59,18 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
     /// Gets the <see cref="string"/> length of the entire distinguished name.
     /// </summary>
     public readonly int Length => _length;
+    /// <summary>
+    /// Gets the <see cref="RelativeNameType"/> of the first <see cref="RelativeName"/> component
+    /// or <see cref="RelativeNameType.None"/> if empty.
+    /// </summary>
+    public readonly RelativeNameType Type
+    {
+        get
+        {
+            ref readonly RelativeName first = ref this.GetFirst();
+            return first.AttributeType;
+        }
+    }
 
     private DistinguishedName(ImmutableArray<RelativeName> segments, in int length)
     {
@@ -114,13 +137,20 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
         return ((IEnumerable<RelativeName>)this).GetEnumerator();
     }
 
+    private ref readonly RelativeName GetFirst()
+    {
+        return ref !this.IsEmpty
+            ? ref _segments.AsSpan(0, 1)[0]
+            : ref RelativeName.Empty;
+    }
+
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <returns></returns>
     public readonly ReadOnlySpan<RelativeName> GetParentSegments()
     {
-        if (this.IsEmpty || _segments.Length <= 1)
+        if (!this.HasParent)
         {
             return [];
         }
@@ -128,7 +158,7 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
         return _segments.AsSpan(1, _segments.Length - 1);
     }
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <returns></returns>
     public readonly string GetParent()
@@ -143,23 +173,18 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
             return parentSegments[0].Value;
         }
 
-        ref readonly RelativeName first = ref _segments.AsSpan(0, 1)[0];
+        ref readonly RelativeName first = ref this.GetFirst();
         int length = _length - first.Value.Length - 1;
         return ToString(parentSegments, in length);
     }
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <returns></returns>
     public readonly DistinguishedName ToParent()
     {
-        if (this.IsEmpty || _segments.Length <= 1)
-        {
-            return Empty;
-        }
-
-        ref readonly RelativeName first = ref this[0];
-        if (first.AttributeType == RelativeNameType.DomainComponent)
+        ref readonly RelativeName first = ref this.GetFirst();
+        if (first.IsEmpty || first.AttributeType == RelativeNameType.DomainComponent)
         {
             return Empty;
         }
@@ -207,7 +232,7 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
         return count;
     }
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="segments"></param>
     /// <returns></returns>

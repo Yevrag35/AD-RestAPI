@@ -5,15 +5,11 @@ public readonly partial struct RelativeName
 {
     public bool Equals(RelativeName other)
     {
-        if (this.AttributeType != other.AttributeType)
+        if (this.IsEmpty)
         {
-            return false;
+            return other.IsEmpty;
         }
-        else if (other.IsEmpty)
-        {
-            return this.IsEmpty;
-        }
-        else if (this.IsEmpty)
+        else if (other.IsEmpty || this.AttributeType != other.AttributeType)
         {
             return false;
         }
