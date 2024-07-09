@@ -12,7 +12,7 @@ namespace AD.Api.Core.Ldap
         string[]? Properties { get; }
         FilteredRequestType? RequestBaseType { get; }
         SearchScope? Scope { get; }
-        string? SearchBase { get; }
+        DistinguishedName? SearchBase { get; }
         int? SizeLimit { get; }
         string? SortBy { get; }
         string? SortDirection { get; }
@@ -29,20 +29,20 @@ namespace AD.Api.Core.Ldap
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly FilteredRequestType? _requestType;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string? _searchBase;
+        private readonly DistinguishedName? _searchBase;
 
         [MemberNotNullWhen(true, nameof(Filter))]
         public bool HasLdapFilter => _hasFilter;
         public string? Filter => _filter;
         public FilteredRequestType? RequestBaseType => _requestType;
-        public string? SearchBase => _searchBase;
+        public DistinguishedName? SearchBase => _searchBase;
         public string[]? Properties => null;
         public SearchScope? Scope => null;
         public int? SizeLimit => 1;
         public string? SortBy => null;
         public string? SortDirection => null;
 
-        private SearchFilterLite(string? filter, FilteredRequestType? requestType, string? searchBase)
+        private SearchFilterLite(string? filter, FilteredRequestType? requestType, DistinguishedName? searchBase)
         {
             _hasFilter = !string.IsNullOrWhiteSpace(filter);
             _filter = filter;
@@ -56,7 +56,7 @@ namespace AD.Api.Core.Ldap
         {
             return Create(filter, null, types);
         }
-        public static SearchFilterLite Create(string filter, string? searchBase, FilteredRequestType? types = null)
+        public static SearchFilterLite Create(string filter, DistinguishedName? searchBase, FilteredRequestType? types = null)
         {
             return new(filter, types, searchBase);
         }

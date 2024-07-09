@@ -1,19 +1,15 @@
 using AD.Api.Attributes;
 using AD.Api.Core.Authentication;
-using AD.Api.Core.Authentication.Jwt;
-using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap;
 using AD.Api.Enums;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using AD.Api.Strings.Spans;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.Buffers;
-using System.Security.Claims;
 
 namespace AD.Api.Core.Web;
 
@@ -149,7 +145,7 @@ public sealed class DistinguishedNameBinder : IModelBinder
     {
         ModelMetadata metadata = context.ModelMetadata;
         return metadata.IsBindingRequired
-               || 
+               ||
                metadata.IsRequired
                ||
                (attribute is not null && attribute.IsRequired);

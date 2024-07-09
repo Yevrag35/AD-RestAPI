@@ -1,3 +1,4 @@
+using AD.Api.Core.Ldap.Requests;
 using AD.Api.Core.Ldap.Results;
 using System.Text.Json.Serialization;
 
@@ -14,6 +15,7 @@ public sealed class PasswordResetRequest : PasswordRequestBase, IPasswordRequest
     {
         return _response?.FoundObject ?? DistinguishedName.Empty;
     }
+
     public void SetContinuation(ConnectedResponse response)
     {
         _response = response;

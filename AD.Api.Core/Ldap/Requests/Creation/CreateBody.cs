@@ -1,4 +1,5 @@
 using AD.Api.Core.Ldap.Filters;
+using AD.Api.Core.Ldap.Requests;
 using Microsoft.AspNetCore.Http;
 using System.Buffers;
 using System.ComponentModel.DataAnnotations;
@@ -9,7 +10,7 @@ namespace AD.Api.Core.Ldap
     /// <summary>
     /// Represents a request to create an LDAP object.
     /// </summary>
-    public abstract class CreateBody : ICreateRequest, IValidatableObject
+    public abstract class CreateBody : ICreateRequest, IScopedRequest, IValidatableObject
     {
         /// <summary>
         /// The specified common name (cn) for the object.
@@ -57,6 +58,20 @@ namespace AD.Api.Core.Ldap
             _dn = new(span.Slice(0, namesWritten + 1));
             ArrayPool<RelativeName>.Shared.Return(array);
             return _dn.Value;
+        }
+
+        protected abstract string GetScopedPathMemberName();
+        string IScopedRequest.GetScopedPathMemberName()
+        {
+            return this.GetScopedPathMemberName();
+        }
+        protected virtual DistinguishedName GetScopedPath()
+        {
+            return this.GetDistinguishedName();
+        }
+        DistinguishedName IScopedRequest.GetScopedPath()
+        {
+            return this.GetScopedPath();
         }
 
         /// <inheritdoc/>

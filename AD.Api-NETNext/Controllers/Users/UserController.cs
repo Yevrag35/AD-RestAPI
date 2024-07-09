@@ -63,11 +63,6 @@ public sealed class UserController : ControllerBase
            return new ApiBadRequestResult(this.ModelState);
         }
 
-        if (!this.Authorizer.IsAuthorizedByParent(this.HttpContext, request.CommonName))
-        {
-            return new ForbidResult();
-        }
-
         return createSvc.Create(in target, request, SID_ROUTE_PREFIX);
     }
 

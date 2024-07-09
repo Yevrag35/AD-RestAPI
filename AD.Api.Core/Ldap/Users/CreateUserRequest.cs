@@ -67,12 +67,17 @@ namespace AD.Api.Core.Ldap.Users
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public override FilteredRequestType RequestType => FilteredRequestType.User;
 
+
         public CreateUserRequest()
         {
             this.Mail = string.Empty;
             this.UserPrincipalName = string.Empty;
         }
 
+        protected override string GetScopedPathMemberName()
+        {
+            return "Path";
+        }
         public bool TryGetAttributes([NotNullWhen(true)] out IReadOnlyDictionary<string, object?>? attributes)
         {
             attributes = _dict;

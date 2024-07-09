@@ -1,3 +1,4 @@
+using AD.Api.Core.Ldap.Requests;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

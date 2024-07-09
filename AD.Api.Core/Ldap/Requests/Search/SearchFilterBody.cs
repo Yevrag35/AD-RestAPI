@@ -1,17 +1,15 @@
 using AD.Api.Core.Ldap.Filters;
+using AD.Api.Core.Ldap.Requests;
+using AD.Api.Core.Web;
 using AD.Api.Statics;
-using System.Buffers;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using System.ComponentModel.DataAnnotations;
-using System.DirectoryServices.Protocols;
 using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Ldap
 {
-    public sealed class SearchFilterBody : ISearchFilter, IValidatableObject
+    public sealed class SearchFilterBody : IScopedRequest, ISearchFilter, IValidatableObject
     {
-        private static readonly SearchValues<char> _mustContain = SearchValues.Create([',', '=']);
-        private const string DN = ",DC=";
-
         private string? _filter;
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -36,7 +34,6 @@ namespace AD.Api.Core.Ldap
 
         public SearchScope? Scope { get; init; }
 
-        [DistinguishedName]
         public DistinguishedName? SearchBase { get; set; }
 
         [Range(0, int.MaxValue)]
@@ -52,20 +49,20 @@ namespace AD.Api.Core.Ldap
         {
             return filter.Length == 1 && CharConstants.STAR == filter[0];
         }
+        public DistinguishedName GetScopedPath()
+        {
+            return this.SearchBase ?? DistinguishedName.Empty;
+        }
+        string IScopedRequest.GetScopedPathMemberName()
+        {
+            return nameof(this.SearchBase);
+        }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             ReadOnlySpan<char> filter = this.Filter;
             if (!IsAllFilter(filter) && filter.Count('(') != filter.Count(')'))
             {
                 yield return new ValidationResult("The LDAP filter is not properly formatted - are you missing parentheses?", [nameof(this.Filter)]);
-            }
-
-            ReadOnlySpan<char> sb = this.SearchBase;
-
-            if (!sb.IsEmpty && (!sb.ContainsAnyExcept(_mustContain) || !sb.Contains(DN, StringComparison.OrdinalIgnoreCase)))
-            {
-                yield return new("The distinguishedName of the SearchBase is not formatted correctly.",
-                    [nameof(this.SearchBase)]);
             }
         }
     }

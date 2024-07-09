@@ -67,18 +67,6 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
 
     public static readonly DomainQuery Default = new(string.Empty, null, false, null!);
 
-    //private IEnumerable<KeyValuePair<string, string?>> EnumerateQueryComponents()
-    //{
-    //    if (!string.IsNullOrWhiteSpace(this.Domain))
-    //    {
-    //        yield return new(DomainModelName, this.Domain);
-    //    }
-
-    //    if (!string.IsNullOrWhiteSpace(this.DomainController))
-    //    {
-    //        yield return new(DomainControllerModelName, this.DomainController);
-    //    }
-    //}
     public bool Equals(DomainQuery other)
     {
         return StringComparer.OrdinalIgnoreCase.Equals(this.Domain, other.Domain)

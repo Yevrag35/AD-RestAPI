@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 namespace AD.Api.Core.Web;
 
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class DistinguishedNameAttribute : Attribute, IBinderTypeProviderMetadata, IDistinguishedNameAttribute, IModelNameProvider
+public class LdapDistinguishedNameAttribute : Attribute, IBinderTypeProviderMetadata, IDistinguishedNameAttribute, IModelNameProvider
 {
     private static readonly Type _type = typeof(DistinguishedNameBinder);
 
@@ -17,11 +17,11 @@ public class DistinguishedNameAttribute : Attribute, IBinderTypeProviderMetadata
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public BindingSource? BindingSource { get; }
 
-    public DistinguishedNameAttribute()
+    public LdapDistinguishedNameAttribute()
         : this(BindingSource.Custom)
     {
     }
-    protected DistinguishedNameAttribute(BindingSource bindingSource)
+    protected LdapDistinguishedNameAttribute(BindingSource bindingSource)
     {
         this.BinderType = _type;
         this.BindingSource = bindingSource;
