@@ -81,13 +81,6 @@ public readonly partial struct DistinguishedName
             return false;
         }
 
-        int count = CountNumberOfRelativeNames(path);
-        if (count < destination.Length)
-        {
-            namesWritten = 0;
-            return false;
-        }
-
         int start = 0;
         namesWritten = 0;
         int i = 0;

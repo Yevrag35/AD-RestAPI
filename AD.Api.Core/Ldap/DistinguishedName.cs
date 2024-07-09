@@ -13,7 +13,11 @@ namespace AD.Api.Core.Ldap;
 /// Represents an LDAP distinguished name (DN) with the ability to split into its individual relative names.
 /// </summary>
 [StructLayout(LayoutKind.Auto)]
-public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
+public readonly partial struct DistinguishedName : 
+    IEnumerable<RelativeName>,
+    IComparable<DistinguishedName>,
+    IEquatable<DistinguishedName>,
+    IEquatable<string>
 {
     private static readonly char COMMA = CharConstants.COMMA;
     private readonly int _length;
@@ -54,7 +58,7 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
     /// <summary>
     /// Indicates whether the distinguished name is empty or default-initialized.
     /// </summary>
-    public readonly bool IsEmpty => !_notDefault && _segments.IsEmpty;
+    public readonly bool IsEmpty => !_notDefault || _segments.IsEmpty;
     /// <summary>
     /// Gets the <see cref="string"/> length of the entire distinguished name.
     /// </summary>
@@ -136,7 +140,6 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
     {
         return ((IEnumerable<RelativeName>)this).GetEnumerator();
     }
-
     private ref readonly RelativeName GetFirst()
     {
         return ref !this.IsEmpty
@@ -150,12 +153,9 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
     /// <returns></returns>
     public readonly ReadOnlySpan<RelativeName> GetParentSegments()
     {
-        if (!this.HasParent)
-        {
-            return [];
-        }
-
-        return _segments.AsSpan(1, _segments.Length - 1);
+        return this.HasParent
+            ? _segments.AsSpan(1, _segments.Length - 1)
+            : [];
     }
     /// <summary>
     ///
@@ -199,7 +199,7 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
     /// <returns>The string representation of the full distinguished name.</returns>
     public override readonly string ToString()
     {
-        return ToString(_segments.AsSpan(), in _length);
+        return !this.IsEmpty ? ToString(_segments.AsSpan(), in _length) : string.Empty;
     }
 
     #region STATIC METHODS
@@ -230,6 +230,51 @@ public readonly partial struct DistinguishedName : IEnumerable<RelativeName>
         }
 
         return count;
+    }
+    /// <summary>
+    /// Counts the number of <see cref="RelativeName"/> components in the provided span of characters if it were
+    /// to be split.
+    /// </summary>
+    /// <param name="path">
+    /// The span of characters to count the number of <see cref="RelativeName"/> components in.
+    /// </param>
+    /// <returns>
+    /// The number of <see cref="RelativeName"/> components that would make up the distinguished name if parsed.
+    /// </returns>
+    public static bool TryCountNumberOfRelativeNames(ReadOnlySpan<char> path, out int count)
+    {
+        if (path.IsEmpty)
+        {
+            count = 0;
+            return true;
+        }
+
+        count = 1;
+        for (int i = 0; i < path.Length; i++)
+        {
+            if (COMMA == path[i])
+            {
+                if (path.IsEscapedAt(in i))
+                {
+                    continue;
+                }
+                else if (i >= path.Length - 1)
+                {
+                    return false;
+                }
+
+                ReadOnlySpan<char> working = path.Slice(i + 1);
+                int equals = working.IndexOf(CharConstants.EQUALS);
+                if (equals < 1 || !RelativeName.TryReadRelativeNameType(working.Slice(0, equals + 1), out _))
+                {
+                    return false;
+                }
+
+                count++;
+            }
+        }
+
+        return true;
     }
     /// <summary>
     ///

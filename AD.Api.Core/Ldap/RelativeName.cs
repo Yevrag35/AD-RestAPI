@@ -2,6 +2,8 @@ using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Enums;
 using AD.Api.Spans;
+using AD.Api.Statics;
+using AD.Api.Strings.Extensions;
 using System;
 using System.Buffers;
 using System.Collections.Frozen;
@@ -78,7 +80,7 @@ public enum RelativeNameType
 public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatable<string>
 {
     private const int DN_SPAN_LIMIT = 256;  // Maximum stackalloc length of a distinguished name.
-    private const int MINIMUM_NAME_INDEX = 3;   // Minimum index for a valid attributed name.
+    private const int MINIMUM_NAME_INDEX = 2;   // Minimum index for a valid attributed name.
     /// <summary>
     /// A read-only dictionary of the <see cref="RelativeNameType"/> attribute values and their LDAP string
     /// representations.
@@ -96,17 +98,20 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// <summary>
     /// Characters that need to be escaped in a distinguished name.
     /// </summary>
-    public static readonly SearchValues<char> EscapedChars = SearchValues.Create([',', '\\', '=', '+', '>', '<', ';', '"']);
+    public static readonly SearchValues<char> NonStandardEscapedChars;
+    public static readonly SearchValues<char> AllEscapedChars;
     public static readonly SearchValues<char> UniqueAttributeChars;
     static RelativeName()
     {
-        Empty = new(RelativeNameType.CommonName, string.Empty, -1);
-
+        Span<char> allEscaped = ['\\', ',', '+', '>', '<', ';', '"']; // except '=', which is even more special.
+        AllEscapedChars = SearchValues.Create(allEscaped);
+        NonStandardEscapedChars = SearchValues.Create(allEscaped.Slice(2));
         AttributeStrings = EnumValues.Create<RelativeNameType, BackendValueAttribute, string>(freeze: true);
         Dictionary<string, RelativeNameType> valueDict = AttributeStrings
             .ToValueDictionary(StringComparer.OrdinalIgnoreCase);
 
         _attributeValues = FrozenDictionary.ToFrozenDictionary(valueDict, valueDict.Comparer);
+        Empty = new(RelativeNameType.CommonName, string.Empty, -1);
         Span<char> chars = stackalloc char[AttributeStrings.ValueCount * 7];
         int count = 0;
         foreach (char c in _attributeValues.Keys.SelectMany(x => x).Distinct())
@@ -170,14 +175,14 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
             return Empty;
         }
 
-        value = value.Trim();
-
-        int index = prefix.Length + 1;
-        value = EscapeChars(value, stackalloc char[value.Length * 2]);
-        if (value.IsEmpty)
+        string v = value.ToString();
+        if (value.IsEmpty || !IsValid(value))
         {
             throw new ArgumentException("The specified distinguished name is invalid - make sure to escape any special characters.", nameof(value));
         }
+
+        int index = prefix.Length;
+        //value = EscapeChars(value, stackalloc char[value.Length * 2]);
 
         if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
@@ -282,7 +287,6 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
             return false;
         }
 
-        RelativeNameType nameTypeIfNotPresent = RelativeNameType.CommonName;
         char[]? array = null;
         bool isRented = false;
 
@@ -294,7 +298,6 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
             return false;
         }
 
-        span = EscapeChars(span, stackalloc char[span.Length * 2]);
         if (span.IsEmpty)
         {
             result = Empty;
@@ -303,25 +306,18 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
 
         if (index < MINIMUM_NAME_INDEX)
         {
-            int length = span.Length + 3;
-            Span<char> buffer = length < DN_SPAN_LIMIT
-                ? stackalloc char[length]
-                : SpanExtensions.RentArray(in length, ref isRented, ref array);
-
-            prefix = default;
-            span = BuildPrefix(in nameTypeIfNotPresent, buffer, span, ref prefix);
+            result = Empty;
+            return false;
         }
-        else
+
+        prefix = span.Slice(0, index);
+        if (!TryGetRelativeNameType(prefix, out var type))
         {
-            prefix = span.Slice(0, index);
-            if (!TryGetRelativeNameType(prefix, out nameTypeIfNotPresent))
-            {
-                result = Empty;
-                return false;
-            }
+            result = Empty;
+            return false;
         }
 
-        result = new(nameTypeIfNotPresent, span.ToString(), index);
+        result = new(type, span.ToString(), index);
         if (isRented)
         {
             ArrayPool<char>.Shared.Return(array!);

@@ -6,109 +6,60 @@ namespace AD.Api.Core.Ldap
 {
     public readonly partial struct RelativeName
     {
-        private static ReadOnlySpan<char> EscapeChars(ReadOnlySpan<char> source, Span<char> destination)
-        {
-            if (!source.ContainsAny(EscapedChars) && CharConstants.POUND != source[0])
-            {
-                return source;
-            }
+        //private static ReadOnlySpan<char> EscapeChars(ReadOnlySpan<char> source, Span<char> destination)
+        //{
+        //    if (!source.ContainsAny(NonStandardEscapedChars) && CharConstants.POUND != source[0])
+        //    {
+        //        return source;
+        //    }
 
-            int position = 0;
+        //    int position = 0;
 
-            if (CharConstants.POUND == source[0])
-            {
-                destination[position++] = '\\';
-                destination[position++] = CharConstants.POUND;
-            }
+        //    if (CharConstants.POUND == source[0])
+        //    {
+        //        destination[position++] = '\\';
+        //        destination[position++] = CharConstants.POUND;
+        //    }
 
-            destination = EscapeCharacters(source, destination, ref position);
-            if (destination.IsEmpty)
-            {
-                return []; // Will be treated as invalid;
-            }
+        //    destination = EscapeCharacters(source, destination, ref position);
+        //    if (destination.IsEmpty)
+        //    {
+        //        return []; // Will be treated as invalid;
+        //    }
 
-            destination = EscapeSpaces(destination, ref position);
+        //    destination = EscapeSpaces(destination, ref position);
 
-            return destination.Slice(0, position);
-        }
-        private static Span<char> EscapeCharacters(ReadOnlySpan<char> source, Span<char> buffer, scoped ref int position)
-        {
-            ReadOnlySpan<char> working = source.Slice(position);
-            for (int i = 0; i < working.Length; i++)
-            {
-                char c = working[i];
-                if (!EscapedChars.Contains(c))
-                {
-                    buffer[position++] = c;
-                    continue;
-                }
+        //    return destination.Slice(0, position);
+        //}
+        //private static Span<char> EscapeSpaces(Span<char> buffer, scoped ref int position)
+        //{
+        //    Span<char> working = buffer.Slice(0, position);
+        //    int nonSpaceIndex = working.LastIndexOfAnyExcept(CharConstants.SPACE);
+        //    if (nonSpaceIndex != working.Length - 1)
+        //    {
+        //        int p = 0;
+        //        Span<char> spaces = buffer.Slice(nonSpaceIndex + 1);
+        //        foreach (char sp in spaces)
+        //        {
+        //            buffer[p++] = CharConstants.BACKSLASH;
+        //            buffer[p++] = sp;
+        //        }
 
-                switch (c)
-                {
-                    case CharConstants.EQUALS:
-                        if (!IsProperEquals(working, in i))
-                        {
-                            return []; // Will be treated as invalid;
-                        }
+        //        position += spaces.Length;
+        //    }
 
-                        buffer[position++] = c;
-                        break;
-
-                    case CharConstants.COMMA:
-                        if (working.IsEscapedAt(in i))
-                        {
-                            buffer[position++] = c;
-                            break;
-                        }
-
-                        goto default;
-
-                    case CharConstants.BACKSLASH:
-                        if (working.IsEscapedAt(i + 1))
-                        {
-                            buffer[position++] = c;
-                            break;
-                        }
-
-                        goto default;
-
-                    default:
-                        buffer[position++] = CharConstants.BACKSLASH;
-                        buffer[position++] = c;
-                        break;
-                }
-            }
-
-            return buffer;
-        }
-        private static Span<char> EscapeSpaces(Span<char> buffer, scoped ref int position)
-        {
-            Span<char> working = buffer.Slice(0, position);
-            int nonSpaceIndex = working.LastIndexOfAnyExcept(CharConstants.SPACE);
-            if (nonSpaceIndex != working.Length - 1)
-            {
-                int p = 0;
-                Span<char> spaces = buffer.Slice(nonSpaceIndex + 1);
-                foreach (char sp in spaces)
-                {
-                    buffer[p++] = CharConstants.BACKSLASH;
-                    buffer[p++] = sp;
-                }
-
-                position += spaces.Length;
-            }
-
-            return buffer;
-        }
+        //    return buffer;
+        //}
         private static bool IsProperEquals(ReadOnlySpan<char> working, in int index)
         {
-            if (index < 2 || index >= working.Length - 1)
+            if (index < 1 || index >= working.Length - 1)
             {
                 return false;
             }
 
             return IsValidPrefixNoError(working.Slice(0, index));
         }
+        
         private static bool IsValidPrefixNoError(ReadOnlySpan<char> working)
         {
             ArrayRefEnumerator<string> enumerator = new(_attributeValues.Keys.AsSpan());
@@ -119,6 +70,76 @@ namespace AD.Api.Core.Ldap
             }
 
             return flag;
+        }
+
+        public static bool IsValid(ReadOnlySpan<char> value)
+        {
+            if (value.IsWhiteSpace())
+            {
+                return false;
+            }
+
+            if (CharConstants.POUND == value[0])
+            {
+                return false;
+            }
+            else if (value.Length > 2 && CharConstants.SPACE == value[^1] && !value.IsEscapedAt(value.Length - 1))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                ref readonly char c = ref value[i];
+                if (NonStandardEscapedChars.Contains(c) && !value.IsEscapedAt(in i))
+                {
+                    return false;
+                }
+
+                switch (c)
+                {
+                    case CharConstants.EQUALS:
+                        if (!IsProperEquals(value, in i))
+                        {
+                            return false;
+                        }
+
+                        break;
+
+                    case CharConstants.COMMA:
+                        if (!value.IsEscapedAt(in i))
+                        {
+                            return false;
+                        }
+
+                        break;
+
+                    case CharConstants.BACKSLASH:
+                        if (!IsProperBackslash(value, i))
+                        {
+                            return false;
+                        }
+
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool IsProperBackslash(ReadOnlySpan<char> value, int index)
+        {
+            if (index == value.Length - 1)
+            {
+                return value.IsEscapedAt(in index);
+            }
+
+            ref readonly char nextChar = ref value[index + 1];
+
+            return AllEscapedChars.Contains(nextChar) || value.IsEscapedAt(in index);
         }
     }
 }
