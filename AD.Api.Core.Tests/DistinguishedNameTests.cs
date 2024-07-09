@@ -1,4 +1,5 @@
 using AD.Api.Core.Ldap;
+using System.Collections.Immutable;
 
 namespace AD.Api.Core.Tests
 {
@@ -79,6 +80,21 @@ namespace AD.Api.Core.Tests
         }
 
         [Theory]
+        [InlineData("DC=contoso,DC=com")]
+        [InlineData("CN=John Doe,OU=Users,DC=contoso,DC=com")]
+        [InlineData("UID=Doe\\, Doe,OU=Users,DC=contoso,DC=com")]
+        [InlineData("OU=Users,DC=contoso,DC=com")]
+        [InlineData("O=The Company,DC=contoso,DC=com")]
+        public void DistinguishedName_CopyToReturnsCorrectWrittenAndEquals(string dn)
+        {
+            DistinguishedName dName = DistinguishedName.Parse(dn);
+            char[] array = new char[dn.Length];
+            int written = dName.CopyTo(array);
+            Assert.Equal(dn.Length, written);
+            Assert.Equal(dn, new string(array, 0, written));
+        }
+
+        [Theory]
         [InlineData("DC=contoso,DC=com", 2)]
         [InlineData("CN=contoso", 1)]
         [InlineData("CN=John Doe,OU=Users,DC=contoso,DC=com", 4)]
@@ -104,21 +120,76 @@ namespace AD.Api.Core.Tests
         [Fact]
         public void DistinguishedName_TryCountRelativeNamesReturnsFalseOnInvalid()
         {
-            bool tried = DistinguishedName.TryCountNumberOfRelativeNames("CNakasi3h3894r7,,DCq12=a", out int count);
+            bool tried = DistinguishedName.TryCountNumberOfRelativeNames("CNakasi3h3894r7,,DCq12=a", out _);
             Assert.False(tried);
         }
-        //[Theory]
-        //[InlineData("DC=contoso")]
-        //[InlineData("DC=com")]
-        //[InlineData("OU=theOU")]
-        //[InlineData("CN=the guy")]
-        //[InlineData("CN=guy\\, the")]
-        //public void DistinguishedName_ParseEmptyIfOneComponent(string dn)
-        //{
-        //    DistinguishedName dName = DistinguishedName.Parse(dn);
-        //    Assert.True(dName.IsEmpty);
-        //    Assert.NotEqual(dn, dName.ToString());
-        //    Assert.Empty(dName);
-        //}
+
+        [Fact]
+        public void DistinguishedName_SplitThrowsOnInvalid()
+        {
+            Assert.Throws<ArgumentException>(() => DistinguishedName.Split("CNakasi3h3894r7,,DCq12=a"));
+        }
+
+        [Theory]
+        [InlineData("DC=contoso,DC=com", "DC=contoso", "DC=com")]
+        [InlineData("CN=contoso", "CN=contoso")]
+        [InlineData("CN=John Doe,OU=Users,DC=contoso,DC=com", "CN=John Doe", "OU=Users", "DC=contoso", "DC=com")]
+        [InlineData("UID=Doe\\, Doe,OU=Users,DC=contoso,DC=com", "UID=Doe\\, Doe", "OU=Users", "DC=contoso", "DC=com")]
+        [InlineData("OU=Users,DC=contoso,DC=com", "OU=Users", "DC=contoso", "DC=com")]
+        [InlineData("O=The Company,DC=contoso,DC=com", "O=The Company", "DC=contoso", "DC=com")]
+        public void DistinguishedName_SplitReturnsCorrectArray(string distinguishedName, params string[] sections)
+        {
+            ImmutableArray<RelativeName> array = DistinguishedName.Split(distinguishedName);
+            Assert.False(array.IsDefaultOrEmpty);
+            Assert.Equal(sections.Length, array.Length);
+            for (int i = 0; i < sections.Length; i++)
+            {
+                Assert.Equal(sections[i], array[i].Value);
+            }
+        }
+
+        [Fact]
+        public void DistinguishedName_SplitReturnsEmptyArrayOnEmpty()
+        {
+            ImmutableArray<RelativeName> array = DistinguishedName.Split(string.Empty);
+            Assert.True(array.IsDefaultOrEmpty);
+        }
+
+        [Theory]
+        [InlineData("OU=Users,DC=contoso,DC=com", "DC=contoso,DC=com", RelativeNameType.DomainComponent)]
+        [InlineData("CN=the man the myth,OU=Users,DC=contoso,DC=com", "OU=Users,DC=contoso,DC=com", RelativeNameType.OrganizationalUnit)]
+        public void DistinguishedName_ToParentReturnsCorrectParent(string dn, string parent, RelativeNameType parentType)
+        {
+            DistinguishedName dName = DistinguishedName.Parse(dn);
+            DistinguishedName parentName = dName.ToParent();
+            Assert.Equal(parent, parentName.ToString());
+            Assert.Equal(parentType, parentName.Type);
+        }
+        
+        [Fact]
+        public void DistinguishedName_TrySplitDoesNotThrowOnInvalid()
+        {
+            RelativeName[] array = new RelativeName[3];
+            bool tried = DistinguishedName.TrySplit("CNakasi3h3894r7,,DCq12=a", array, out _);
+            Assert.False(tried);
+        }
+        [Theory]
+        [InlineData("DC=contoso,DC=com", "DC=contoso", "DC=com")]
+        [InlineData("CN=contoso", "CN=contoso")]
+        [InlineData("CN=John Doe,OU=Users,DC=contoso,DC=com", "CN=John Doe", "OU=Users", "DC=contoso", "DC=com")]
+        [InlineData("UID=Doe\\, Doe,OU=Users,DC=contoso,DC=com", "UID=Doe\\, Doe", "OU=Users", "DC=contoso", "DC=com")]
+        [InlineData("OU=Users,DC=contoso,DC=com", "OU=Users", "DC=contoso", "DC=com")]
+        [InlineData("O=The Company,DC=contoso,DC=com", "O=The Company", "DC=contoso", "DC=com")]
+        public void DistinguishedName_TrySplitReturnsCorrectArray(string distinguishedName, params string[] sections)
+        {
+            RelativeName[] array = new RelativeName[sections.Length];
+            bool tried = DistinguishedName.TrySplit(distinguishedName, array, out int written);
+            Assert.True(tried);
+            Assert.Equal(sections.Length, written);
+            for (int i = 0; i < sections.Length; i++)
+            {
+                Assert.Equal(sections[i], array[i].Value);
+            }
+        }
     }
 }

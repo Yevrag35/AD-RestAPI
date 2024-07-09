@@ -61,6 +61,17 @@ public readonly partial struct DistinguishedName
             }
         }
 
+        if (start < path.Length)
+        {
+            ReadOnlySpan<char> slice = path.Slice(start);
+            if (!RelativeName.TryParseOne(slice, out RelativeName last))
+            {
+                throw new ArgumentException($"Invalid distinguished name component - make sure to escape any special characters: {slice.ToString()}", nameof(path));
+            }
+
+            array[n++] = last;
+        }
+
         ImmutableArray<RelativeName> result = ImmutableArray.Create(array.AsSpan(0, n));
         ArrayPool<RelativeName>.Shared.Return(array);
 
@@ -91,7 +102,7 @@ public readonly partial struct DistinguishedName
                 ReadOnlySpan<char> slice = path.Slice(start, i - start);
                 if (!RelativeName.TryParseOne(slice, out RelativeName rn))
                 {
-                    Debug.Fail($"Invalid distinguished name component: {slice.ToString()}");
+                    //Debug.Fail($"Invalid distinguished name component: {slice.ToString()}");
                     return false;
                 }
 
@@ -104,7 +115,7 @@ public readonly partial struct DistinguishedName
         {
             if (!RelativeName.TryParseOne(path.Slice(start), out RelativeName last))
             {
-                Debug.Fail($"Invalid distinguished name component: {last.ToString()}");
+                //Debug.Fail($"Invalid distinguished name component: {last.ToString()}");
                 return false;
             }
 
