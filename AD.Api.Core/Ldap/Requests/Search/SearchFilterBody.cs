@@ -36,8 +36,8 @@ namespace AD.Api.Core.Ldap
 
         public SearchScope? Scope { get; init; }
 
-        [MinLength(4, ErrorMessage = "The distinguishedName of the SearchBase is not formatted correctly.")]
-        public string? SearchBase { get; set; }
+        [DistinguishedName]
+        public DistinguishedName? SearchBase { get; set; }
 
         [Range(0, int.MaxValue)]
         public int? SizeLimit { get; init; }
