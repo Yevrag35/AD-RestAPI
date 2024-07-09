@@ -74,7 +74,7 @@ public readonly partial struct DistinguishedName :
         }
     }
 
-    private DistinguishedName(ImmutableArray<RelativeName> segments, in int length)
+    private DistinguishedName(in ImmutableArray<RelativeName> segments, in int length)
     {
         _notDefault = true;
         _length = length;
@@ -243,7 +243,8 @@ public readonly partial struct DistinguishedName :
         }
 
         int length = _length - first.Value.Length - 1;
-        return new(ImmutableArray.Create(_segments, 1, _segments.Length - 1), in length);
+        var array = ImmutableArray.Create(_segments, 1, _segments.Length - 1);
+        return new(in array, in length);
     }
 
     /// <summary>

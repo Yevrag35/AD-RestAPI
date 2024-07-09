@@ -40,6 +40,7 @@ public readonly partial struct DistinguishedName
         ImmutableArray<RelativeName> array = @this._segments;
         int newLength = @this._length + relativeName.Value.Length + 1;
 
-        return new DistinguishedName(array.Insert(relativeNameIndex, relativeName), in newLength);
+        array = array.Insert(relativeNameIndex, relativeName);
+        return new DistinguishedName(in array, in newLength);
     }
 }
