@@ -10,24 +10,13 @@ namespace AD.Api.Core.Ldap
     /// </summary>
     public abstract class CreateBody : ICreateRequest, IValidatableObject
     {
-        private DistinguishedNameOld? _constructedDn;
-
         /// <summary>
         /// The specified common name (cn) for the object.
         /// </summary>
         [JsonRequired]
         [JsonPropertyName("cn")]
         [MinLength(1, ErrorMessage = "Common names should always be at least 1 character in length.")]
-        public required string CommonName
-        {
-            get => _constructedDn?.CommonName ?? string.Empty;
-            set
-            {
-                _constructedDn ??= new();
-                _constructedDn.CommonName = value;
-            }
-        }
-
+        public required string CommonName { get; init; }
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(Path))]
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -35,32 +24,15 @@ namespace AD.Api.Core.Ldap
         /// <summary>
         /// The parent distinguished name of the container or organizational unit for the request.
         /// </summary>
-        public string? Path
-        {
-            get => _constructedDn?.Path ?? string.Empty;
-            set
-            {
-                _constructedDn ??= new();
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    _constructedDn.Path = value;
-                    this.HasPath = true;
-                }
-                else
-                {
-                    _constructedDn.Path = string.Empty;
-                    this.HasPath = false;
-                }
-            }
-        }
+        public string? Path { get; init; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public abstract FilteredRequestType RequestType { get; }
 
         /// <inheritdoc/>
-        public DistinguishedNameOld GetDistinguishedName()
+        public DistinguishedName GetDistinguishedName()
         {
-            return _constructedDn ??= new();
+            
         }
 
         /// <inheritdoc/>

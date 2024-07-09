@@ -2,7 +2,7 @@ using AD.Api.Core.Ldap;
 
 namespace AD.Api.Core.Tests
 {
-    public class RelativeNameTests
+    public sealed class RelativeNameTests
     {
         [Theory]
         [InlineData("John Doe", RelativeNameType.CommonName, "CN=")]
