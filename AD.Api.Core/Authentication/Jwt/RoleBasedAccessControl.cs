@@ -35,14 +35,14 @@ namespace AD.Api.Core.Authentication.Jwt
         public bool IsDomainScoped => _isDomainScoped;
         public required AuthorizedRole Roles { get; init; }
 
-        public bool IsAuthorized(in WorkingScope scope)
+        public bool IsAuthorized(ref readonly WorkingScope scope)
         {
             if (!this.Roles.HasFlag(scope.RequiredRole))
             {
                 return false;
             }
 
-            if (this.IsDomainScoped && !this.Domain.Equals(scope.DomainName))
+            if (this.IsDomainScoped && !scope.DomainName.Equals(this.Domain, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

@@ -12,12 +12,12 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
     private IServiceProvider _provider;
 
     public LdapConnection ActiveConnection => _connection;
-    public string FoundObject { get; private set; }
+    public DistinguishedName FoundObject { get; private set; }
     public DirectoryResponse LastResponse => _response;
 
     private ConnectedResponse()
     {
-        this.FoundObject = string.Empty;
+        this.FoundObject = DistinguishedName.Empty;
         _connection = null!;
         _response = null!;
         _provider = null!;
@@ -29,7 +29,14 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
         _connection = connection;
         _response = response;
         _provider = provider;
-        this.FoundObject = distinguishedName ?? string.Empty;
+        this.FoundObject = ParseToDN(distinguishedName);
+    }
+
+    private static DistinguishedName ParseToDN(string? distinguishedName)
+    {
+        return !string.IsNullOrWhiteSpace(distinguishedName)
+            ? DistinguishedName.Parse(distinguishedName)
+            : DistinguishedName.Empty;
     }
 
     internal static ConnectedResponse Continue(LdapConnection connection, DirectoryResponse response, IServiceProvider requestServices)

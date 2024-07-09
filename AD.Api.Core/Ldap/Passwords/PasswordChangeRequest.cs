@@ -18,9 +18,9 @@ public sealed class PasswordChangeRequest : IPasswordRequest
     public required string OldPassword { get; init; }
 
     bool IPasswordRequest.IsResetting() => false;
-    public string GetDistinguishedName()
+    public DistinguishedName GetDistinguishedName()
     {
-        return _response?.FoundObject ?? string.Empty;
+        return _response?.FoundObject ?? DistinguishedName.Empty;
     }
     public void SetContinuation(ConnectedResponse response)
     {

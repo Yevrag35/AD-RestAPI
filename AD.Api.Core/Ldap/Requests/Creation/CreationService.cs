@@ -36,8 +36,8 @@ internal abstract class CreationService
                 "Unable to determine the object class for this request - you may have to specify it manually.", ResultCode.ObjectClassViolation);
         }
 
-        DistinguishedNameOld dn = request.GetDistinguishedName();
-        if (!request.HasPath && !this.TryUpdateWithWellKnown(dn, target.Domain, request.RequestType, out IActionResult? error))
+        DistinguishedName dn = request.GetDistinguishedName();
+        if (!request.HasPath && !this.TryUpdateWithWellKnown(ref dn, target.Domain, request.RequestType, out IActionResult? error))
         {
             return OneOf<ResultEntry>.FromT1(error);
         }
@@ -83,7 +83,7 @@ internal abstract class CreationService
         return entry.Value;
     }
 
-    private AddRequest CreateAddRequest<T>(DistinguishedNameOld dn, IEnumerable<KeyValuePair<string, T>> attributeValues)
+    private AddRequest CreateAddRequest<T>(DistinguishedName dn, IEnumerable<KeyValuePair<string, T>> attributeValues)
     {
         object?[] values = _objPool.Get();
         try
@@ -114,9 +114,9 @@ internal abstract class CreationService
             yield return GetObjectArray();
         }
     }
-    private bool TryUpdateWithWellKnown(DistinguishedNameOld dn, string? domainKey, FilteredRequestType type, [NotNullWhen(false)] out IActionResult? errorResult)
+    private bool TryUpdateWithWellKnown(ref DistinguishedName dn, string? domainKey, FilteredRequestType type, [NotNullWhen(false)] out IActionResult? errorResult)
     {
-        if (!this.WellKnowns.TryGetValue(domainKey, requestType: type, out string? location))
+        if (!this.WellKnowns.TryGetValue(domainKey, requestType: type, out DistinguishedName wellKnownDn))
         {
             errorResult = new ApiBadRequestResult(
                 "This request requires a path to be specified.", ResultCode.InvalidDNSyntax);
@@ -125,7 +125,7 @@ internal abstract class CreationService
         }
 
         errorResult = null;
-        dn.Path = location;
+        dn = wellKnownDn.Insert(0, dn[0]);
         return true;
     }
 }

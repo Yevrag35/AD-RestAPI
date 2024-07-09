@@ -10,9 +10,9 @@ public sealed class PasswordResetRequest : PasswordRequestBase, IPasswordRequest
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     string? IPasswordRequest.OldPassword => null;
     bool IPasswordRequest.IsResetting() => true;
-    public string GetDistinguishedName()
+    public DistinguishedName GetDistinguishedName()
     {
-        return _response?.FoundObject ?? string.Empty;
+        return _response?.FoundObject ?? DistinguishedName.Empty;
     }
     public void SetContinuation(ConnectedResponse response)
     {

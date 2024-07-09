@@ -67,9 +67,9 @@ namespace AD.Api.Core.Authentication.Jwt
             return false;
         }
 
-        public bool IsAuthorized(HttpContext context, string? fullDN)
+        public bool IsAuthorized(HttpContext context, DistinguishedName distinguishedName, out AuthorizedRole requiredRole)
         {
-            if (!context.NeedsScoping(out AuthorizedRole requiredRole) || requiredRole == AuthorizedRole.None)
+            if (!context.NeedsScoping(out requiredRole) || requiredRole == AuthorizedRole.None)
             {
                 return true;
             }
@@ -77,24 +77,15 @@ namespace AD.Api.Core.Authentication.Jwt
             string domain = (string?)context.Items[DomainQuery.DomainModelName] ?? string.Empty;
             string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
-            int nameCount = DistinguishedNameOld.CountNumberOfRelativeNames(fullDN);
-            var array = ArrayPool<RelativeName>.Shared.Rent(nameCount);
-            Span<RelativeName> span = array.AsSpan(0, nameCount);
-            try
+            if (distinguishedName.IsEmpty || distinguishedName.Count == 1)
             {
-                if (!DistinguishedNameOld.TrySplit(fullDN, span, out int written))
-                {
-                    return false;
-                }
+                return false;
+            }
 
-                DistinguishedNameOld dn = DistinguishedNameOld.Join(span.Slice(1));
-                WorkingScope scope = new(domain, dn.ToString(), requiredRole);
-                return this.IsAuthorized(name, scope);
-            }
-            finally
-            {
-                ArrayPool<RelativeName>.Shared.Return(array);
-            }
+            Span<char> chars = stackalloc char[distinguishedName.Length];
+            WorkingScope scope = distinguishedName.ToWorkingScope(domain, requiredRole, chars);
+
+            return this.IsAuthorized(name, ref scope);
         }
         public bool IsAuthorizedByParent(HttpContext context, string? parentPath)
         {
@@ -108,9 +99,9 @@ namespace AD.Api.Core.Authentication.Jwt
             string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
             WorkingScope scope = new(domain, parentPath ?? string.Empty, requiredRole);
-            return this.IsAuthorized(name, scope);
+            return this.IsAuthorized(name, ref scope);
         }
-        private bool IsAuthorized(string? userName, WorkingScope scope)
+        private bool IsAuthorized(string? userName, ref WorkingScope scope)
         {
             if (scope.RequiredRole == AuthorizedRole.None)
             {
@@ -134,7 +125,7 @@ namespace AD.Api.Core.Authentication.Jwt
 
             while (enumerator.MoveNext(in flag, ref index))
             {
-                flag = this.Scopes[enumerator.Current].IsAuthorized(in scope);
+                flag = this.Scopes[enumerator.Current].IsAuthorized(ref scope);
             }
 
             if (flag)

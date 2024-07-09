@@ -8,7 +8,7 @@ public interface IPasswordRequest
     string NewPassword { get; }
     string? OldPassword { get; }
 
-    string GetDistinguishedName();
+    DistinguishedName GetDistinguishedName();
     [MemberNotNullWhen(false, nameof(OldPassword))]
     bool IsResetting();
     bool TryGetContinuation([NotNullWhen(true)] out ConnectedResponse? continuation);

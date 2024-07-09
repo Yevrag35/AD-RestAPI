@@ -13,8 +13,6 @@ namespace AD.Api.Strings.Extensions
         private const string COMMA_SPACE = ", ";
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private const int MAX_LENGTH = 256;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly string SPACE_STR = " ";
 #if NET5_0_OR_GREATER
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private const StringSplitOptions DEFAULT = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;

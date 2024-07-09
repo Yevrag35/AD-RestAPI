@@ -8,6 +8,10 @@ namespace AD.Api.Core.Ldap
     public interface ICreateRequest
     {
         /// <summary>
+        /// 
+        /// </summary>
+        string? CommonName { get; }
+        /// <summary>
         /// Gets the type of request.
         /// </summary>
         FilteredRequestType RequestType { get; }
@@ -22,7 +26,7 @@ namespace AD.Api.Core.Ldap
         /// <returns>
         /// The distinguished name for the object.
         /// </returns>
-        DistinguishedNameOld GetDistinguishedName();
+        DistinguishedName GetDistinguishedName();
     }
 }
 

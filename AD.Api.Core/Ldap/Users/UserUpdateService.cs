@@ -28,12 +28,12 @@ namespace AD.Api.Core.Ldap.Users
 
         public IActionResult UpdateUser(SidString sidString, IEditOperation operation, ConnectedResponse continuation, in DomainQuery target)
         {
-            if (string.IsNullOrWhiteSpace(continuation.FoundObject))
+            if (continuation.FoundObject.IsEmpty)
             {
                 return new ApiBadRequestResult("The distinguished name of the object to update was not found.", ResultCode.NoSuchObject);
             }
 
-            ModifyRequest request = new(continuation.FoundObject);
+            ModifyRequest request = new(continuation.FoundObject.ToString());
             operation.ApplyToRequest(request);
 
             var oneOf = _requestSvc.SendForResponse<ModifyResponse>(request, continuation.ActiveConnection);

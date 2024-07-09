@@ -123,6 +123,12 @@
   <data name="JWT_NotEnabled" xml:space="preserve">
     <value>JWT authentication is not enabled.</value>
   </data>
+  <data name="JWT_Unauthorized" xml:space="preserve">
+    <value>You are unauthorized to access the resource at path: "{0}"</value>
+  </data>
+  <data name="JWT_Unauthorized_RequiredRole" xml:space="preserve">
+    <value>You must have at least 1 required role: '{0}'.</value>
+  </data>
   <data name="OperationResult_DefaultError" xml:space="preserve">
     <value>An exception occurred performing the operation</value>
   </data>

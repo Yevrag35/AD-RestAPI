@@ -124,4 +124,53 @@ public readonly partial struct DistinguishedName
 
         return true;
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="destination"></param>
+    /// <param name="namesWritten"></param>
+    /// <returns></returns>
+    public static bool TrySplit(ReadOnlySpan<char> path, Span<RelativeName> destination, ref SpanStringBuilder erroredSections, out int namesWritten)
+    {
+        if (destination.IsEmpty)
+        {
+            namesWritten = 0;
+            return false;
+        }
+
+        int start = 0;
+        namesWritten = 0;
+        bool failed = false;
+        int i = 0;
+        for (i = 0; i < path.Length; i++)
+        {
+            if (COMMA == path[i] && !path.IsEscapedAt(in i))
+            {
+                ReadOnlySpan<char> slice = path.Slice(start, i - start);
+                if (!RelativeName.TryParseOne(slice, out RelativeName rn))
+                {
+                    erroredSections = erroredSections.AppendLine(slice);
+                    failed = true;
+                }
+
+                destination[namesWritten++] = rn;
+                start = i + 1;
+            }
+        }
+
+        if (start < path.Length)
+        {
+            ReadOnlySpan<char> slice = path.Slice(start);
+            if (!RelativeName.TryParseOne(slice, out RelativeName last))
+            {
+                erroredSections = erroredSections.AppendLine(slice);
+                failed = true;
+            }
+
+            destination[namesWritten++] = last;
+        }
+
+        return !failed;
+    }
 }

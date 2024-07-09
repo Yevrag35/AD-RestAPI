@@ -63,7 +63,7 @@ public sealed class UserController : ControllerBase
            return new ApiBadRequestResult(this.ModelState);
         }
 
-        if (!this.Authorizer.IsAuthorizedByParent(this.HttpContext, request.Path))
+        if (!this.Authorizer.IsAuthorizedByParent(this.HttpContext, request.CommonName))
         {
             return new ForbidResult();
         }
@@ -94,7 +94,7 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject))
+        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject, out var role))
         {
             return new ForbidResult();
         }
@@ -130,7 +130,7 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject))
+        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject, out var role))
         {
             return new ForbidResult();
         }
@@ -166,7 +166,7 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject))
+        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject, out _))
         {
             return new ForbidResult();
         }

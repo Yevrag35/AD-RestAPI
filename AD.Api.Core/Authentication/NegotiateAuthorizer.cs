@@ -1,3 +1,4 @@
+using AD.Api.Core.Ldap;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -9,8 +10,9 @@ namespace AD.Api.Core.Authentication
         {
             return;
         }
-        public bool IsAuthorized(HttpContext context, string? fullDN)
+        public bool IsAuthorized(HttpContext context, DistinguishedName distinguishedName, out AuthorizedRole requiredRole)
         {
+            requiredRole = AuthorizedRole.None;
             return true;
         }
         public bool IsAuthorizedByParent(HttpContext context, string? parentPath)

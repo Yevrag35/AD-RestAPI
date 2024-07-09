@@ -85,8 +85,10 @@ namespace AD.Api.Enums.Internal
             Dictionary<TValue, TEnum> dictionary = new(_backing.Attributes.Count, equalityComparer);
             foreach (var kvp in _backing.EnumStrings)
             {
-                TValue value = _backing.Attributes[kvp.Key].Value;
-                _ = dictionary.TryAdd(value, kvp.Value);
+                if (_backing.Attributes.TryGetValue(kvp.Key, out var value))
+                {
+                    _ = dictionary.TryAdd(value.Value, kvp.Value);
+                }
             }
 
             return dictionary;

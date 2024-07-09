@@ -30,13 +30,13 @@ namespace AD.Api.Strings.Extensions
         /// <summary>
         /// Splits the characters in the read-only span based on a sequence of separator characters.
         /// </summary>
-        /// <param name="value">The read-only span of characters to split.</param>
+        /// <param name="readOnlyValue">The read-only span of characters to split.</param>
         /// <param name="splitBy">The span of characters to use as separators.</param>
         /// <returns>A <see cref="SplitEnumerator"/> for enumerating over the split entries.</returns>
         [DebuggerStepThrough]
-        public static SplitEnumerator SpanSplit(this ReadOnlySpan<char> value, ReadOnlySpan<char> splitBy)
+        public static SplitEnumerator SpanSplit(this ReadOnlySpan<char> readOnlyValue, ReadOnlySpan<char> splitBy)
         {
-            return new SplitEnumerator(value, splitBy);
+            return new SplitEnumerator(readOnlyValue, splitBy);
         }
         /// <summary>
         /// Splits the string based on a single separator character.
@@ -65,6 +65,20 @@ namespace AD.Api.Strings.Extensions
         public static SplitEnumerator SpanSplit(this string? value, ReadOnlySpan<char> splitBy)
         {
             return new SplitEnumerator(value.AsSpan(), splitBy);
+        }
+        /// <summary>
+        /// Splits the string based on a sequence of separator characters.
+        /// </summary>
+        /// <param name="value">
+        ///     The string to split. A <see langword="null"/> string is treated as an 
+        ///     empty span.
+        /// </param>
+        /// <param name="splitBy">The span of characters to use as separators.</param>
+        /// <returns>A <see cref="SplitEnumerator"/> for enumerating over the split entries.</returns>
+        [DebuggerStepThrough]
+        public static SplitEnumerator SpanSplit(this Span<char> span, ReadOnlySpan<char> splitBy)
+        {
+            return new SplitEnumerator(str: span, splitBy);
         }
     }
 }

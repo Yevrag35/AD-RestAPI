@@ -35,9 +35,11 @@ namespace AD.Api
         {
             options.Converters.AddRange([
                 new ClearOperationConverter(),
+                new DistinguishedNameConverter(),
                 new OneEditOperationConverter<AddDictionary>(),
                 new OneEditOperationConverter<RemoveDictionary>(),
                 new OneEditOperationConverter<SetDictionary>(),
+                new RelativeNameConverter(),
                 new ReplaceOperationConverter(),
                 new ResultEntryConverter(converter),
                 new ResultEntryCollectionConverter(converter),

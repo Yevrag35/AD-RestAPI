@@ -58,7 +58,8 @@ namespace AD.Api.Core.Ldap.Passwords
 
             try
             {
-                ModifyRequest modify = new(request.GetDistinguishedName());
+                DistinguishedName dn = request.GetDistinguishedName();
+                ModifyRequest modify = new((string)dn);
 
                 _decryptor.EncodePasswordChange(request.OldPassword, request.NewPassword, modify);
 
@@ -96,7 +97,8 @@ namespace AD.Api.Core.Ldap.Passwords
 
             try
             {
-                ModifyRequest modify = new(request.GetDistinguishedName());
+                DistinguishedName dn = request.GetDistinguishedName();
+                ModifyRequest modify = new((string)dn);
 
                 _decryptor.EncodePasswordReset(request.NewPassword, modify);
 

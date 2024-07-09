@@ -1,3 +1,4 @@
+using AD.Api.Core.Ldap;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -21,7 +22,7 @@ namespace AD.Api.Core.Authentication
         /// <param name="role">The authorized role to check for.</param>
         void Authorize(AuthorizationFilterContext context, AuthorizedRole role);
 
-        bool IsAuthorized(HttpContext context, string? fullDN);
+        bool IsAuthorized(HttpContext context, DistinguishedName distinguishedName, out AuthorizedRole requiredRole);
         /// <summary>
         /// A second method to authorize the request based on the possible scoping rules that have been defined
         /// for the requester.

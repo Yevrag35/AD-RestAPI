@@ -79,6 +79,24 @@ namespace AD.Api {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are unauthorized to access the resource at path: &quot;{0}&quot;.
+        /// </summary>
+        public static string JWT_Unauthorized {
+            get {
+                return ResourceManager.GetString("JWT_Unauthorized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must have at least 1 required role: &apos;{0}&apos;..
+        /// </summary>
+        public static string JWT_Unauthorized_RequiredRole {
+            get {
+                return ResourceManager.GetString("JWT_Unauthorized_RequiredRole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An exception occurred performing the operation.
         /// </summary>
         public static string OperationResult_DefaultError {

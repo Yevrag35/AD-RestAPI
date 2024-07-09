@@ -11,11 +11,11 @@ public sealed class PasswordResetRequestByDN : PasswordRequestBase, IPasswordReq
     [MinLength(4, ErrorMessage = "The distinguished name must be at least 4 characters long.")]
     [JsonRequired]
     [JsonPropertyName("dn")]
-    public required string DistinguishedName { get; init; }
+    public required DistinguishedName DistinguishedName { get; init; }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     string? IPasswordRequest.OldPassword => null;
-    string IPasswordRequest.GetDistinguishedName() => this.DistinguishedName;
+    DistinguishedName IPasswordRequest.GetDistinguishedName() => this.DistinguishedName;
     bool IPasswordRequest.IsResetting() => true;
     bool IPasswordRequest.TryGetContinuation([NotNullWhen(true)] out ConnectedResponse? continuation)
     {

@@ -10,9 +10,9 @@ public sealed class PasswordChangeRequestByDN : PasswordChangeRequestBase, IPass
     [MinLength(4, ErrorMessage = "The distinguished name must be at least 4 characters long.")]
     [JsonRequired]
     [JsonPropertyName("dn")]
-    public required string DistinguishedName { get; init; }
+    public required DistinguishedName DistinguishedName { get; init; }
 
-    string IPasswordRequest.GetDistinguishedName() => this.DistinguishedName;
+    DistinguishedName IPasswordRequest.GetDistinguishedName() => this.DistinguishedName;
     bool IPasswordRequest.IsResetting() => false;
     bool IPasswordRequest.TryGetContinuation([NotNullWhen(true)] out ConnectedResponse? continuation)
     {

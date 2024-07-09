@@ -16,21 +16,21 @@ namespace AD.Api.Core.Ldap
         private const string FILTER = "(objectClass=domainDNS)";
         private readonly IEnumValues<WellKnownObjectValue, BackendValueAttribute, string> _values;
 
-        private readonly FrozenDictionary<string, FrozenDictionary<WellKnownObjectValue, string>> _dictionary;
+        private readonly FrozenDictionary<string, FrozenDictionary<WellKnownObjectValue, DistinguishedName>> _dictionary;
 
-        public ref readonly FrozenDictionary<WellKnownObjectValue, string> this[string? key] => ref _dictionary[key ?? string.Empty];
+        public ref readonly FrozenDictionary<WellKnownObjectValue, DistinguishedName> this[string? key] => ref _dictionary[key ?? string.Empty];
 
         public WellKnownObjectDictionary(IConnectionService connections, IEnumValues<WellKnownObjectValue, BackendValueAttribute, string> enumValues)
         {
             _values = enumValues;
             string[] atts = [ATT_NAME, OTHER_NAME];
 
-            Dictionary<string, FrozenDictionary<WellKnownObjectValue, string>> wkByDomain = new(connections.RegisteredConnections.Count, StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, FrozenDictionary<WellKnownObjectValue, DistinguishedName>> wkByDomain = new(connections.RegisteredConnections.Count, StringComparer.OrdinalIgnoreCase);
 
             //foreach (IGrouping<string, ConnectionContext> grouping in connections.RegisteredConnections.GroupBy(x => x))
             foreach (var grouping in connections.RegisteredConnections.Keys.GroupBy(x => connections.RegisteredConnections[x]))
             {
-                Dictionary<WellKnownObjectValue, string> dict = new(_values.EnumCount);
+                Dictionary<WellKnownObjectValue, DistinguishedName> dict = new(_values.EnumCount);
                 FindDomainWellKnownLocations(dict, grouping.Key, enumValues, atts);
                 var frozen = dict.ToFrozenDictionary();
                 foreach (string key in grouping)
@@ -42,27 +42,27 @@ namespace AD.Api.Core.Ldap
             _dictionary = wkByDomain.ToFrozenDictionary(wkByDomain.Comparer);
         }
 
-        public bool TryGetValue(string? domainKey, FilteredRequestType requestType, [NotNullWhen(true)] out string? location)
+        public bool TryGetValue(string? domainKey, FilteredRequestType requestType, out DistinguishedName location)
         {
             if (!HasWellKnownPath(requestType, out WellKnownObjectValue wkValue))
             {
-                location = null;
+                location = DistinguishedName.Empty;
                 return false;
             }
 
             return this.TryGetValue(domainKey, wellKnownType: wkValue, out location);
         }
-        public bool TryGetValue(string? domainKey, WellKnownObjectValue wellKnownType, [NotNullWhen(true)] out string? location)
+        public bool TryGetValue(string? domainKey, WellKnownObjectValue wellKnownType, out DistinguishedName location)
         {
             domainKey ??= string.Empty;
-            if (_dictionary[domainKey].TryGetValue(wellKnownType, out string? value) && !string.IsNullOrWhiteSpace(value))
+            if (_dictionary[domainKey].TryGetValue(wellKnownType, out DistinguishedName value) && !value.IsEmpty)
             {
                 location = value;
                 return true;
             }
             else
             {
-                location = null;
+                location = DistinguishedName.Empty;
                 return false;
             }
         }
@@ -109,7 +109,7 @@ namespace AD.Api.Core.Ldap
             }
         }
 
-        private static void FindDomainWellKnownLocations(Dictionary<WellKnownObjectValue, string> dict, ConnectionContext context, IEnumValues<WellKnownObjectValue, BackendValueAttribute, string> enumValues, string[] attributes)
+        private static void FindDomainWellKnownLocations(Dictionary<WellKnownObjectValue, DistinguishedName> dict, ConnectionContext context, IEnumValues<WellKnownObjectValue, BackendValueAttribute, string> enumValues, string[] attributes)
         {
             using var connection = context.CreateConnection();
             List<string> locations = GetLocationValues(connection, context, attributes);
@@ -121,9 +121,9 @@ namespace AD.Api.Core.Ldap
             foreach (WellKnownObjectValue wk in enumValues.EnumStrings.Values)
             {
                 string guid = enumValues.GetValueOrDefault(wk, string.Empty);
-                string location = MatchLocationToGuid(guid, locations);
+                DistinguishedName locationDn = DistinguishedName.Parse(MatchLocationToGuid(guid, locations));
 
-                dict.TryAdd(wk, location);
+                dict.TryAdd(wk, locationDn);
             }
         }
         private static string[] GetAttributeValue(string attributeName, SearchResultEntry entries)

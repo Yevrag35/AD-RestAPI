@@ -31,10 +31,7 @@ namespace AD.Api.Controllers.System
             if (key.HasValue)
             {
                 _logger.Info("Requesting well-known path for {WellKnown}...", key.Value);
-                if (!_dictionary.TryGetValue(domain, key.Value, out string? location))
-                {
-                    location = string.Empty;
-                }
+                _ = _dictionary.TryGetValue(domain, key.Value, out DistinguishedName location);
 
                 return this.Ok(new WellKnownPathResult
                 {

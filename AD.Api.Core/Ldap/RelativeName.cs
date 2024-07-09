@@ -18,6 +18,7 @@ namespace AD.Api.Core.Ldap;
 /// </remarks>
 [StructLayout(LayoutKind.Auto)]
 [DynamicDependencyRegistration]
+[DebuggerDisplay(@"\{Type={AttributeType}; Value={Value}\}")]
 public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatable<string>
 {
     private const int DN_SPAN_LIMIT = 256;  // Maximum stackalloc length of a distinguished name.
@@ -133,7 +134,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         }
 
         string v = value.ToString();
-        if (value.IsEmpty || !IsValid(value))
+        if (!IsValid(value))
         {
             throw new ArgumentException("The specified distinguished name is invalid - make sure to escape any special characters.", nameof(value));
         }
@@ -251,7 +252,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     public static bool TryParseOne(ReadOnlySpan<char> value, out RelativeName result)
     {
         scoped ReadOnlySpan<char> span = value;
-        if (span.IsWhiteSpace())
+        if (!IsValid(value))
         {
             result = Empty;
             return false;

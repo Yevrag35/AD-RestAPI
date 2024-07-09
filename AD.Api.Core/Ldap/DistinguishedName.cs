@@ -1,4 +1,5 @@
 using AD.Api.Collections.Enumerators;
+using AD.Api.Core.Authentication;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using System.Collections;
@@ -11,6 +12,7 @@ namespace AD.Api.Core.Ldap;
 /// Represents an LDAP distinguished name (DN) with the ability to split into its individual relative names.
 /// </summary>
 [StructLayout(LayoutKind.Auto)]
+[DebuggerDisplay(@"\{Count={Count}; Value={ToString(),nq}\}")]
 public readonly partial struct DistinguishedName :
     IEnumerable<RelativeName>,
     IComparable<DistinguishedName>,
@@ -255,6 +257,33 @@ public readonly partial struct DistinguishedName :
     {
         return !this.IsEmpty ? ToString(_segments.AsSpan(), in _length) : string.Empty;
     }
+
+    public readonly WorkingScope ToWorkingScope(ReadOnlySpan<char> domainKey, AuthorizedRole requiredRole, Span<char> buffer)
+    {
+        DistinguishedName @this = this;
+        if (@this.IsEmpty)
+        {
+            return WorkingScope.Open;
+        }
+
+        int written = !this.HasParent
+            ? @this.CopyTo(buffer)
+            : @this.CopyTo(buffer, 1);
+
+        return new WorkingScope(domainKey, buffer.Slice(0, written), requiredRole);
+    }
+
+    #region CASTING OPERATORS
+    public static explicit operator DistinguishedName(string? dn)
+    {
+        return Parse(dn);
+    }
+    public static explicit operator string(DistinguishedName dn)
+    {
+        return dn.ToString();
+    }
+
+    #endregion
 
     #region STATIC METHODS
     /// <summary>
