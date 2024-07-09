@@ -1,8 +1,6 @@
 using AD.Api.Collections.Enumerators;
-using AD.Api.Spans;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
-using System;
 using System.Collections;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
@@ -13,7 +11,7 @@ namespace AD.Api.Core.Ldap;
 /// Represents an LDAP distinguished name (DN) with the ability to split into its individual relative names.
 /// </summary>
 [StructLayout(LayoutKind.Auto)]
-public readonly partial struct DistinguishedName : 
+public readonly partial struct DistinguishedName :
     IEnumerable<RelativeName>,
     IComparable<DistinguishedName>,
     IEquatable<DistinguishedName>,
@@ -82,6 +80,13 @@ public readonly partial struct DistinguishedName :
         _length = length;
         _segments = segments;
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistinguishedName"/> struct copying the
+    /// specified relative name components.
+    /// </summary>
+    /// <param name="segments">
+    /// The relative name components to copy into the distinguished name.
+    /// </param>
     public DistinguishedName(ReadOnlySpan<RelativeName> segments)
     {
         _notDefault = true;
@@ -97,35 +102,82 @@ public readonly partial struct DistinguishedName :
         }
     }
 
+    /// <summary>
+    /// Returns the distinguished name as an immutable array of relative names.
+    /// </summary>
+    /// <returns>An immutable array of <see cref="RelativeName"/> components.</returns>
     public readonly ImmutableArray<RelativeName> AsImmutableArray()
     {
         return !this.IsEmpty ? _segments : [];
     }
+    /// <summary>
+    /// Returns the distinguished name as a read-only span of the relative name components
+    /// in sequence (lowest level-to-highest level).
+    /// </summary>
+    /// <returns>A read-only span of <see cref="RelativeName"/> components.</returns>
     public readonly ReadOnlySpan<RelativeName> AsSpan()
     {
         return _segments.AsSpan();
     }
+    /// <summary>
+    /// Returns the distinguished name as a read-only span of relative names starting from the specified index.
+    /// </summary>
+    /// <param name="start">The zero-based index to start from.</param>
+    /// <returns>A read-only span of <see cref="RelativeName"/> components starting from the specified index.</returns>
     public readonly ReadOnlySpan<RelativeName> AsSpan(int start)
     {
         return !this.IsEmpty ? _segments.AsSpan(start, _segments.Length - start) : [];
     }
+    /// <summary>
+    /// Returns the distinguished name as a read-only span of relative names starting from the specified index
+    /// and for the specified length.
+    /// </summary>
+    /// <param name="start">The zero-based index to start from.</param>
+    /// <param name="length">The number of elements to include in the span.</param>
+    /// <returns>A read-only span of <see cref="RelativeName"/> components starting from the specified index
+    /// and for the specified length.</returns>
     public readonly ReadOnlySpan<RelativeName> AsSpan(int start, int length)
     {
         return !this.IsEmpty ? _segments.AsSpan(start, length) : [];
     }
+    /// <summary>
+    /// Copies the distinguished name to the specified span of characters.
+    /// </summary>
+    /// <param name="destination">The span of characters to copy to.</param>
+    /// <returns>The number of characters copied.</returns>
     public readonly int CopyTo(Span<char> destination)
     {
         return CopyTo(_segments.AsSpan(), destination);
     }
+    /// <summary>
+    /// Copies the relative name components starting at the specified index to the specified span of characters.
+    /// </summary>
+    /// <param name="destination">The span of characters to copy to.</param>
+    /// <param name="relativeNameIndex">The zero-based index of the relative name component to copy.</param>
+    /// <returns>The number of characters copied.</returns>
     public readonly int CopyTo(Span<char> destination, int relativeNameIndex)
     {
         return this.CopyTo(destination, relativeNameIndex, this.Count - relativeNameIndex);
     }
+    /// <summary>
+    /// Copies the specified number of relative name components to the specified span of characters.
+    /// </summary>
+    /// <param name="destination">The span of characters to copy to.</param>
+    /// <param name="relativeNameIndex">The zero-based index of the first relative name component to copy.</param>
+    /// <param name="relativeNameLength">The number of relative name components to copy.</param>
+    /// <returns>The number of characters copied.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the length of the destination span is less than the length of the distinguished name.
+    /// </exception>
     public readonly int CopyTo(Span<char> destination, int relativeNameIndex, int relativeNameLength)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(destination.Length, this.Length, nameof(destination));
         return CopyTo(_segments.AsSpan(relativeNameIndex, relativeNameLength), destination);
     }
+    /// <summary>
+    /// Returns an enumerator that iterates through the relative name components.
+    /// </summary>
+    /// <returns>An enumerator for the relative name components.</returns>
     public ArrayRefEnumerator<RelativeName> GetEnumerator()
     {
         ReadOnlySpan<RelativeName> span = _segments.AsSpan();
@@ -148,9 +200,9 @@ public readonly partial struct DistinguishedName :
     }
 
     /// <summary>
-    ///
+    /// Returns the relative name components of the parent distinguished name.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A read-only span of the parent relative name components.</returns>
     public readonly ReadOnlySpan<RelativeName> GetParentSegments()
     {
         return this.HasParent
@@ -158,9 +210,9 @@ public readonly partial struct DistinguishedName :
             : [];
     }
     /// <summary>
-    ///
+    /// Returns the string representation of the parent distinguished name.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The string representation of the parent distinguished name.</returns>
     public readonly string GetParent()
     {
         ReadOnlySpan<RelativeName> parentSegments = this.GetParentSegments();
@@ -178,9 +230,10 @@ public readonly partial struct DistinguishedName :
         return ToString(parentSegments, in length);
     }
     /// <summary>
-    ///
+    /// Creates a new <see cref="DistinguishedName"/> object that represents
+    /// the parent path of the current distinguished name.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The parent distinguished name.</returns>
     public readonly DistinguishedName ToParent()
     {
         ref readonly RelativeName first = ref this.GetFirst();
@@ -232,14 +285,16 @@ public readonly partial struct DistinguishedName :
         return count;
     }
     /// <summary>
-    /// Counts the number of <see cref="RelativeName"/> components in the provided span of characters if it were
-    /// to be split.
+    /// Attempts to count the number of <see cref="RelativeName"/> components in the provided span of characters.
     /// </summary>
     /// <param name="path">
     /// The span of characters to count the number of <see cref="RelativeName"/> components in.
     /// </param>
+    /// <param name="count">
+    /// When this method returns, contains the number of <see cref="RelativeName"/> components that would make up the distinguished name if parsed.
+    /// </param>
     /// <returns>
-    /// The number of <see cref="RelativeName"/> components that would make up the distinguished name if parsed.
+    /// <see langword="true"/> if the path contains valid relative name components; otherwise, <see langword="false"/>.
     /// </returns>
     public static bool TryCountNumberOfRelativeNames(ReadOnlySpan<char> path, out int count)
     {
@@ -277,10 +332,10 @@ public readonly partial struct DistinguishedName :
         return true;
     }
     /// <summary>
-    ///
+    /// Returns the string representation of the specified relative name components.
     /// </summary>
-    /// <param name="segments"></param>
-    /// <returns></returns>
+    /// <param name="segments">The span of relative name components to convert to a string.</param>
+    /// <returns>The string representation of the specified relative name components.</returns>
     public static string ToString(ReadOnlySpan<RelativeName> segments)
     {
         if (segments.IsEmpty)

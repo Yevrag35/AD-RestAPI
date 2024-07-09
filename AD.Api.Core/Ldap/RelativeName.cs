@@ -1,71 +1,12 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Enums;
-using AD.Api.Spans;
-using AD.Api.Statics;
-using AD.Api.Strings.Extensions;
-using System;
 using System.Buffers;
 using System.Collections.Frozen;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace AD.Api.Core.Ldap;
-
-/// <summary>
-/// Typical Relative Distinguished Name (RDN) attribute types.
-/// </summary>
-public enum RelativeNameType
-{
-    /// <summary>
-    /// The common name attribute: <c>CN</c>
-    /// </summary>
-    /// <remarks>
-    /// Also used as the default when no attribute type is specified.
-    /// </remarks>
-    [BackendValue("CN=")]
-    CommonName = 0x0,
-    /// <summary>
-    /// The organizational unit name attribute: <c>OU</c>
-    /// </summary>
-    [BackendValue("OU=")]
-    OrganizationalUnit = 0x1,
-    /// <summary>
-    /// The domain component attribute: <c>DC</c>
-    /// </summary>
-    [BackendValue("DC=")]
-    DomainComponent = 0x2,
-    /// <summary>
-    /// The organization name attribute: <c>O</c>
-    /// </summary>
-    [BackendValue("O=")]
-    Organization = 0x3,
-    /// <summary>
-    /// The street address attribute: <c>STREET</c>
-    /// </summary>
-    [BackendValue("STREET=")]
-    StreetAddress = 0x4,
-    /// <summary>
-    /// The locality name attribute: <c>L</c>
-    /// </summary>
-    [BackendValue("L=")]
-    Locality = 0x5,
-    /// <summary>
-    /// The state or province name attribute: <c>ST</c>
-    /// </summary>
-    [BackendValue("ST=")]
-    StateOrProvince = 0x6,
-    /// <summary>
-    /// The country name attribute: <c>C</c>
-    /// </summary>
-    [BackendValue("C=")]
-    Country = 0x7,
-    /// <summary>
-    /// The user ID attribute: <c>UID</c>
-    /// </summary>
-    [BackendValue("UID=")]
-    UserId = 0x8,
-}
 
 /// <summary>
 /// A struct representing one relative distinguished name that when combined and separated with commas forms
@@ -81,6 +22,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
 {
     private const int DN_SPAN_LIMIT = 256;  // Maximum stackalloc length of a distinguished name.
     private const int MINIMUM_NAME_INDEX = 2;   // Minimum index for a valid attributed name.
+
     /// <summary>
     /// A read-only dictionary of the <see cref="RelativeNameType"/> attribute values and their LDAP string
     /// representations.
@@ -93,14 +35,17 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// </code>
     /// </remarks>
     public static readonly IEnumValues<RelativeNameType, BackendValueAttribute, string> AttributeStrings;
+
     private static readonly FrozenDictionary<string, RelativeNameType> _attributeValues;
     public static readonly RelativeName Empty;
+
     /// <summary>
     /// Characters that need to be escaped in a distinguished name.
     /// </summary>
     public static readonly SearchValues<char> NonStandardEscapedChars;
     public static readonly SearchValues<char> AllEscapedChars;
     public static readonly SearchValues<char> UniqueAttributeChars;
+
     static RelativeName()
     {
         Span<char> allEscaped = ['\\', ',', '+', '>', '<', ';', '"']; // except '=', which is even more special.
@@ -128,9 +73,20 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly string? _value;
 
+    /// <summary>
+    /// Gets the attribute type of the relative name.
+    /// </summary>
     public readonly RelativeNameType AttributeType { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether this instance is empty.
+    /// </summary>
     [MemberNotNullWhen(false, nameof(_value))]
     public readonly bool IsEmpty => !_notEmpty;
+
+    /// <summary>
+    /// Gets the string value of the relative name.
+    /// </summary>
     public readonly string Value => _value ?? string.Empty;
 
     private RelativeName(RelativeNameType attributeType, string value, in int nameIndex)
@@ -168,6 +124,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     /// A new <see cref="RelativeName"/> instance with the specified
     /// <paramref name="nameType"/> and <paramref name="value"/>.
     /// </returns>
+    /// <exception cref="ArgumentException">The specified distinguished name is invalid.</exception>
     public static RelativeName Create(scoped ReadOnlySpan<char> value, RelativeNameType nameType)
     {
         if (value.IsWhiteSpace() || !AttributeStrings.TryGetValue(nameType, out string? prefix))
@@ -196,10 +153,15 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         return new(nameType, new string(chars), in index);
     }
 
+    /// <summary>
+    /// Gets the name portion of the relative distinguished name.
+    /// </summary>
+    /// <returns>A read-only span of characters representing the name.</returns>
     public ReadOnlySpan<char> GetName()
     {
-        return _notEmpty ? _value.AsSpan(_nameStartIndex) : [];
+        return _notEmpty ? _value.AsSpan(_nameStartIndex) : ReadOnlySpan<char>.Empty;
     }
+
     private static RelativeNameType GetRelativeNameType(ReadOnlySpan<char> prefix)
     {
         ThrowWhenInvalidPrefix(prefix);
@@ -215,6 +177,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         Debug.Fail("This should be unreachable...");
         return RelativeNameType.CommonName;
     }
+
     private static bool TryGetRelativeNameType(ReadOnlySpan<char> prefix, out RelativeNameType result)
     {
         if (prefix.Length >= 2 && prefix.Length <= 7 && !prefix.ContainsAnyExcept(UniqueAttributeChars))
@@ -232,6 +195,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         result = default;
         return false;
     }
+
     private static bool IsValidPrefix(ReadOnlySpan<char> prefix, [NotNullWhen(false)] out ArgumentException? exception)
     {
         if (prefix.Length < 2 || prefix.Length > 7)
@@ -273,11 +237,17 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
     }
 
     /// <summary>
-    ///
+    /// Attempts to parse a single relative distinguished name from the specified span of characters.
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="result"></param>
-    /// <returns></returns>
+    /// <param name="value">The read-only span of characters to parse.</param>
+    /// <param name="result">
+    /// When this method returns, contains the parsed <see cref="RelativeName"/> if successful.
+    /// This parameter is passed uninitialized.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the span was successfully parsed into a <see cref="RelativeName"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool TryParseOne(ReadOnlySpan<char> value, out RelativeName result)
     {
         scoped ReadOnlySpan<char> span = value;
@@ -338,6 +308,14 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         return this.Value;
     }
 
+    /// <summary>
+    /// Throws an <see cref="ArgumentException"/> if the specified prefix is not valid.
+    /// </summary>
+    /// <param name="prefix">The read-only span of characters to validate as a prefix.</param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the specified prefix is less than 2 or more than 7 characters in length,
+    /// or contains invalid characters.
+    /// </exception>
     public static void ThrowWhenInvalidPrefix(ReadOnlySpan<char> prefix)
     {
         if (prefix.IsEmpty)
@@ -351,6 +329,10 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         }
     }
 
+    /// <summary>
+    /// Registers the dependencies for the <see cref="RelativeName"/> struct.
+    /// </summary>
+    /// <param name="services">The service collection to add the dependencies to.</param>
     [DynamicDependencyRegistrationMethod]
     [EditorBrowsable(EditorBrowsableState.Never)]
     private static void AddToServices(IServiceCollection services)
@@ -359,4 +341,3 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
                 .AddSingleton(AttributeStrings.EnumStrings);
     }
 }
-
