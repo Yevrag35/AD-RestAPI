@@ -90,9 +90,9 @@ namespace AD.Api.Core.Ldap
                 request.Filter = searchFilter.Filter;
             }
 
-            if (!string.IsNullOrWhiteSpace(searchFilter.SearchBase))
+            if (searchFilter.SearchBase.HasValue && !searchFilter.SearchBase.Value.IsEmpty)
             {
-                request.DistinguishedName = searchFilter.SearchBase;
+                request.DistinguishedName = searchFilter.SearchBase.Value.ToString();
             }
 
             if (!string.IsNullOrWhiteSpace(searchFilter.SortBy))

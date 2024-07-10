@@ -8,14 +8,17 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization.Json;
+using AD.Api.Core.Web.Validation;
 using AD.Api.Expressions;
 using AD.Api.Extensions.Startup;
 using AD.Api.Mapping;
 using AD.Api.Middleware;
+using AD.Api.Serialization.Json;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
@@ -124,7 +127,11 @@ try
         builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
     }
 
-    builder.AddApiControllers(settingsSection, converter, b => b.Services.AddControllers());
+    builder.AddApiControllers(settingsSection, converter, b => b.Services.AddControllers(options =>
+    {
+        options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider(JsonSpanCamelCaseNamingPolicy.SpanPolicy));
+        options.ModelValidatorProviders.Add(new ScopeAuthorizationValidator());
+    }));
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

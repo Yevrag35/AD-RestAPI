@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Http.Metadata;
 namespace AD.Api.Binding.Attributes;
 
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public sealed class FromQueryDNAttribute : DistinguishedNameAttribute, IFromQueryMetadata
+public sealed class FromQueryDNAttribute : LdapDistinguishedNameAttribute, IFromQueryMetadata
 {
 }
 
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public sealed class FromRouteDNAttribute : DistinguishedNameAttribute, IFromRouteMetadata
+public sealed class FromRouteDNAttribute : LdapDistinguishedNameAttribute, IFromRouteMetadata
 {
 }

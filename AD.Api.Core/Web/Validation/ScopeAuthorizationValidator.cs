@@ -8,17 +8,17 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace AD.Api.Core.Web.Validation
 {
-    [DependencyRegistration(typeof(IModelValidator), Lifetime = ServiceLifetime.Singleton)]
-    internal sealed class ScopeAuthorizationValidator : IModelValidator
+    //[DependencyRegistration(typeof(IModelValidator), Lifetime = ServiceLifetime.Singleton)]
+    public sealed class ScopeAuthorizationValidator : IModelValidator, IModelValidatorProvider
     {
-        private static ModelValidationResult[] BuildErrorResult(string memberName, string? parentPath, in AuthorizedRole requiredRole)
+        private static ModelValidationResult[] BuildErrorResult(string? parentPath, in AuthorizedRole requiredRole)
         {
             ModelValidationResult[] results = new ModelValidationResult[2];
             string message = string.Format(Messages.JWT_Unauthorized, parentPath);
             string roleMsg = string.Format(Messages.JWT_Unauthorized_RequiredRole, requiredRole.ToString());
 
-            results[0] = new ModelValidationResult(memberName, message);
-            results[1] = new ModelValidationResult(memberName, roleMsg);
+            results[0] = new ModelValidationResult(null, message);
+            results[1] = new ModelValidationResult(null, roleMsg);
             return results;
         }
 
@@ -37,9 +37,23 @@ namespace AD.Api.Core.Web.Validation
             }
         }
 
+        public void CreateValidators(ModelValidatorProviderContext context)
+        {
+            if (typeof(IScopedRequest).IsAssignableFrom(context.ModelMetadata.ContainerType))
+            {
+                context.Results.Add(new ValidatorItem
+                {
+                    Validator = this,
+                    IsReusable = true,
+                });
+            }
+        }
+
         public IEnumerable<ModelValidationResult> Validate(ModelValidationContext context)
         {
-            if (context.Model is not IScopedRequest scopedRequest)
+            if (context.Container is not IScopedRequest scopedRequest
+                ||
+                !scopedRequest.GetScopedPathMemberName().Equals(context.ModelMetadata.Name, StringComparison.OrdinalIgnoreCase))
             {
                 return [];
             }
@@ -50,8 +64,7 @@ namespace AD.Api.Core.Web.Validation
 
             if (IsNotScopedAuthorized(in scopedDn, context.ActionContext.HttpContext, out string? parentPath, out AuthorizedRole requiredRole))
             {
-                string memberName = scopedRequest.GetScopedPathMemberName();
-                results = BuildErrorResult(memberName, parentPath, in requiredRole);
+                results = BuildErrorResult(parentPath, in requiredRole);
             }
 
             return results;
