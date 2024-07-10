@@ -202,7 +202,10 @@ namespace AD.Api.Core.Ldap
         }
         protected override void OnApplyingContext(ConnectionContext context)
         {
-            this.SearchBase = context.DefaultNamingContext;
+            if (string.IsNullOrWhiteSpace(this.SearchBase))
+            {
+                this.SearchBase = context.DefaultNamingContext;
+            }
         }
         private void RemoveDefaultAttributes()
         {

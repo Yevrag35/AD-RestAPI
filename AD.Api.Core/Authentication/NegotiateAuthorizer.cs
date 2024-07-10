@@ -6,7 +6,7 @@ namespace AD.Api.Core.Authentication
 {
     public sealed class NegotiateAuthorizer : IAuthorizer
     {
-        public void Authorize(AuthorizationFilterContext context, AuthorizedRole role)
+        public void Authorize(AuthorizationFilterContext context, AuthorizedRole role, bool possiblyScoped)
         {
             return;
         }

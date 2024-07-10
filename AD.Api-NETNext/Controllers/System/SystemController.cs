@@ -1,9 +1,10 @@
-﻿using AD.Api.Core.Ldap;
+﻿using AD.Api.Authentication;
+using AD.Api.Core.Authentication;
+using AD.Api.Core.Ldap;
 using AD.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
-using System.Collections.Frozen;
 
 namespace AD.Api.Controllers.System
 {
@@ -22,6 +23,7 @@ namespace AD.Api.Controllers.System
 
         [HttpGet]
         [Route("wellKnownPaths")]
+        [JwtAuth(AuthorizedRole.Reader)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dictionary<WellKnownObjectValue, string>))]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WellKnownPathResult))]
         public IActionResult GetWellKnownPaths(

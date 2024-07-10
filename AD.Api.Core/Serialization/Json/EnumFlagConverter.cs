@@ -31,6 +31,7 @@ namespace AD.Api.Core.Serialization.Json
         private static readonly MethodInfo _method = typeof(EnumFlagConverter)
             .GetMethod(nameof(CreateGeneric), BindingFlags.NonPublic | BindingFlags.Static)
             ?? throw new MissingMethodException(nameof(EnumFlagConverter), nameof(CreateGeneric));
+
         private static JsonConverter Create(Type flagEnumType, JsonConverter converter)
         {
             MethodInfo genMeth = _method.MakeGenericMethod(flagEnumType);
@@ -73,7 +74,7 @@ namespace AD.Api.Core.Serialization.Json
 
             private static void AppendEnum(ref T value, ref readonly Utf8JsonReader reader)
             {
-                int count = Encoding.UTF8.GetCharCount(reader.ValueSpan);
+                int count = Encoding.UTF8.GetMaxCharCount(reader.ValueSpan.Length);
                 Span<char> buffer = stackalloc char[count];
                 int written = Encoding.UTF8.GetChars(reader.ValueSpan, buffer);
 

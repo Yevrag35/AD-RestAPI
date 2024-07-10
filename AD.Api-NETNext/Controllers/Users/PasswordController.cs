@@ -30,7 +30,7 @@ public sealed class PasswordController : ControllerBase
 
     [HttpPut]
     [Route("change")]
-    [JwtAuth(AuthorizedRole.PasswordChanger, possiblyScoped: true)]
+    [JwtAuth(AuthorizedRole.PasswordChanger, PossiblyScoped = true)]
     public IActionResult ChangePassword(
         [FromBody] PasswordChangeRequestByDN request,
         [Domain] DomainQuery target)
@@ -50,7 +50,7 @@ public sealed class PasswordController : ControllerBase
 
     [HttpPut]
     [Route("reset")]
-    [JwtAuth(AuthorizedRole.PasswordResetter, possiblyScoped: true)]
+    [JwtAuth(AuthorizedRole.PasswordResetter, PossiblyScoped = true)]
     public IActionResult ResetPassword(
         [FromBody] PasswordResetRequestByDN request,
         [Domain] DomainQuery target)

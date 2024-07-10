@@ -20,8 +20,14 @@ namespace AD.Api.Core.Authentication
         /// </remarks>
         /// <param name="context">The authorization context used by the filter.</param>
         /// <param name="role">The authorized role to check for.</param>
-        void Authorize(AuthorizationFilterContext context, AuthorizedRole role);
-
+        void Authorize(AuthorizationFilterContext context, AuthorizedRole role, bool possiblyScoped);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="distinguishedName"></param>
+        /// <param name="requiredRole"></param>
+        /// <returns></returns>
         bool IsAuthorized(HttpContext context, DistinguishedName distinguishedName, out AuthorizedRole requiredRole);
         /// <summary>
         /// A second method to authorize the request based on the possible scoping rules that have been defined

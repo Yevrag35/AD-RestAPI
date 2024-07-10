@@ -25,12 +25,10 @@ public sealed class UserController : ControllerBase
 {
     private const string ROUTE_NAME = "users";
 
-    public IAuthorizer Authorizer { get; }
     public IUserSearcher UserSearcher { get; }
 
-    public UserController(IUserSearcher searcher, IAuthorizer authorizer)
+    public UserController(IUserSearcher searcher)
     {
-        this.Authorizer = authorizer;
         this.UserSearcher = searcher;
     }
 
@@ -49,7 +47,7 @@ public sealed class UserController : ControllerBase
 
     private const string SID_ROUTE_PREFIX = "/" + ROUTE_NAME + "/";
     [HttpPost]
-    [JwtAuth(AuthorizedRole.UserCreator, possiblyScoped: true)]
+    [JwtAuth(AuthorizedRole.UserCreator, PossiblyScoped = true)]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CreatedResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -68,7 +66,7 @@ public sealed class UserController : ControllerBase
 
     [HttpPatch]
     [Route("{sid:objectsid}")]
-    [JwtAuth(AuthorizedRole.UserEditor, possiblyScoped: true)]
+    [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
     [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -89,11 +87,6 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject, out var role))
-        {
-            return new ForbidResult();
-        }
-
         return updateSvc.UpdateUser(sid, body, continueWith, in target)
                         .WithLocation(sid.Value, ROUTE_NAME, in target);
     }
@@ -104,7 +97,7 @@ public sealed class UserController : ControllerBase
     [HttpPut]
     [LdapRequiresSSL]
     [Route("{sid:objectsid}/password")]
-    [JwtAuth(AuthorizedRole.PasswordChanger, possiblyScoped: true)]
+    [JwtAuth(AuthorizedRole.PasswordChanger, PossiblyScoped = true)]
     [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
@@ -125,11 +118,6 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject, out var role))
-        {
-            return new ForbidResult();
-        }
-
         request.SetContinuation(continueWith);
 
         return pwdChangeSvc.Change(in target, request)
@@ -140,7 +128,7 @@ public sealed class UserController : ControllerBase
     [HttpPut]
     [LdapRequiresSSL]
     [Route("{sid:objectsid}/password/reset")]
-    [JwtAuth(AuthorizedRole.PasswordResetter, possiblyScoped: true)]
+    [JwtAuth(AuthorizedRole.PasswordResetter, PossiblyScoped = true)]
     [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
@@ -159,11 +147,6 @@ public sealed class UserController : ControllerBase
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
-        }
-
-        if (!this.Authorizer.IsAuthorized(this.HttpContext, continueWith.FoundObject, out _))
-        {
-            return new ForbidResult();
         }
 
         request.SetContinuation(continueWith);

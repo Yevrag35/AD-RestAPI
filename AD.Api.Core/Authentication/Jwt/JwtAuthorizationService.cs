@@ -2,12 +2,13 @@ using AD.Api.Collections.Enumerators;
 using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap;
 using AD.Api.Enums;
+using AD.Api.Security;
+using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NLog;
-using System.Buffers;
 using System.Collections.Frozen;
 using System.Security.Claims;
 
@@ -15,6 +16,7 @@ namespace AD.Api.Core.Authentication.Jwt
 {
     internal sealed class JwtAuthorizationService : IAuthorizer
     {
+        static readonly ForbidResult _forbidden = new(JwtBearerDefaults.AuthenticationScheme);
         static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public FrozenDictionary<string, AuthorizationScope> Scopes { get; }
@@ -28,45 +30,49 @@ namespace AD.Api.Core.Authentication.Jwt
             this.RoleEnums = enumStrings;
         }
 
-        public void Authorize(AuthorizationFilterContext context, AuthorizedRole role)
+        public void Authorize(AuthorizationFilterContext context, AuthorizedRole role, bool possiblyScoped)
         {
             if (!(context.HttpContext.User.Identity?.IsAuthenticated).GetValueOrDefault())
             {
-                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
+                context.Result = _forbidden;
+                return;
+            }
+            else if (role == AuthorizedRole.None)
+            {
                 return;
             }
 
-            Claim? claim = context.HttpContext.User.FindFirst(ClaimTypes.Role);
-            if (claim is null || !this.RoleEnums.TryGetEnum(claim.Value, out AuthorizedRole aRole) || !aRole.HasFlag(role) && !this.TryAddScopesToContext(context.HttpContext, role))
+            if (!context.HttpContext.User.TryFindFirst(ClaimTypes.Role, out Claim? claim)
+                ||
+                !this.RoleEnums.TryGetEnum(claim.Value, out AuthorizedRole userRole))
             {
-                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
+                context.Result = _forbidden;
+                return;
+            }
+
+            if (userRole.HasFlag(role))
+            {
+                // Is authorized.
+                return;
+            }
+            else if (!possiblyScoped || !this.TryAddScopesToContext(context.HttpContext, role))
+            {
+                context.Result = _forbidden;
+                return;
             }
         }
-        private bool TryAddScopesToContext(HttpContext context, AuthorizedRole requiredRole)
+        private bool HasNoMatchingScopes(string[] scopes)
         {
-            Claim? scopeClaim = context.User.FindFirst(AuthorizationScope.CLAIM_TYPE);
-            if (scopeClaim is null)
+            foreach (string scope in scopes)
             {
-                return false;
+                if (this.Scopes.ContainsKey(scope))
+                {
+                    return false;
+                }
             }
 
-            string[] scopes = scopeClaim.Value.Split(", ", StringSplitOptions.RemoveEmptyEntries);
-            var authScopes = new AuthorizationScope[scopes.Length];
-
-            for (int i = 0; i < scopes.Length; i++)
-            {
-                authScopes[i] = this.Scopes[scopes[i]];
-            }
-
-            if (context.Items.TryAdd(AuthorizationScope.CLAIM_TYPE, authScopes))
-            {
-                context.AddNeedsScoping(in requiredRole);
-                return true;
-            }
-
-            return false;
+            return true;
         }
-
         public bool IsAuthorized(HttpContext context, DistinguishedName distinguishedName, out AuthorizedRole requiredRole)
         {
             if (!context.NeedsScoping(out requiredRole) || requiredRole == AuthorizedRole.None)
@@ -74,8 +80,8 @@ namespace AD.Api.Core.Authentication.Jwt
                 return true;
             }
 
-            string domain = (string?)context.Items[DomainQuery.DomainModelName] ?? string.Empty;
-            string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            string domain = ((string?)context.Items[DomainQuery.DomainModelName]).OrEmpty();
+            string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier).OrEmpty();
 
             if (distinguishedName.IsEmpty || distinguishedName.Count == 1)
             {
@@ -87,18 +93,19 @@ namespace AD.Api.Core.Authentication.Jwt
 
             return this.IsAuthorized(name, ref scope);
         }
+        [Obsolete("Use IsAuthorized(HttpContext, DistinguishedName, out AuthorizedRole) instead.")]
         public bool IsAuthorizedByParent(HttpContext context, string? parentPath)
         {
+            parentPath ??= string.Empty;
             if (!context.NeedsScoping(out AuthorizedRole requiredRole))
             {
                 return true;
             }
 
-            string domain = (string?)context.Items[DomainQuery.DomainModelName] ?? string.Empty;
+            string domain = ((string?)context.Items[DomainQuery.DomainModelName]).OrEmpty();
+            string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier).OrEmpty();
 
-            string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-
-            WorkingScope scope = new(domain, parentPath ?? string.Empty, requiredRole);
+            WorkingScope scope = new(domain, parentPath, requiredRole);
             return this.IsAuthorized(name, ref scope);
         }
         private bool IsAuthorized(string? userName, ref WorkingScope scope)
@@ -131,10 +138,29 @@ namespace AD.Api.Core.Authentication.Jwt
             if (flag)
             {
                 AuthorizationScope winningScope = this.Scopes[user.Scopes[index]];
-                _logger.Info("User {Name} authorized for scope: Domain: {Domain} - {Scope}.", userName, winningScope.Domain, winningScope.Roles);
+
+                _logger.Info("User {Name} authorized for scope: Domain: {Domain} - {Scope}.",
+                    userName, winningScope.Domain, winningScope.Roles);
+            }
+            else
+            {
+                _logger.Warn("User {Name} is not authorized for path: {Path:l} ({Domain:l})",
+                    user.UserName, scope.DistinguishedName.ToString(), scope.DomainName.ToString());
             }
 
             return flag;
+        }
+        private bool TryAddScopesToContext(HttpContext context, AuthorizedRole requiredRole)
+        {
+            if (!context.User.TryGetScopesFromClaim(AuthorizationScope.CLAIM_TYPE, out string[]? scopes)
+                ||
+                this.HasNoMatchingScopes(scopes))
+            {
+                return false;
+            }
+
+            context.AddNeedsScoping(in requiredRole);
+            return true;
         }
     }
 

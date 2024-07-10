@@ -17,6 +17,7 @@ using AD.Api.Serialization.Json;
 using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
+using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -84,7 +85,7 @@ try
         })
         .AddEnumStringDictionary<ResultCode>(out var resultCodes)
         // Add Authentication/Authorization
-        .AddApiAuthenticationAuthorization(config, out Action<WebApplication>? builderCallback)
+        .AddApiAuthenticationAuthorization(config, out Action<WebApplication>? builderCallback, out bool isJwt)
         .AddMemoryCache()
         .Configure<RouteOptions>(options =>
         {
@@ -94,7 +95,7 @@ try
 
     PropertyConverter converter = PropertyConverter.AddToServices(builder.Services, config, (conversions) =>
     {
-        IConfigurationSection section = config.GetRequiredSection("Settings").GetRequiredSection("Serialization");
+        IConfigurationSection section = settingsSection.GetRequiredSection("Serialization");
 
         conversions.Add<Guid>(section.GetSection("GuidAttributes"), AttributeSerialization.WriteGuid);
         conversions.Add<DateTimeOffset>(section.GetSection("DateTimeAttributes"), AttributeSerialization.WriteDateTimeOffset);
@@ -111,7 +112,7 @@ try
 
     if (OperatingSystem.IsWindows())
     {
-        IConfigurationSection section = config.GetRequiredSection("Settings").GetSection("Encryption");
+        IConfigurationSection section = settingsSection.GetSection("Encryption");
         if (section.Exists() && "Certificate".Equals(section.GetValue<string>("Type"), StringComparison.OrdinalIgnoreCase))
         {
             builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
@@ -130,7 +131,11 @@ try
     builder.AddApiControllers(settingsSection, converter, b => b.Services.AddControllers(options =>
     {
         options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider(JsonSpanCamelCaseNamingPolicy.SpanPolicy));
-        options.ModelValidatorProviders.Add(new ScopeAuthorizationValidator());
+
+        if (isJwt)
+        {
+            options.ModelValidatorProviders.Add(new ScopeAuthorizationValidator());
+        }
     }));
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

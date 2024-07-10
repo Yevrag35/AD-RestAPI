@@ -55,6 +55,7 @@ namespace AD.Api.Core.Ldap
             }
 
             connection = context.CreateConnection();
+            connection.Bind();
             return true;
         }
         public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
@@ -191,7 +192,7 @@ namespace AD.Api.Core.Ldap
                 return false;
             }
 
-            if (result.HasCredential && result.Credential.IsEmpty)
+            if (!result.HasCredential || result.Credential.IsEmpty)
             {
                 if (!OperatingSystem.IsWindows())
                 {

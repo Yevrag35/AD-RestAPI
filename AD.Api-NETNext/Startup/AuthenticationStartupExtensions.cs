@@ -16,12 +16,13 @@ namespace AD.Api.Startup
 {
     internal static class AuthenticationStartupExtensions
     {
-        internal static IServiceCollection AddApiAuthenticationAuthorization(this IServiceCollection services, ConfigurationManager configuration, out Action<WebApplication>? callback)
+        internal static IServiceCollection AddApiAuthenticationAuthorization(this IServiceCollection services, ConfigurationManager configuration, out Action<WebApplication>? callback, out bool isJwt)
         {
             services.AddEnumStringDictionary<AuthorizedRole>(out var roles);
             IConfigurationSection authSection = configuration.GetRequiredSection("Authentication");
             callback = null;
 
+            isJwt = false;
             string? authType = authSection.GetValue("Type", string.Empty)?.ToUpperInvariant();
             switch (authType)
             {
@@ -40,6 +41,7 @@ namespace AD.Api.Startup
 
                 case "CUSTOMJWT":
                 case "JWT":
+                    isJwt = true;
                     AddCustomJwt(services, authSection, roles);
                     break;
 
