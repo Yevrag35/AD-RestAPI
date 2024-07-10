@@ -64,6 +64,19 @@ public sealed class UserController : ControllerBase
         return createSvc.Create(in target, request, SID_ROUTE_PREFIX);
     }
 
+    [HttpPut]
+    [Route("{sid:objectsid}/rename")]
+    [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult RenameUser(
+        [FromRouteSid] SidString sid,
+        [Domain] DomainQuery target)
+    {
+
+    }
+
     [HttpPatch]
     [Route("{sid:objectsid}")]
     [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]

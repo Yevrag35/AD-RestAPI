@@ -21,7 +21,9 @@ namespace AD.Api
             return addControllers(appBuilder)
                 .AddJsonOptions(options =>
                 {
+
                     options.AllowInputFormatterExceptionMessages = isDevelopment;
+                    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonSpanCamelCaseNamingPolicy.SpanPolicy;
                     options.JsonSerializerOptions.WriteIndented = settings.WriteIndented;
