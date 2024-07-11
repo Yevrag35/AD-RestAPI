@@ -20,9 +20,13 @@ namespace AD.Api.Components
     public readonly struct OneOf<T0, T1>
     {
         private readonly int _index;
+        private readonly bool _notDefault;
 
         public readonly T0? AsT0 { get; }
         public readonly T1? AsT1 { get; }
+
+        public readonly bool IsDefault => !_notDefault;
+
         [MemberNotNullWhen(true, nameof(AsT0))]
         [MemberNotNullWhen(false, nameof(AsT1))]
         public readonly bool IsT0 { get; }
@@ -37,9 +41,11 @@ namespace AD.Api.Components
         {
             ArgumentNullException.ThrowIfNull(obj);
             this.Value = obj;
+            _notDefault = true;
         }
         internal OneOf(T0? item0, T1? item1, int index)
         {
+            _notDefault = true;
             this.AsT0 = item0;
             this.AsT1 = item1;
             switch (index)

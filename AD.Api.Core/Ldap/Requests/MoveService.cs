@@ -22,17 +22,6 @@ internal sealed class MoveService : IMoveService
 
     public IActionResult MoveObject(DistinguishedName newParentDn, RelativeName? newName, ConnectedResponse continuation)
     {
-        if (newName.HasValue)
-        {
-            if (newName.Value.IsEmpty)
-            {
-                newName = null;
-            }
-            else if (newName.Value.AttributeType == RelativeNameType.DomainComponent)
-            {
-                return new ApiBadRequestResult("The new name must not be a domain component.", ResultCode.NotAllowedOnRdn);
-            }
-        }
 
         string newRdn = newName?.Value ?? continuation.FoundObject[0].Value;
         ModifyDNRequest modify = new((string)continuation.FoundObject, (string)newParentDn, newRdn);

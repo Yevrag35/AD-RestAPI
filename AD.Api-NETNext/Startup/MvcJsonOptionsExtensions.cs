@@ -7,6 +7,7 @@ using AD.Api.Extensions.Collections;
 using AD.Api.Serialization.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace AD.Api
 {
@@ -30,6 +31,11 @@ namespace AD.Api
 
                     options.JsonSerializerOptions.Converters.Add(enumConverter);
                     AddAdditionalJsonConverters(options.JsonSerializerOptions, converter);
+
+                    options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
+                    {
+                        Modifiers = { PrivateExtensionDataModifier.AddPrivateExtensionData }
+                    };
                 });
         }
 
