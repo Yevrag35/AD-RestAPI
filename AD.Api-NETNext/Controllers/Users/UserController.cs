@@ -93,7 +93,7 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        return moveSvc.MoveObject(request.NewParentDn, rdn, continuation);
+        return moveSvc.MoveObject(request.NewParentDn.Value, rdn, continuation);
     }
 
     [HttpPut]

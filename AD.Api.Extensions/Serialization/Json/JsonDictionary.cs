@@ -4,14 +4,16 @@ using System.Text.Json;
 namespace AD.Api.Serialization.Json
 {
     [DebuggerDisplay("Count = {Count}")]
-    public sealed class JsonDictionary : IDictionary<string, object?>, IReadOnlyDictionary<string, object?>
+    public class JsonDictionary : IDictionary<string, object?>, IReadOnlyDictionary<string, object?>
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly Dictionary<string, object?> _dict;
 
         public object? this[string key]
         {
-            //[DebuggerStepThrough]
+            [DebuggerStepThrough]
             get => _dict[key];
+            [DebuggerStepThrough]
             set => this.SetPair(key, value);
         }
 
@@ -50,7 +52,7 @@ namespace AD.Api.Serialization.Json
         {
             this.AddPair(key, value);
         }
-        private void AddPair(string key, object? value)
+        protected virtual void AddPair(string key, object? value)
         {
             value = TransformValue(key, value);
             _dict.Add(key, value);
@@ -137,7 +139,7 @@ namespace AD.Api.Serialization.Json
         {
             return _dict.Remove(key);
         }
-        private void SetPair(string key, object? value)
+        protected virtual void SetPair(string key, object? value)
         {
             value = TransformValue(key, value);
             _dict[key] = value;
@@ -240,4 +242,3 @@ namespace AD.Api.Serialization.Json
         #endregion
     }
 }
-

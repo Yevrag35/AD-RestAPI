@@ -15,17 +15,42 @@ public sealed class ModelStateErrorBody : ErrorBody
     {
         Debug.Assert(!modelState.IsValid);
         this.Errors = new(modelState.Count);
-        this.Message = "One or more validation errors occurred.";
+        this.Message = "One or more validation errors occurred in the request body.";
         this.Result = RCode.ConstraintViolation;
         this.ResultCode = (int)this.Result;
 
         foreach (var kvp in modelState)
         {
-            _ = this.Errors.TryAdd(kvp.Key, kvp.Value.Errors
-                    .Select(x => x.ErrorMessage)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .ToArray());
+            StringValues messages = ProjectErrorMessagesOrEmpty(kvp.Value.Errors);
+            if (messages.Count > 0)
+            {
+                _ = this.Errors.TryAdd(kvp.Key, messages);
+            }
         }
+    }
+
+    private static IEnumerable<string> EnumerateMessages(ModelErrorCollection collection)
+    {
+        foreach (ModelError error in collection)
+        {
+            string? exMsg = error.Exception?.Message;
+            string msg = error.ErrorMessage;
+            yield return msg;
+
+            if (!string.IsNullOrEmpty(exMsg) && !msg.Equals(exMsg, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return exMsg;
+            }
+        }
+    }
+    private static StringValues ProjectErrorMessagesOrEmpty(ModelErrorCollection collection)
+    {
+        if (collection.Count == 0)
+        {
+            return StringValues.Empty;
+        }
+
+        return new StringValues(EnumerateMessages(collection).ToArray());
     }
 }
 

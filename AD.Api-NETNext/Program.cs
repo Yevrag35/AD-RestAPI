@@ -8,6 +8,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization.Json;
+using AD.Api.Core.Web;
 using AD.Api.Core.Web.Validation;
 using AD.Api.Expressions;
 using AD.Api.Extensions.Startup;
@@ -19,6 +20,7 @@ using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
@@ -128,15 +130,27 @@ try
         builder.Services.AddSingleton<IEncryptionService, CertificateEncryptionService>();
     }
 
-    builder.AddApiControllers(settingsSection, converter, b => b.Services.AddControllers(options =>
+    builder.AddApiControllers(settingsSection, converter, b =>
     {
-        options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider(JsonSpanCamelCaseNamingPolicy.SpanPolicy));
+        return b.Services
+            .AddControllers(options =>
+            {
+                options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider(JsonSpanCamelCaseNamingPolicy.SpanPolicy));
 
-        if (isJwt)
-        {
-            options.ModelValidatorProviders.Add(new ScopeAuthorizationValidator());
-        }
-    }));
+                if (isJwt)
+                {
+                    options.ModelValidatorProviders.Add(new ScopeAuthorizationValidator());
+                }
+            })
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                options.SuppressMapClientErrors = true;
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    return new ApiBadRequestResult(context.ModelState);
+                };
+            });
+    });
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
