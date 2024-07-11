@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AD.Api.Core.Ldap.Requests.Rename
+namespace AD.Api.Core.Ldap.Requests
 {
     public class RenameRequest : IValidatableObject
     {

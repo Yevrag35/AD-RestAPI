@@ -57,6 +57,11 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
         {
             span = UnescapeValue(reader.ValueSpan, span, in length);
         }
+        else
+        {
+            int written = Encoding.UTF8.GetChars(reader.ValueSpan, span);
+            span = span.Slice(0, written);
+        }
 
         if (!DistinguishedName.TryCountNumberOfRelativeNames(span, out int count))
         {

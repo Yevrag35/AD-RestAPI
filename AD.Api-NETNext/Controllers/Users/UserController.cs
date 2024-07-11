@@ -5,6 +5,7 @@ using AD.Api.Core;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Passwords;
+using AD.Api.Core.Ldap.Requests;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Ldap.Users;
 using AD.Api.Core.Operations;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Controllers.Users;
 
@@ -65,16 +67,61 @@ public sealed class UserController : ControllerBase
     }
 
     [HttpPut]
+    [Route("{sid:objectsid}/move")]
+    [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult MoveUser(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] MoveRequest request,
+        [FromRouteSid] SidString sid,
+        [FromServices] IMoveService moveSvc,
+        [Domain] DomainQuery target)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return new ApiBadRequestResult(this.ModelState);
+        }
+
+        RelativeName? rdn = !string.IsNullOrWhiteSpace(request.NewName)
+            ? RelativeName.Create(request.NewName, RelativeNameType.CommonName)
+            : null;
+
+        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        if (userSearch.TryGetT1(out var error, out var continuation))
+        {
+            return error;
+        }
+
+        return moveSvc.MoveObject(request.NewParentDn, rdn, continuation);
+    }
+
+    [HttpPut]
     [Route("{sid:objectsid}/rename")]
     [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult RenameUser(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] RenameRequest request,
         [FromRouteSid] SidString sid,
+        [FromServices] IRenameService renameSvc,
         [Domain] DomainQuery target)
     {
+        if (!this.ModelState.IsValid)
+        {
+            return new ApiBadRequestResult(this.ModelState);
+        }
 
+        RelativeName rdn = RelativeName.Create(request.Name, RelativeNameType.CommonName);
+
+        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        if (userSearch.TryGetT1(out var error, out var continuation))
+        {
+            return error;
+        }
+
+        return renameSvc.RenameObject(rdn, continuation);
     }
 
     [HttpPatch]
