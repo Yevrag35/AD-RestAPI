@@ -2,6 +2,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Requests;
 using AD.Api.Core.Web;
 using AD.Api.Statics;
+using AD.Api.Validation;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -34,6 +35,7 @@ namespace AD.Api.Core.Ldap
 
         public SearchScope? Scope { get; init; }
 
+        [DistinguishedName(AllowEmpty = true)]
         public DistinguishedName? SearchBase { get; set; }
 
         [Range(0, int.MaxValue)]

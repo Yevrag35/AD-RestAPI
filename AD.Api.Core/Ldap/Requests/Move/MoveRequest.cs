@@ -1,4 +1,5 @@
 using AD.Api.Core.Serialization;
+using AD.Api.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Core.Ldap.Requests;
@@ -10,9 +11,10 @@ public sealed class MoveRequest : RequestExtensionModel
     private static readonly string[] _extraKeys = [OTHER_NAME, OTHER_PARENT];
 
     //[MinLength(1, ErrorMessage = "New names must be at least 1 character in length.")]
+    [UserPrincipalName]
     public string? NewName { get; set; }
 
-    [NotNull]
+    [DistinguishedName(RequiredRelativeNameType = RelativeNameType.OrganizationalUnit)]
     public DistinguishedName? NewParentDn { get; set; }
 
     public MoveRequest() : base(_extraKeys)
@@ -45,21 +47,25 @@ public sealed class MoveRequest : RequestExtensionModel
 
     public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (string.IsNullOrWhiteSpace(this.NewName))
-        {
-            yield return new ValidationResult("The new name must not be null, empty, or whitespace.",
-                this.GetFaultingProperty<MoveRequest>(x => x.NewName, OTHER_NAME));
-        }
-
-        if (!this.NewParentDn.HasValue || this.NewParentDn.Value.IsEmpty)
-        {
-            yield return new ValidationResult("The new parent distinguished name must not be empty.", 
-                this.GetFaultingProperty<MoveRequest>(x => x.NewParentDn, OTHER_PARENT));
-        }
-        else if (this.NewParentDn.Value.Count <= 1)
-        {
-            yield return new ValidationResult("The new parent distinguished name must have at least 2 components.", 
-                this.GetFaultingProperty<MoveRequest>(x => x.NewParentDn, OTHER_PARENT));
-        }
+        return [];
     }
+    //public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    //{
+    //    if (string.IsNullOrWhiteSpace(this.NewName))
+    //    {
+    //        yield return new ValidationResult("The new name must not be null, empty, or whitespace.",
+    //            this.GetFaultingProperty<MoveRequest>(x => x.NewName, OTHER_NAME));
+    //    }
+
+    //    if (!this.NewParentDn.HasValue || this.NewParentDn.Value.IsEmpty)
+    //    {
+    //        yield return new ValidationResult("The new parent distinguished name must not be empty.", 
+    //            this.GetFaultingProperty<MoveRequest>(x => x.NewParentDn, OTHER_PARENT));
+    //    }
+    //    else if (this.NewParentDn.Value.Count <= 1)
+    //    {
+    //        yield return new ValidationResult("The new parent distinguished name must have at least 2 components.", 
+    //            this.GetFaultingProperty<MoveRequest>(x => x.NewParentDn, OTHER_PARENT));
+    //    }
+    //}
 }

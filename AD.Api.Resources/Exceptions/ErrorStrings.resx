@@ -185,4 +185,16 @@
   <data name="Exception_ValidationStartup" xml:space="preserve">
     <value>The startup validation for type '{0}' failed. The following results were returned:</value>
   </data>
+  <data name="Validation_InvalidUPN_Format" xml:space="preserve">
+    <value>The specified string must be in the form of a userPrincipalName and longer than 2 characters- similar to that of an email address.</value>
+  </data>
+  <data name="Validation_InvalidUPN_Length" xml:space="preserve">
+    <value>A userPrincipalName cannot be longer than 1024 characters (113 for Entra ID).</value>
+  </data>
+  <data name="Validation_NullEmptyOrWS" xml:space="preserve">
+    <value>String value cannot be null, empty, or whitespace.</value>
+  </data>
+  <data name="Validation_SamAccountName_Length" xml:space="preserve">
+    <value>A sAMAccountName cannot be longer than 20 characters.</value>
+  </data>
 </root>

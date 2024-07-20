@@ -1,5 +1,7 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Serialization.Json;
+using AD.Api.Strings.Extensions;
+using AD.Api.Validation;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -23,6 +25,7 @@ namespace AD.Api.Core.Ldap.Users
             set => _dict = new(value);
         }
 
+        [EmailAddress]
         public string? Mail
         {
             get => (string?)this.Attributes[AttributeConstants.MAIL];
@@ -35,7 +38,8 @@ namespace AD.Api.Core.Ldap.Users
             init => this.Attributes[AttributeConstants.NAME] = value;
         }
 
-        [MaxLength(20, ErrorMessage = "The sAMAccountName length must be 20 characters or less.")]
+        [MaxLength(20, ErrorMessageResourceType = typeof(Errors),
+            ErrorMessageResourceName = nameof(Errors.Validation_SamAccountName_Length))]
         public required string SamAccountName
         {
             get => (string)this.Attributes[AttributeConstants.SAM_ACCOUNT_NAME]!;
@@ -57,10 +61,12 @@ namespace AD.Api.Core.Ldap.Users
             }
             init => this.Attributes[AttributeConstants.USER_ACCOUNT_CONTROL] = (int)value;
         }
+
+        [UserPrincipalName]
         public string UserPrincipalName
         {
             get => (string?)this.Attributes[AttributeConstants.USER_PRINCIPAL_NAME] ?? string.Empty;
-            init => this.Attributes[AttributeConstants.USER_PRINCIPAL_NAME] = value ?? string.Empty;
+            init => this.Attributes[AttributeConstants.USER_PRINCIPAL_NAME] = value.OrEmpty();
         }
 
         [BindNever]
@@ -104,9 +110,17 @@ namespace AD.Api.Core.Ldap.Users
             {
                 return true;
             }
+            else if (userPrincipalName.Length <= 2)
+            {
+                return false;
+            }
 
-            int index = userPrincipalName.LastIndexOf('@');
-            return index >= 0 && index < userPrincipalName.Length;
+            int index = userPrincipalName.IndexOf('@');
+            return index switch
+            {
+                > 0 => index < userPrincipalName.Length - 1 && !userPrincipalName.Slice(index + 1).Contains('@'),
+                _ => false,
+            };
         }
     }
 }

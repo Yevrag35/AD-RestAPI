@@ -55,12 +55,17 @@ namespace AD.Api.Strings.Spans
             int length = this.Length;
             ArgumentOutOfRangeException.ThrowIfLessThan(span.Length, length, nameof(span));
 
-            char start = this.Start;
+            int start = this.Start;
 
             for (int i = 0; i < length; i++)
             {
                 span[i] = (char)(start + i);
             }
+        }
+        public readonly void CopyTo(scoped Span<char> span, ref int index)
+        {
+            this.CopyTo(span.Slice(index));
+            index += this.Length;
         }
         private static int GetLength(ref readonly char start, ref readonly char end)
         {

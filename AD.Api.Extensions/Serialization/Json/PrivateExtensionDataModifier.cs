@@ -134,13 +134,6 @@ public static class PrivateExtensionDataModifier
 
         return true;
     }
-    //private static IEnumerable<T> FilterForValidPrivateMembers<T>(IEnumerable<T> members) where T : MemberInfo
-    //{
-    //    foreach (T member in members.Where(x => x.IsDefined(typeof(PrivateExtensionDataAttribute))))
-    //    {
-    //        Type memberType = member.
-    //    }
-    //}
 
     /// <summary>
     /// 

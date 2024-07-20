@@ -257,5 +257,41 @@ namespace AD.Api.Resources {
                 return ResourceManager.GetString("Exception_ValidationStartup", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified string must be in the form of a userPrincipalName and longer than 2 characters- similar to that of an email address..
+        /// </summary>
+        public static string Validation_InvalidUPN_Format {
+            get {
+                return ResourceManager.GetString("Validation_InvalidUPN_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A userPrincipalName cannot be longer than 1024 characters (113 for Entra ID)..
+        /// </summary>
+        public static string Validation_InvalidUPN_Length {
+            get {
+                return ResourceManager.GetString("Validation_InvalidUPN_Length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String value cannot be null, empty, or whitespace..
+        /// </summary>
+        public static string Validation_NullEmptyOrWS {
+            get {
+                return ResourceManager.GetString("Validation_NullEmptyOrWS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A sAMAccountName cannot be longer than 20 characters..
+        /// </summary>
+        public static string Validation_SamAccountName_Length {
+            get {
+                return ResourceManager.GetString("Validation_SamAccountName_Length", resourceCulture);
+            }
+        }
     }
 }
