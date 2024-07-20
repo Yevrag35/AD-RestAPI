@@ -6,6 +6,17 @@ namespace AD.Api.Serialization.Json;
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 public sealed class PrivateExtensionDataAttribute : Attribute { }
 
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public sealed class PrivateExtensionDataClassAttribute : Attribute
+{
+    public Type ExtensionDataClassType { get; }
+
+    public PrivateExtensionDataClassAttribute(Type extensionDataClassType)
+    {
+        this.ExtensionDataClassType = extensionDataClassType;
+    }
+}
+
 public static class PrivateExtensionDataModifier
 {
     public static void AddPrivateExtensionData(JsonTypeInfo typeInfo)
@@ -13,8 +24,18 @@ public static class PrivateExtensionDataModifier
         if (typeInfo.Kind != JsonTypeInfoKind.Object)
             return;
 
-        OneOf<FieldInfo, PropertyInfo> firstMember = GetPrivateFieldAndProperties(typeInfo.Type)
-            .FirstOrDefault();
+        IEnumerable<OneOf<FieldInfo, PropertyInfo>> members;
+        if (typeInfo.Type.IsDefined(typeof(PrivateExtensionDataClassAttribute), inherit: true))
+        {
+            Type type = typeInfo.Type.GetCustomAttribute<PrivateExtensionDataClassAttribute>()!.ExtensionDataClassType;
+            members = GetPrivateFieldAndProperties(type);
+        }
+        else
+        {
+            members = GetPrivateFieldAndProperties(typeInfo.Type);
+        }
+
+        OneOf<FieldInfo, PropertyInfo> firstMember = members.FirstOrDefault();
 
         if (firstMember.IsDefault)
             return;

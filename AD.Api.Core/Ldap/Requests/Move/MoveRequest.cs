@@ -9,7 +9,7 @@ public sealed class MoveRequest : RequestExtensionModel
     private const string OTHER_PARENT = "newParent";
     private static readonly string[] _extraKeys = [OTHER_NAME, OTHER_PARENT];
 
-    [MinLength(1, ErrorMessage = "New names must be at least 1 character in length.")]
+    //[MinLength(1, ErrorMessage = "New names must be at least 1 character in length.")]
     public string? NewName { get; set; }
 
     [NotNull]
@@ -45,6 +45,12 @@ public sealed class MoveRequest : RequestExtensionModel
 
     public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (string.IsNullOrWhiteSpace(this.NewName))
+        {
+            yield return new ValidationResult("The new name must not be null, empty, or whitespace.",
+                this.GetFaultingProperty<MoveRequest>(x => x.NewName, OTHER_NAME));
+        }
+
         if (!this.NewParentDn.HasValue || this.NewParentDn.Value.IsEmpty)
         {
             yield return new ValidationResult("The new parent distinguished name must not be empty.", 

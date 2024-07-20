@@ -5,10 +5,11 @@ using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Serialization
 {
+    [PrivateExtensionDataClass(typeof(RequestExtensionModel))]
     public abstract class RequestExtensionModel : IJsonOnDeserialized, IValidatableObject
     {
         [PrivateExtensionData]
-        private IDictionary<string, object?> _extensionData;
+        private readonly IDictionary<string, object?> _extensionData;
 
         protected RequestExtensionModel(IEnumerable<string> extraJsonPropertyNames)
         {
