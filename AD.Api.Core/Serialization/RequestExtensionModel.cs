@@ -9,11 +9,11 @@ namespace AD.Api.Core.Serialization
     public abstract class RequestExtensionModel : IJsonOnDeserialized, IValidatableObject
     {
         [PrivateExtensionData]
-        private readonly IDictionary<string, object?> _extensionData;
+        private readonly ExclusionaryJsonDictionary _extensionData;
 
         protected RequestExtensionModel(IEnumerable<string> extraJsonPropertyNames)
         {
-            _extensionData = new ExclusionaryJsonDictionary(extraJsonPropertyNames);
+            _extensionData = new(extraJsonPropertyNames);
         }
 
         protected IEnumerable<string> GetFaultingProperty<T>(Expression<Func<T, object?>> memberExpression, string additionalKeyName)
@@ -45,7 +45,7 @@ namespace AD.Api.Core.Serialization
         }
         public void OnDeserialized()
         {
-            this.OnDeserialized((IReadOnlyDictionary<string, object?>)_extensionData);
+            this.OnDeserialized(_extensionData);
         }
 
         /// <summary>
@@ -74,9 +74,6 @@ namespace AD.Api.Core.Serialization
                 return false;
             }
         }
-        public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            return [];
-        }
+        public abstract IEnumerable<ValidationResult> Validate(ValidationContext validationContext);
     }
 }
