@@ -2,6 +2,7 @@ using AD.Api.Collections.Enumerators;
 using AD.Api.Core.Authentication;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
+using AD.Api.Validation;
 using System.Collections;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
@@ -14,6 +15,7 @@ namespace AD.Api.Core.Ldap;
 [StructLayout(LayoutKind.Auto)]
 [DebuggerDisplay(@"\{Count={Count}; Value={ToString(),nq}\}")]
 public readonly partial struct DistinguishedName :
+    ICanBeEmpty,
     IEnumerable<RelativeName>,
     IComparable<DistinguishedName>,
     IEquatable<DistinguishedName>,
@@ -49,6 +51,7 @@ public readonly partial struct DistinguishedName :
     /// </summary>
     public readonly bool HasParent
     {
+        [DebuggerStepThrough]
         get
         {
             ref readonly RelativeName first = ref this.GetFirst();
@@ -69,6 +72,7 @@ public readonly partial struct DistinguishedName :
     /// </summary>
     public readonly RelativeNameType Type
     {
+        [DebuggerStepThrough]
         get
         {
             ref readonly RelativeName first = ref this.GetFirst();
@@ -92,16 +96,9 @@ public readonly partial struct DistinguishedName :
     public DistinguishedName(ReadOnlySpan<RelativeName> segments)
     {
         _notDefault = true;
-        if (segments.IsEmpty)
-        {
-            _segments = [];
-            _length = 0;
-        }
-        else
-        {
-            _segments = ImmutableArray.Create(segments);
-            _length = GetTotalLength(segments);
-        }
+        ImmutableArray<RelativeName> array = ImmutableArray.Create(segments);
+        _segments = array;
+        _length = GetTotalLength(segments);
     }
 
     /// <summary>

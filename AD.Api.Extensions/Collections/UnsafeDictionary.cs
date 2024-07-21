@@ -1,11 +1,13 @@
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace AD.Api.Collections
 {
     [DebuggerDisplay("Count = {Count}")]
-    public class UnsafeDictionary<TKey> : IEnumerable<KeyValuePair<TKey, object>> where TKey : notnull
+    public class UnsafeDictionary<TKey> : IReadOnlyDictionary<TKey, object>
+        where TKey : notnull
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         readonly Dictionary<TKey, object> _dict;
 
         /// <inheritdoc cref="IReadOnlyCollection{T}.Count"/>
@@ -13,6 +15,28 @@ namespace AD.Api.Collections
         {
             [DebuggerStepThrough]
             get => _dict.Count;
+        }
+        /// <summary>
+        /// Gets a collection containing the keys in the dictionary.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="Dictionary{TKey, TValue}.KeyCollection"/> containing the keys in the dictionary.
+        /// </returns>
+        protected Dictionary<TKey, object>.KeyCollection Keys
+        {
+            [DebuggerStepThrough]
+            get => _dict.Keys;
+        }
+        /// <summary>
+        /// Gets a collection containing the values in the dictionary.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="Dictionary{TKey, TValue}.ValueCollection"/> containing the values in the dictionary.
+        /// </returns>
+        protected Dictionary<TKey, object>.ValueCollection Values
+        {
+            [DebuggerStepThrough]
+            get => _dict.Values;
         }
 
         [DebuggerStepThrough]
@@ -35,11 +59,25 @@ namespace AD.Api.Collections
             _dict = new(capacity, keyComparer);
         }
 
+        /// <inheritdoc cref="Dictionary{TKey, TValue}.Add(TKey, TValue)"/>
+        protected void AddCore<TValue>(TKey key, [DisallowNull] TValue value) where TValue : class
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _dict.Add(key, value);
+        }
+
         /// <summary>
         /// Removes all keys and values from the dictionary.
         /// </summary>
         [DebuggerStepThrough]
         public void Clear()
+        {
+            this.ClearItems();
+        }
+        /// <summary>
+        /// Removes all keys and values from the dictionary.
+        /// </summary>
+        protected virtual void ClearItems()
         {
             _dict.Clear();
         }
@@ -78,7 +116,6 @@ namespace AD.Api.Collections
         {
             return this.GetEnumerator();
         }
-
         /// <summary>
         /// Removes the value with the specified key from the dictionary.
         /// </summary>
@@ -88,8 +125,7 @@ namespace AD.Api.Collections
         /// <see langword="false"/>.
         /// </returns>
         /// <inheritdoc cref="Dictionary{TKey, TValue}.Remove(TKey)" path="/exception"/>
-        [DebuggerStepThrough]
-        public bool Remove(TKey key)
+        protected virtual bool RemoveItem(TKey key)
         {
             return _dict.Remove(key);
         }
@@ -97,39 +133,105 @@ namespace AD.Api.Collections
         [DebuggerStepThrough]
         public void TrimExcess()
         {
-            _dict.TrimExcess();
+            this.TrimExcessCore();
         }
         /// <inheritdoc cref="Dictionary{TKey, TValue}.TrimExcess(int)"/>
         [DebuggerStepThrough]
         public void TrimExcess(int capacity)
         {
+            this.TrimExcessCore(capacity);
+        }
+        /// <inheritdoc cref="Dictionary{TKey, TValue}.TrimExcess()"/>
+        protected virtual void TrimExcessCore()
+        {
+            _dict.TrimExcess();
+        }
+        /// <inheritdoc cref="Dictionary{TKey, TValue}.TrimExcess(int)"/>
+        protected virtual void TrimExcessCore(int capacity)
+        {
             _dict.TrimExcess(capacity);
         }
+
+        
         /// <inheritdoc cref="Dictionary{TKey, TValue}.TryAdd(TKey, TValue)"/>
         [DebuggerStepThrough]
-        public bool TryAdd<TValue>(TKey key, [DisallowNull] TValue value) where TValue : class
+        protected bool TryAddCore<TValue>(TKey key, [DisallowNull] TValue value) where TValue : class
         {
             ArgumentNullException.ThrowIfNull(value);
             return _dict.TryAdd(key, value);
+        }
+
+        /// <inheritdoc cref="Dictionary{TKey, TValue}.TryGetValue(TKey, out TValue)" path="/*[not(self::returns)]"/>
+        /// <returns>
+        /// <see langword="true"/> if the dictionary contains an element with the specified key; otherwise,
+        /// <see langword="false"/>.
+        /// </returns>
+        protected virtual bool TryGetValue(TKey key, [NotNullWhen(true)] out object? value)
+        {
+            return _dict.TryGetValue(key, out value);
         }
         /// <inheritdoc cref="Dictionary{TKey, TValue}.TryGetValue(TKey, out TValue)" path="/*[not(self::returns)]"/>
         /// <returns>
         /// <see langword="true"/> if the dictionary contains an element with the specified key; otherwise,
         /// <see langword="false"/>.
         /// </returns>
-        public bool TryGetValue<TValue>(TKey key, [NotNullWhen(true)] out TValue? value) where TValue : class
+        public bool TryGetValue<TValue>(TKey key, [NotNullWhen(true)] out TValue? castedValue) where TValue : class?
         {
             if (_dict.TryGetValue(key, out object? obj))
             {
-                value = (TValue)obj;
+                castedValue = (TValue)obj;
                 return true;
             }
             else
             {
-                value = null;
+                castedValue = null;
                 return false;
             }
         }
+        public bool TryGetUnsafeValue<TValue>(TKey key, [NotNullWhen(true)] out TValue? unsafeValue) where TValue : class?
+        {
+            if (_dict.TryGetValue(key, out object? obj))
+            {
+                unsafeValue = Unsafe.As<TValue>(obj);
+                return true;
+            }
+            else
+            {
+                unsafeValue = null;
+                return false;
+            }
+        }
+
+        #region DICTIONARY INTERFACE IMPLEMENTATIONS
+
+        /// <inheritdoc/>
+        object IReadOnlyDictionary<TKey, object>.this[TKey key]
+        {
+            [DebuggerStepThrough]
+            get => _dict[key];
+        }
+
+        /// <inheritdoc/>
+        IEnumerable<TKey> IReadOnlyDictionary<TKey, object>.Keys
+        {
+            [DebuggerStepThrough]
+            get => this.Keys;
+        }
+        /// <inheritdoc/>
+        IEnumerable<object> IReadOnlyDictionary<TKey, object>.Values
+        {
+            [DebuggerStepThrough]
+            get => this.Values;
+        }
+
+        /// <inheritdoc/>
+        [DebuggerStepThrough]
+        bool IReadOnlyDictionary<TKey, object>.TryGetValue(TKey key, [NotNullWhen(true)] out object? value)
+        {
+            return this.TryGetValue(key, out value);
+        }
+
+        #endregion
     }
 }
 

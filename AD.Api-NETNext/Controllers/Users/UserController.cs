@@ -73,19 +73,16 @@ public sealed class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult MoveUser(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] MoveRequest request,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] UserMoveRequest request,
         [FromRouteSid] SidString sid,
         [FromServices] IMoveService moveSvc,
         [Domain] DomainQuery target)
     {
+
         if (!this.ModelState.IsValid)
         {
             return new ApiBadRequestResult(this.ModelState);
         }
-
-        RelativeName? rdn = !string.IsNullOrWhiteSpace(request.NewName)
-            ? RelativeName.Create(request.NewName, RelativeNameType.CommonName)
-            : null;
 
         var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
         if (userSearch.TryGetT1(out var error, out var continuation))
@@ -93,7 +90,7 @@ public sealed class UserController : ControllerBase
             return error;
         }
 
-        return moveSvc.MoveObject(request.NewParentDn.Value, rdn, continuation);
+        return moveSvc.MoveObject(request.NewParentDn.Value, request.NewName.Value, continuation);
     }
 
     [HttpPut]

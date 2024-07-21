@@ -1,21 +1,40 @@
+using AD.Api.Serialization;
 using AD.Api.Serialization.Json;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Serialization
 {
     [PrivateExtensionDataClass(typeof(RequestExtensionModel))]
-    public abstract class RequestExtensionModel : IJsonOnDeserialized, IValidatableObject
+    public abstract class RequestExtensionModel : IExtensionPropertyModel, IJsonDeserializableOnce, IValidatableObject
     {
+        private bool _deserialized;
+
         [PrivateExtensionData]
         private readonly ExclusionaryJsonDictionary _extensionData;
+
+        public bool IsDeserialized => _deserialized;
 
         protected RequestExtensionModel(IEnumerable<string> extraJsonPropertyNames)
         {
             _extensionData = new(extraJsonPropertyNames);
         }
 
+        [return: NotNullIfNotNull(nameof(propertyName))]
+        public abstract string? GetAlternateName(string? propertyName);
+        [return: NotNullIfNotNull(nameof(propertyName))]
+        public string? GetFaultingProperty(string? propertyName)
+        {
+            string? alternate = this.GetAlternateName(propertyName);
+            if (!string.IsNullOrEmpty(alternate) && _extensionData.ContainsKey(alternate))
+            {
+                return alternate;
+            }
+            else
+            {
+                return propertyName;
+            }
+        }
         protected IEnumerable<string> GetFaultingProperty<T>(Expression<Func<T, object?>> memberExpression, string additionalKeyName)
         {
             if (_extensionData.ContainsKey(additionalKeyName))
@@ -45,7 +64,11 @@ namespace AD.Api.Core.Serialization
         }
         public void OnDeserialized()
         {
-            this.OnDeserialized(_extensionData);
+            if (!_deserialized)
+            {
+                this.OnDeserialized(_extensionData);
+                _deserialized = true;
+            }
         }
 
         /// <summary>

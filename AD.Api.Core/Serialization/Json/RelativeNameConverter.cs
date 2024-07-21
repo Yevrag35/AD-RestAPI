@@ -33,7 +33,7 @@ public sealed class RelativeNameConverter : JsonConverter<RelativeName>
             : SpanExtensions.RentArray(in length, ref isRented, ref array);
 
         int written = Encoding.UTF8.GetChars(reader.ValueSpan, span);
-        RelativeName result = RelativeName.TryParseOne(span.Slice(0, written), out RelativeName rn)
+        RelativeName result = RelativeName.TryParse(span.Slice(0, written), RelativeNameType.CommonName, out RelativeName rn)
             ? rn
             : RelativeName.Empty;
 

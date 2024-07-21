@@ -19,6 +19,13 @@ public readonly partial struct RelativeName
     /// </remarks>
     public static bool IsValid(ReadOnlySpan<char> value)
     {
+        return IsValid(value, out _);
+    }
+
+    private static bool IsValid(ReadOnlySpan<char> value, out int equalsIndex)
+    {
+        equalsIndex = -1;
+
         // Check if the value is empty or consists only of whitespace
         if (value.IsWhiteSpace())
         {
@@ -55,11 +62,13 @@ public readonly partial struct RelativeName
                     // Check if the equals sign is properly placed. Equals signs can only be escaped
                     // when using their hex value (\3D) so we only check if the previous characters are
                     // valid attribute names.
-                    if (!IsProperEquals(value, in i))
+                    // And there can only be 1.
+                    if (equalsIndex >= 0 || !IsProperEquals(value, in i))
                     {
                         return false;
                     }
 
+                    equalsIndex = i;
                     break;
                 }
 

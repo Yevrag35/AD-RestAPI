@@ -1,3 +1,4 @@
+using AD.Api.Strings.Extensions;
 using AD.Api.Strings.Spans;
 using System.Buffers;
 using System.ComponentModel.DataAnnotations;
@@ -30,6 +31,8 @@ namespace AD.Api.Validation
 
         public SHA1ThumbprintAttribute()
         {
+            this.ErrorMessageResourceName = nameof(Errors.Validation_Thumbprint_NotString);
+            this.ErrorMessageResourceType = typeof(Errors);
         }
 
         public override bool RequiresValidationContext => false;
@@ -44,25 +47,23 @@ namespace AD.Api.Validation
                 return ValidateNestedProperty(validatable, validationContext);
             }
 
-            string[]? memberNames = null;
-
+            string? msg = null;
             if (value is not string sha1Str)
             {
-                memberNames ??= [validationContext.MemberName ?? string.Empty];
-                return new ValidationResult("The value is not a string.", memberNames);
+                msg = this.FormatErrorMessage(value.ToString().OrEmpty());
             }
             else if (sha1Str.Length != THUMBPRINT_LENGTH)
             {
-                memberNames ??= [validationContext.MemberName ?? string.Empty];
-                return new ValidationResult("The value is not of the correct length - Thumbprints must be 40 characters in length.", memberNames);
+                msg = string.Format(Errors.Validation_Thumbprint_IncorrectLength, sha1Str.Length);
             }
             else if (sha1Str.AsSpan().ContainsAnyExcept(_sha1Chars))
             {
-                memberNames ??= [validationContext.MemberName ?? string.Empty];
-                return new ValidationResult("The SHA1 Thumbprint contains invalid characters. Only 'A-F', 'a-f', and '0-9' are allowed.", memberNames);
+                msg = string.Format(Errors.Validation_Thumbprint_InvalidChars, sha1Str);
             }
 
-            return ValidationResult.Success;
+            return msg is not null
+                ? new ValidationResult(msg, validationContext.GetMemberNames())
+                : ValidationResult.Success;
         }
     }
 }

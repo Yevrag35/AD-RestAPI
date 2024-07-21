@@ -4,7 +4,26 @@ namespace AD.Api.Extensions.Collections
 {
     public static class ArrayExtensions
     {
-
+        /// <summary>
+        /// Converts an <see cref="IEnumerable{T}"/> to an array.
+        /// </summary>
+        /// <remarks>
+        /// If the input sequence is already an array, it is returned with no allocation. 
+        /// Otherwise, creates a new array from the specified <see cref="IEnumerable{T}"/>.
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <returns>
+        /// The input sequence casted to an array or allocates a new array that contains the copied elements from 
+        /// the input sequence.
+        /// </returns>
+        /// <inheritdoc cref="Enumerable.ToArray{TSource}(IEnumerable{TSource})" path="/exception"/>
+        public static T[] AsOrToArray<T>(this IEnumerable<T> source)
+        {
+            return source is T[] array
+                ? array
+                : source.ToArray();
+        }
         public static RentedArray<T> ToRentedArray<T>(this ReadOnlySpan<T> readOnlySpan)
         {
             return RentedArray<T>.FromSpan(readOnlySpan);

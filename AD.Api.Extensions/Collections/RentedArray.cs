@@ -4,12 +4,17 @@ namespace AD.Api.Collections
 {
     public static class RentedArray
     {
-        public static RentedArray<T> Empty<T>() => default;
+        public static RentedArray<T> Empty<T>() => new(emptyArray: Array.Empty<T>());
     }
 
     public struct RentedArray<T> : IDisposable
     {
-        private T[] _array; int _length; bool _rented;
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        private T[] _array;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private int _length;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool _rented;
 
         public readonly T this[int index]
         {
@@ -47,6 +52,13 @@ namespace AD.Api.Collections
 
             _array = array;
             _rented = isRented;
+        }
+        internal RentedArray(T[] emptyArray)
+        {
+            Debug.Assert(0 == emptyArray.Length);
+            _array = emptyArray;
+            _rented = false;
+            _length = 0;
         }
         private RentedArray(ReadOnlySpan<T> values)
         {

@@ -51,7 +51,11 @@ namespace AD.Api.Validation
         /// </summary>
         public bool AllowEmpty { get; init; }
 
-        public UserPrincipalNameAttribute() { }
+        public UserPrincipalNameAttribute()
+        {
+            this.ErrorMessageResourceType = typeof(Errors);
+            this.ErrorMessageResourceName = nameof(Errors.Validation_InvalidUPN_Format);
+        }
 
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
@@ -62,20 +66,20 @@ namespace AD.Api.Validation
 
             if (value is not string strValue || IsEmptyAndNotAllowed(strValue, this.AllowEmpty) || strValue.Length <= 2)
             {
-                return new ValidationResult(Errors.Validation_InvalidUPN_Format, GetMemberName(validationContext));
+                return new ValidationResult(this.ErrorMessageString, validationContext.GetMemberNames());
             }
 
             ReadOnlySpan<char> chars = strValue.AsSpan();
 
             if (chars.ContainsAnyExcept(_allAllowedChars) || !chars.ContainsAny(_allowedMinusAt))
             {
-                return new ValidationResult(Errors.Validation_InvalidUPN_Format, GetMemberName(validationContext));
+                return new ValidationResult(Errors.Validation_InvalidUPN_Format, validationContext.GetMemberNames());
             }
 
             int index = chars.IndexOf(CharConstants.AT_SIGN);
             if (index <= 0 || index >= chars.Length - 1)
             {
-                return new ValidationResult(Errors.Validation_InvalidUPN_Format, GetMemberName(validationContext));
+                return new ValidationResult(Errors.Validation_InvalidUPN_Format, validationContext.GetMemberNames());
             }
 
             int count = 0;
@@ -84,7 +88,7 @@ namespace AD.Api.Validation
                 count++;
                 if (count > 2)
                 {
-                    return new ValidationResult(Errors.Validation_InvalidUPN_Format, GetMemberName(validationContext));
+                    return new ValidationResult(Errors.Validation_InvalidUPN_Format, validationContext.GetMemberNames());
                 }
 
                 if (section.IsWhiteSpace())
@@ -96,16 +100,12 @@ namespace AD.Api.Validation
 
             if (count <= 1)
             {
-                return new ValidationResult(Errors.Validation_InvalidUPN_Format, GetMemberName(validationContext));
+                return new ValidationResult(Errors.Validation_InvalidUPN_Format, validationContext.GetMemberNames());
             }
 
             return ValidationResult.Success;
         }
 
-        private static IEnumerable<string> GetMemberName(ValidationContext context)
-        {
-            yield return context.MemberName ?? string.Empty;
-        }
         private static bool IsEmptyAndNotAllowed(ReadOnlySpan<char> chars, bool allowEmpty)
         {
             return chars.IsEmpty && !allowEmpty;

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Frozen;
 using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
 using System.Text;
 
 namespace AD.Api.Validation
@@ -43,13 +42,6 @@ namespace AD.Api.Validation
             _validEncodingNames = set;
         }
 
-        private static string[] GetMemberNames(ValidationContext context)
-        {
-            return !string.IsNullOrWhiteSpace(context.MemberName)
-                ? [context.MemberName]
-                : [];
-        }
-
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             if (value is null)
@@ -62,7 +54,6 @@ namespace AD.Api.Validation
             }
 
             HashSet<string> encodingNames;
-            
 
             if (value is Encoding encoding)
             {
@@ -84,7 +75,7 @@ namespace AD.Api.Validation
                 }
                 catch (InvalidCastException)
                 {
-                    return new ValidationResult("The value must be a string or System.Text.Encoding object.", GetMemberNames(validationContext));
+                    return new ValidationResult("The value must be a string or System.Text.Encoding object.", validationContext.GetMemberNames());
                 }
             }
             else
@@ -95,42 +86,11 @@ namespace AD.Api.Validation
             if (!_validEncodingNames.IsSupersetOf(encodingNames))
             {
                 encodingNames.ExceptWith(_validEncodingNames);
-                return new ValidationResult($"The following encoding names are not valid: {string.Join(", ", encodingNames)}", GetMemberNames(validationContext));
+                return new ValidationResult($"The following encoding names are not valid: {string.Join(", ", encodingNames)}", validationContext.GetMemberNames());
             }
 
             return ValidationResult.Success;
         }
-
-        //private static ValidationResult? ValidateNestedProperty(IValidatableEncoding value, ValidationContext context)
-        //{
-        //    var expression = value.GetValidatableProperty();
-        //    if (expression is null || expression.Body is not MemberExpression memEx || memEx.Member is not PropertyInfo propInfo)
-        //    {
-        //        return ValidationResult.Success;
-        //    }
-
-        //    ValidateEncodingAttribute? propAtt = propInfo.GetCustomAttribute<ValidateEncodingAttribute>();
-        //    if (propAtt is null)
-        //    {
-        //        return ValidationResult.Success;
-        //    }
-
-        //    var func = expression.Compile();
-        //    object? propValue = func(value);
-
-        //    if (propValue is null)
-        //    {
-        //        return ValidationResult.Success;
-        //    }
-
-        //    ValidationContext newContext = new(value, context, context.Items)
-        //    {
-        //        MemberName = propInfo.Name,
-        //        DisplayName = propInfo.Name,
-        //    };
-
-        //    return propAtt.GetValidationResult(propValue, newContext);
-        //}
     }
 }
 

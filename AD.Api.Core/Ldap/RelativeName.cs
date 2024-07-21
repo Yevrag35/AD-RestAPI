@@ -1,6 +1,7 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Enums;
+using AD.Api.Validation;
 using System.Buffers;
 using System.Collections.Frozen;
 using System.ComponentModel;
@@ -19,7 +20,10 @@ namespace AD.Api.Core.Ldap;
 [StructLayout(LayoutKind.Auto)]
 [DynamicDependencyRegistration]
 [DebuggerDisplay(@"\{Type={AttributeType}; Value={Value}\}")]
-public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatable<string>
+public readonly partial struct RelativeName :
+    ICanBeEmpty,
+    IEquatable<RelativeName>,
+    IEquatable<string>
 {
     private const int DN_SPAN_LIMIT = 256;  // Maximum stackalloc length of a distinguished name.
     private const int MINIMUM_NAME_INDEX = 2;   // Minimum index for a valid attributed name.
@@ -96,7 +100,7 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         if (!string.IsNullOrWhiteSpace(value))
         {
             _value = value;
-            _notEmpty = nameIndex >= 2 && nameIndex < value.Length - 1;
+            _notEmpty = nameIndex >= 2 && nameIndex < value.Length;
             _nameStartIndex = nameIndex;
         }
         else
@@ -179,6 +183,22 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         return RelativeNameType.CommonName;
     }
 
+    private static bool IsValidPrefix(ReadOnlySpan<char> prefix, [NotNullWhen(false)] out ArgumentException? exception)
+    {
+        if (prefix.Length < 2 || prefix.Length > 7)
+        {
+            exception = new ArgumentException("No valid attribute type found is less than 2 or more than 7 characters in length.", nameof(prefix));
+            return false;
+        }
+        else if (prefix.ContainsAnyExcept(UniqueAttributeChars))
+        {
+            exception = new ArgumentException($"The specified attribute type contains invalid characters: {prefix.ToString()}", nameof(prefix));
+            return false;
+        }
+
+        exception = null;
+        return true;
+    }
     private static bool TryGetRelativeNameType(ReadOnlySpan<char> prefix, out RelativeNameType result)
     {
         if (prefix.Length >= 2 && prefix.Length <= 7 && !prefix.ContainsAnyExcept(UniqueAttributeChars))
@@ -197,21 +217,55 @@ public readonly partial struct RelativeName : IEquatable<RelativeName>, IEquatab
         return false;
     }
 
-    private static bool IsValidPrefix(ReadOnlySpan<char> prefix, [NotNullWhen(false)] out ArgumentException? exception)
+    public static bool TryParse(ReadOnlySpan<char> value, RelativeNameType typeToUseWhenNotPresent, out RelativeName relativeName)
     {
-        if (prefix.Length < 2 || prefix.Length > 7)
+        if (!IsValid(value, out int equalsIndex))
         {
-            exception = new ArgumentException("No valid attribute type found is less than 2 or more than 7 characters in length.", nameof(prefix));
-            return false;
-        }
-        else if (prefix.ContainsAnyExcept(UniqueAttributeChars))
-        {
-            exception = new ArgumentException($"The specified attribute type contains invalid characters: {prefix.ToString()}", nameof(prefix));
+            relativeName = Empty;
             return false;
         }
 
-        exception = null;
-        return true;
+        if (equalsIndex < MINIMUM_NAME_INDEX)
+        {
+            if (typeToUseWhenNotPresent == RelativeNameType.None || !AttributeStrings.TryGetValue(typeToUseWhenNotPresent, out string? prefix))
+            {
+                relativeName = Empty;
+                return false;
+            }
+
+            int prefixLength = prefix.Length;
+            Span<char> chars = stackalloc char[value.Length + prefixLength];
+            prefix.CopyTo(chars);
+            value.CopyTo(chars.Slice(prefixLength));
+
+            relativeName = new(typeToUseWhenNotPresent, new string(chars), in prefixLength);
+            return true;
+        }
+        else if (TryGetRelativeNameType(value.Slice(0, equalsIndex + 1), out var type)
+                 &&
+                 AttributeStrings.TryGetValue(type, out string? prefix))
+        {
+            if (!value.Slice(0, equalsIndex + 1).Equals(prefix, StringComparison.Ordinal))
+            {
+                int prefixLength = prefix.Length;
+                Span<char> chars = stackalloc char[value.Length - equalsIndex + prefixLength];
+                prefix.CopyTo(chars);
+                value.Slice(equalsIndex + 1).CopyTo(chars.Slice(prefixLength));
+
+                relativeName = new(type, new string(chars), in prefixLength);
+            }
+            else
+            {
+                relativeName = new(type, value.ToString(), prefix.Length);
+            }
+
+            return true;
+        }
+        else
+        {
+            relativeName = Empty;
+            return false;
+        }
     }
 
     /// <summary>

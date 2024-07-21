@@ -77,11 +77,11 @@ namespace AD.Api.Collections
 
             internal bool Add<T>(IReadOnlySet<T> readOnlySet, Type type)
             {
-                return this.TryAdd(type, readOnlySet);
+                return this.TryAddCore(type, readOnlySet);
             }
             internal bool Add<T>(ISet<T> set, Type type)
             {
-                return this.TryAdd(type, set);
+                return this.TryAddCore(type, set);
             }
 
             internal bool TryGetValue<T>([NotNullWhen(true)] out ISet<T>? set, out Type typeSearched)

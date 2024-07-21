@@ -259,6 +259,24 @@ namespace AD.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Empty objects of this type are not allowed. Please supply a value..
+        /// </summary>
+        public static string Validation_EmptyObj_NotAllowed {
+            get {
+                return ResourceManager.GetString("Validation_EmptyObj_NotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following encoding names are not valid: {0}.
+        /// </summary>
+        public static string Validation_Encoding_InvalidNames {
+            get {
+                return ResourceManager.GetString("Validation_Encoding_InvalidNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified string must be in the form of a userPrincipalName and longer than 2 characters- similar to that of an email address..
         /// </summary>
         public static string Validation_InvalidUPN_Format {
@@ -291,6 +309,33 @@ namespace AD.Api.Resources {
         public static string Validation_SamAccountName_Length {
             get {
                 return ResourceManager.GetString("Validation_SamAccountName_Length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The SHA1 Thumbprint string value is not of the correct length - Expected 40 characters and got {0} instead..
+        /// </summary>
+        public static string Validation_Thumbprint_IncorrectLength {
+            get {
+                return ResourceManager.GetString("Validation_Thumbprint_IncorrectLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The SHA1 Thumbprint string value, &apos;{0}&apos;, contains illegal characters. Only &apos;A-F&apos;, &apos;a-f&apos;, and &apos;0-9&apos; are allowed..
+        /// </summary>
+        public static string Validation_Thumbprint_InvalidChars {
+            get {
+                return ResourceManager.GetString("Validation_Thumbprint_InvalidChars", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified value for a SHA1 Thumbprint is not a valid string: &apos;{0}&apos;.
+        /// </summary>
+        public static string Validation_Thumbprint_NotString {
+            get {
+                return ResourceManager.GetString("Validation_Thumbprint_NotString", resourceCulture);
             }
         }
     }

@@ -185,6 +185,13 @@
   <data name="Exception_ValidationStartup" xml:space="preserve">
     <value>The startup validation for type '{0}' failed. The following results were returned:</value>
   </data>
+  <data name="Validation_EmptyObj_NotAllowed" xml:space="preserve">
+    <value>Empty objects of this type are not allowed. Please supply a value.</value>
+  </data>
+  <data name="Validation_Encoding_InvalidNames" xml:space="preserve">
+    <value>The following encoding names are not valid: {0}</value>
+    <comment>{0} is the comma-separated list of invalid names</comment>
+  </data>
   <data name="Validation_InvalidUPN_Format" xml:space="preserve">
     <value>The specified string must be in the form of a userPrincipalName and longer than 2 characters- similar to that of an email address.</value>
   </data>
@@ -196,5 +203,17 @@
   </data>
   <data name="Validation_SamAccountName_Length" xml:space="preserve">
     <value>A sAMAccountName cannot be longer than 20 characters.</value>
+  </data>
+  <data name="Validation_Thumbprint_IncorrectLength" xml:space="preserve">
+    <value>The SHA1 Thumbprint string value is not of the correct length - Expected 40 characters and got {0} instead.</value>
+    <comment>{0} is the length of the supplied string value.</comment>
+  </data>
+  <data name="Validation_Thumbprint_InvalidChars" xml:space="preserve">
+    <value>The SHA1 Thumbprint string value, '{0}', contains illegal characters. Only 'A-F', 'a-f', and '0-9' are allowed.</value>
+    <comment>{0} is the supplied string value.</comment>
+  </data>
+  <data name="Validation_Thumbprint_NotString" xml:space="preserve">
+    <value>The specified value for a SHA1 Thumbprint is not a valid string: '{0}'</value>
+    <comment>{0} is the ToString representation of the supplied value.</comment>
   </data>
 </root>
