@@ -3,7 +3,7 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AD.Api.Core.Ldap.Requests;
+namespace AD.Api.Core.Ldap;
 
 public interface IMoveService
 {

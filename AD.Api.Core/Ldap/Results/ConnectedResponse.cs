@@ -39,13 +39,13 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
             : DistinguishedName.Empty;
     }
 
-    internal static ConnectedResponse Continue(LdapConnection connection, DirectoryResponse response, IServiceProvider requestServices)
+    internal static ConnectedResponse Continue(LdapConnection connection, SearchResponse response, IServiceProvider requestServices)
     {
         ConnectedResponse continued = requestServices.GetRequiredService<ConnectedResponse>();
         string dn = string.Empty;
-        if (response is SearchResponse searchResponse && searchResponse.Entries.Count > 0)
+        if (response.Entries.Count > 0)
         {
-            dn = searchResponse.Entries[0].DistinguishedName;
+            dn = response.Entries[0].DistinguishedName;
         }
 
         continued.AddDependencies(response, connection, requestServices, dn);

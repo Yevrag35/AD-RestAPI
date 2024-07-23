@@ -116,13 +116,12 @@ namespace AD.Api.Core.Ldap
             }
 
             var responseOr = this.SendForResponse<TResponse>(parameters.Request, connection);
-            if (responseOr.TryGetT1(out error, out TResponse? isGood))
+            if (responseOr.TryGetT1(out error, out TResponse? response))
             {
                 connection.Dispose();
                 return OneOf<ConnectedResponse>.FromT1(error);
             }
 
-            TResponse response = isGood;
             return ConnectedResponse.Continue(connection, response, parameters.Info);
         }
 
@@ -140,7 +139,7 @@ namespace AD.Api.Core.Ldap
             TCollection collection = requestServices.GetRequiredService<IPooledItem<TCollection>>().Value;
             if (!collection.TryApplyResponse(parameters.Info.Domain, response))
             {
-                return this.SendCustomExceptionResult(response, isMultiRequest);
+                return SendCustomExceptionResult(response, isMultiRequest);
             }
 
             if (!isMultiRequest)
@@ -185,12 +184,8 @@ namespace AD.Api.Core.Ldap
         }
 
         // EXCEPTION HANDLING
-        private ObjectResult SendCustomExceptionResult(SearchResponse response, bool isMultiRequest)
+        private static ApiBadRequestResult SendCustomExceptionResult(SearchResponse response, bool isMultiRequest)
         {
-            int statusCode = isMultiRequest
-                    ? StatusCodes.Status500InternalServerError
-                    : StatusCodes.Status400BadRequest;
-
             bool isZero = response.Entries.Count == 0;
 
             ResultCode code = isMultiRequest

@@ -66,6 +66,28 @@ public sealed class UserController : ControllerBase
         return createSvc.Create(in target, request, SID_ROUTE_PREFIX);
     }
 
+    [HttpDelete]
+    [Route("{sid:objectsid}")]
+    [JwtAuth(AuthorizedRole.UserDeleter, PossiblyScoped = true)]
+    public IActionResult DeleteUser(
+        [FromRouteSid] SidString sid,
+        [FromServices] IDeletionService deleteSvc,
+        [Domain] DomainQuery target)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return new ApiBadRequestResult(this.ModelState);
+        }
+
+        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        if (userSearch.TryGetT1(out var error, out var continuation))
+        {
+            return error;
+        }
+
+        return deleteSvc.DeleteObject(continuation);
+    }
+
     [HttpPut]
     [Route("{sid:objectsid}/move")]
     [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]

@@ -5,7 +5,7 @@ using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
 using System.Buffers;
 
-namespace AD.Api.Core.Ldap.Requests;
+namespace AD.Api.Core.Ldap;
 
 public interface IRenameService
 {
