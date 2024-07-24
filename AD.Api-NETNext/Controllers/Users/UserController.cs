@@ -12,11 +12,9 @@ using AD.Api.Core.Operations;
 using AD.Api.Core.Security;
 using AD.Api.Core.Web;
 using AD.Api.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.DirectoryServices.Protocols;
+using NLog;
 
 namespace AD.Api.Controllers.Users;
 
@@ -26,6 +24,7 @@ namespace AD.Api.Controllers.Users;
 public sealed class UserController : ControllerBase
 {
     private const string ROUTE_NAME = "users";
+    static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
     public IUserSearcher UserSearcher { get; }
 
@@ -88,9 +87,53 @@ public sealed class UserController : ControllerBase
         return deleteSvc.DeleteObject(continuation);
     }
 
+    private static readonly string[] _uac = [AttributeConstants.USER_ACCOUNT_CONTROL];
+    [HttpPut]
+    [Route("{sid:objectsid}/disable")]
+    [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
+    public IActionResult DisableUser(
+        [FromRouteSid] SidString sid,
+        [FromServices] IUserUpdateService updateSvc,
+        [Domain] DomainQuery target)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return new ApiBadRequestResult(this.ModelState);
+        }
+
+        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target, _uac);
+        if (userSearch.TryGetT1(out var error, out var continuation))
+        {
+            return error;
+        }
+
+        return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(false), continuation, in target);
+    }
+    [HttpPut]
+    [Route("{sid:objectsid}/enable")]
+    [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
+    public IActionResult EnableUser(
+        [FromRouteSid] SidString sid,
+        [FromServices] IUserUpdateService updateSvc,
+        [Domain] DomainQuery target)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return new ApiBadRequestResult(this.ModelState);
+        }
+
+        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target, _uac);
+        if (userSearch.TryGetT1(out var error, out var continuation))
+        {
+            return error;
+        }
+
+        return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(true), continuation, in target);
+    }
+
     [HttpPut]
     [Route("{sid:objectsid}/move")]
-    [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
+    [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -100,7 +143,6 @@ public sealed class UserController : ControllerBase
         [FromServices] IMoveService moveSvc,
         [Domain] DomainQuery target)
     {
-
         if (!this.ModelState.IsValid)
         {
             return new ApiBadRequestResult(this.ModelState);

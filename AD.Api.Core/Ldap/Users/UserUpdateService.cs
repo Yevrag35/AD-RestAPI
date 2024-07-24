@@ -1,7 +1,7 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Core.Ldap.Requests;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Operations;
-using AD.Api.Core.Schema;
 using AD.Api.Core.Security;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Web;
@@ -11,6 +11,7 @@ namespace AD.Api.Core.Ldap.Users
 {
     public interface IUserUpdateService
     {
+        IActionResult ToggleStatus(SidString sidString, AccountStatusUpdateRequest operation, ConnectedResponse continuation, in DomainQuery target);
         IActionResult UpdateUser(SidString sidString, IEditOperation operation, ConnectedResponse continuation, in DomainQuery target);
     }
 
@@ -26,6 +27,26 @@ namespace AD.Api.Core.Ldap.Users
             _converter = converter;
         }
 
+        public IActionResult ToggleStatus(SidString sidString, AccountStatusUpdateRequest operation, ConnectedResponse continuation, in DomainQuery target)
+        {
+            if (!continuation.IsSearchSuccess)
+            {
+                return new ApiBadRequestResult("The distinguished name of the object to update was not found.", ResultCode.NoSuchObject);
+            }
+
+            ModifyRequest request = new(continuation.FoundObject.ToString());
+            operation.ReadChangeFromCurrent(continuation.ResultEntry);
+            operation.ApplyToRequest(request);
+
+            var oneOf = _requestSvc.SendForResponse<ModifyResponse>(request, continuation.ActiveConnection);
+            if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
+            {
+                return error ?? 
+                    new ApiBadRequestResult("The update was not successful however no error was generated.", ResultCode.OperationsError);
+            }
+
+            return new AcceptedResult($"/users/{sidString.Value}", null);
+        }
         public IActionResult UpdateUser(SidString sidString, IEditOperation operation, ConnectedResponse continuation, in DomainQuery target)
         {
             if (continuation.FoundObject.IsEmpty)
@@ -39,10 +60,11 @@ namespace AD.Api.Core.Ldap.Users
             var oneOf = _requestSvc.SendForResponse<ModifyResponse>(request, continuation.ActiveConnection);
             if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
             {
-                return error ?? new ApiBadRequestResult("The update was not successful however no error was generated.", ResultCode.OperationsError);
+                return error ?? 
+                    new ApiBadRequestResult("The update was not successful however no error was generated.", ResultCode.OperationsError);
             }
 
-            return new AcceptedResult();
+            return new AcceptedResult($"/users/{sidString.Value}", null);
         }
     }
 }

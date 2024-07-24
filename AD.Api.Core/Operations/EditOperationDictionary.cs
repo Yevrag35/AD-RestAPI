@@ -9,8 +9,6 @@ public interface IAppendableSingleOperation
 }
 public interface IEditOperation
 {
-    int Count { get; }
-
     void ApplyToRequest(ModifyRequest request);
 }
 public interface IModificationCreator<T>

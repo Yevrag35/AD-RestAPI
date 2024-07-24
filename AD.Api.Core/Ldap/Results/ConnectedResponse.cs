@@ -3,17 +3,54 @@ using System.ComponentModel;
 
 namespace AD.Api.Core.Ldap.Results;
 
+/// <summary>
+/// A class that represents a response from a directory search operation which includes the active connection that
+/// was used to perform the search for sending further queries.
+/// </summary>
 [DynamicDependencyRegistration]
 public sealed class ConnectedResponse : IDisposable, IServiceProvider
 {
-    private bool _disposed;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private LdapConnection _connection;
-    private DirectoryResponse _response;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private SearchResponse _response;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private ResultCode? _responseResultCode;
+
+    private bool _disposed;
     private IServiceProvider _provider;
 
+    /// <summary>
+    /// The active connection that was used to perform the search.
+    /// </summary>
+    /// <remarks>
+    /// It remains open and connected for sending further queries.
+    /// </remarks>
     public LdapConnection ActiveConnection => _connection;
+    /// <summary>
+    /// The distinguished name of the single found object from the initial search operation.
+    /// </summary>
     public DistinguishedName FoundObject { get; private set; }
-    public DirectoryResponse LastResponse => _response;
+    /// <summary>
+    /// Indicates whether there is a <see cref="SearchResponse"/> provided to the this <see cref="ConnectedResponse"/>
+    /// and it's result code is <see cref="ResultCode.Success"/>.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> if there is a <see cref="SearchResponse"/> provided and it's result code is
+    /// <see cref="ResultCode.Success"/>; otherwise, if not or no response was provided, <see langword="false"/>.
+    /// </returns>
+    [MemberNotNullWhen(true, nameof(ResultEntry))]
+    public bool IsSearchSuccess
+    {
+        get
+        {
+            return _responseResultCode.HasValue
+                && ResultCode.Success == _responseResultCode.Value
+                && !this.FoundObject.IsEmpty;
+        }
+    }
+
+    public SearchResultEntry? ResultEntry => 0 < _response?.Entries.Count ? _response.Entries[0] : null;
 
     private ConnectedResponse()
     {
@@ -23,18 +60,15 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
         _provider = null!;
     }
 
-    private void AddDependencies(DirectoryResponse response, LdapConnection connection, IServiceProvider provider, string distinguishedName)
+    private void AddDependencies(SearchResponse response, LdapConnection connection, IServiceProvider provider, string distinguishedName)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         _connection = connection;
         _response = response;
+        _responseResultCode = response.ResultCode;
         _provider = provider;
-        this.FoundObject = ParseToDN(distinguishedName);
-    }
 
-    private static DistinguishedName ParseToDN(string? distinguishedName)
-    {
-        return !string.IsNullOrWhiteSpace(distinguishedName)
+        this.FoundObject = !string.IsNullOrWhiteSpace(distinguishedName)
             ? DistinguishedName.Parse(distinguishedName)
             : DistinguishedName.Empty;
     }
@@ -53,24 +87,25 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
         return continued;
     }
 
+    /// <inheritdoc/>
     public object? GetService(Type serviceType)
     {
         return _provider?.GetService(serviceType);
     }
 
-    public bool TryGetResponse<T>([NotNullWhen(true)] out T? response) where T : DirectoryResponse
-    {
-        if (_response is T tResp)
-        {
-            response = tResp;
-            return true;
-        }
-        else
-        {
-            response = null;
-            return false;
-        }
-    }
+    //public bool TryGetResponse<T>([NotNullWhen(true)] out T? response) where T : DirectoryResponse
+    //{
+    //    if (_response is T tResp)
+    //    {
+    //        response = tResp;
+    //        return true;
+    //    }
+    //    else
+    //    {
+    //        response = null;
+    //        return false;
+    //    }
+    //}
 
     [DynamicDependencyRegistrationMethod]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -80,6 +115,9 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
         services.AddScoped(create);
     }
 
+    /// <summary>
+    /// Closes and disposes of the underlying connection for this <see cref="ConnectedResponse"/>.
+    /// </summary>
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

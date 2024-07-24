@@ -23,6 +23,9 @@ namespace AD.Api.Core.Ldap
         [FromQuery(Name = "properties")]
         public string? Properties { get; set; }
 
+        [BindNever]
+        public string[] PropertiesArray { get; set; } = [];
+
         [FromQuery(Name = "limit")]
         [Range(0, int.MaxValue)]
         public int? SizeLimit { get; set; }
@@ -58,6 +61,10 @@ namespace AD.Api.Core.Ldap
             if (searchFilter.Properties is not null)
             {
                 this.SearchRequest.Value.AddAttributes(searchFilter.Properties, searchFilter.RequestBaseType);
+            }
+            else if (this.PropertiesArray.Length > 0)
+            {
+                this.SearchRequest.Value.AddAttributes(this.PropertiesArray, searchFilter.RequestBaseType);
             }
             else
             {
