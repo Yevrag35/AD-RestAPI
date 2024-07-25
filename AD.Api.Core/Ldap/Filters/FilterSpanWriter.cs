@@ -169,6 +169,16 @@ namespace AD.Api.Core.Ldap.Filters
 
             return this.Equal(nameChars.Slice(0, count), value, maxValueLength, format, provider);
         }
+        public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : ISpanFormattable
+        {
+            Span<char> valChars = stackalloc char[maxValueLength];
+            if (!value.TryFormat(valChars, out int written, format, provider))
+            {
+                throw new FormatException("Unable to format the value to the character span.");
+            }
+
+            return this.Equal(propertyName, modifier, valChars.Slice(0, written));
+        }
 
         public FilterSpanWriter Not()
         {

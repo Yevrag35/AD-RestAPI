@@ -57,7 +57,8 @@ namespace AD.Api.Core.Ldap
                     .AddSingleton<IPoolReturner<LdapSearchRequest>>(func)
                     .AddScoped(x =>
                     {
-                        return func(x).GetPooledItem();
+                        var item = func(x).GetPooledItem();
+                        return item;
                     });
         }
 

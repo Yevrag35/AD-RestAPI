@@ -19,7 +19,8 @@ public readonly partial struct DistinguishedName :
     IEnumerable<RelativeName>,
     IComparable<DistinguishedName>,
     IEquatable<DistinguishedName>,
-    IEquatable<string>
+    IEquatable<string>,
+    ISpanFormattable
 {
     private static readonly char COMMA = CharConstants.COMMA;
     private readonly int _length;
@@ -254,6 +255,12 @@ public readonly partial struct DistinguishedName :
     {
         return !this.IsEmpty ? ToString(_segments.AsSpan(), in _length) : string.Empty;
     }
+    /// <inheritdoc/>
+    [DebuggerStepThrough]
+    string IFormattable.ToString(string? format, System.IFormatProvider? formatProvider)
+    {
+        return this.ToString();
+    }
 
     public readonly WorkingScope ToWorkingScope(ReadOnlySpan<char> domainKey, AuthorizedRole requiredRole, Span<char> buffer)
     {
@@ -268,6 +275,14 @@ public readonly partial struct DistinguishedName :
             : @this.CopyTo(buffer, 1);
 
         return new WorkingScope(domainKey, buffer.Slice(0, written), requiredRole);
+    }
+
+    /// <inheritdoc/>
+    [DebuggerStepThrough]
+    bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        charsWritten = this.CopyTo(destination);
+        return charsWritten == this.Length;
     }
 
     #region CASTING OPERATORS

@@ -18,7 +18,7 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
     private ResultCode? _responseResultCode;
 
     private bool _disposed;
-    private IServiceProvider _provider;
+    private DomainQuery _target;
 
     /// <summary>
     /// The active connection that was used to perform the search.
@@ -50,39 +50,50 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public SearchResponse LastResponse => _response;
+    /// <summary>
+    /// 
+    /// </summary>
     public SearchResultEntry? ResultEntry => 0 < _response?.Entries.Count ? _response.Entries[0] : null;
+    /// <summary>
+    /// 
+    /// </summary>
+    public DomainQuery Target => _target;
 
     private ConnectedResponse()
     {
         this.FoundObject = DistinguishedName.Empty;
         _connection = null!;
         _response = null!;
-        _provider = null!;
+        _target = DomainQuery.Default;
     }
 
-    private void AddDependencies(SearchResponse response, LdapConnection connection, IServiceProvider provider, string distinguishedName)
+    private void AddDependencies(SearchResponse response, LdapConnection connection, in DomainQuery target, string distinguishedName)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         _connection = connection;
         _response = response;
         _responseResultCode = response.ResultCode;
-        _provider = provider;
+        _target = target;
 
         this.FoundObject = !string.IsNullOrWhiteSpace(distinguishedName)
             ? DistinguishedName.Parse(distinguishedName)
             : DistinguishedName.Empty;
     }
 
-    internal static ConnectedResponse Continue(LdapConnection connection, SearchResponse response, IServiceProvider requestServices)
+    internal static ConnectedResponse Continue(LdapConnection connection, SearchResponse response, DomainQuery target)
     {
-        ConnectedResponse continued = requestServices.GetRequiredService<ConnectedResponse>();
+        ConnectedResponse continued = target.GetRequiredService<ConnectedResponse>();
         string dn = string.Empty;
         if (response.Entries.Count > 0)
         {
             dn = response.Entries[0].DistinguishedName;
         }
 
-        continued.AddDependencies(response, connection, requestServices, dn);
+        continued.AddDependencies(response, connection, in target, dn);
 
         return continued;
     }
@@ -90,7 +101,7 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
     /// <inheritdoc/>
     public object? GetService(Type serviceType)
     {
-        return _provider?.GetService(serviceType);
+        return _target.GetService(serviceType);
     }
 
     //public bool TryGetResponse<T>([NotNullWhen(true)] out T? response) where T : DirectoryResponse
@@ -133,7 +144,7 @@ public sealed class ConnectedResponse : IDisposable, IServiceProvider
                 _connection?.Dispose();
             }
 
-            _provider = null!;
+            _target = DomainQuery.Default;
             _connection = null!;
             _disposed = true;
         }

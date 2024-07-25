@@ -22,6 +22,9 @@ namespace AD.Api.Core.Ldap
         IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where TResponse : SearchResponse
             where T : LdapRequest;
+        IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
+            where TResponse : SearchResponse
+            where T : LdapRequest;
         IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
             where T : LdapRequest
             where TResponse : SearchResponse;
@@ -88,6 +91,12 @@ namespace AD.Api.Core.Ldap
             {
                 return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, connection, requestServices, isMultiRequest: true);
             }
+        }
+        public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
+            where TResponse : SearchResponse
+            where T : LdapRequest
+        {
+            return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, continuation.ActiveConnection, continuation, isMultiRequest: true);
         }
 
         public IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)

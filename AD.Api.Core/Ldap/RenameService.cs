@@ -1,9 +1,7 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Results;
-using AD.Api.Core.Security;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
-using System.Buffers;
 
 namespace AD.Api.Core.Ldap;
 

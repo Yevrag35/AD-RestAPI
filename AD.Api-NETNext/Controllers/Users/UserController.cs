@@ -4,6 +4,7 @@ using AD.Api.Binding.Attributes;
 using AD.Api.Core;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
+using AD.Api.Core.Ldap.Groups;
 using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Ldap.Requests;
 using AD.Api.Core.Ldap.Results;
@@ -15,20 +16,21 @@ using AD.Api.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NLog;
+using System.Security.Principal;
 
 namespace AD.Api.Controllers.Users;
 
 [ApiAuthorize]
 [ApiController]
 [Route(ROUTE_NAME)]
-public sealed class UserController : ControllerBase
+public sealed class UsersController : ControllerBase
 {
     private const string ROUTE_NAME = "users";
     static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
     public IUserSearcher UserSearcher { get; }
 
-    public UserController(IUserSearcher searcher)
+    public UsersController(IUserSearcher searcher)
     {
         this.UserSearcher = searcher;
     }
@@ -43,7 +45,8 @@ public sealed class UserController : ControllerBase
         [FromServices] IPasswordChangeService pwdSvc,
         [FromRouteSid] SidString sid)
     {
-        return this.UserSearcher.GetOneUser(sid, parameters, this.HttpContext.RequestServices);
+        SecurityIdentifier id = new();
+        return this.UserSearcher.FindOne(sid, parameters, this.HttpContext.RequestServices);
     }
 
     private const string SID_ROUTE_PREFIX = "/" + ROUTE_NAME + "/";
@@ -78,7 +81,7 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -87,7 +90,7 @@ public sealed class UserController : ControllerBase
         return deleteSvc.DeleteObject(continuation);
     }
 
-    private static readonly string[] _uac = [AttributeConstants.USER_ACCOUNT_CONTROL];
+    private static readonly string[] _uac = [AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.USER_ACCOUNT_CONTROL];
     [HttpPut]
     [Route("{sid:objectsid}/disable")]
     [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
@@ -101,7 +104,7 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target, _uac);
+        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target, _uac);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -122,13 +125,37 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target, _uac);
+        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target, _uac);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
         }
 
         return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(true), continuation, in target);
+    }
+
+    private static readonly string[] _groupProperties = [AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.MEMBER_OF];
+    [HttpGet]
+    [Route("{sid:objectsid}/groups")]
+    [JwtAuth(AuthorizedRole.Reader)]
+    public IActionResult GetUserGroups(
+        [FromRouteSid] SidString sid,
+        [FromServices] IGroupSearcher groupSearcher,
+        [Domain] DomainQuery target,
+        [FromQuery] string? properties = null)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return new ApiBadRequestResult(this.ModelState);
+        }
+
+        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target, _groupProperties);
+        if (userSearch.TryGetT1(out var error, out var continuation))
+        {
+            return error;
+        }
+
+        return groupSearcher.ResolveUserGroups(continuation, properties);
     }
 
     [HttpPut]
@@ -148,7 +175,7 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -176,7 +203,7 @@ public sealed class UserController : ControllerBase
 
         RelativeName rdn = RelativeName.Create(request.Name, RelativeNameType.CommonName);
 
-        var userSearch = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -202,7 +229,7 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var oneOf = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        var oneOf = this.UserSearcher.FindOneAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
@@ -233,7 +260,7 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var oneOf = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        var oneOf = this.UserSearcher.FindOneAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
@@ -264,7 +291,7 @@ public sealed class UserController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var oneOf = this.UserSearcher.GetOneUserAndContinue(sid, in target);
+        var oneOf = this.UserSearcher.FindOneAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
