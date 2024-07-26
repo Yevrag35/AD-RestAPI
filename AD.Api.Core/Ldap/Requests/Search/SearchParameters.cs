@@ -43,7 +43,9 @@ public class SearchParameters : RequestParameters<LdapSearchRequest, SearchRespo
         get => _searchRequest;
         set
         {
+            Guid id = value.Value.RequestId;
             value.Value.Reset();
+            value.Value.RequestId = id;
             _searchRequest = value;
         }
     }

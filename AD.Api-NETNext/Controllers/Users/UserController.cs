@@ -45,7 +45,6 @@ public sealed class UsersController : ControllerBase
         [FromServices] IPasswordChangeService pwdSvc,
         [FromRouteSid] SidString sid)
     {
-        SecurityIdentifier id = new();
         return this.UserSearcher.FindOne(sid, parameters, this.HttpContext.RequestServices);
     }
 
@@ -142,7 +141,8 @@ public sealed class UsersController : ControllerBase
         [FromRouteSid] SidString sid,
         [FromServices] IGroupSearcher groupSearcher,
         [Domain] DomainQuery target,
-        [FromQuery] string? properties = null)
+        [FromQuery] string? properties = null,
+        [FromQuery(Name = "limit")] int? sizeLimit = null)
     {
         if (!this.ModelState.IsValid)
         {
@@ -155,7 +155,7 @@ public sealed class UsersController : ControllerBase
             return error;
         }
 
-        return groupSearcher.ResolveUserGroups(continuation, properties);
+        return groupSearcher.ResolveUserGroups(continuation, properties, sizeLimit.GetValueOrDefault());
     }
 
     [HttpPut]
