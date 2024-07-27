@@ -1,6 +1,7 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Services;
 using AD.Api.Collections.Enumerators;
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Enums;
 using System.Collections.Frozen;
@@ -128,7 +129,7 @@ namespace AD.Api.Core.Ldap
         }
         private static string[] GetAttributeValue(string attributeName, SearchResultEntry entries)
         {
-            return entries.Attributes[attributeName].GetValues(typeof(string)) as string[] ?? [];
+            return entries.Attributes[attributeName].GetStringArray();
         }
         private static List<string> GetLocationValues(LdapConnection connection, ConnectionContext context, string[] attributes)
         {

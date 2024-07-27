@@ -1,4 +1,5 @@
 ﻿using AD.Api.Attributes.Services;
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
@@ -98,7 +99,7 @@ internal sealed class GroupSearcher : IGroupSearcher
     }
     private static ObjectResult SendResultAsDNList(SearchResultEntry entry, SearchResponse response)
     {
-        string[] memberOf = entry.Attributes[AttributeConstants.MEMBER_OF].GetValues(typeof(string)) as string[] ?? [];
+        string[] memberOf = entry.Attributes[AttributeConstants.MEMBER_OF].GetStringArray();
 
         return new ObjectResult(new
         {

@@ -1,4 +1,5 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Serialization.Json.Ldap;
@@ -68,8 +69,8 @@ namespace AD.Api.Core.Serialization
             object value = attribute.Count switch
             {
                 <= 0 => string.Empty,
-                1 => attribute.GetValues(SchemaProperty.StringType)[0],
-                _ => attribute.GetValues(SchemaProperty.StringType),
+                1 => attribute.GetString(),
+                _ => attribute.GetStringArray(),
             };
 
             _ = dictionary.TryAdd(attribute.Name, value);
