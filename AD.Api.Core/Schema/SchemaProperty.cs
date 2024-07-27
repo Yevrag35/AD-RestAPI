@@ -1,4 +1,5 @@
 using AD.Api.Core.Ldap;
+using System.Collections.Immutable;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.Versioning;
 
@@ -15,6 +16,8 @@ namespace AD.Api.Core.Schema
         public static readonly Type StringType = typeof(string);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly ImmutableArray<string> _heirarchy;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly bool _isMulti;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly bool _isNotEmpty;
@@ -24,6 +27,13 @@ namespace AD.Api.Core.Schema
         private readonly string _name;
         private readonly Type _type;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public readonly ImmutableArray<string> Heirarchy => _heirarchy;
+        /// <summary>
+        /// 
+        /// </summary>
         public readonly bool IsEmpty => !_isNotEmpty;
         /// <inheritdoc/>
         public readonly bool IsMultiValued => _isMulti;
@@ -35,7 +45,7 @@ namespace AD.Api.Core.Schema
         public Type RuntimeType => _type ?? ObjectType;
 
         [DebuggerStepThrough]
-        public SchemaProperty(string name, Type type, LdapValueType ldapType, bool isSingle)
+        public SchemaProperty(string name, Type type, LdapValueType ldapType, bool isSingle, in ImmutableArray<string> heirarchy)
         {
             _name = name;
             _type = type;
@@ -44,11 +54,24 @@ namespace AD.Api.Core.Schema
             _isMulti = !isSingle;
         }
 
+        [Obsolete("The logic does not work... yet.")]
+        public bool ClassOverlaps(string className, ISet<string> emptySet)
+        {
+            if (_heirarchy.IsDefaultOrEmpty)
+            {
+                return false;
+            }
+
+            emptySet.Clear();
+            emptySet.UnionWith(_heirarchy);
+            return emptySet.Contains(className);
+        }
+
         [SupportedOSPlatform("WINDOWS")]
-        public static SchemaProperty Create(string name, ActiveDirectorySyntax syntax, bool isSingleValued)
+        public static SchemaProperty Create(string name, ActiveDirectorySyntax syntax, bool isSingleValued, in ImmutableArray<string> heirarchy)
         {
             (Type type, LdapValueType ldapType) = GetConversionType(syntax, isSingleValued);
-            return new(name, type, ldapType, isSingleValued);
+            return new(name, type, ldapType, isSingleValued, in heirarchy);
         }
 
         [SupportedOSPlatform("WINDOWS")]
@@ -74,6 +97,7 @@ namespace AD.Api.Core.Schema
 
             return tuple;
         }
+
 
         [SupportedOSPlatform("WINDOWS")]
         private static (Type type, LdapValueType ldapType) MatchSyntaxToTypes(ActiveDirectorySyntax syntax)

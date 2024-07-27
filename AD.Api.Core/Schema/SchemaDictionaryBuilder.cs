@@ -1,5 +1,6 @@
 using AD.Api.Core.Ldap;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.Versioning;
 
@@ -33,12 +34,14 @@ namespace AD.Api.Core.Schema
         {
             return new(_domain.Name, _domain.DomainName, _dict);
         }
-        public async Task ReadFromAsync(string className, CancellationToken token = default)
+        public async Task ReadFromAsync(string className, Func<ActiveDirectorySchemaClass, ImmutableArray<string>> getHeirarchy, CancellationToken token = default)
         {
             if (!this.TryGetClass(className, out var schemaClass))
             {
                 return;
             }
+
+            ImmutableArray<string> classArray = getHeirarchy(schemaClass);
 
             try
             {
@@ -50,7 +53,7 @@ namespace AD.Api.Core.Schema
 
                     foreach (ActiveDirectorySchemaProperty schProp in allProps)
                     {
-                        tasks.Add(this.ReadInPropertyAsync(schProp, token));
+                        tasks.Add(this.ReadInPropertyAsync(schProp, classArray, token));
                     }
 
                     await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -62,15 +65,16 @@ namespace AD.Api.Core.Schema
             }
         }
 
-        private async Task ReadInPropertyAsync(ActiveDirectorySchemaProperty schemaProperty, CancellationToken token)
+        private async Task ReadInPropertyAsync(ActiveDirectorySchemaProperty schemaProperty, ImmutableArray<string> heirarchy, CancellationToken token)
         {
             try
             {
                 await _semaphore.WaitAsync(token).ConfigureAwait(false);
                 await Task.Factory.StartNew(p =>
                 {
-                    var sp = ((ConcurrentDictionary<string, SchemaProperty>, ActiveDirectorySchemaProperty))p!;
-                    Property prop = Property.Create(sp.Item2);
+                    var sp = ((ConcurrentDictionary<string, SchemaProperty> dict, ActiveDirectorySchemaProperty schemaProperty, ImmutableArray<string> heirarchy))p!;
+
+                    Property prop = Property.Create(sp.schemaProperty);
 
                     if (prop.IsDefunct)
                     {
@@ -82,12 +86,12 @@ namespace AD.Api.Core.Schema
                         return;
                     }
 
-                    if (!sp.Item1.ContainsKey(prop.Name))
+                    if (!sp.dict.ContainsKey(prop.Name))
                     {
-                        var schema = SchemaProperty.Create(prop.Name, prop.Syntax, prop.IsSingleValued);
-                        sp.Item1.TryAdd(prop.Name, schema);
+                        var schema = SchemaProperty.Create(prop.Name, prop.Syntax, prop.IsSingleValued, in sp.heirarchy);
+                        sp.dict.TryAdd(prop.Name, schema);
                     }
-                }, (_dict, schemaProperty), token).ConfigureAwait(false);
+                }, (_dict, schemaProperty, heirarchy), token).ConfigureAwait(false);
             }
             catch (OperationCanceledException) { }
             finally

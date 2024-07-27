@@ -204,6 +204,14 @@
   <data name="Validation_SamAccountName_Length" xml:space="preserve">
     <value>A sAMAccountName cannot be longer than 20 characters.</value>
   </data>
+  <data name="Validation_SchemaProperty_UnknownClassProperty" xml:space="preserve">
+    <value>The schema property '{0}' is not a valid attribute for the class '{1}' in the domain '{2}'.</value>
+  </data>
+  <data name="Validation_SchemaProperty_UnknownProperty" xml:space="preserve">
+    <value>The schema property '{0}' was not found in the domain '{1}'.</value>
+    <comment>{0} is the attempted schema property name.
+{1} is the domain from the query.</comment>
+  </data>
   <data name="Validation_Thumbprint_IncorrectLength" xml:space="preserve">
     <value>The SHA1 Thumbprint string value is not of the correct length - Expected 40 characters and got {0} instead.</value>
     <comment>{0} is the length of the supplied string value.</comment>

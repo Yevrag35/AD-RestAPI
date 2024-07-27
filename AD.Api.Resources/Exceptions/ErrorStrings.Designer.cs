@@ -313,6 +313,24 @@ namespace AD.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The schema property &apos;{0}&apos; is not a valid attribute for the class &apos;{1}&apos; in the domain &apos;{2}&apos;..
+        /// </summary>
+        public static string Validation_SchemaProperty_UnknownClassProperty {
+            get {
+                return ResourceManager.GetString("Validation_SchemaProperty_UnknownClassProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The schema property &apos;{0}&apos; was not found in the domain &apos;{1}&apos;..
+        /// </summary>
+        public static string Validation_SchemaProperty_UnknownProperty {
+            get {
+                return ResourceManager.GetString("Validation_SchemaProperty_UnknownProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The SHA1 Thumbprint string value is not of the correct length - Expected 40 characters and got {0} instead..
         /// </summary>
         public static string Validation_Thumbprint_IncorrectLength {

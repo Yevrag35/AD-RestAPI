@@ -80,6 +80,15 @@ namespace AD.Api.Strings.Extensions
         {
             return new SplitEnumerator(str: span, splitBy);
         }
+
+        public static SplitAnyEnumerator SpanSplitAny(this ReadOnlySpan<char> chars, ReadOnlySpan<char> splitByAny)
+        {
+            return new SplitAnyEnumerator(chars, splitByAny);
+        }
+        public static SplitAnyEnumerator SpanSplitAny(this string? value, ReadOnlySpan<char> splitByAny)
+        {
+            return new SplitAnyEnumerator(value.AsSpan(), splitByAny);
+        }
     }
 }
 

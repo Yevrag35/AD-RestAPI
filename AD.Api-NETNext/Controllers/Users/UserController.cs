@@ -141,7 +141,7 @@ public sealed class UsersController : ControllerBase
         [FromRouteSid] SidString sid,
         [FromServices] IGroupSearcher groupSearcher,
         [Domain] DomainQuery target,
-        [FromQuery] string? properties = null,
+        [QueryProperties] string[]? properties = null,
         [FromQuery(Name = "limit")] int? sizeLimit = null)
     {
         if (!this.ModelState.IsValid)
