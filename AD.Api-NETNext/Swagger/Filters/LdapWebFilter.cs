@@ -3,6 +3,7 @@ using AD.Api.Core;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Security;
 using AD.Api.Reflection;
+using AD.Api.Validation;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -71,7 +72,6 @@ namespace AD.Api.Swagger.Filters
                 OpenApiSchema dcSchema = new()
                 {
                     Type = "string",
-                    
                     Nullable = true,
                     Default = new OpenApiNull(),
                     Description = "The domain controller to query. Leave empty or null to query the default domain controller. Either 'domainController' or 'dc' can be used.",
@@ -106,7 +106,9 @@ namespace AD.Api.Swagger.Filters
                 schema.Items = null;
                 schema.AdditionalProperties = null;
                 schema.MinLength = 2;
-                bool isNullable = rNullable is not null;
+                bool isNullable = rNullable is not null
+                               && context.MemberInfo.GetCustomAttribute<RequiredAfterDeserializationAttribute>() is null;
+
                 schema.Nullable = isNullable;
                 schema.Default = isNullable ? new OpenApiNull() : new OpenApiString(string.Empty);
                 schema.Description = "A relative distinguishedName (RDN) for the given object. If the attribute prefix is missing from the value, then 'CN=' will be prepended.";
@@ -114,7 +116,6 @@ namespace AD.Api.Swagger.Filters
                 schema.Format = "relativeDistinguishedName";
                 schema.Properties.Clear();
             }
-
 
             if (typeof(DistinguishedName).Equals(context.Type.TryGetNullable(out Type? underlying) ? underlying : context.Type))
             {
@@ -127,7 +128,8 @@ namespace AD.Api.Swagger.Filters
                 schema.Description = "The LDAP distinguished name of the object.";
                 schema.Properties.Clear();
                 schema.Example = new OpenApiString("CN=John Doe,OU=Users,DC=contoso,DC=com");
-                schema.Nullable = underlying is not null;
+                schema.Nullable = underlying is not null
+                               && context.MemberInfo?.GetCustomAttribute<RequiredAfterDeserializationAttribute>() is null;
             }
         }
     }
