@@ -1,3 +1,4 @@
+using AD.Api.Core.Web;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +21,8 @@ public class SearchParameters : RequestParameters<LdapSearchRequest, SearchRespo
     [FromQuery(Name = "scope")]
     public SearchScope? Scope { get; set; }
 
-    [FromQuery(Name = "properties")]
-    public string? Properties { get; set; }
-
-    [BindNever]
-    public string[] PropertiesArray { get; set; } = [];
+    [FromQueryProperties]
+    public string[] Properties { get; set; } = [];
 
     [FromQuery(Name = "limit")]
     [Range(0, int.MaxValue)]
@@ -73,11 +71,7 @@ public class SearchParameters : RequestParameters<LdapSearchRequest, SearchRespo
         {
             this.SearchRequest.Value.AddAttributes(searchFilter.Properties, searchFilter.RequestBaseType);
         }
-        else if (this.PropertiesArray.Length > 0)
-        {
-            this.SearchRequest.Value.AddAttributes(this.PropertiesArray, searchFilter.RequestBaseType);
-        }
-        else
+        else if (this.Properties.Length > 0)
         {
             this.SearchRequest.Value.AddAttributes(this.Properties, searchFilter.RequestBaseType);
         }
@@ -145,22 +139,20 @@ public class SearchParameters : RequestParameters<LdapSearchRequest, SearchRespo
     {
         if (extraProperties is null || extraProperties.Length == 0)
         {
-            this.PropertiesArray = [];
-            this.Properties = mainProperty;
+            this.Properties = [mainProperty];
             return;
         }
         else if (extraProperties.Contains(mainProperty, StringComparer.OrdinalIgnoreCase))
         {
-            this.Properties = null;
-            this.PropertiesArray = extraProperties;
+            this.Properties = extraProperties;
+            return;
         }
 
         string[] atts = new string[extraProperties.Length + 1];
         atts[0] = mainProperty;
         extraProperties.CopyTo(atts, 1);
 
-        this.Properties = null;
-        this.PropertiesArray = atts;
+        this.Properties = atts;
     }
 
     public static implicit operator SR(SearchParameters parameters)

@@ -208,7 +208,7 @@
     <value>The schema property '{0}' is not a valid attribute for the class '{1}' in the domain '{2}'.</value>
   </data>
   <data name="Validation_SchemaProperty_UnknownProperty" xml:space="preserve">
-    <value>The schema property '{0}' was not found in the domain '{1}'.</value>
+    <value>The schema attribute '{0}' was not found in the domain '{1}'.</value>
     <comment>{0} is the attempted schema property name.
 {1} is the domain from the query.</comment>
   </data>

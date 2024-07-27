@@ -6,10 +6,6 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Web\SearchQueryParams.cs" />
-  </ItemGroup>
 	
 	<ItemGroup>
 		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
@@ -17,10 +13,6 @@
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Web\SearchQueryParams.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

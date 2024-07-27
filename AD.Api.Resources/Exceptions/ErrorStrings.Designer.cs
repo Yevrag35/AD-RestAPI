@@ -322,7 +322,7 @@ namespace AD.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The schema property &apos;{0}&apos; was not found in the domain &apos;{1}&apos;..
+        ///   Looks up a localized string similar to The schema attribute &apos;{0}&apos; was not found in the domain &apos;{1}&apos;..
         /// </summary>
         public static string Validation_SchemaProperty_UnknownProperty {
             get {

@@ -4,10 +4,12 @@ using AD.Api.Core.Web.Extensions;
 using AD.Api.Pooling;
 using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Primitives;
 using System.Buffers;
 using System.Collections.Frozen;
@@ -16,14 +18,14 @@ using System.Runtime.CompilerServices;
 namespace AD.Api.Core.Web;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
-public sealed class QueryPropertiesAttribute : ModelBinderAttribute, IFromQueryMetadata
+public sealed class FromQueryPropertiesAttribute : ModelBinderAttribute, IFromQueryMetadata
 {
     private static readonly Type _binderType = typeof(QueryPropertiesBinding);
 
     [Obsolete("The logic for this property is not yet implemented.", true)]
     public string? RestrictedToClass { get; init; }
 
-    public QueryPropertiesAttribute()
+    public FromQueryPropertiesAttribute()
         : base(_binderType)
     {
     }
@@ -34,10 +36,10 @@ public sealed class QueryPropertiesBinding : IModelBinder
     private const string DEFAULT = "default";
     private static readonly Type _stringArrayType = typeof(string[]);
     private delegate bool ClassOverlapDelegate(in SchemaProperty property, string name, ISet<string> set);
-    //private static readonly ValidationStateEntry _suppress = new()
-    //{
-    //    SuppressValidation = true,
-    //};
+    private static readonly ValidationStateEntry _suppress = new()
+    {
+        SuppressValidation = true,
+    };
 
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
@@ -110,7 +112,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
             return null;
         }
 
-        return defMeta.Attributes.Attributes.OfType<QueryPropertiesAttribute>().FirstOrDefault()?.RestrictedToClass;
+        return defMeta.Attributes.Attributes.OfType<FromQueryPropertiesAttribute>().FirstOrDefault()?.RestrictedToClass;
     }
     private static ModelBindingResult GetSchemaValidatedResult(ModelBindingContext context, string propertyString, Span<char> splitBy, ISchemaService schemaSvc, string domain)
     {
@@ -148,7 +150,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 
             string propertyName = trimmed.ToString();
             //if (!schema.TryGetValue(propertyName, out SchemaProperty schProp) || !validator.Overlaps(in schProp))
-            if (!schema.TryGetValue(propertyName, out SchemaProperty schProp))
+            if (!schema.ContainsKey(propertyName))
             {
                 AddUnknownPropertyError(context, propertyName, schema);
                 continue;
@@ -157,11 +159,12 @@ public sealed class QueryPropertiesBinding : IModelBinder
             properties[count++] = propertyName;
         }
 
-        string[] result = new string[count];
-        Array.Copy(properties, result, count);
-        ArrayPool<string>.Shared.Return(properties);
+        ModelBindingResult result = context.ModelState.IsValid
+            ? ReadModelIntoSuccessResult(properties, in count)
+            : ReturnErroredSuccess(context);
 
-        return ModelBindingResult.Success(result);
+        ArrayPool<string>.Shared.Return(properties);
+        return result;
     }
     private static OneOf<string, ModelBindingResult> GetValue(ModelBindingContext context)
     {
@@ -181,6 +184,18 @@ public sealed class QueryPropertiesBinding : IModelBinder
         {
             return value;
         }
+    }
+    private static ModelBindingResult ReadModelIntoSuccessResult(string[] properties, in int count)
+    {
+        string[] finalArray = new string[count];
+        Array.Copy(properties, finalArray, count);
+        return ModelBindingResult.Success(finalArray);
+    }
+    private static ModelBindingResult ReturnErroredSuccess(ModelBindingContext context)
+    {
+        string[] empty = [];
+        context.ValidationState[empty] = _suppress;
+        return ModelBindingResult.Success(empty);
     }
 
     [Obsolete("The logic for this struct is not yet functionally accurate.", true)]
