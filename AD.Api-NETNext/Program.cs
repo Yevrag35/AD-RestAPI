@@ -19,6 +19,7 @@ using AD.Api.Services;
 using AD.Api.Services.Enums;
 using AD.Api.Startup;
 using AD.Api.Strings.Extensions;
+using AD.Api.Swagger.Filters;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
@@ -153,8 +154,14 @@ try
     });
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerWithOptions(config.GetSection("SwaggerInfo"));
+    builder.Services.AddEndpointsApiExplorer()
+        .AddSwaggerGen(x =>
+        {
+            x.SchemaFilter<LdapWebFilter>();
+            x.OperationFilter<LdapWebFilter>();
+            x.OperationFilter<SidStringFilter>();
+        })
+        .AddSwaggerWithOptions(config.GetSection("SwaggerInfo"));
 
     // Only show PII in development.
     IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();

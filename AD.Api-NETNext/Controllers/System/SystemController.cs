@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using NLog;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace AD.Api.Controllers.System
 {
