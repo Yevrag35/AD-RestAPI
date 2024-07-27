@@ -1,9 +1,12 @@
 ﻿using AD.Api.Authentication;
+using AD.Api.Binding.Attributes;
+using AD.Api.Core;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using NLog;
 
 namespace AD.Api.Controllers.System
@@ -15,10 +18,12 @@ namespace AD.Api.Controllers.System
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly WellKnownObjectDictionary _dictionary;
+        private readonly IWellKnownService _wkSvc;
 
-        public SystemController(WellKnownObjectDictionary dictionary)
+        public SystemController(IWellKnownService wkSvc, WellKnownObjectDictionary dictionary)
         {
             _dictionary = dictionary;
+            _wkSvc = wkSvc;
         }
 
         [HttpGet]
@@ -27,13 +32,13 @@ namespace AD.Api.Controllers.System
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dictionary<WellKnownObjectValue, string>))]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WellKnownPathResult))]
         public IActionResult GetWellKnownPaths(
-            [FromQuery] string? domain = null,
+            [Domain] DomainQuery domain,
             [FromQuery] WellKnownObjectValue? key = null)
         {
             if (key.HasValue)
             {
                 _logger.Info("Requesting well-known path for {WellKnown}...", key.Value);
-                _ = _dictionary.TryGetValue(domain, key.Value, out DistinguishedName location);
+                _ = _dictionary.TryGetValue(domain.Domain, key.Value, out DistinguishedName location);
 
                 return this.Ok(new WellKnownPathResult
                 {
@@ -43,7 +48,11 @@ namespace AD.Api.Controllers.System
             }
 
             _logger.Info("Requesting well-known paths...");
-            return this.Ok(_dictionary[domain]);
+            var array = _wkSvc.GetAllWellKnownsInDomain(domain.Domain);
+            return this.Ok(array);
+
+            //return this.Ok(Array.Empty<KeyValuePair<string, string>>());
+            //return this.Ok(_dictionary[domain.Domain].OrderBy(x => x.Key));
         }
     }
 }

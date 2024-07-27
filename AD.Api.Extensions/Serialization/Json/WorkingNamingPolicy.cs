@@ -100,6 +100,7 @@ namespace AD.Api.Serialization.Json
         private static void WriteCharSpan(Utf8JsonWriter writer, JsonSpanCamelCaseNamingPolicy spanPolicy, ReadOnlySpan<char> propertyName)
         {
             Span<char> span = stackalloc char[propertyName.Length];
+            propertyName.CopyTo(span);
             spanPolicy.ConvertSpan(span);
             writer.WritePropertyName(span);
         }

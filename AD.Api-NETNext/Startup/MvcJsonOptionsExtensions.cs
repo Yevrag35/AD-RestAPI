@@ -44,6 +44,7 @@ namespace AD.Api
             options.Converters.AddRange([
                 new ClearOperationConverter(),
                 new DistinguishedNameConverter(),
+                new KeyValuePairArrayConverter<DistinguishedName>() { IsOrdered = true },
                 new OneEditOperationConverter<AddDictionary>(),
                 new OneEditOperationConverter<RemoveDictionary>(),
                 new OneEditOperationConverter<SetDictionary>(),

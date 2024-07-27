@@ -19,6 +19,8 @@ namespace AD.Api.Core.Ldap
 
         private readonly FrozenDictionary<string, FrozenDictionary<WellKnownObjectValue, DistinguishedName>> _dictionary;
 
+        public IEnumStrings<WellKnownObjectValue> EnumStrings => _values.EnumStrings; 
+
         public ref readonly FrozenDictionary<WellKnownObjectValue, DistinguishedName> this[string? key] => ref _dictionary[key ?? string.Empty];
 
         public WellKnownObjectDictionary(IConnectionService connections, IEnumValues<WellKnownObjectValue, BackendValueAttribute, string> enumValues)
@@ -119,7 +121,7 @@ namespace AD.Api.Core.Ldap
                 return;
             }
 
-            foreach (WellKnownObjectValue wk in enumValues.EnumStrings.Values)
+            foreach (WellKnownObjectValue wk in enumValues.EnumStrings.Values.Where(x => WellKnownObjectValue.None != x))
             {
                 string guid = enumValues.GetValueOrDefault(wk, string.Empty);
                 DistinguishedName locationDn = DistinguishedName.Parse(MatchLocationToGuid(guid, locations));
