@@ -56,7 +56,7 @@ public readonly partial struct DistinguishedName :
         get
         {
             ref readonly RelativeName first = ref this.GetFirst();
-            return !first.IsEmpty && first.AttributeType != RelativeNameType.DomainComponent;
+            return !first.IsEmpty && this.Count > 1 && first.AttributeType != RelativeNameType.DomainComponent;
         }
     }
     /// <summary>

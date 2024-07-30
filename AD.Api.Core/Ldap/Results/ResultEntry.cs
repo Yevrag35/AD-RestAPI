@@ -10,21 +10,29 @@ namespace AD.Api.Core.Ldap.Results
     {
         private readonly SortedDictionary<string, object> _attributes;
         private readonly IAttributeConverter _converter;
+        private string _distinguishedName;
 
         public object this[string key] => _attributes[key];
 
         public int Count => _attributes.Count;
+        public string DistinguishedName => _distinguishedName ??= string.Empty;
         public Guid LeaseId { get; set; }
 
         public ResultEntry(IAttributeConverter converter)
         {
             _attributes = new(StringComparer.OrdinalIgnoreCase);
             _converter = converter;
+            _distinguishedName = string.Empty;
         }
 
         public void AddResult(string domain, SearchResultEntry entry)
         {
+            _distinguishedName = entry.DistinguishedName;
             _converter.ConvertEntry(domain, entry, _attributes);
+            if (!_attributes.ContainsKey(AttributeConstants.DISTINGUISHED_NAME))
+            {
+                _attributes[AttributeConstants.DISTINGUISHED_NAME] = entry.DistinguishedName;
+            }
         }
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()

@@ -10,8 +10,10 @@ namespace AD.Api.Core.Ldap
     /// <summary>
     /// Represents a request to create an LDAP object.
     /// </summary>
-    public abstract class CreateBody : ICreateRequest, IScopedRequest, IValidatableObject
+    public abstract class CreateBody : ICreateRequest, IJsonOnDeserialized, IScopedRequest, IValidatableObject
     {
+        private readonly string? _path;
+
         /// <summary>
         /// The specified common name (cn) for the object.
         /// </summary>
@@ -24,6 +26,16 @@ namespace AD.Api.Core.Ldap
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool HasPath { get; private set; }
 
+        public string? Path
+        {
+            get => _path;
+            init
+            {
+                _path = value;
+                this.HasPath = !string.IsNullOrWhiteSpace(value);
+            }
+        }
+
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public abstract FilteredRequestType RequestType { get; }
 
@@ -31,33 +43,7 @@ namespace AD.Api.Core.Ldap
         /// <inheritdoc/>
         public DistinguishedName GetDistinguishedName()
         {
-            if (_dn.HasValue && _dn.Value.IsEmpty)
-            {
-                return _dn.Value;
-            }
-
-            if (!this.HasPath)
-            {
-                _dn = DistinguishedName.Parse(this.CommonName);
-                return _dn.Value;
-            }
-
-            int count = DistinguishedName.CountNumberOfRelativeNames(this.CommonName) + 1;
-            RelativeName[] array = ArrayPool<RelativeName>.Shared.Rent(count);
-            Span<RelativeName> span = array.AsSpan(0, count);
-
-            if (!DistinguishedName.TrySplit(this.CommonName, span.Slice(1), out int namesWritten)
-                ||
-                !RelativeName.TryParseOne(this.CommonName, out RelativeName first))
-            {
-                ArrayPool<RelativeName>.Shared.Return(array);
-                return DistinguishedName.Empty;
-            }
-
-            span[0] = first;
-            _dn = new(span.Slice(0, namesWritten + 1));
-            ArrayPool<RelativeName>.Shared.Return(array);
-            return _dn.Value;
+            return _dn ??= DistinguishedName.Empty;
         }
 
         protected abstract string GetScopedPathMemberName();
@@ -73,12 +59,29 @@ namespace AD.Api.Core.Ldap
         {
             return this.GetScopedPath();
         }
+        public void OnDeserialized()
+        {
+            DistinguishedName basePath = DistinguishedName.Parse(this.Path);
+            RelativeNameType rdnType = this.RequestType switch
+            {
+                FilteredRequestType.OrganizationalUnit => RelativeNameType.OrganizationalUnit,
+                _ => RelativeNameType.CommonName,
+            };
 
+            RelativeName rdn = RelativeName.Create(this.CommonName, rdnType);
+            _dn = basePath.IsEmpty
+                ? new DistinguishedName(new ReadOnlySpan<RelativeName>(in rdn))
+                : basePath.Insert(0, rdn);
+
+            return;
+        }
         /// <inheritdoc/>
         public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             return [];
         }
+
+        
     }
 }
 

@@ -37,7 +37,7 @@ internal abstract class CreationService
         }
 
         DistinguishedName dn = request.GetDistinguishedName();
-        if (!request.HasPath && !this.TryUpdateWithWellKnown(ref dn, target.Domain, request.RequestType, out IActionResult? error))
+        if (!dn.HasParent && !this.TryUpdateWithWellKnown(ref dn, target.Domain, request.RequestType, out IActionResult? error))
         {
             return OneOf<ResultEntry>.FromT1(error);
         }

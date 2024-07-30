@@ -7,6 +7,7 @@ using System.Collections.Frozen;
 using System.DirectoryServices.Protocols;
 using AD.Api.Spans;
 using AD.Api.Statics;
+using AD.Api.Core.Extensions.Results;
 
 namespace AD.Api.Core.Ldap.Users;
 
@@ -37,9 +38,6 @@ internal sealed class UserCreationService : CreationService, IUserCreations
             IReadOnlyDictionary<string, object?> attributes = GetAttributesFromRequest(request);
 
             oneOf = this.SendRequest(connection, in target, request, attributes);
-            // return oneOf.Match(
-            //     f0: success => new SidString((byte[])success[AttributeConstants.OBJECT_SID]),
-            //     f1: error => OneOf<SidString>.FromT1(error));
         }
 
         if (oneOf.TryGetT1(out error, out ResultEntry? entry))
@@ -47,31 +45,8 @@ internal sealed class UserCreationService : CreationService, IUserCreations
             return error;
         }
 
-        Span<char> chars = stackalloc char[target.UrlQueryLength + 1 + SidString.MaxSidStringLength];
-        int pos = 0;
-        createdAt.CopyToSlice(chars, ref pos);
-
-        Span<byte> sidBytes = entry[AttributeConstants.OBJECT_SID] as byte[];
-        int prePos = pos;
-        pos += SidString.FormatSpan(chars.Slice(pos), sidBytes);
-
-        string sidValue = chars.Slice(prePos, pos - prePos).ToString();
-
-        if (target != DomainQuery.Default)
-        {
-            chars[pos++] = CharConstants.QUESTION;
-            target.AppendAsQuery(chars.Slice(pos), out int written);
-            pos += written;
-        }
-
-        return new CreatedResult(
-            location: new string(chars.Slice(0, pos)),
-            value: new {
-                Domain = target.Domain,
-                Dn = request.GetDistinguishedName().ToString(),
-                ObjectSid = sidValue,
-            }
-        );
+        CreatedObject createObj = entry.ToCreatedObject(createdAt, in target);
+        return new CreatedResult(createObj.Location, createObj);
     }
 
     private static IReadOnlyDictionary<string, object?> GetAttributesFromRequest(CreateUserRequest request)

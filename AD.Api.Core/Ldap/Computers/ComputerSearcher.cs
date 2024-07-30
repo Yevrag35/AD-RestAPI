@@ -1,16 +1,17 @@
-﻿using AD.Api.Components;
+﻿using AD.Api.Attributes.Services;
+using AD.Api.Components;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.Versioning;
-using System.Security.Principal;
 
 namespace AD.Api.Core.Ldap.Computers;
 
 public interface IComputerSearcher
 {
+    IActionResult FindOne(SidString computerSid, SearchParameters parameters, IServiceProvider provider);
+
     /// <summary>
     /// Retrieves a single computer object by its object SID from the specified target domain and returns the result
     /// along with the active connection for sending further queries.
@@ -23,10 +24,11 @@ public interface IComputerSearcher
     /// an <see cref="IActionResult"/> containing the web response result if the operation failed or was unable to
     /// find the computer object.
     /// </returns>
-    OneOf<ConnectedResponse, IActionResult> GetOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null);
+    OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null);
 }
 
-internal sealed class ComputerSearcher
+[DependencyRegistration(typeof(IComputerSearcher), Lifetime = ServiceLifetime.Singleton)]
+internal sealed class ComputerSearcher : IComputerSearcher
 {
     private readonly ILdapFilterService _filterSvc;
     private readonly IRequestService _requestSvc;
@@ -37,7 +39,15 @@ internal sealed class ComputerSearcher
         _requestSvc = requestSvc;
     }
 
-    [SupportedOSPlatform("WINDOWS")]
+    public IActionResult FindOne(SidString computerSid, SearchParameters parameters, IServiceProvider provider)
+    {
+        string filter = _filterSvc.GetFilter(computerSid, FilteredRequestType.Computer);
+        SearchFilterLite searchFilter = SearchFilterLite.Create(filter, FilteredRequestType.Computer);
+
+        parameters.ApplyParameters(searchFilter);
+
+        return _requestSvc.FindOne(parameters, provider);
+    }
     public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null)
     {
         string filter = _filterSvc.GetFilter(computerSid, FilteredRequestType.Computer);
@@ -52,7 +62,7 @@ internal sealed class ComputerSearcher
 
         parameters.SetProperties(AttributeConstants.DISTINGUISHED_NAME, extraProperties);
         parameters.ApplyParameters(searchFilter);
-        SidString ss = new("");
+
         return _requestSvc.FindOneAndContinue(parameters);
     }
 }
