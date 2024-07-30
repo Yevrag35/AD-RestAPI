@@ -42,7 +42,6 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     public IActionResult GetUser(
         [FromQuery] SearchParameters parameters,
-        [FromServices] IPasswordChangeService pwdSvc,
         [FromRouteSid] SidString sid)
     {
         return this.UserSearcher.FindOne(sid, parameters, this.HttpContext.RequestServices);

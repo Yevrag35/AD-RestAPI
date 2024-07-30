@@ -51,9 +51,6 @@ namespace AD.Api.Controllers.System
             _logger.Info("Requesting well-known paths...");
             var array = _wkSvc.GetAllWellKnownsInDomain(domain.Domain);
             return this.Ok(array);
-
-            //return this.Ok(Array.Empty<KeyValuePair<string, string>>());
-            //return this.Ok(_dictionary[domain.Domain].OrderBy(x => x.Key));
         }
     }
 }

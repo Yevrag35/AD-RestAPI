@@ -1,7 +1,5 @@
 using AD.Api.Core.Ldap.Requests;
 using AD.Api.Validation;
-using Swashbuckle.AspNetCore.Annotations;
-using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Core.Ldap.Users;
 

@@ -1,5 +1,6 @@
 using AD.Api;
 using AD.Api.Collections;
+using AD.Api.Components;
 using AD.Api.Constraints;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Authentication.Jwt;
@@ -8,6 +9,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Security;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Serialization.Json;
+using AD.Api.Core.Settings;
 using AD.Api.Core.Web;
 using AD.Api.Core.Web.Validation;
 using AD.Api.Expressions;
@@ -157,8 +159,8 @@ try
     builder.Services.AddEndpointsApiExplorer()
         .AddSwaggerGen(x =>
         {
-            x.SchemaFilter<LdapWebFilter>();
-            x.OperationFilter<LdapWebFilter>();
+            x.SchemaFilter<DomainQueryFilter>();
+            x.OperationFilter<DomainQueryFilter>();
             x.OperationFilter<SidStringFilter>();
         })
         .AddSwaggerWithOptions(config.GetSection("SwaggerInfo"));

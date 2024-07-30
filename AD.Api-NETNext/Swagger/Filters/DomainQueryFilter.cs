@@ -2,18 +2,30 @@
 using AD.Api.Core;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Security;
+using AD.Api.Core.Settings;
 using AD.Api.Reflection;
 using AD.Api.Validation;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 
 namespace AD.Api.Swagger.Filters
 {
-    public sealed class LdapWebFilter : IOperationFilter, ISchemaFilter
+    public sealed class DomainQueryFilter : IOperationFilter, ISchemaFilter
     {
+        //public Dictionary<string, HashSet<string>> Attributes { get; }
+
+        //public LdapWebFilter(Dictionary<string, HashSet<string>> setDict)
+        public DomainQueryFilter()
+        {
+            //this.Attributes = setDict;
+        }
+
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             if (!context.SchemaRepository.Schemas.TryGetValue(nameof(DomainQuery), out var schema)
@@ -53,6 +65,11 @@ namespace AD.Api.Swagger.Filters
                 break;
             }
         }
+
+        //private static bool TryLabelDomainQueryProperty(ApiParameterDescription parameter, OpenApiOperation operation, OperationFilterContext context)
+        //{
+
+        //}
 
         public void Apply(OpenApiSchema schema, SchemaFilterContext context)
         {

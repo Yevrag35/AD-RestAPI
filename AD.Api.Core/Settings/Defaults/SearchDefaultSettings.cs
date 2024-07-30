@@ -17,7 +17,7 @@ namespace AD.Api.Core.Settings
         TimeSpan Timeout { get; }
     }
 
-    [DynamicDependencyRegistration]
+    //[DynamicDependencyRegistration]
     public sealed class SearchDefaultSettings : ISearchDefaults
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -28,9 +28,7 @@ namespace AD.Api.Core.Settings
         string[] ISearchDefaults.AllAttributes => this.AllAttributes;
         internal string[] AllAttributes { get; set; } = [];
         public DereferenceAlias DereferenceAlias { get; set; } = DereferenceAlias.Never;
-        internal bool IsGlobal { get; set; }
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        bool ISearchDefaults.IsGlobal => this.IsGlobal;
+        public bool IsGlobal { get; set; }
         public SearchScope Scope { get; set; } = SearchScope.Subtree;
         [Range(0, int.MaxValue, ErrorMessage = "The search request Size Limit cannot be less than 0.")]
         public int SizeLimit { get; set; }
@@ -38,28 +36,38 @@ namespace AD.Api.Core.Settings
         public TimeSpan Timeout { get; set; } = LdapRequest.DefaultTimeout;
         public bool UseGlobalAttributes { get; set; }
 
-        [DynamicDependencyRegistrationMethod]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        private static void AddToServices(IServiceCollection services, IConfiguration configuration)
+        public static SearchDefaultSettings? ParseFromConfig(IConfigurationSection section)
         {
-            IConfigurationSection defaultsSection = configuration
-                .GetSection("Settings")
-                .GetSection("SearchDefaults");
-
-            if (!defaultsSection.Exists())
+            var settings = section.Get<SearchDefaultSettings>(x => x.ErrorOnUnknownConfiguration = false);
+            if (settings is not null && "Global".Equals(section.Key, StringComparison.OrdinalIgnoreCase))
             {
-                return;
+                settings.IsGlobal = true;
             }
 
-            SearchDefaultSettings? settings = defaultsSection.Get<SearchDefaultSettings>(x => x.ErrorOnUnknownConfiguration = false);
-
-            if (settings is null)
-            {
-                return;
-            }
-
-            services.AddSingleton<ISearchDefaults>(settings);
+            return settings;
         }
+
+        //[DynamicDependencyRegistrationMethod]
+        //[EditorBrowsable(EditorBrowsableState.Never)]
+        //private static void AddToServices(IServiceCollection services, IConfiguration configuration)
+        //{
+        //    IConfigurationSection defaultsSection = configuration
+        //        .GetSection("Settings")
+        //        .GetSection("SearchDefaults");
+
+        //    if (!defaultsSection.Exists())
+        //    {
+        //        return;
+        //    }
+
+        //    var settings = ParseFromConfig(defaultsSection);
+        //    if (settings is null)
+        //    {
+        //        return;
+        //    }
+
+        //    services.AddSingleton<ISearchDefaults>(settings);
+        //}
     }
 }
 

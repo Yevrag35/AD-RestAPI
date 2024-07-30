@@ -147,8 +147,7 @@ namespace AD.Api.Core
                 throw new AdApiStartupException(typeof(DefaultsService), "The 'Settings:SearchDefaults:Global' section is missing from the configuration.");
             }
 
-            SearchDefaultSettings globalSettings = ParseDefaultsFor(globalSection);
-            globalSettings.IsGlobal = true;
+            SearchDefaultSettings globalSettings = SearchDefaultSettings.ParseFromConfig(globalSection)!;
             globalSettings.UseGlobalAttributes = true;
 
             Dictionary<string, ISearchDefaults> dictionary = new(6, StringComparer.OrdinalIgnoreCase)
@@ -164,7 +163,7 @@ namespace AD.Api.Core
             foreach (IConfigurationSection child in section.GetChildren().Where(x => x.Key != "Global"))
             {
                 working.Clear();
-                SearchDefaultSettings settings = ParseDefaultsFor(child);
+                SearchDefaultSettings settings = SearchDefaultSettings.ParseFromConfig(child)!;
                 settings.IsGlobal = false;
                 if (settings.UseGlobalAttributes)
                 {
@@ -183,12 +182,6 @@ namespace AD.Api.Core
             {
                 return new DefaultsService(x.GetRequiredService<IEnumStrings<FilteredRequestType>>(), dictionary);
             });
-        }
-        private static SearchDefaultSettings ParseDefaultsFor(IConfigurationSection section)
-        {
-            SearchDefaultSettings? settings = section.Get<SearchDefaultSettings>(x => x.ErrorOnUnknownConfiguration = false);
-
-            return settings ?? new SearchDefaultSettings();
         }
     }
 }
