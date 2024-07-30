@@ -1,15 +1,15 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Core.Ldap.Filters;
+using AD.Api.Core.Ldap.Groups;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Mvc;
-using System.Buffers;
 
 namespace AD.Api.Core.Ldap.Users
 {
-    public interface IUserService
+    public partial interface IUserService
     {
         IActionResult FindOne(SidString userSid, SearchParameters parameters, IServiceProvider provider);
         /// <summary>
@@ -25,22 +25,35 @@ namespace AD.Api.Core.Ldap.Users
         /// find the user object.
         /// </returns>
         OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString userSid, in DomainQuery target, string[]? extraProperties = null);
+
+        IActionResult ResolveUserGroups(SidString userSid, SearchParameters searchParameters, in DomainQuery target);
     }
 
     [DependencyRegistration(typeof(IUserService), Lifetime = ServiceLifetime.Singleton)]
-    internal sealed class UserSearcher : IUserService
+    internal sealed partial class UserService : IUserService
     {
+        private static readonly string[] _groupSearchProperties = [
+            AttributeConstants.DISTINGUISHED_NAME,
+            AttributeConstants.MEMBER_OF,
+        ];
+
         private readonly ILdapFilterService _filterSvc;
+        private readonly IGroupSearcher _groupSearcher;
         private readonly IRequestService _requestSvc;
-        private readonly IWellKnownService _wellKnownSvc;
-        
-        public UserSearcher(ILdapFilterService filterSvc, IRequestService requestSvc, IWellKnownService wellKnown)
+        private readonly CreationService _creationSvc;
+        private readonly IDeletionService _deletionSvc;
+        private readonly IMoveService _moveSvc;
+
+        public UserService(ILdapFilterService filterSvc, IGroupSearcher groupSearcher, IRequestService requestSvc, CreationService creationSvc, IDeletionService deletionSvc, IMoveService moveSvc)
         {
             _filterSvc = filterSvc;
+            _groupSearcher = groupSearcher;
             _requestSvc = requestSvc;
-            _wellKnownSvc = wellKnown;
+            _creationSvc = creationSvc;
+            _deletionSvc = deletionSvc;
+            _moveSvc = moveSvc;
         }
-        
+
         public IActionResult FindOne(SidString userSid, SearchParameters parameters, IServiceProvider provider)
         {
             string filter = _filterSvc.GetFilter(userSid, FilteredRequestType.User);
@@ -67,6 +80,20 @@ namespace AD.Api.Core.Ldap.Users
             parameters.ApplyParameters(searchFilter);
 
             return _requestSvc.FindOneAndContinue(parameters);
+        }
+
+        public IActionResult ResolveUserGroups(SidString userSid, SearchParameters searchParameters, in DomainQuery target)
+        {
+            var oneOf = this.FindOneAndContinue(userSid, in target, _groupSearchProperties);
+            if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continuation))
+            {
+                return error;
+            }
+
+            Guid leaseId = searchParameters.Request.RequestId;
+            searchParameters.Request.Reset();
+            searchParameters.Request.RequestId = leaseId;
+            return _groupSearcher.ResolveUserGroups(continuation, searchParameters);
         }
     }
 }

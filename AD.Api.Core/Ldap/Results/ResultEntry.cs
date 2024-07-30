@@ -29,10 +29,10 @@ namespace AD.Api.Core.Ldap.Results
         {
             _distinguishedName = entry.DistinguishedName;
             _converter.ConvertEntry(domain, entry, _attributes);
-            if (!_attributes.ContainsKey(AttributeConstants.DISTINGUISHED_NAME))
-            {
-                _attributes[AttributeConstants.DISTINGUISHED_NAME] = entry.DistinguishedName;
-            }
+            //if (!_attributes.ContainsKey(AttributeConstants.DISTINGUISHED_NAME))
+            //{
+            //    _attributes[AttributeConstants.DISTINGUISHED_NAME] = entry.DistinguishedName;
+            //}
         }
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()

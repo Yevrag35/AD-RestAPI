@@ -15,6 +15,7 @@ public interface IGroupSearcher
 {
     IActionResult ResolveUserGroups(ConnectedResponse continuation, string? propertyString, int sizeLimit);
     IActionResult ResolveUserGroups(ConnectedResponse continuation, string[]? properties, int sizeLimit);
+    IActionResult ResolveUserGroups(ConnectedResponse continuation, SearchParameters searchParameters);
 }
 
 [DependencyRegistration(typeof(IGroupSearcher), Lifetime = ServiceLifetime.Singleton)]
@@ -84,6 +85,33 @@ internal sealed class GroupSearcher : IGroupSearcher
         parameters.SetProperties(AttributeConstants.DISTINGUISHED_NAME, properties);
         parameters.ApplyParameters(null);
 
+        return _requestSvc.FindAll(parameters, continuation);
+    }
+    public IActionResult ResolveUserGroups(ConnectedResponse continuation, SearchParameters parameters)
+    {
+        if (!parameters.Scope.HasValue)
+        {
+            parameters.Scope = SearchScope.Subtree;
+        }
+
+        if (!continuation.IsSearchSuccess)
+        {
+            return new ApiBadRequestResult("The distinguished name of the user object was not found.", ResultCode.NoSuchObject);
+        }
+        else if (continuation.ResultEntry.Attributes.Contains(AttributeConstants.MEMBER_OF) && (parameters.Properties.Length == 0 || (parameters.Properties.Length == 1 && AttributeConstants.DISTINGUISHED_NAME.Equals(parameters.Properties[0], StringComparison.OrdinalIgnoreCase))))
+        {
+            return SendResultAsDNList(continuation.ResultEntry, continuation.LastResponse);
+        }
+
+        parameters.SizeLimit ??= 0;
+        parameters.BackingFilter = new SearchFilter
+        {
+            Filter = GetGroupFilter(continuation.FoundObject, _filterSvc),
+            SearchBase = DistinguishedName.Parse(_connectSvc.RegisteredConnections[continuation.Target.Domain].DefaultNamingContext),
+            SizeLimit = parameters.SizeLimit,
+        };
+
+        parameters.ApplyParameters(null);
         return _requestSvc.FindAll(parameters, continuation);
     }
 

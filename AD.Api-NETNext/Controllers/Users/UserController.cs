@@ -28,11 +28,11 @@ public sealed class UsersController : ControllerBase
     private const string ROUTE_NAME = "users";
     static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-    public IUserService UserSearcher { get; }
+    public IUserService UserService { get; }
 
-    public UsersController(IUserService searcher)
+    public UsersController(IUserService userSvc)
     {
-        this.UserSearcher = searcher;
+        this.UserService = userSvc;
     }
 
     [HttpGet]
@@ -44,7 +44,7 @@ public sealed class UsersController : ControllerBase
         [FromQuery] SearchParameters parameters,
         [FromRouteSid] SidString sid)
     {
-        return this.UserSearcher.FindOne(sid, parameters, this.HttpContext.RequestServices);
+        return this.UserService.FindOne(sid, parameters, this.HttpContext.RequestServices);
     }
 
     private const string SID_ROUTE_PREFIX = "/" + ROUTE_NAME + "/";
@@ -55,7 +55,6 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult CreateUser(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
-        [FromServices] IUserCreations createSvc,
         [Domain] DomainQuery target)
     {
         if (!this.ModelState.IsValid)
@@ -63,7 +62,7 @@ public sealed class UsersController : ControllerBase
            return new ApiBadRequestResult(this.ModelState);
         }
 
-        return createSvc.Create(in target, request, SID_ROUTE_PREFIX);
+        return this.UserService.Create(in target, request, SID_ROUTE_PREFIX);
     }
 
     [HttpDelete]
@@ -71,7 +70,6 @@ public sealed class UsersController : ControllerBase
     [JwtAuth(AuthorizedRole.UserDeleter, PossiblyScoped = true)]
     public IActionResult DeleteUser(
         [FromRouteSid] SidString sid,
-        [FromServices] IDeletionService deleteSvc,
         [Domain] DomainQuery target)
     {
         if (!this.ModelState.IsValid)
@@ -79,13 +77,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target);
-        if (userSearch.TryGetT1(out var error, out var continuation))
-        {
-            return error;
-        }
-
-        return deleteSvc.DeleteObject(continuation);
+        return this.UserService.Delete(sid, in target);
     }
 
     private static readonly string[] _uac = [AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.USER_ACCOUNT_CONTROL];
@@ -102,7 +94,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target, _uac);
+        var userSearch = this.UserService.FindOneAndContinue(sid, in target, _uac);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -123,7 +115,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target, _uac);
+        var userSearch = this.UserService.FindOneAndContinue(sid, in target, _uac);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -139,22 +131,14 @@ public sealed class UsersController : ControllerBase
     public IActionResult GetUserGroups(
         [FromRouteSid] SidString sid,
         [FromServices] IGroupSearcher groupSearcher,
-        [Domain] DomainQuery target,
-        [FromQueryProperties] string[]? properties = null,
-        [FromQuery(Name = "limit")] int? sizeLimit = null)
+        [FromQuery] SearchParameters parameters)
     {
         if (!this.ModelState.IsValid)
         {
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target, _groupProperties);
-        if (userSearch.TryGetT1(out var error, out var continuation))
-        {
-            return error;
-        }
-
-        return groupSearcher.ResolveUserGroups(continuation, properties, sizeLimit.GetValueOrDefault());
+        return this.UserService.ResolveUserGroups(sid, parameters, parameters.Info);
     }
 
     [HttpPut]
@@ -166,7 +150,6 @@ public sealed class UsersController : ControllerBase
     public IActionResult MoveUser(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] UserMoveRequest request,
         [FromRouteSid] SidString sid,
-        [FromServices] IMoveService moveSvc,
         [Domain] DomainQuery target)
     {
         if (!this.ModelState.IsValid)
@@ -174,13 +157,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target);
-        if (userSearch.TryGetT1(out var error, out var continuation))
-        {
-            return error;
-        }
-
-        return moveSvc.MoveObject(request.NewParentDn.Value, request.NewName.Value, continuation);
+        return this.UserService.Move(sid, request, in target);
     }
 
     [HttpPut]
@@ -202,7 +179,7 @@ public sealed class UsersController : ControllerBase
 
         RelativeName rdn = RelativeName.Create(request.Name, RelativeNameType.CommonName);
 
-        var userSearch = this.UserSearcher.FindOneAndContinue(sid, in target);
+        var userSearch = this.UserService.FindOneAndContinue(sid, in target);
         if (userSearch.TryGetT1(out var error, out var continuation))
         {
             return error;
@@ -228,7 +205,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var oneOf = this.UserSearcher.FindOneAndContinue(sid, in target);
+        var oneOf = this.UserService.FindOneAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
@@ -259,7 +236,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var oneOf = this.UserSearcher.FindOneAndContinue(sid, in target);
+        var oneOf = this.UserService.FindOneAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;
@@ -290,7 +267,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        var oneOf = this.UserSearcher.FindOneAndContinue(sid, in target);
+        var oneOf = this.UserService.FindOneAndContinue(sid, in target);
         if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
         {
             return error;

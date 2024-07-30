@@ -1,4 +1,5 @@
 using AD.Api.Attributes;
+using AD.Api.Attributes.Services;
 using AD.Api.Components;
 using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap.Filters;
@@ -6,30 +7,29 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
 using AD.Api.Pooling;
 using AD.Api.Strings.Extensions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap;
 
-internal abstract class CreationService
+[DependencyRegistration(Lifetime = ServiceLifetime.Singleton)]
+internal sealed class CreationService
 {
     private readonly NonLeaseablePool<object?[]> _objPool;
     private static readonly string[] _searchAttributes = [
         AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.OBJECT_SID,
     ];
 
-    protected IRequestService Requests { get; }
-    protected IWellKnownService WellKnownSvc { get; }
+    internal IRequestService Requests { get; }
+    internal IWellKnownService WellKnownSvc { get; }
 
-    protected CreationService(IWellKnownService wellKnowns, IRequestService requests)
+    public CreationService(IWellKnownService wellKnowns, IRequestService requests)
     {
         _objPool = new(5, PreFillBag(2), GetObjectArray, null);
         this.Requests = requests;
         this.WellKnownSvc = wellKnowns;
     }
 
-    protected OneOf<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
+    internal OneOf<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
     {
         string objClass = request.RequestType.GetObjectClass();
         bool needsObj = string.Empty.Equals(objClass);
