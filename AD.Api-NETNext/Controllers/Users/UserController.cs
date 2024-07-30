@@ -28,9 +28,9 @@ public sealed class UsersController : ControllerBase
     private const string ROUTE_NAME = "users";
     static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-    public IUserSearcher UserSearcher { get; }
+    public IUserService UserSearcher { get; }
 
-    public UsersController(IUserSearcher searcher)
+    public UsersController(IUserService searcher)
     {
         this.UserSearcher = searcher;
     }

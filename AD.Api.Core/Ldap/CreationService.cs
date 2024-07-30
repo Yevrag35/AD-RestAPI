@@ -5,6 +5,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
 using AD.Api.Pooling;
+using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.DirectoryServices.Protocols;
@@ -14,15 +15,18 @@ namespace AD.Api.Core.Ldap;
 internal abstract class CreationService
 {
     private readonly NonLeaseablePool<object?[]> _objPool;
+    private static readonly string[] _searchAttributes = [
+        AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.OBJECT_SID,
+    ];
 
     protected IRequestService Requests { get; }
-    protected WellKnownObjectDictionary WellKnowns { get; }
+    protected IWellKnownService WellKnownSvc { get; }
 
-    protected CreationService(WellKnownObjectDictionary wellKnowns, IRequestService requests)
+    protected CreationService(IWellKnownService wellKnowns, IRequestService requests)
     {
         _objPool = new(5, PreFillBag(2), GetObjectArray, null);
         this.Requests = requests;
-        this.WellKnowns = wellKnowns;
+        this.WellKnownSvc = wellKnowns;
     }
 
     protected OneOf<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
@@ -54,10 +58,9 @@ internal abstract class CreationService
             return OneOf<ResultEntry>.FromT1(oneOf.AsT1);
         }
 
-        var filterSvc = target.GetRequiredService<ILdapFilterService>();
-        string filter = filterSvc.GetFilter(request.RequestType, addEnclosure: true);
+        string filter = CreateFilterFromRequest(in target, request);
 
-        SearchRequest search = new(dn.ToString(), filter, SearchScope.Base, [AttributeConstants.OBJECT_SID]);
+        SearchRequest search = new(dn.ToString(), filter, SearchScope.Base, _searchAttributes);
 
         var searchOneOf = this.Requests.SendForResponse<SearchResponse>(search, connection);
         if (searchOneOf.TryGetT1(out error, out var searchSuccess))
@@ -66,19 +69,12 @@ internal abstract class CreationService
         }
         else if (searchSuccess.Entries.Count == 0)
         {
-            return new ObjectResult(new
-            {
-                Error = "The object was seemingly created, but could not be found in the directory.",
-                ResultCode = (int)ResultCode.NoSuchObject,
-                Result = ResultCode.NoSuchObject,
-            })
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-            };
+            return new LdapObjectMissingResult(
+                $"The object was seemingly created, but could not be found in the directory: {dn}");
         }
 
         var entry = target.GetRequiredService<IPooledItem<ResultEntry>>();
-        entry.Value.AddResult(target.Domain ?? string.Empty, searchSuccess.Entries[0]);
+        entry.Value.AddResult(target.Domain.OrEmpty(), searchSuccess.Entries[0]);
 
         return entry.Value;
     }
@@ -103,6 +99,11 @@ internal abstract class CreationService
             _objPool.Return(values);
         }
     }
+    private static string CreateFilterFromRequest(in DomainQuery target, ICreateRequest request)
+    {
+        var filterSvc = target.GetRequiredService<ILdapFilterService>();
+        return filterSvc.GetFilter(request.RequestType, addEnclosure: true);
+    }
     private static object?[] GetObjectArray()
     {
         return new object[1];
@@ -116,7 +117,7 @@ internal abstract class CreationService
     }
     private bool TryUpdateWithWellKnown(ref DistinguishedName dn, string? domainKey, FilteredRequestType type, [NotNullWhen(false)] out IActionResult? errorResult)
     {
-        if (!this.WellKnowns.TryGetValue(domainKey, requestType: type, out DistinguishedName wellKnownDn))
+        if (!this.WellKnownSvc.TryGetValueByRequestType(domainKey, type, out DistinguishedName wellKnownDn))
         {
             errorResult = new ApiBadRequestResult(
                 "This request requires a path to be specified.", ResultCode.InvalidDNSyntax);

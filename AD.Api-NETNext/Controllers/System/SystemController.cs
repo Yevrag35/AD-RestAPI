@@ -6,51 +6,46 @@ using AD.Api.Core.Ldap;
 using AD.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using NLog;
-using Swashbuckle.AspNetCore.Annotations;
 
-namespace AD.Api.Controllers.System
+namespace AD.Api.Controllers.System;
+
+[Authorize]
+[ApiController]
+[Route("system")]
+public sealed class SystemController : ControllerBase
 {
-    [Authorize]
-    [ApiController]
-    [Route("system")]
-    public sealed class SystemController : ControllerBase
+    private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+    private readonly IWellKnownService _wkSvc;
+
+    public SystemController(IWellKnownService wkSvc)
     {
-        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
-        private readonly WellKnownObjectDictionary _dictionary;
-        private readonly IWellKnownService _wkSvc;
+        _wkSvc = wkSvc;
+    }
 
-        public SystemController(IWellKnownService wkSvc, WellKnownObjectDictionary dictionary)
+    [HttpGet]
+    [Route("wellKnownPaths")]
+    [JwtAuth(AuthorizedRole.Reader)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dictionary<WellKnownObjectValue, string>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WellKnownPathResult))]
+    public IActionResult GetWellKnownPaths(
+        [Domain] DomainQuery domain,
+        [FromQuery] WellKnownObjectValue? key = null)
+    {
+        if (key.HasValue)
         {
-            _dictionary = dictionary;
-            _wkSvc = wkSvc;
-        }
+            _logger.Info("Requesting well-known path for {WellKnown}...", key.Value);
+            DistinguishedName location = _wkSvc.GetValueByKey(domain.Domain, key.Value);
 
-        [HttpGet]
-        [Route("wellKnownPaths")]
-        [JwtAuth(AuthorizedRole.Reader)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dictionary<WellKnownObjectValue, string>))]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WellKnownPathResult))]
-        public IActionResult GetWellKnownPaths(
-            [Domain] DomainQuery domain,
-            [FromQuery] WellKnownObjectValue? key = null)
-        {
-            if (key.HasValue)
+            return this.Ok(new WellKnownPathResult
             {
-                _logger.Info("Requesting well-known path for {WellKnown}...", key.Value);
-                _ = _dictionary.TryGetValue(domain.Domain, key.Value, out DistinguishedName location);
-
-                return this.Ok(new WellKnownPathResult
-                {
-                    DistinguishedName = location,
-                    WellKnown = key.Value,
-                });
-            }
-
-            _logger.Info("Requesting well-known paths...");
-            var array = _wkSvc.GetAllWellKnownsInDomain(domain.Domain);
-            return this.Ok(array);
+                DistinguishedName = location,
+                WellKnown = key.Value,
+            });
         }
+
+        _logger.Info("Requesting all well-known paths...");
+        var array = _wkSvc.GetAllWellKnownsInDomain(domain.Domain);
+        return this.Ok(array);
     }
 }

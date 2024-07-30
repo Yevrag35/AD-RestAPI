@@ -19,7 +19,7 @@ public interface IUserCreations
 [DependencyRegistration(typeof(IUserCreations), Lifetime = ServiceLifetime.Singleton)]
 internal sealed class UserCreationService : CreationService, IUserCreations
 {
-    public UserCreationService(WellKnownObjectDictionary wellKnowns, IRequestService requests)
+    public UserCreationService(IWellKnownService wellKnowns, IRequestService requests)
         : base(wellKnowns, requests)
     {
     }

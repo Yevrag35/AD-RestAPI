@@ -9,7 +9,7 @@ using System.Buffers;
 
 namespace AD.Api.Core.Ldap.Users
 {
-    public interface IUserSearcher
+    public interface IUserService
     {
         IActionResult FindOne(SidString userSid, SearchParameters parameters, IServiceProvider provider);
         /// <summary>
@@ -27,16 +27,18 @@ namespace AD.Api.Core.Ldap.Users
         OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString userSid, in DomainQuery target, string[]? extraProperties = null);
     }
 
-    [DependencyRegistration(typeof(IUserSearcher), Lifetime = ServiceLifetime.Singleton)]
-    internal sealed class UserSearcher : IUserSearcher
+    [DependencyRegistration(typeof(IUserService), Lifetime = ServiceLifetime.Singleton)]
+    internal sealed class UserSearcher : IUserService
     {
         private readonly ILdapFilterService _filterSvc;
         private readonly IRequestService _requestSvc;
+        private readonly IWellKnownService _wellKnownSvc;
         
-        public UserSearcher(ILdapFilterService filterSvc, IRequestService requestSvc)
+        public UserSearcher(ILdapFilterService filterSvc, IRequestService requestSvc, IWellKnownService wellKnown)
         {
             _filterSvc = filterSvc;
             _requestSvc = requestSvc;
+            _wellKnownSvc = wellKnown;
         }
         
         public IActionResult FindOne(SidString userSid, SearchParameters parameters, IServiceProvider provider)
