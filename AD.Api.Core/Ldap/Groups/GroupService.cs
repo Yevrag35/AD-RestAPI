@@ -11,15 +11,15 @@ using System.Buffers;
 
 namespace AD.Api.Core.Ldap.Groups;
 
-public interface IGroupSearcher
+public interface IGroupService
 {
     IActionResult ResolveUserGroups(ConnectedResponse continuation, string? propertyString, int sizeLimit);
     IActionResult ResolveUserGroups(ConnectedResponse continuation, string[]? properties, int sizeLimit);
     IActionResult ResolveUserGroups(ConnectedResponse continuation, SearchParameters searchParameters);
 }
 
-[DependencyRegistration(typeof(IGroupSearcher), Lifetime = ServiceLifetime.Singleton)]
-internal sealed class GroupSearcher : IGroupSearcher
+[DependencyRegistration(typeof(IGroupService), Lifetime = ServiceLifetime.Singleton)]
+internal sealed class GroupService : IGroupService
 {
     static readonly int MEMBER_LENGTH = AttributeConstants.MEMBER.Length + LdapConstants.RECURSIVE.Length;
 
@@ -27,7 +27,7 @@ internal sealed class GroupSearcher : IGroupSearcher
     private readonly ILdapFilterService _filterSvc;
     private readonly IRequestService _requestSvc;
 
-    public GroupSearcher(IConnectionService connectSvc, ILdapFilterService filterSvc, IRequestService requestSvc)
+    public GroupService(IConnectionService connectSvc, ILdapFilterService filterSvc, IRequestService requestSvc)
     {
         _connectSvc = connectSvc;
         _filterSvc = filterSvc;

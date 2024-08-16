@@ -138,6 +138,7 @@ try
         return b.Services
             .AddControllers(options =>
             {
+                options.AllowEmptyInputInBodyModelBinding = false;
                 options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider(JsonSpanCamelCaseNamingPolicy.SpanPolicy));
 
                 if (isJwt)

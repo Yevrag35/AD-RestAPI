@@ -16,7 +16,6 @@ using AD.Api.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NLog;
-using System.Security.Principal;
 
 namespace AD.Api.Controllers.Users;
 
@@ -54,7 +53,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult CreateUser(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] CreateUserRequest request,
+        [FromBody] CreateUserRequest request,
         [Domain] DomainQuery target)
     {
         if (!this.ModelState.IsValid)
@@ -124,13 +123,12 @@ public sealed class UsersController : ControllerBase
         return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(true), continuation, in target);
     }
 
-    private static readonly string[] _groupProperties = [AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.MEMBER_OF];
     [HttpGet]
     [Route("{sid:objectsid}/groups")]
     [JwtAuth(AuthorizedRole.Reader)]
     public IActionResult GetUserGroups(
         [FromRouteSid] SidString sid,
-        [FromServices] IGroupSearcher groupSearcher,
+        [FromServices] IGroupService groupSearcher,
         [FromQuery] SearchParameters parameters)
     {
         if (!this.ModelState.IsValid)
@@ -148,7 +146,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult MoveUser(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] UserMoveRequest request,
+        [FromBody] UserMoveRequest request,
         [FromRouteSid] SidString sid,
         [Domain] DomainQuery target)
     {
@@ -167,9 +165,8 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult RenameUser(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] RenameRequest request,
+        [FromBody] RenameRequest request,
         [FromRouteSid] SidString sid,
-        [FromServices] IRenameService renameSvc,
         [Domain] DomainQuery target)
     {
         if (!this.ModelState.IsValid)
@@ -177,15 +174,7 @@ public sealed class UsersController : ControllerBase
             return new ApiBadRequestResult(this.ModelState);
         }
 
-        RelativeName rdn = RelativeName.Create(request.Name, RelativeNameType.CommonName);
-
-        var userSearch = this.UserService.FindOneAndContinue(sid, in target);
-        if (userSearch.TryGetT1(out var error, out var continuation))
-        {
-            return error;
-        }
-
-        return renameSvc.RenameObject(rdn, continuation);
+        return this.UserService.Rename(sid, request, in target);
     }
 
     [HttpPatch]
@@ -195,7 +184,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult UpdateUser(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] EditObjectRequest body,
+        [FromBody] EditObjectRequest body,
         [FromServices] IUserUpdateService updateSvc,
         [FromRouteSid] SidString sid,
         [Domain] DomainQuery target)
@@ -226,7 +215,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
     public IActionResult ChangeUserPassword(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] PasswordChangeRequest request,
+        [FromBody] PasswordChangeRequest request,
         [FromServices] IPasswordChangeService pwdChangeSvc,
         [FromRouteSid] SidString sid,
         [Domain] DomainQuery target)
@@ -257,7 +246,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
     public IActionResult ResetUserPassword(
-        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] PasswordResetRequest request,
+        [FromBody] PasswordResetRequest request,
         [FromServices] IPasswordResetService pwdResetSvc,
         [FromRouteSid] SidString sid,
         [Domain] DomainQuery target)

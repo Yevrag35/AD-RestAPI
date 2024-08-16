@@ -1,3 +1,5 @@
+using MG.Extensions.Strings.Enumerators;
+
 namespace AD.Api.Strings.Spans;
 
 public ref struct SplitAnyEnumerator

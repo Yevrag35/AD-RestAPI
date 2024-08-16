@@ -2,6 +2,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Requests;
 using AD.Api.Core.Web;
 using AD.Api.Statics;
+using AD.Api.Strings.Extensions;
 using AD.Api.Validation;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using System.ComponentModel.DataAnnotations;
@@ -62,7 +63,7 @@ namespace AD.Api.Core.Ldap
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             ReadOnlySpan<char> filter = this.Filter;
-            if (!IsAllFilter(filter) && filter.Count('(') != filter.Count(')'))
+            if (!IsAllFilter(filter) && !filter.ContainsEqualAmount('(', ')'))
             {
                 yield return new ValidationResult("The LDAP filter is not properly formatted - are you missing parentheses?", [nameof(this.Filter)]);
             }
