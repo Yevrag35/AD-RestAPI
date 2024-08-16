@@ -1,9 +1,8 @@
 using AD.Api.Collections;
-using AD.Api.Reflection;
-using AD.Api.Spans;
 using AD.Api.Statics;
 using AD.Api.Strings;
-using System.Collections;
+using MG.Extensions.Strings;
+using MG.Extensions.Strings.Reflection;
 using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Exceptions;

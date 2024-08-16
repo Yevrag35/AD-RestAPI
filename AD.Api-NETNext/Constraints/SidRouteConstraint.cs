@@ -1,7 +1,6 @@
 ﻿using AD.Api.Core.Security;
 using AD.Api.Statics;
-using AD.Api.Strings.Extensions;
-using AD.Api.Strings.Spans;
+using MG.Extensions.Strings;
 using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;

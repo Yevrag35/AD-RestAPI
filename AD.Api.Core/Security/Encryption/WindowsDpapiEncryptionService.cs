@@ -1,12 +1,9 @@
-using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Security.Accounts;
 using AD.Api.Core.Settings.Credentials;
 using AD.Api.Strings;
-using Microsoft.Extensions.Options;
 using System.Buffers.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Security;
 using System.Security.Cryptography;

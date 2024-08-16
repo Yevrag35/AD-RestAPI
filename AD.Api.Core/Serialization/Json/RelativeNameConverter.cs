@@ -1,5 +1,4 @@
 using AD.Api.Core.Ldap;
-using AD.Api.Spans;
 using System.Buffers;
 using System.Text;
 using System.Text.Json;

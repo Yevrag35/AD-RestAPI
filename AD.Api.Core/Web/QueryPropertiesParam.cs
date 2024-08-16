@@ -1,10 +1,8 @@
 using AD.Api.Components;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Web.Extensions;
-using AD.Api.Pooling;
 using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -13,7 +11,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Primitives;
 using System.Buffers;
 using System.Collections.Frozen;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Web;
 

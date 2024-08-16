@@ -1,9 +1,7 @@
-using AD.Api.Strings.Extensions;
-using AD.Api.Strings.Spans;
+using MG.Extensions.Strings;
+using MG.Extensions.Strings.Builders;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Drawing;
 
 namespace AD.Api.Core.Ldap;
 
@@ -48,7 +46,7 @@ public readonly partial struct DistinguishedName
         int i = 0;
         for (i = 0; i < path.Length; i++)
         {
-            if (COMMA == path[i] && !path.IsEscapedAt(in i))
+            if (COMMA == path[i] && !path.IsEscapedAt(i))
             {
                 ReadOnlySpan<char> slice = path.Slice(start, i - start);
                 if (!RelativeName.TryParseOne(slice, out RelativeName rn))
@@ -97,7 +95,7 @@ public readonly partial struct DistinguishedName
         int i = 0;
         for (i = 0; i < path.Length; i++)
         {
-            if (COMMA == path[i] && !path.IsEscapedAt(in i))
+            if (COMMA == path[i] && !path.IsEscapedAt(i))
             {
                 ReadOnlySpan<char> slice = path.Slice(start, i - start);
                 if (!RelativeName.TryParseOne(slice, out RelativeName rn))
@@ -145,7 +143,7 @@ public readonly partial struct DistinguishedName
         int i = 0;
         for (i = 0; i < path.Length; i++)
         {
-            if (COMMA == path[i] && !path.IsEscapedAt(in i))
+            if (COMMA == path[i] && !path.IsEscapedAt(i))
             {
                 ReadOnlySpan<char> slice = path.Slice(start, i - start);
                 if (!RelativeName.TryParseOne(slice, out RelativeName rn))

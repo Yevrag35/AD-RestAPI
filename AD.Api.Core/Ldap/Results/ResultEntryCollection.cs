@@ -1,6 +1,5 @@
 using Microsoft.Extensions.ObjectPool;
 using System.Collections;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap.Results
 {

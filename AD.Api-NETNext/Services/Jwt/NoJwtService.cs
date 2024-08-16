@@ -4,7 +4,6 @@ using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.DirectoryServices.Protocols;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace AD.Api.Services.Jwt
 {

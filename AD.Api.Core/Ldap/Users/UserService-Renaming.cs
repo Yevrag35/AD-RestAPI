@@ -1,5 +1,4 @@
 using AD.Api.Core.Ldap.Requests;
-using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using Microsoft.AspNetCore.Mvc;
 

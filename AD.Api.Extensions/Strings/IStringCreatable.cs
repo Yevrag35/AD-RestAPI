@@ -1,5 +1,3 @@
-using System.Buffers;
-
 namespace AD.Api.Strings
 {
     public interface IStringCreatable

@@ -2,13 +2,9 @@ using AD.Api.Exceptions;
 using AD.Api.Core.Ldap.Passwords;
 using System.Security;
 using System.Text;
-using Base64 = AD.Api.Strings.Base64Extensions;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.DirectoryServices.Protocols;
 using AD.Api.Core.Ldap;
 using AD.Api.Statics;
-using AD.Api.Spans;
 
 namespace AD.Api.Core.Security.Encryption
 {

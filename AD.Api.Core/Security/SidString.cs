@@ -1,8 +1,8 @@
 using AD.Api.Extensions.Comparisons;
-using AD.Api.Spans;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
-using AD.Api.Strings.Spans;
+using MG.Extensions.Strings;
+using MG.Extensions.Strings.Builders;
 using System.Collections;
 using System.Runtime.CompilerServices;
 

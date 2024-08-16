@@ -3,7 +3,6 @@ using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap;
 using AD.Api.Enums;
 using AD.Api.Security;
-using AD.Api.Strings.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

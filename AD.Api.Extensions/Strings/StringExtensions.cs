@@ -1,5 +1,3 @@
-using AD.Api.Statics;
-
 namespace AD.Api.Strings.Extensions
 {
     /// <summary>

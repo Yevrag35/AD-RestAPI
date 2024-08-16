@@ -1,11 +1,8 @@
-﻿using AD.Api.Components;
-using AD.Api.Core;
+﻿using AD.Api.Core;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Serialization.Json;
-using AD.Api.Core.Web;
 using AD.Api.Enums;
 using AD.Api.Serialization.Json;
-using AD.Api.Spans;
 using AD.Api.Statics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -14,6 +11,9 @@ using NLog;
 using System.Buffers;
 using System.DirectoryServices.Protocols;
 using System.Text.Json;
+using MG.Extensions.Strings;
+
+using ColEx = AD.Api.Collections.CollectionExtensions;
 
 namespace AD.Api.Middleware
 {
@@ -93,7 +93,7 @@ namespace AD.Api.Middleware
 
             Span<char> buffer = length < MAX_MSG_LENGTH
                 ? stackalloc char[length]
-                : SpanExtensions.RentArray(in length, ref isRented, ref array);
+                : ColEx.RentArray(in length, ref isRented, ref array);
 
             msg.CopyTo(buffer);
             int pos = msg.Length;

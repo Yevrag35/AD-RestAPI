@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Web
 {

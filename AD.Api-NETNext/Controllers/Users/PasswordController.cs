@@ -3,7 +3,6 @@ using AD.Api.Authentication;
 using AD.Api.Binding.Attributes;
 using AD.Api.Core;
 using AD.Api.Core.Authentication;
-using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Authorization;

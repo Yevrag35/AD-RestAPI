@@ -4,7 +4,6 @@ using AD.Api.Binding.Attributes;
 using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Computers;
-using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Security;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Mvc;

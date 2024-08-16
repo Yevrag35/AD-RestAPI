@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections;
 
 namespace AD.Api.Collections
@@ -24,6 +25,15 @@ namespace AD.Api.Collections
         public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IReadOnlyCollection<T>? collection)
         {
             return collection is null || collection.Count <= 0;
+        }
+
+        [DebuggerStepThrough]
+        public static Span<T> RentArray<T>(scoped in int length, scoped ref bool isRented, scoped ref T[]? array)
+        {
+            Debug.Fail("Take a look at this ^");
+            array = ArrayPool<T>.Shared.Rent(length);
+            isRented = true;
+            return array.AsSpan(0, length);
         }
 
         public static bool TryGetFirst<T>(this ICollection collection, [NotNullWhen(true)] out T? value)

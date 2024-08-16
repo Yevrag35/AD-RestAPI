@@ -1,7 +1,6 @@
 using AD.Api.Attributes.Services;
 using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
-using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Security
 {

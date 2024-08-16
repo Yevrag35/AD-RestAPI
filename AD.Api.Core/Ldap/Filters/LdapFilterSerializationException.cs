@@ -1,9 +1,11 @@
 using AD.Api.Enums;
 using AD.Api.Exceptions;
-using AD.Api.Spans;
 using AD.Api.Statics;
-using AD.Api.Strings.Spans;
+using MG.Extensions.Strings;
+using MG.Extensions.Strings.Builders;
 using System.Buffers;
+
+using ColEx = AD.Api.Collections.CollectionExtensions;
 
 namespace AD.Api.Core.Ldap.Filters
 {
@@ -49,7 +51,7 @@ namespace AD.Api.Core.Ldap.Filters
             bool isRented = false;
 
             Span<char> span = enumStrings.TotalNameLength > 256
-                ? SpanExtensions.RentArray(enumStrings.TotalNameLength, ref isRented, ref array)
+                ? ColEx.RentArray(enumStrings.TotalNameLength, ref isRented, ref array)
                 : stackalloc char[enumStrings.TotalNameLength];
 
             Span<char> joinBy = [CharConstants.COMMA, CharConstants.SPACE];

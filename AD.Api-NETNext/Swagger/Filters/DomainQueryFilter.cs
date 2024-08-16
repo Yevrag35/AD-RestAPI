@@ -2,17 +2,12 @@
 using AD.Api.Core;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Security;
-using AD.Api.Core.Settings;
 using AD.Api.Reflection;
 using AD.Api.Validation;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Diagnostics;
 using System.Reflection;
-using System.Text.Json;
 
 namespace AD.Api.Swagger.Filters
 {

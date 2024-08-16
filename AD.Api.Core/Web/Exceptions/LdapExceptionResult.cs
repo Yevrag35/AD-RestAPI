@@ -1,4 +1,3 @@
-using System.DirectoryServices.Protocols;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
 namespace AD.Api.Core.Web

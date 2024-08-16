@@ -1,7 +1,5 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Requests;
-using Microsoft.AspNetCore.Http;
-using System.Buffers;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 

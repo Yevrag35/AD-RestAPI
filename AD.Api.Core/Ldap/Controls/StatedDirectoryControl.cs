@@ -1,5 +1,3 @@
-using System.DirectoryServices.Protocols;
-
 namespace AD.Api.Core.Ldap.Controls
 {
     public static class StatedDirectoryControl

@@ -6,7 +6,6 @@ using AD.Api.Enums;
 using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap
 {

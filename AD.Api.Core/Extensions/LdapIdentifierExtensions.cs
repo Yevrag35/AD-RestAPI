@@ -1,5 +1,3 @@
-using System.DirectoryServices.Protocols;
-
 namespace AD.Api.Core.Extensions;
 
 public static class LdapIdentifierExtensions

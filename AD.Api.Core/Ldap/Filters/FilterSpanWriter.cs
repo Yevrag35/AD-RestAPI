@@ -1,5 +1,5 @@
-﻿using AD.Api.Statics;
-using AD.Api.Strings.Spans;
+﻿using MG.Extensions.Strings;
+using MG.Extensions.Strings.Builders;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;

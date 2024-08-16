@@ -2,7 +2,6 @@ using AD.Api.Startup.Exceptions;
 using System.Collections.Concurrent;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
-using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap

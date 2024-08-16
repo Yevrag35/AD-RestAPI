@@ -4,10 +4,7 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
 using AD.Api.Pooling;
-using AD.Api.Strings.Extensions;
-using AD.Api.Strings.Spans;
 using Microsoft.AspNetCore.Mvc;
-using System.Buffers;
 
 namespace AD.Api.Core.Ldap.Groups;
 

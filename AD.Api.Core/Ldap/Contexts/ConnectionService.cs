@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.ActiveDirectory;
-using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap

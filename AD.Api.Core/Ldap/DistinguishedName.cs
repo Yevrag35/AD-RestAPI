@@ -1,7 +1,6 @@
 using AD.Api.Collections.Enumerators;
 using AD.Api.Core.Authentication;
 using AD.Api.Statics;
-using AD.Api.Strings.Extensions;
 using AD.Api.Validation;
 using System.Collections;
 using System.Collections.Immutable;

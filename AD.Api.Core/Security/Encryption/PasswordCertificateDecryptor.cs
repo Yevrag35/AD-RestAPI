@@ -1,12 +1,8 @@
 using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Exceptions;
-using AD.Api.Startup.Exceptions;
-using Microsoft.Extensions.Options;
-using System.Buffers.Text;
 using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Base64 = AD.Api.Strings.Base64Extensions;
 

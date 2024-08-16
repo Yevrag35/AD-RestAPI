@@ -1,7 +1,5 @@
 ﻿using AD.Api.Core.Serialization;
-using AD.Api.Statics;
-using Newtonsoft.Json.Linq;
-using System;
+using MG.Extensions.Strings;
 using System.Text.Json;
 
 namespace AD.Api.Mapping

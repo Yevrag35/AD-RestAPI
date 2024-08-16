@@ -1,4 +1,3 @@
-using AD.Api.Spans;
 using AD.Api.Statics;
 
 namespace AD.Api.Core.Ldap;

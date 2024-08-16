@@ -14,7 +14,6 @@ using AD.Api.Core.Security;
 using AD.Api.Core.Web;
 using AD.Api.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NLog;
 
 namespace AD.Api.Controllers.Users;

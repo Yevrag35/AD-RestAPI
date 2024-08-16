@@ -1,5 +1,3 @@
-using AD.Api.Reflection;
-
 namespace AD.Api.Startup.Exceptions
 {
     /// <summary>

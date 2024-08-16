@@ -1,5 +1,4 @@
-﻿using AD.Api.Spans;
-using AD.Api.Statics;
+﻿using AD.Api.Statics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 

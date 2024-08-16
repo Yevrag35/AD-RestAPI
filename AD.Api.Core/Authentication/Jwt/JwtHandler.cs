@@ -1,19 +1,12 @@
 using AD.Api.Components;
-using AD.Api.Core.Extensions;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Enums;
-using AD.Api.Startup.Exceptions;
 using AD.Api.Strings;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
-using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.Versioning;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using System.Xml;
 using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace AD.Api.Core.Authentication.Jwt

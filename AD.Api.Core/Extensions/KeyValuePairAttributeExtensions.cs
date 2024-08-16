@@ -1,5 +1,3 @@
-using System.DirectoryServices.Protocols;
-
 namespace AD.Api.Core.Extensions
 {
     internal static class KeyValuePairAttributeExtensions

@@ -1,6 +1,5 @@
 using AD.Api.Core.Security;
 using System.DirectoryServices.ActiveDirectory;
-using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap

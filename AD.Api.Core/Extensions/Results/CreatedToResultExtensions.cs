@@ -1,9 +1,7 @@
-﻿using AD.Api.Core;
-using AD.Api.Core.Ldap;
+﻿using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Ldap.Users;
 using AD.Api.Core.Security;
-using AD.Api.Spans;
 using AD.Api.Statics;
 
 namespace AD.Api.Core.Extensions.Results;

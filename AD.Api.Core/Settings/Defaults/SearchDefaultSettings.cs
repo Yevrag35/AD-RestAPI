@@ -1,8 +1,5 @@
-using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Settings
 {

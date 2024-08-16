@@ -2,7 +2,6 @@ using AD.Api.Core.Extensions;
 using AD.Api.Core.Schema;
 using NLog;
 using System.DirectoryServices.ActiveDirectory;
-using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap

@@ -1,9 +1,7 @@
-using AD.Api.Components;
 using AD.Api.Statics;
 using AD.Api.Strings;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Core.Ldap
 {

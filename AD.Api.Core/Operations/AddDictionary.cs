@@ -1,5 +1,4 @@
 using AD.Api.Components;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Operations;
 

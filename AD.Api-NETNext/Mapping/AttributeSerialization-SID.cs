@@ -1,8 +1,5 @@
 ﻿using AD.Api.Core.Security;
 using AD.Api.Core.Serialization;
-using AD.Api.Statics;
-using AD.Api.Strings.Spans;
-using System.Diagnostics;
 using System.Text.Json;
 
 namespace AD.Api.Mapping

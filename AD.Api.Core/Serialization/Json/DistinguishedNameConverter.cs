@@ -1,12 +1,13 @@
 using AD.Api.Core.Ldap;
-using AD.Api.Spans;
 using AD.Api.Statics;
-using AD.Api.Strings.Spans;
+using MG.Extensions.Strings.Builders;
 using System.Buffers;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using ColEx = AD.Api.Collections.CollectionExtensions;
 
 namespace AD.Api.Core.Serialization.Json;
 
@@ -51,7 +52,7 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 
         Span<char> span = length <= 256
             ? stackalloc char[length]
-            : SpanExtensions.RentArray(in length, ref isRented, ref array);
+            : ColEx.RentArray(in length, ref isRented, ref array);
 
         if (reader.ValueIsEscaped)
         {
@@ -93,7 +94,7 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 
         Span<char> chars = length <= MAX_STACKALLOC
             ? stackalloc char[length]
-            : SpanExtensions.RentArray(in length, ref isRented, ref array);
+            : ColEx.RentArray(in length, ref isRented, ref array);
 
         int written = Encoding.UTF8.GetChars(value, chars);
         chars = chars.Slice(0, written);

@@ -1,6 +1,5 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Serialization.Json;
-using AD.Api.Strings.Extensions;
 using AD.Api.Validation;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.ComponentModel.DataAnnotations;

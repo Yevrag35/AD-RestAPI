@@ -1,5 +1,4 @@
 using AD.Api.Core.Ldap.Results;
-using Microsoft.AspNetCore.Http;
 
 namespace AD.Api.Core.Ldap.Passwords;
 
