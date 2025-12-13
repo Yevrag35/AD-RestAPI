@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -23,22 +23,22 @@
 	
 	<ItemGroup>
 	  <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-	  <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
-	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.1" />
-	  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.0.1" />
-	  <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.7.0" />
-	  <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
-	  <PackageReference Include="System.DirectoryServices.Protocols" Version="8.0.0" />
-	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.1" />
+	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
+	  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
+	  <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.0.1" />
+	  <PackageReference Include="System.DirectoryServices" Version="10.0.1" />
+	  <PackageReference Include="System.DirectoryServices.Protocols" Version="10.0.1" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
 	  <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
-	  <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
+	  <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.1" />
 	  <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
-	  <PackageReference Include="System.Text.Json" Version="8.0.4" />
-		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+	  <PackageReference Include="System.Text.Json" Version="10.0.1" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.1" />
 		<PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
 	</ItemGroup>
 	
