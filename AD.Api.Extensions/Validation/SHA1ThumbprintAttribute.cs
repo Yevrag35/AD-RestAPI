@@ -47,7 +47,7 @@ public sealed class SHA1ThumbprintAttribute : ValidatablePropertyAttribute<strin
 		string? msg = null;
 		if (value is not string sha1Str)
 		{
-			msg = this.FormatErrorMessage(value.ToString().OrEmpty());
+			msg = this.FormatErrorMessage(value.ToString() ?? string.Empty);
 		}
 		else if (sha1Str.Length != THUMBPRINT_LENGTH)
 		{

@@ -1,4 +1,3 @@
-using AD.Api.Collections.Enumerators;
 using AD.Api.Reflection.Exceptions;
 using AD.Api.Startup.Services;
 
@@ -28,98 +27,58 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 	/// </remarks>
 	protected Type? Service { get; set; }
 
+	/// <summary>
+	/// Constructs and enumerates all <see cref="ServiceDescriptor"/> objects from the specified type.
+	/// </summary>
+	/// <returns>
+	/// A <see cref="List{T}"/> of <see cref="ServiceDescriptor"/> objects that were created from the 
+	/// specified type.
+	/// </returns>
 	/// <exception cref="ArgumentException"/>
 	/// <inheritdoc 
-	///     cref="TryCreateDescriptorFromAttribute(AddToDepedencyInjectionAttribute, Type, in IServiceTypeExclusions, out ServiceDescriptor)"
+	///     cref="TryCreateDescriptorFromAttribute(ServiceRegistrationBaseAttribute, Type, in IServiceTypeExclusions, out ServiceDescriptor)"
 	///     path="/exception"/>
 	[DebuggerStepThrough]
-	public static IEnumerable<ServiceDescriptor> CreateDescriptorsFromType(
-		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.Interfaces)] Type type,
-		IServiceTypeExclusions exclusions)
+	internal static List<ServiceDescriptor> CreateDescriptorsFromType(Type type, IServiceTypeExclusions exclusions)
 	{
+		List<ServiceDescriptor> descriptors = new(10);
 		foreach (var attribute in type.GetCustomAttributes<AddToDepedencyInjectionAttribute>(inherit: false))
 		{
-			if (TryCreateDescriptorFromAttribute(attribute, type, in exclusions, out ServiceDescriptor? descriptor))
+			if (TryCreateDescriptorFromAttribute(attribute, type, exclusions, out ServiceDescriptor? descriptor))
 			{
-				yield return descriptor;
+				descriptors.Add(descriptor);
 			}
 		}
-	}
 
-	/// <inheritdoc cref="Type.GetGenericTypeDefinition" path="/exception"/>
-	/// <inheritdoc cref="ValidateImplementationType(Type, Type)" path="/exception"/>
-	private static bool TryCreateDescriptorFromAttribute(
-		AddToDepedencyInjectionAttribute attribute,
-		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.Interfaces)] Type type,
-		in IServiceTypeExclusions exclusions,
-		[NotNullWhen(true)] out ServiceDescriptor? descriptor)
-	{
-		attribute.Service ??= type;
-		attribute.Implementation ??= type;
-
-		if (exclusions.IsExcluded(attribute.Service))
-		{
-			descriptor = null;
-			return false;
-		}
-
-		if (attribute.Service.IsGenericTypeDefinition && !attribute.Implementation.IsGenericTypeDefinition)
-		{
-			attribute.Implementation = attribute.Implementation.GetGenericTypeDefinition();
-		}
-
-		ValidateImplementationType(attribute.Service, attribute.Implementation);
-		descriptor = new(attribute.Service, attribute.Implementation, attribute.Lifetime);
-		return true;
-	}
-
-	/// <exception cref="MissingConstructorException"></exception>
-	/// <exception cref="TypeNotAssignableException"></exception>
-	[DebuggerStepThrough]
-	protected static void ValidateImplementationType(
-		Type serviceType,
-		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.Interfaces)] Type implementationType)
-	{
-		BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
-		ConstructorInfo[] ctors = implementationType.GetConstructors(flags);
-		if (ctors.Length <= 0)
-		{
-			throw new MissingConstructorException(implementationType, flags);
-		}
-		else if (!ReferenceEquals(serviceType, implementationType) && !ImplementsType(serviceType, implementationType))
-		{
-			throw new TypeNotAssignableException(serviceType, implementationType);
-		}
+		return descriptors;
 	}
 
 	[DebuggerStepThrough]
-	private static bool AnyGenericInterfaceMatches(
-		Type serviceType,
-		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type implementationType)
+	private static bool AnyGenericInterfaceMatches(Type serviceType, Type implementationType)
 	{
-		ArrayRefEnumerator<Type> enumerator = new(implementationType.GetInterfaces());
-		bool flag = false;
-
-		while (enumerator.MoveNext(in flag))
+		Type[] intTypes = implementationType.GetInterfaces();
+		for (int i = 0; i < intTypes.Length; i++)
 		{
-			Type type = enumerator.Current;
-			if (!type.IsGenericTypeDefinition && type.IsGenericType)
+			Type interfaceType = intTypes[i];
+
+			if (!interfaceType.IsGenericTypeDefinition && interfaceType.IsGenericType)
 			{
-				type = type.GetGenericTypeDefinition();
+				interfaceType = interfaceType.GetGenericTypeDefinition();
 			}
 
-			flag = type.IsGenericTypeDefinition
-				   &&
-				   type.Equals(serviceType);
+			if (interfaceType.IsGenericTypeDefinition
+				&&
+				interfaceType.Equals(serviceType))
+			{
+				return true;
+			}
 		}
 
-		return flag;
+		return false;
 	}
 
 	[DebuggerStepThrough]
-	private static bool ImplementsType(
-		Type serviceType,
-		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type implementationType)
+	private static bool ImplementsType(Type serviceType, Type implementationType)
 	{
 		if (serviceType.IsAssignableFrom(implementationType))
 		{
@@ -143,6 +102,40 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 		}
 
 		return false;
+	}
+
+	/// <inheritdoc cref="Type.GetGenericTypeDefinition" path="/exception"/>
+	/// <inheritdoc cref="ValidateImplementationType(Type, Type)" path="/exception"/>
+	private static bool TryCreateDescriptorFromAttribute(AddToDepedencyInjectionAttribute attribute, Type type, IServiceTypeExclusions exclusions, [NotNullWhen(true)] out ServiceDescriptor? descriptor)
+	{
+		attribute.Service ??= type;
+		attribute.Implementation ??= type;
+
+		if (exclusions.IsExcluded(attribute.Service))
+		{
+			descriptor = null;
+			return false;
+		}
+
+		if (attribute.Service.IsGenericTypeDefinition && !attribute.Implementation.IsGenericTypeDefinition)
+		{
+			attribute.Implementation = attribute.Implementation.GetGenericTypeDefinition();
+		}
+
+		ValidateImplementationType(attribute.Service, attribute.Implementation);
+		descriptor = new(attribute.Service, attribute.Implementation, attribute.Lifetime);
+		return true;
+	}
+
+	/// <exception cref="MissingConstructorException"></exception>
+	/// <exception cref="TypeNotAssignableException"></exception>
+	[DebuggerStepThrough]
+	protected static void ValidateImplementationType(Type serviceType, Type implementationType)
+	{
+		if (!ReferenceEquals(serviceType, implementationType) && !ImplementsType(serviceType, implementationType))
+		{
+			throw new TypeNotAssignableException(serviceType, implementationType);
+		}
 	}
 }
 

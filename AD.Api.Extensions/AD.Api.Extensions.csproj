@@ -24,6 +24,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Using Include="AD.Api.Reflection" />
 		<Using Include="AD.Api.Resources.ErrorStrings" Alias="Errors" />
 		<Using Include="Microsoft.Extensions.Configuration" />
 		<Using Include="Microsoft.Extensions.DependencyInjection" />

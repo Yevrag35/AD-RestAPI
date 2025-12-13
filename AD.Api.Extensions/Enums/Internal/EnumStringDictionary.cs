@@ -157,7 +157,7 @@ internal sealed class ESDictionary<T> : IEnumStrings<T> where T : unmanaged, Enu
 			return false;
 		}
 
-		foreach (ReadOnlySpan<char> _ in name.SpanSplit(_joinBy))
+		foreach (Range _ in name.AsSpan().Split(_joinBy))
 		{
 			numberOfNames++;
 		}

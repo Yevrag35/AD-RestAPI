@@ -81,7 +81,7 @@ public sealed class UserPrincipalNameAttribute : ValidationAttribute
 		}
 
 		int count = 0;
-		foreach (ReadOnlySpan<char> section in chars.SpanSplit(in AT_SIGN))
+		foreach (Range section in chars.Split(AT_SIGN))
 		{
 			count++;
 			if (count > 2)
@@ -89,7 +89,7 @@ public sealed class UserPrincipalNameAttribute : ValidationAttribute
 				return new ValidationResult(Errors.Validation_InvalidUPN_Format, validationContext.GetMemberNames());
 			}
 
-			if (section.IsWhiteSpace())
+			if (chars[section].IsWhiteSpace())
 			{
 				count--;
 				continue;

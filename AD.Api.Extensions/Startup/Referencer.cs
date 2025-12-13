@@ -1,12 +1,6 @@
 namespace AD.Api.Startup;
 
 /// <summary>
-/// A delegate that acts on a <see cref="Referencer"/>.
-/// </summary>
-/// <param name="referencer">The referencer used to load assemblies at application startup.</param>
-public delegate void ActOnReferencer(in Referencer referencer);
-
-/// <summary>
 /// A struct used at application startup to force loading of assemblies by referencing a type
 /// from each assembly.
 /// </summary>
@@ -39,10 +33,9 @@ public readonly ref struct Referencer
 	/// Force loads referenced assemblies by executing the specified action.
 	/// </summary>
 	/// <param name="action">The action to execute.</param>
-	public static void LoadAll(ActOnReferencer action)
+	public static void LoadAll(Action<Referencer> action)
 	{
-		Referencer referencer = default;
-		action(in referencer);
+		action(default);
 	}
 }
 

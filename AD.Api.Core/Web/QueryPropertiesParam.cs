@@ -88,9 +88,10 @@ public sealed class QueryPropertiesBinding : IModelBinder
 		string[] properties = ArrayPool<string>.Shared.Rent(propertyString.Length);
 		int count = 0;
 
-		foreach (ReadOnlySpan<char> property in propertyString.SpanSplitAny(splitBy))
+		foreach (Range section in propertyString.AsSpan().SplitAny(splitBy))
 		{
-			string propertyName = property.Trim().ToString();
+			ReadOnlySpan<char> trimmed = propertyString[section].Trim();
+			string propertyName = new(trimmed);
 			properties[count++] = propertyName;
 		}
 
@@ -136,9 +137,9 @@ public sealed class QueryPropertiesBinding : IModelBinder
 
 		string[] properties = ArrayPool<string>.Shared.Rent(chars.Length);
 		int count = 0;
-		foreach (ReadOnlySpan<char> property in chars.SpanSplitAny(splitBy))
+		foreach (Range section in chars.SplitAny(splitBy))
 		{
-			ReadOnlySpan<char> trimmed = property.Trim();
+			ReadOnlySpan<char> trimmed = chars[section].Trim();
 			if (trimmed.Equals(DEFAULT, StringComparison.OrdinalIgnoreCase))
 			{
 				properties[count++] = DEFAULT;

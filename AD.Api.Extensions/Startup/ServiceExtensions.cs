@@ -1,9 +1,6 @@
-using AD.Api.Assemblies;
 using AD.Api.Attributes.Services;
-using AD.Api.Collections.Enumerators;
 using AD.Api.Startup.Exceptions;
 using AD.Api.Startup.Services;
-using AD.Api.Startup.Services.Internal;
 
 namespace AD.Api.Startup;
 
@@ -28,16 +25,18 @@ public static partial class ServiceExtensions
 	/// <returns>
 	///     The same instance of the <see cref="IServiceCollection"/> for chaining.
 	/// </returns>
-	/// <inheritdoc cref="AddResolvedServicesFromAssembly(IServiceCollection, Assembly, IConfiguration, in IServiceTypeExclusions)" 
+	/// <inheritdoc cref="AddResolvedServicesFromAssembly(IServiceCollection, Assembly, IConfiguration, IServiceTypeExclusions)" 
 	///     path="/exception"/>
-	public static IServiceCollection AddResolvedServicesFromAssemblies(this IServiceCollection services, IConfiguration configuration, Assembly[] assemblies, Action<IAddServiceTypeExclusions>? configureExclusions = null)
+	//public static IServiceCollection AddResolvedServicesFromAssemblies(this IServiceCollection services, IConfiguration configuration, Assembly[] assemblies, Action<IAddServiceTypeExclusions>? configureExclusions = null)
+	public static IServiceCollection AddResolvedServices(this IServiceCollection services, Action<AttributedServiceOptions> configureOptions)
 	{
-		IServiceTypeExclusions exclusions = ServiceTypeExclusions.ConfigureFromAction(configureExclusions);
-		ServiceResolutionContext context = new(services, configuration, in exclusions);
+		AttributedServiceOptions options = new();
+		configureOptions(options);
+		ServiceResolutionContext context = new(services, options);
 
-		foreach (Assembly assembly in assemblies.Where(IsServicableAssembly))
+		foreach (Assembly assembly in options.GetAssemblies())
 		{
-			AddResolvedServicesFromAssembly(assembly, in context);
+			AddResolvedServicesFromAssembly(assembly, context);
 		}
 
 		return services;
@@ -45,13 +44,13 @@ public static partial class ServiceExtensions
 
 	/// <exception cref="DuplicatedServiceException"/>
 	/// <exception cref="AdApiStartupException"></exception>
-	private static void AddResolvedServicesFromAssembly(Assembly assembly, in ServiceResolutionContext context)
+	private static void AddResolvedServicesFromAssembly(Assembly assembly, ServiceResolutionContext context)
 	{
 		foreach (Type type in GetResolvableTypes(assembly, context))
 		{
 			if (!type.IsInterface && type.IsDefined(typeof(DynamicDependencyRegistrationAttribute), inherit: false))
 			{
-				AddFromRegistration(in context, type);
+				AddFromRegistration(context, type);
 			}
 			else if (type.IsDefined(typeof(AddToDepedencyInjectionAttribute), inherit: false))
 			{
@@ -59,7 +58,7 @@ public static partial class ServiceExtensions
 				{
 					foreach (var descriptor in AddToDepedencyInjectionAttribute.CreateDescriptorsFromType(type, context.Exclusions))
 					{
-						AddService(context.Services, descriptor);
+						AddService(context.Services, descriptor, context.AllowsDuplicates);
 					}
 				}
 				catch (Exception e) when (e is not DuplicatedServiceException)
@@ -70,106 +69,161 @@ public static partial class ServiceExtensions
 		}
 	}
 
-	/// <exception cref="AdApiStartupException"></exception>
-	private static void AddFromRegistration(
-		in ServiceResolutionContext context,
-		[DynamicallyAccessedMembers(
-				DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type)
+	private const string INVALID_PARAMETERS = "Registration method must have at least the IServiceCollection parameter type.";
+
+	/// <summary>
+	/// A context for resolving services during the attribute service registration process.
+	/// </summary>
+	private sealed class ServiceResolutionContext
 	{
-		MethodInfo? method = type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-			.Where(x => x.IsDefined(typeof(DynamicDependencyRegistrationMethodAttribute), inherit: false))
-			.OrderBy(x => x.Name)
-			.FirstOrDefault();
+		private readonly object[] _overload1;
+		private readonly object?[] _overload2;
 
-		if (method is null)
+		/// <summary>
+		/// Gets a value indicating whether duplicate service registrations are allowed.
+		/// </summary>
+		internal readonly bool AllowsDuplicates;
+
+		/// <summary>
+		/// Gets the configuration for the attributed services.
+		/// </summary>
+		internal readonly IConfiguration? Configuration;
+
+		/// <summary>
+		/// Gets the binding flags for dynamic method resolution.
+		/// </summary>
+		internal readonly BindingFlags DynamicMethodFlags;
+
+		/// <summary>
+		/// Gets the service type exclusions for the attributed services.
+		/// </summary>
+		internal readonly IServiceTypeExclusions Exclusions;
+
+		/// <summary>
+		/// Gets the service collection where services are registered.
+		/// </summary>
+		internal readonly IServiceCollection Services;
+
+		/// <summary>
+		/// Gets a value indicating whether an exception should be thrown on multiple dynamic registrations.
+		/// </summary>
+		internal readonly bool ThrowOnMultipleDynamic;
+
+		/// <summary>
+		/// Gets a value indicating whether an exception should be thrown on missing dynamic registration methods.
+		/// </summary>
+		internal readonly bool ThrowOnMissingDynamic;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ServiceResolutionContext"/> struct.
+		/// </summary>
+		/// <param name="services">The service collection where services are registered.</param>
+		/// <param name="options">The options used for configuring attributed services.</param>
+		internal ServiceResolutionContext(IServiceCollection services, AttributedServiceOptions options)
 		{
-			Debug.Fail("No registration method found.");
-			return;
+			AllowsDuplicates = options.AllowDuplicateServiceRegistrations;
+			DynamicMethodFlags = options.GetDynamicMethodBindingFlags();
+			ThrowOnMultipleDynamic = !options.IgnoreMultipleDynamicRegistrations;
+			ThrowOnMissingDynamic = options.ThrowOnMissingDynamicRegistrationMethod;
+			Services = services;
+			Configuration = options.Configuration;
+			Exclusions = options.GetServiceTypeExclusions();
+			_overload1 = new object[1] { services };
+			_overload2 = new object?[2] { services, options.Configuration };
 		}
 
-		try
+		/// <summary>
+		/// Invokes the specified static method with the appropriate parameters.
+		/// </summary>
+		/// <param name="method">The method to invoke.</param>
+		/// <param name="includeConfiguration">
+		/// If true, includes the configuration parameter in the method invocation; otherwise, excludes it.
+		/// </param>
+		/// <exception cref="TargetInvocationException">
+		/// Thrown when the method invoked throws an exception.
+		/// </exception>
+		internal void InvokeStaticMethod(MethodInfo method, bool includeConfiguration)
 		{
-			Span<bool> twoBools = [false, false];
-			BoolCounter counter = new(twoBools);
-			CheckParameters(type, method, ref counter);
-
-			context.InvokeStaticMethod(method, ref twoBools[^1]);
-		}
-		catch (Exception e)
-		{
-			throw new AdApiStartupException(typeof(ServiceExtensions), $"Failed to invoke registration method \"{method.Name}\".", e);
+			object?[] parameters = !includeConfiguration ? _overload1 : _overload2;
+			_ = method.Invoke(obj: null, parameters);
 		}
 	}
 
-	/// <exception cref="InvalidOperationException"></exception>
-	private static void CheckParameters(Type type, MethodInfo method, ref BoolCounter flags)
+	#region GET / ENUMERATE METHODS
+	/// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
+	private static MethodInfo? GetFirstDynamicMethodByName(Type type, BindingFlags flags)
 	{
-		ParameterInfo[] parameters = method.GetParameters();
-		if (parameters.Length <= 0)
+		return type
+				.GetMethods(flags)
+				.Where(x => x.IsDefined(typeof(DynamicDependencyRegistrationMethodAttribute), inherit: false))
+				.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+				.FirstOrDefault();
+	}
+	/// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
+	/// <exception cref="AttributeDIStartupException">More than one dynamic method was found.</exception>
+	private static MethodInfo? GetSingleDynamicMethod(Type type, BindingFlags flags)
+	{
+		try
 		{
-			throw new InvalidOperationException("Registration method must have at least the IServiceCollection parameter type");
+			return type
+				.GetMethods(flags)
+				.Where(x => x.IsDefined(typeof(DynamicDependencyRegistrationMethodAttribute), inherit: false))
+				.SingleOrDefault();
 		}
-		else if (parameters.Length > 2)
+		catch (InvalidOperationException e)
 		{
-			throw new InvalidOperationException("Registration method must have at most two parameters");
-		}
-
-		ArrayRefEnumerator<ParameterInfo> enumerator = new(parameters);
-		bool tripped = false;
-
-		while (enumerator.MoveNext(in tripped))
-		{
-			ParameterInfo parameter = enumerator.Current;
-			switch (parameter.Position)
-			{
-				case 0:
-					flags.MarkFlag(0, typeof(IServiceCollection).Equals(parameter.ParameterType));
-					break;
-
-				case 1:
-					flags.MarkFlag(1, typeof(IConfiguration).Equals(parameter.ParameterType));
-					break;
-
-				default:
-					break;
-			}
-
-			tripped = flags.Count == 2;
-		}
-
-		if (0 == flags.Count)
-		{
-			throw new AdApiStartupException(type, Errors.Exception_InvalidMethodParameters);
+			throw new AdApiStartupException(type,
+				"More than one (1) dynamic registration method were found on the specified type.", e);
 		}
 	}
 	private static IEnumerable<Type> GetResolvableTypes(Assembly assembly, ServiceResolutionContext context)
 	{
-		Type mustHave = context.MustHaveAttribute;
 		IServiceTypeExclusions exclusions = context.Exclusions;
 
 		Type[] types = assembly.GetTypes();
 
-		return types
-			.Where(x => IsProperType(x)
-						&&
-						x.IsDefined(mustHave)
-						&&
-						!exclusions.IsExcluded(x)
-						&&
-						IsSupportedOSService(x));
+		return types.Where(x => IsProperType(x)
+								&&
+								x.IsDefined(typeof(AutomaticDependencyInjectionAttribute), inherit: false)
+								&&
+								!exclusions.IsExcluded(x));
 	}
 
-	private static bool IsServicableAssembly(Assembly assembly)
+	#endregion
+
+	#region VALIDATION
+	/// <exception cref="AttributeDIStartupException"/>
+	private static bool CheckParameters(Type type, MethodInfo method)
 	{
-		return !assembly.IsDynamic
-			&& assembly.IsDefined(typeof(DependencyAssemblyAttribute), inherit: false);
+		ParameterInfo[] parameters = method.GetParameters();
+
+		switch (parameters.Length)
+		{
+			case 0:
+				goto default;
+
+			case 1 when typeof(IServiceCollection) != parameters[0].ParameterType:
+				throw new AdApiStartupException(type, INVALID_PARAMETERS);
+
+			case 1:
+				return false;
+
+			case 2 when typeof(IServiceCollection) != parameters[0].ParameterType || typeof(IConfiguration) != parameters[1].ParameterType:
+				throw new AdApiStartupException(type, INVALID_PARAMETERS);
+
+			case 2:
+				return true;
+
+			default:
+				throw new AdApiStartupException(type, "Registration method must have 1 or 2 parameters.");
+		}
 	}
 	private static bool IsProperType(Type type)
 	{
 		if (type.IsClass)
 		{
-			// Must not be static class.
-			return !(type.IsAbstract && type.IsSealed);
+			// Must not be abstract/static class.
+			return !type.IsAbstract;
 		}
 		else
 		{
@@ -177,35 +231,58 @@ public static partial class ServiceExtensions
 			return type.IsValueType || type.IsInterface;
 		}
 	}
-	private static bool IsSupportedOSService(Type type)
-	{
-		if (!type.IsDefined(ServiceResolutionContext.SupportedOSType))
-		{
-			return true;
-		}
 
-		CustomAttributeData data = type.GetCustomAttributesData().First(x => x.AttributeType == ServiceResolutionContext.SupportedOSType);
-
-		return data.ConstructorArguments.Count > 0
-			&& data.ConstructorArguments[0].Value is string osName
-			&& OperatingSystem.IsOSPlatform(osName);
-	}
+	#endregion
 
 	#region ADD SERVICE
 
+	/// <exception cref="AttributeDIStartupException"></exception>
+	private static void AddFromRegistration(ServiceResolutionContext context, Type type)
+	{
+		MethodInfo? method;
+		try
+		{
+			method = context.ThrowOnMultipleDynamic
+				? GetSingleDynamicMethod(type, context.DynamicMethodFlags)
+				: GetFirstDynamicMethodByName(type, context.DynamicMethodFlags);
+		}
+		catch (Exception e) when (e is not AdApiStartupException)
+		{
+			throw new AdApiStartupException(type,
+				$"An exception occurred scanning the type for '{nameof(DynamicDependencyRegistrationMethodAttribute)}' - {e.Message}", e);
+		}
+
+		if (method is null)
+		{
+			if (context.ThrowOnMissingDynamic)
+			{
+				throw new AdApiStartupException(type, $"No dynamic registration method was found on the specified type '{type.GetName()}'.");
+			}
+
+			return;
+		}
+
+		try
+		{
+			bool wantsConfiguration = CheckParameters(type, method);
+
+			context.InvokeStaticMethod(method, wantsConfiguration);
+		}
+		catch (Exception e)
+		{
+			throw new AdApiStartupException(typeof(ServiceExtensions), $"Failed to invoke registration method \"{method.Name}\" - {e.Message}", e);
+		}
+	}
 
 #if DEBUG
 	/// <exception cref="DuplicatedServiceException"/>
 	/// <exception cref="InvalidOperationException">
 	///     <paramref name="services"/> is read-only.
 	/// </exception>
-	private static void AddService(IServiceCollection services, ServiceDescriptor descriptor)
+	private static void AddService(IServiceCollection services, ServiceDescriptor descriptor, bool allowsDuplicates)
 	{
-		if (!_addedViaAttributes.Add(descriptor))
+		if (!allowsDuplicates && !_addedViaAttributes.Add(descriptor))
 		{
-			string msg = $"Duplicate service descriptor -> Service: {descriptor.ServiceType.GetName()}; Implementation: {descriptor.ImplementationType.GetName()}";
-			Debug.Fail(msg);
-
 			throw new DuplicatedServiceException(
 				serviceType: descriptor.ServiceType,
 				diType: typeof(ServiceExtensions));
@@ -214,7 +291,7 @@ public static partial class ServiceExtensions
 		services.Add(descriptor);
 	}
 
-	static readonly HashSet<ServiceDescriptor> _addedViaAttributes = new(100, new ServiceDescriptorComparer());
+	static readonly HashSet<ServiceDescriptor> _addedViaAttributes = new(new ServiceDescriptorComparer());
 	private sealed class ServiceDescriptorComparer : IEqualityComparer<ServiceDescriptor>
 	{
 		public bool Equals(ServiceDescriptor? x, ServiceDescriptor? y)
@@ -223,7 +300,7 @@ public static partial class ServiceExtensions
 				   ||
 				   (x is not null && y is not null
 					&&
-					x.ServiceType == y.ServiceType
+					x.ServiceType.Equals(y.ServiceType)
 					&&
 					x.ImplementationType == y.ImplementationType);
 		}
@@ -242,7 +319,7 @@ public static partial class ServiceExtensions
         /// <exception cref="InvalidOperationException">
         ///     <paramref name="services"/> is read-only.
         /// </exception>
-        private static void AddService(IServiceCollection services, ServiceDescriptor descriptor)
+        private static void AddService(IServiceCollection services, ServiceDescriptor descriptor, bool allowsDuplicates)
         {
             services.Add(descriptor);
         }
@@ -250,4 +327,3 @@ public static partial class ServiceExtensions
 
 	#endregion
 }
-
