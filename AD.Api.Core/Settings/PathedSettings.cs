@@ -1,8 +1,7 @@
-namespace AD.Api.Core.Settings
+namespace AD.Api.Core.Settings;
+
+public abstract class PathedSettings
 {
-    public abstract class PathedSettings
-    {
-        public abstract void ResolvePaths(ReadOnlySpan<char> basePath);
-    }
+	public abstract void ResolvePaths(ReadOnlySpan<char> basePath);
 }
 

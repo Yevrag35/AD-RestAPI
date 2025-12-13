@@ -1,8 +1,7 @@
-namespace AD.Api.Pooling
+namespace AD.Api.Pooling;
+
+public interface IPoolBag<T> : IPoolReturner<T> where T : class
 {
-    public interface IPoolBag<T> : IPoolReturner<T> where T : class
-    {
-        T Get();
-    }
+	T Get();
 }
 

@@ -1,7 +1,6 @@
-﻿namespace AD.Api.Actions
+﻿namespace AD.Api.Actions;
+
+public interface IStatedCallback<T>
 {
-    public interface IStatedCallback<T>
-    {
-        T Invoke();
-    }
+	T Invoke();
 }

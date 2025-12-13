@@ -12,119 +12,119 @@ namespace AD.Api.Core.Ldap;
 [DependencyRegistration(Lifetime = ServiceLifetime.Singleton)]
 internal sealed class CreationService
 {
-    private readonly NonLeaseablePool<object?[]> _objPool;
-    private static readonly string[] _searchAttributes = [
-        AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.OBJECT_SID,
-    ];
+	private readonly NonLeaseablePool<object?[]> _objPool;
+	private static readonly string[] _searchAttributes = [
+		AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.OBJECT_SID,
+	];
 
-    internal IRequestService Requests { get; }
-    internal IWellKnownService WellKnownSvc { get; }
+	internal IRequestService Requests { get; }
+	internal IWellKnownService WellKnownSvc { get; }
 
-    public CreationService(IWellKnownService wellKnowns, IRequestService requests)
-    {
-        _objPool = new(5, PreFillBag(2), GetObjectArray, null);
-        this.Requests = requests;
-        this.WellKnownSvc = wellKnowns;
-    }
+	public CreationService(IWellKnownService wellKnowns, IRequestService requests)
+	{
+		_objPool = new(5, PreFillBag(2), GetObjectArray, null);
+		this.Requests = requests;
+		this.WellKnownSvc = wellKnowns;
+	}
 
-    internal OneOf<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
-    {
-        string objClass = request.RequestType.GetObjectClass();
-        bool needsObj = string.Empty.Equals(objClass);
-        bool containsClass = attributeValues.ContainsKey(AttributeConstants.OBJECT_CLASS);
-        if (needsObj && !containsClass)
-        {
-            return new ApiBadRequestResult(
-                "Unable to determine the object class for this request - you may have to specify it manually.", ResultCode.ObjectClassViolation);
-        }
+	internal OneOf<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
+	{
+		string objClass = request.RequestType.GetObjectClass();
+		bool needsObj = string.Empty.Equals(objClass);
+		bool containsClass = attributeValues.ContainsKey(AttributeConstants.OBJECT_CLASS);
+		if (needsObj && !containsClass)
+		{
+			return new ApiBadRequestResult(
+				"Unable to determine the object class for this request - you may have to specify it manually.", ResultCode.ObjectClassViolation);
+		}
 
-        DistinguishedName dn = request.GetDistinguishedName();
-        if (!dn.HasParent && !this.TryUpdateWithWellKnown(ref dn, target.Domain, request.RequestType, out IActionResult? error))
-        {
-            return OneOf<ResultEntry>.FromT1(error);
-        }
+		DistinguishedName dn = request.GetDistinguishedName();
+		if (!dn.HasParent && !this.TryUpdateWithWellKnown(ref dn, target.Domain, request.RequestType, out IActionResult? error))
+		{
+			return OneOf<ResultEntry>.FromT1(error);
+		}
 
-        AddRequest addRequest = this.CreateAddRequest(dn, attributeValues);
-        if (!containsClass)
-        {
-            addRequest.Attributes.Add(new DirectoryAttribute(AttributeConstants.OBJECT_CLASS, objClass));
-        }
+		AddRequest addRequest = this.CreateAddRequest(dn, attributeValues);
+		if (!containsClass)
+		{
+			addRequest.Attributes.Add(new DirectoryAttribute(AttributeConstants.OBJECT_CLASS, objClass));
+		}
 
-        var oneOf = this.Requests.SendForResponse<AddResponse>(addRequest, connection);
-        if (oneOf.IsT1)
-        {
-            return OneOf<ResultEntry>.FromT1(oneOf.AsT1);
-        }
+		var oneOf = this.Requests.SendForResponse<AddResponse>(addRequest, connection);
+		if (oneOf.IsT1)
+		{
+			return OneOf<ResultEntry>.FromT1(oneOf.AsT1);
+		}
 
-        string filter = CreateFilterFromRequest(in target, request);
+		string filter = CreateFilterFromRequest(in target, request);
 
-        SearchRequest search = new(dn.ToString(), filter, SearchScope.Base, _searchAttributes);
+		SearchRequest search = new(dn.ToString(), filter, SearchScope.Base, _searchAttributes);
 
-        var searchOneOf = this.Requests.SendForResponse<SearchResponse>(search, connection);
-        if (searchOneOf.TryGetT1(out error, out var searchSuccess))
-        {
-            return OneOf<ResultEntry>.FromT1(error);
-        }
-        else if (searchSuccess.Entries.Count == 0)
-        {
-            return new LdapObjectMissingResult(
-                $"The object was seemingly created, but could not be found in the directory: {dn}");
-        }
+		var searchOneOf = this.Requests.SendForResponse<SearchResponse>(search, connection);
+		if (searchOneOf.TryGetT1(out error, out var searchSuccess))
+		{
+			return OneOf<ResultEntry>.FromT1(error);
+		}
+		else if (searchSuccess.Entries.Count == 0)
+		{
+			return new LdapObjectMissingResult(
+				$"The object was seemingly created, but could not be found in the directory: {dn}");
+		}
 
-        var entry = target.GetRequiredService<IPooledItem<ResultEntry>>();
-        entry.Value.AddResult(target.Domain.OrEmpty(), searchSuccess.Entries[0]);
+		var entry = target.GetRequiredService<IPooledItem<ResultEntry>>();
+		entry.Value.AddResult(target.Domain.OrEmpty(), searchSuccess.Entries[0]);
 
-        return entry.Value;
-    }
+		return entry.Value;
+	}
 
-    private AddRequest CreateAddRequest<T>(DistinguishedName dn, IEnumerable<KeyValuePair<string, T>> attributeValues)
-    {
-        object?[] values = _objPool.Get();
-        try
-        {
-            AddRequest addRequest = new(dn.ToString(), attributes: []);
+	private AddRequest CreateAddRequest<T>(DistinguishedName dn, IEnumerable<KeyValuePair<string, T>> attributeValues)
+	{
+		object?[] values = _objPool.Get();
+		try
+		{
+			AddRequest addRequest = new(dn.ToString(), attributes: []);
 
-            foreach (var kvp in attributeValues)
-            {
-                DirectoryAttribute dirAttribute = kvp.ToDirectoryAttribute(values);
-                addRequest.Attributes.Add(dirAttribute);
-            }
+			foreach (var kvp in attributeValues)
+			{
+				DirectoryAttribute dirAttribute = kvp.ToDirectoryAttribute(values);
+				addRequest.Attributes.Add(dirAttribute);
+			}
 
-            return addRequest;
-        }
-        finally
-        {
-            _objPool.Return(values);
-        }
-    }
-    private static string CreateFilterFromRequest(in DomainQuery target, ICreateRequest request)
-    {
-        var filterSvc = target.GetRequiredService<ILdapFilterService>();
-        return filterSvc.GetFilter(request.RequestType, addEnclosure: true);
-    }
-    private static object?[] GetObjectArray()
-    {
-        return new object[1];
-    }
-    private static IEnumerable<object?[]> PreFillBag(int count)
-    {
-        for (int i = 0; i < count; i++)
-        {
-            yield return GetObjectArray();
-        }
-    }
-    private bool TryUpdateWithWellKnown(ref DistinguishedName dn, string? domainKey, FilteredRequestType type, [NotNullWhen(false)] out IActionResult? errorResult)
-    {
-        if (!this.WellKnownSvc.TryGetValueByRequestType(domainKey, type, out DistinguishedName wellKnownDn))
-        {
-            errorResult = new ApiBadRequestResult(
-                "This request requires a path to be specified.", ResultCode.InvalidDNSyntax);
+			return addRequest;
+		}
+		finally
+		{
+			_objPool.Return(values);
+		}
+	}
+	private static string CreateFilterFromRequest(in DomainQuery target, ICreateRequest request)
+	{
+		var filterSvc = target.GetRequiredService<ILdapFilterService>();
+		return filterSvc.GetFilter(request.RequestType, addEnclosure: true);
+	}
+	private static object?[] GetObjectArray()
+	{
+		return new object[1];
+	}
+	private static IEnumerable<object?[]> PreFillBag(int count)
+	{
+		for (int i = 0; i < count; i++)
+		{
+			yield return GetObjectArray();
+		}
+	}
+	private bool TryUpdateWithWellKnown(ref DistinguishedName dn, string? domainKey, FilteredRequestType type, [NotNullWhen(false)] out IActionResult? errorResult)
+	{
+		if (!this.WellKnownSvc.TryGetValueByRequestType(domainKey, type, out DistinguishedName wellKnownDn))
+		{
+			errorResult = new ApiBadRequestResult(
+				"This request requires a path to be specified.", ResultCode.InvalidDNSyntax);
 
-            return false;
-        }
+			return false;
+		}
 
-        errorResult = null;
-        dn = wellKnownDn.Insert(0, dn[0]);
-        return true;
-    }
+		errorResult = null;
+		dn = wellKnownDn.Insert(0, dn[0]);
+		return true;
+	}
 }

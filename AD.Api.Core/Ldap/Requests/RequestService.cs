@@ -7,209 +7,208 @@ using AD.Api.Pooling;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap;
+
+public interface IRequestService
 {
-    public interface IRequestService
-    {
-        IConnectionService Connections { get; }
+	IConnectionService Connections { get; }
 
-        OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters);
-        bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
+	OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters);
+	bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
 
-        bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
+	bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
 
-        IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
-            where TResponse : SearchResponse
-            where T : LdapRequest;
-        IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
-            where TResponse : SearchResponse
-            where T : LdapRequest;
-        IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
-            where T : LdapRequest
-            where TResponse : SearchResponse;
+	IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+		where TResponse : SearchResponse
+		where T : LdapRequest;
+	IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
+		where TResponse : SearchResponse
+		where T : LdapRequest;
+	IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+		where T : LdapRequest
+		where TResponse : SearchResponse;
 
-        OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
-            where TResponse : SearchResponse
-            where T : LdapRequest;
+	OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
+		where TResponse : SearchResponse
+		where T : LdapRequest;
 
-        OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
-            where TResponse : DirectoryResponse;
-    }
+	OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
+		where TResponse : DirectoryResponse;
+}
 
-    [DependencyRegistration(typeof(IRequestService), Lifetime = ServiceLifetime.Singleton)]
-    internal sealed class RequestService : IRequestService
-    {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IEnumStrings<ResultCode> _enumStrings;
-        public IConnectionService Connections { get; }
+[DependencyRegistration(typeof(IRequestService), Lifetime = ServiceLifetime.Singleton)]
+internal sealed class RequestService : IRequestService
+{
+	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private readonly IEnumStrings<ResultCode> _enumStrings;
+	public IConnectionService Connections { get; }
 
-        [DebuggerStepThrough]
-        public RequestService(IConnectionService connectionService, IEnumStrings<ResultCode> enumStrings)
-        {
-            _enumStrings = enumStrings;
-            this.Connections = connectionService;
-        }
+	[DebuggerStepThrough]
+	public RequestService(IConnectionService connectionService, IEnumStrings<ResultCode> enumStrings)
+	{
+		_enumStrings = enumStrings;
+		this.Connections = connectionService;
+	}
 
-        // CONNECTIONS
-        [DebuggerStepThrough]
-        public OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters)
-        {
-            return parameters.ApplyConnection(this.Connections);
-        }
-        [DebuggerStepThrough]
-        public bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
-        {
-            return this.Connect(parameters).TryGetT0(out connection, out errorResult);
-        }
-        [DebuggerStepThrough]
-        public bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
-        {
-            if (!this.Connections.TryGetConnection(domainKey, out connection))
-            {
-                errorResult = new DomainNotFoundResult(domainKey);
-                return false;
-            }
-            else
-            {
-                errorResult = null;
-                return true;
-            }
-        }
+	// CONNECTIONS
+	[DebuggerStepThrough]
+	public OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters)
+	{
+		return parameters.ApplyConnection(this.Connections);
+	}
+	[DebuggerStepThrough]
+	public bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
+	{
+		return this.Connect(parameters).TryGetT0(out connection, out errorResult);
+	}
+	[DebuggerStepThrough]
+	public bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
+	{
+		if (!this.Connections.TryGetConnection(domainKey, out connection))
+		{
+			errorResult = new DomainNotFoundResult(domainKey);
+			return false;
+		}
+		else
+		{
+			errorResult = null;
+			return true;
+		}
+	}
 
-        // SEARCH REQUESTS
-        public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
-            where TResponse : SearchResponse
-            where T : LdapRequest
-        {
-            if (!this.TryConnect(parameters, out LdapConnection? connection, out IActionResult? error))
-            {
-                return error;
-            }
+	// SEARCH REQUESTS
+	public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+		where TResponse : SearchResponse
+		where T : LdapRequest
+	{
+		if (!this.TryConnect(parameters, out LdapConnection? connection, out IActionResult? error))
+		{
+			return error;
+		}
 
-            using (connection)
-            {
-                return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, connection, requestServices, isMultiRequest: true);
-            }
-        }
-        public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
-            where TResponse : SearchResponse
-            where T : LdapRequest
-        {
-            return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, continuation.ActiveConnection, continuation, isMultiRequest: true);
-        }
+		using (connection)
+		{
+			return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, connection, requestServices, isMultiRequest: true);
+		}
+	}
+	public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
+		where TResponse : SearchResponse
+		where T : LdapRequest
+	{
+		return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, continuation.ActiveConnection, continuation, isMultiRequest: true);
+	}
 
-        public IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
-            where TResponse : SearchResponse
-            where T : LdapRequest
-        {
-            var oneOf = parameters.ApplyConnection(this.Connections);
-            if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
-            {
-                return error;
-            }
+	public IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
+		where TResponse : SearchResponse
+		where T : LdapRequest
+	{
+		var oneOf = parameters.ApplyConnection(this.Connections);
+		if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
+		{
+			return error;
+		}
 
-            using (connection)
-            {
-                return this.SendSearchRequest<T, ResultEntry, TResponse>(parameters, connection, requestServices, isMultiRequest: false);
-            }
-         }
-        public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
-            where TResponse : SearchResponse
-            where T : LdapRequest
-        {
-            var oneOf = parameters.ApplyConnection(this.Connections);
-            if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
-            {
-                return OneOf<ConnectedResponse>.FromT1(error);
-            }
+		using (connection)
+		{
+			return this.SendSearchRequest<T, ResultEntry, TResponse>(parameters, connection, requestServices, isMultiRequest: false);
+		}
+	}
+	public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
+		where TResponse : SearchResponse
+		where T : LdapRequest
+	{
+		var oneOf = parameters.ApplyConnection(this.Connections);
+		if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
+		{
+			return OneOf<ConnectedResponse>.FromT1(error);
+		}
 
-            var responseOr = this.SendForResponse<TResponse>(parameters.Request, connection);
-            if (responseOr.TryGetT1(out error, out TResponse? response))
-            {
-                connection.Dispose();
-                return OneOf<ConnectedResponse>.FromT1(error);
-            }
+		var responseOr = this.SendForResponse<TResponse>(parameters.Request, connection);
+		if (responseOr.TryGetT1(out error, out TResponse? response))
+		{
+			connection.Dispose();
+			return OneOf<ConnectedResponse>.FromT1(error);
+		}
 
-            return ConnectedResponse.Continue(connection, response, parameters.Info);
-        }
+		return ConnectedResponse.Continue(connection, response, parameters.Info);
+	}
 
-        private IActionResult SendSearchRequest<T, TCollection, TResponse>(RequestParameters<T, TResponse> parameters, LdapConnection connection, IServiceProvider requestServices, bool isMultiRequest)
-            where T : LdapRequest
-            where TCollection : ISearchResultEntry
-            where TResponse : SearchResponse
-        {
-            var oneOf = this.SendForResponse<TResponse>(parameters.Request, connection);
-            if (oneOf.TryGetT1(out IActionResult? error, out TResponse? response))
-            {
-                return error;
-            }
+	private IActionResult SendSearchRequest<T, TCollection, TResponse>(RequestParameters<T, TResponse> parameters, LdapConnection connection, IServiceProvider requestServices, bool isMultiRequest)
+		where T : LdapRequest
+		where TCollection : ISearchResultEntry
+		where TResponse : SearchResponse
+	{
+		var oneOf = this.SendForResponse<TResponse>(parameters.Request, connection);
+		if (oneOf.TryGetT1(out IActionResult? error, out TResponse? response))
+		{
+			return error;
+		}
 
-            TCollection collection = requestServices.GetRequiredService<IPooledItem<TCollection>>().Value;
-            if (!collection.TryApplyResponse(parameters.Info.Domain, response))
-            {
-                return SendCustomExceptionResult(response, isMultiRequest);
-            }
+		TCollection collection = requestServices.GetRequiredService<IPooledItem<TCollection>>().Value;
+		if (!collection.TryApplyResponse(parameters.Info.Domain, response))
+		{
+			return SendCustomExceptionResult(response, isMultiRequest);
+		}
 
-            if (!isMultiRequest)
-            {
-                return new OkObjectResult(collection);
-            }
+		if (!isMultiRequest)
+		{
+			return new OkObjectResult(collection);
+		}
 
-            CollectionResponse respCol = requestServices.GetRequiredService<CollectionResponse>();
-            respCol.SetData(response, resultEntries: collection);
+		CollectionResponse respCol = requestServices.GetRequiredService<CollectionResponse>();
+		respCol.SetData(response, resultEntries: collection);
 
-            return respCol;
-        }
+		return respCol;
+	}
 
-        // REQUEST SENDING
-        public OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
-            where TResponse : DirectoryResponse
-        {
-            try
-            {
-                return (TResponse)connection.SendRequest(request);
-            }
-            catch (DirectoryOperationException operationsEx)
-            {
-                return new OperationsExceptionResult(operationsEx);
-            }
-            catch (LdapException ldapEx)
-            {
-                return new LdapExceptionResult(ldapEx);
-            }
-            catch (Exception otherEx)
-            {
-                return new ObjectResult(new
-                {
-                    Result = ResultCode.Other,
-                    ResultCode = otherEx.HResult,
-                    Error = otherEx.Message ?? "No message provided.",
-                })
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                };
-            }
-        }
+	// REQUEST SENDING
+	public OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
+		where TResponse : DirectoryResponse
+	{
+		try
+		{
+			return (TResponse)connection.SendRequest(request);
+		}
+		catch (DirectoryOperationException operationsEx)
+		{
+			return new OperationsExceptionResult(operationsEx);
+		}
+		catch (LdapException ldapEx)
+		{
+			return new LdapExceptionResult(ldapEx);
+		}
+		catch (Exception otherEx)
+		{
+			return new ObjectResult(new
+			{
+				Result = ResultCode.Other,
+				ResultCode = otherEx.HResult,
+				Error = otherEx.Message ?? "No message provided.",
+			})
+			{
+				StatusCode = StatusCodes.Status500InternalServerError,
+			};
+		}
+	}
 
-        // EXCEPTION HANDLING
-        private static ApiBadRequestResult SendCustomExceptionResult(SearchResponse response, bool isMultiRequest)
-        {
-            bool isZero = response.Entries.Count == 0;
+	// EXCEPTION HANDLING
+	private static ApiBadRequestResult SendCustomExceptionResult(SearchResponse response, bool isMultiRequest)
+	{
+		bool isZero = response.Entries.Count == 0;
 
-            ResultCode code = isMultiRequest
-                ? ResultCode.Other
-                : !isZero
-                    ? ResultCode.ResultsTooLarge
-                    : ResultCode.NoSuchObject;
+		ResultCode code = isMultiRequest
+			? ResultCode.Other
+			: !isZero
+				? ResultCode.ResultsTooLarge
+				: ResultCode.NoSuchObject;
 
-            string message = isMultiRequest
-                ? "The request failed to apply the response for serialization."
-                : isZero
-                    ? "The requested object was not found in the directory."
-                    : $"The wrong amount of results were returned. Expected one (1) result and got {response.Entries.Count}.";
+		string message = isMultiRequest
+			? "The request failed to apply the response for serialization."
+			: isZero
+				? "The requested object was not found in the directory."
+				: $"The wrong amount of results were returned. Expected one (1) result and got {response.Entries.Count}.";
 
-            return new ApiBadRequestResult(message, code);
-        }
-    }
+		return new ApiBadRequestResult(message, code);
+	}
 }
 

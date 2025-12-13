@@ -5,256 +5,255 @@ using AD.Api.Statics;
 using Microsoft.Extensions.ObjectPool;
 using System.Buffers;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap;
+
+[DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
+public sealed class LdapSearchRequest : LdapRequest, IResettable
 {
-    [DependencyRegistration(Lifetime = ServiceLifetime.Transient)]
-    public sealed class LdapSearchRequest : LdapRequest, IResettable
-    {
-        private const string DEFAULTS = "defaults";
+	private const string DEFAULTS = "defaults";
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly string _defaultRequestId = Guid.Empty.ToString();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDefaults _defaults;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly SearchRequest _request;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private Guid _requestId;
+	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private static readonly string _defaultRequestId = Guid.Empty.ToString();
+	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private readonly IDefaults _defaults;
+	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private readonly SearchRequest _request;
+	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private Guid _requestId;
 
-        private bool _hasDefaults;
-        protected override DirectoryRequest BackingRequest => _request;
-        protected override string DefaultRequestId => _defaultRequestId;
+	private bool _hasDefaults;
+	protected override DirectoryRequest BackingRequest => _request;
+	protected override string DefaultRequestId => _defaultRequestId;
 
-        public int ControlCount => _request.Controls.Count;
+	public int ControlCount => _request.Controls.Count;
 
-        /// <summary>
-        /// The <see cref="RequestId"/> contains the unique identifier for the LDAP request.
-        /// </summary>
-        /// <remarks>
-        /// Each request will have its own RequestId per scoped-HTTP request.
-        /// </remarks>
-        /// <returns>
-        /// The requestID for the LDAP request as a <see cref="Guid"/> value.
-        /// </returns>
-        public Guid RequestId
-        {
-            [DebuggerStepThrough]
-            get => _requestId;
-            set
-            {
-                if (value == Guid.Empty)
-                {
-                    _request.RequestId = _defaultRequestId;
-                    _requestId = Guid.Empty;
-                }
-                else
-                {
-                    _requestId = value;
-                    _request.RequestId = value.ToString();
-                }
-            }
-        }
-        /// <inheritdoc cref="SearchRequest.SizeLimit" path="/*[not(self::summary)]"/>
-        /// <summary>
-        ///     <inheritdoc cref="SearchRequest.SizeLimit" path="/summary/text()[1]"/>
-        ///     <see cref="LdapSearchRequest"/>
-        ///     <inheritdoc cref="SearchRequest.SizeLimit" path="/summary/text()[last()]"/>
-        /// </summary>
-        public int SizeLimit
-        {
-            [DebuggerStepThrough]
-            get => _request.SizeLimit;
-            [DebuggerStepThrough]
-            set => _request.SizeLimit = value;
-        }
-        /// <summary>
-        /// Gets or sets the base distinguished name (DN) from which the search will start.
-        /// </summary>
-        /// <remarks>
-        /// The <see cref="SearchBase"/> property defines the starting point in the directory
-        /// from which the LDAP search will be conducted. It is specified as a distinguished name (DN).
-        /// </remarks>
-        /// <returns>
-        /// The base distinguished name (DN) for the LDAP search as a <see cref="string"/> value.
-        /// </returns>
-        public string SearchBase
-        {
-            [DebuggerStepThrough]
-            get => _request.DistinguishedName;
-            [DebuggerStepThrough]
-            set => _request.DistinguishedName = value ?? string.Empty;
-        }
+	/// <summary>
+	/// The <see cref="RequestId"/> contains the unique identifier for the LDAP request.
+	/// </summary>
+	/// <remarks>
+	/// Each request will have its own RequestId per scoped-HTTP request.
+	/// </remarks>
+	/// <returns>
+	/// The requestID for the LDAP request as a <see cref="Guid"/> value.
+	/// </returns>
+	public Guid RequestId
+	{
+		[DebuggerStepThrough]
+		get => _requestId;
+		set
+		{
+			if (value == Guid.Empty)
+			{
+				_request.RequestId = _defaultRequestId;
+				_requestId = Guid.Empty;
+			}
+			else
+			{
+				_requestId = value;
+				_request.RequestId = value.ToString();
+			}
+		}
+	}
+	/// <inheritdoc cref="SearchRequest.SizeLimit" path="/*[not(self::summary)]"/>
+	/// <summary>
+	///     <inheritdoc cref="SearchRequest.SizeLimit" path="/summary/text()[1]"/>
+	///     <see cref="LdapSearchRequest"/>
+	///     <inheritdoc cref="SearchRequest.SizeLimit" path="/summary/text()[last()]"/>
+	/// </summary>
+	public int SizeLimit
+	{
+		[DebuggerStepThrough]
+		get => _request.SizeLimit;
+		[DebuggerStepThrough]
+		set => _request.SizeLimit = value;
+	}
+	/// <summary>
+	/// Gets or sets the base distinguished name (DN) from which the search will start.
+	/// </summary>
+	/// <remarks>
+	/// The <see cref="SearchBase"/> property defines the starting point in the directory
+	/// from which the LDAP search will be conducted. It is specified as a distinguished name (DN).
+	/// </remarks>
+	/// <returns>
+	/// The base distinguished name (DN) for the LDAP search as a <see cref="string"/> value.
+	/// </returns>
+	public string SearchBase
+	{
+		[DebuggerStepThrough]
+		get => _request.DistinguishedName;
+		[DebuggerStepThrough]
+		set => _request.DistinguishedName = value ?? string.Empty;
+	}
 
-        public LdapSearchRequest(IDefaults defaults)
-        {
-            _requestId = Guid.Empty;
-            _defaults = defaults;
-            _request = new();
+	public LdapSearchRequest(IDefaults defaults)
+	{
+		_requestId = Guid.Empty;
+		_defaults = defaults;
+		_request = new();
 
-            ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
+		ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
 
-            ResetRequest(_request, in globals);
-            _hasDefaults = true;
-        }
+		ResetRequest(_request, in globals);
+		_hasDefaults = true;
+	}
 
-        public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
-        {
-            if (attributeString.IsWhiteSpace())
-            {
-                this.AddAttributesFromTypes(types);
-                return;
-            }
+	public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
+	{
+		if (attributeString.IsWhiteSpace())
+		{
+			this.AddAttributesFromTypes(types);
+			return;
+		}
 
-            bool wantsDefault = false;
-            char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
+		bool wantsDefault = false;
+		char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
 
-            foreach (ReadOnlySpan<char> section in attributeString.SpanSplit(in separator))
-            {
-                if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
-                    ||
-                    section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
-                {
-                    wantsDefault = true;
-                }
-                else if (!section.IsWhiteSpace())
-                {
-                    string s = section.ToString();
-                    _ = _request.Attributes.Add(s);
-                }
-            }
+		foreach (ReadOnlySpan<char> section in attributeString.SpanSplit(in separator))
+		{
+			if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
+				||
+				section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
+			{
+				wantsDefault = true;
+			}
+			else if (!section.IsWhiteSpace())
+			{
+				string s = section.ToString();
+				_ = _request.Attributes.Add(s);
+			}
+		}
 
-            if (!wantsDefault)
-            {
-                this.RemoveDefaultAttributes();
-            }
-            else
-            {
-                this.AddAttributesFromTypes(types);
-            }
-        }
-        public void AddAttributes(ReadOnlySpan<string> attributes, FilteredRequestType? types)
-        {
-            if (attributes.IsEmpty)
-            {
-                this.AddAttributesFromTypes(types);
-                return;
-            }
+		if (!wantsDefault)
+		{
+			this.RemoveDefaultAttributes();
+		}
+		else
+		{
+			this.AddAttributesFromTypes(types);
+		}
+	}
+	public void AddAttributes(ReadOnlySpan<string> attributes, FilteredRequestType? types)
+	{
+		if (attributes.IsEmpty)
+		{
+			this.AddAttributesFromTypes(types);
+			return;
+		}
 
-            bool wantsDefault = false;
+		bool wantsDefault = false;
 
-            foreach (string att in attributes)
-            {
-                if (string.IsNullOrWhiteSpace(att))
-                {
-                    continue;
-                }
+		foreach (string att in attributes)
+		{
+			if (string.IsNullOrWhiteSpace(att))
+			{
+				continue;
+			}
 
-                ReadOnlySpan<char> working = att;
-                if (working.StartsWith(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase))
-                {
-                    working = working.Slice(DEFAULTS.Length - 1);
+			ReadOnlySpan<char> working = att;
+			if (working.StartsWith(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase))
+			{
+				working = working.Slice(DEFAULTS.Length - 1);
 
-                    if (working.IsEmpty || (working.Length == 1 && char.ToUpperInvariant(working[0]) == char.ToUpperInvariant(DEFAULTS[^1])))
-                    {
-                        wantsDefault = true;
-                        continue;
-                    }
-                }
+				if (working.IsEmpty || (working.Length == 1 && char.ToUpperInvariant(working[0]) == char.ToUpperInvariant(DEFAULTS[^1])))
+				{
+					wantsDefault = true;
+					continue;
+				}
+			}
 
-                _ = _request.Attributes.Add(att);
-            }
+			_ = _request.Attributes.Add(att);
+		}
 
-            if (!wantsDefault)
-            {
-                this.RemoveDefaultAttributes();
-            }
-            else
-            {
-                this.AddAttributesFromTypes(types);
-            }
-        }
-        private void AddAttributesFromTypes(FilteredRequestType? types)
-        {
-            if (!types.HasValue)
-            {
-                return;
-            }
+		if (!wantsDefault)
+		{
+			this.RemoveDefaultAttributes();
+		}
+		else
+		{
+			this.AddAttributesFromTypes(types);
+		}
+	}
+	private void AddAttributesFromTypes(FilteredRequestType? types)
+	{
+		if (!types.HasValue)
+		{
+			return;
+		}
 
-            int count = _defaults.GetAttributeCount(types.Value, includeGlobal: false);
-            if (count <= 0)
-            {
-                return;
-            }
+		int count = _defaults.GetAttributeCount(types.Value, includeGlobal: false);
+		if (count <= 0)
+		{
+			return;
+		}
 
-            string[] array = ArrayPool<string>.Shared.Rent(count);
-            Span<string> attributes = array.AsSpan(0, count);
+		string[] array = ArrayPool<string>.Shared.Rent(count);
+		Span<string> attributes = array.AsSpan(0, count);
 
-            _defaults.TryGetAllAttributes(types.Value, attributes, includeGlobal: false, out count);
+		_defaults.TryGetAllAttributes(types.Value, attributes, includeGlobal: false, out count);
 
-            foreach (string s in attributes.Slice(0, count))
-            {
-                _request.Attributes.Add(s);
-            }
+		foreach (string s in attributes.Slice(0, count))
+		{
+			_request.Attributes.Add(s);
+		}
 
-            ArrayPool<string>.Shared.Return(array);
-        }
-        protected override void OnApplyingContext(ConnectionContext context)
-        {
-            if (string.IsNullOrWhiteSpace(this.SearchBase))
-            {
-                this.SearchBase = context.DefaultNamingContext;
-            }
-        }
-        private void RemoveDefaultAttributes()
-        {
-            if (!_hasDefaults)
-            {
-                return;
-            }
+		ArrayPool<string>.Shared.Return(array);
+	}
+	protected override void OnApplyingContext(ConnectionContext context)
+	{
+		if (string.IsNullOrWhiteSpace(this.SearchBase))
+		{
+			this.SearchBase = context.DefaultNamingContext;
+		}
+	}
+	private void RemoveDefaultAttributes()
+	{
+		if (!_hasDefaults)
+		{
+			return;
+		}
 
-            int i = _defaults.TotalGlobalAttributeCount - 1;
-            for (;i >= 0; i--)
-            {
-                _request.Attributes.RemoveAt(i);
-            }
+		int i = _defaults.TotalGlobalAttributeCount - 1;
+		for (; i >= 0; i--)
+		{
+			_request.Attributes.RemoveAt(i);
+		}
 
-            _hasDefaults = false;
-        }
-        /// <inheritdoc/>
-        /// <remarks>
-        /// Resets all search parameters and controls to their default values based on the global defaults.
-        /// </remarks>
-        protected override void ResetCore()
-        {
-            _requestId = Guid.Empty;
-            ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
-            //_pageSize = 0;
-            ResetRequest(_request, in defaults);
-            _hasDefaults = true;
-        }
-        private static void ResetRequest(SearchRequest request, ref readonly ISearchDefaults defaults)
-        {
-            request.Aliases = defaults.DereferenceAlias;
-            request.Attributes.Clear();
-            request.Attributes.AddRange(defaults.Attributes);
-            request.DistinguishedName = string.Empty;
-            request.Filter = string.Empty;
-            request.Scope = defaults.Scope;
-            request.SizeLimit = defaults.SizeLimit;
-            request.TimeLimit = defaults.Timeout;
-        }
+		_hasDefaults = false;
+	}
+	/// <inheritdoc/>
+	/// <remarks>
+	/// Resets all search parameters and controls to their default values based on the global defaults.
+	/// </remarks>
+	protected override void ResetCore()
+	{
+		_requestId = Guid.Empty;
+		ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
+		//_pageSize = 0;
+		ResetRequest(_request, in defaults);
+		_hasDefaults = true;
+	}
+	private static void ResetRequest(SearchRequest request, ref readonly ISearchDefaults defaults)
+	{
+		request.Aliases = defaults.DereferenceAlias;
+		request.Attributes.Clear();
+		request.Attributes.AddRange(defaults.Attributes);
+		request.DistinguishedName = string.Empty;
+		request.Filter = string.Empty;
+		request.Scope = defaults.Scope;
+		request.SizeLimit = defaults.SizeLimit;
+		request.TimeLimit = defaults.Timeout;
+	}
 
-        public SearchRequest AsLdapRequest()
-        {
-            return _request;
-        }
+	public SearchRequest AsLdapRequest()
+	{
+		return _request;
+	}
 
-        /// <inheritdoc/>
-        bool IResettable.TryReset()
-        {
-            this.Reset();
-            return true;
-        }
-    }
+	/// <inheritdoc/>
+	bool IResettable.TryReset()
+	{
+		this.Reset();
+		return true;
+	}
 }
 

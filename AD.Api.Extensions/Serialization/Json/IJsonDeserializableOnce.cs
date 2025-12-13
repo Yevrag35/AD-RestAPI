@@ -1,9 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace AD.Api.Serialization.Json
+namespace AD.Api.Serialization.Json;
+
+public interface IJsonDeserializableOnce : IJsonOnDeserialized
 {
-    public interface IJsonDeserializableOnce : IJsonOnDeserialized
-    {
-        bool IsDeserialized { get; }
-    }
+	bool IsDeserialized { get; }
 }

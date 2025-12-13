@@ -1,8 +1,7 @@
-namespace AD.Api.Core.Security
+namespace AD.Api.Core.Security;
+
+public interface ILdapCredential : IDisposable
 {
-    public interface ILdapCredential : IDisposable
-    {
-        void SetCredential(LdapConnection connection);
-    }
+	void SetCredential(LdapConnection connection);
 }
 

@@ -1,34 +1,33 @@
 using System.Text.Json;
 
-namespace AD.Api.Core.Serialization
+namespace AD.Api.Core.Serialization;
+
+public ref struct SerializationContext
 {
-    public ref struct SerializationContext
-    {
-        private readonly IServiceProvider _provider;
-        private ReadOnlySpan<char> _attributeName;
-        private readonly JsonSerializerOptions _options;
-        private object _value;
+	private readonly IServiceProvider _provider;
+	private ReadOnlySpan<char> _attributeName;
+	private readonly JsonSerializerOptions _options;
+	private object _value;
 
-        public ReadOnlySpan<char> AttributeName
-        {
-            readonly get => _attributeName;
-            internal set => _attributeName = value;
-        }
-        public readonly JsonSerializerOptions Options => _options;
-        public readonly IServiceProvider Services => _provider;
-        public object Value
-        {
-            readonly get => _value;
-            internal set => _value = value;
-        }
+	public ReadOnlySpan<char> AttributeName
+	{
+		readonly get => _attributeName;
+		internal set => _attributeName = value;
+	}
+	public readonly JsonSerializerOptions Options => _options;
+	public readonly IServiceProvider Services => _provider;
+	public object Value
+	{
+		readonly get => _value;
+		internal set => _value = value;
+	}
 
-        internal SerializationContext(JsonSerializerOptions options, IServiceProvider scopedProvider)
-        {
-            _attributeName = default;
-            _provider = scopedProvider;
-            _options = options;
-            _value = string.Empty;
-        }
-    }
+	internal SerializationContext(JsonSerializerOptions options, IServiceProvider scopedProvider)
+	{
+		_attributeName = default;
+		_provider = scopedProvider;
+		_options = options;
+		_value = string.Empty;
+	}
 }
 

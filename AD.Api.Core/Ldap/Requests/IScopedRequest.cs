@@ -2,6 +2,6 @@
 
 public interface IScopedRequest
 {
-    DistinguishedName GetScopedPath();
-    string GetScopedPathMemberName();
+	DistinguishedName GetScopedPath();
+	string GetScopedPathMemberName();
 }

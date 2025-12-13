@@ -1,213 +1,212 @@
 using AD.Api.Attributes;
 using System.Buffers;
-using System.Collections.Frozen;
 using System.Collections;
+using System.Collections.Frozen;
 
-namespace AD.Api.Enums.Internal
+namespace AD.Api.Enums.Internal;
+
+[DebuggerDisplay(@"\{EnumCount = {EnumCount}; ValueCount = {ValueCount}\}")]
+internal sealed class EVDictionary<TEnum, TAtt, TValue> : IEnumValues<TEnum, TAtt, TValue>, IEnumerable<TEnum>
+	where TEnum : unmanaged, Enum
+	where TAtt : Attribute, IValuedAttribute<TValue>
+	where TValue : notnull
 {
-    [DebuggerDisplay(@"\{EnumCount = {EnumCount}; ValueCount = {ValueCount}\}")]
-    internal sealed class EVDictionary<TEnum, TAtt, TValue> : IEnumValues<TEnum, TAtt, TValue>, IEnumerable<TEnum>
-        where TEnum : unmanaged, Enum
-        where TAtt : Attribute, IValuedAttribute<TValue>
-        where TValue : notnull
-    {
-        [DebuggerStepThrough]
-        private readonly struct Dicts
-        {
-            internal readonly IReadOnlyDictionary<string, TAtt> Attributes;
-            internal readonly IEnumStrings<TEnum> EnumStrings;
+	[DebuggerStepThrough]
+	private readonly struct Dicts
+	{
+		internal readonly IReadOnlyDictionary<string, TAtt> Attributes;
+		internal readonly IEnumStrings<TEnum> EnumStrings;
 
-            internal Dicts(IReadOnlyDictionary<string, TAtt> attributes, IEnumStrings<TEnum> enumStrings)
-            {
-                Attributes = attributes;
-                EnumStrings = enumStrings;
-            }
-        }
+		internal Dicts(IReadOnlyDictionary<string, TAtt> attributes, IEnumStrings<TEnum> enumStrings)
+		{
+			Attributes = attributes;
+			EnumStrings = enumStrings;
+		}
+	}
 
-        private readonly Dicts _backing;
+	private readonly Dicts _backing;
 
-        public string this[TEnum key] => _backing.EnumStrings[key];
+	public string this[TEnum key] => _backing.EnumStrings[key];
 
-        public int EnumCount => _backing.EnumStrings.NameCount;
-        public IEnumStrings<TEnum> EnumStrings => _backing.EnumStrings;
-        public int ValueCount => _backing.Attributes.Count;
+	public int EnumCount => _backing.EnumStrings.NameCount;
+	public IEnumStrings<TEnum> EnumStrings => _backing.EnumStrings;
+	public int ValueCount => _backing.Attributes.Count;
 
-        [DebuggerStepThrough]
-        public EVDictionary(IEnumStrings<TEnum> enumStrings)
-            : this(CreateFromEnumsAndFields(enumStrings), enumStrings)
-        {
-        }
-        [DebuggerStepThrough]
-        private EVDictionary(IDictionary<string, TAtt> nameToValue, IEnumStrings<TEnum> enumStrings)
-        {
-            IReadOnlyDictionary<string, TAtt> attDict = enumStrings.IsFrozen
-                ? nameToValue.ToFrozenDictionary(StringComparer.InvariantCultureIgnoreCase)
-                : nameToValue.AsReadOnly();
+	[DebuggerStepThrough]
+	public EVDictionary(IEnumStrings<TEnum> enumStrings)
+		: this(CreateFromEnumsAndFields(enumStrings), enumStrings)
+	{
+	}
+	[DebuggerStepThrough]
+	private EVDictionary(IDictionary<string, TAtt> nameToValue, IEnumStrings<TEnum> enumStrings)
+	{
+		IReadOnlyDictionary<string, TAtt> attDict = enumStrings.IsFrozen
+			? nameToValue.ToFrozenDictionary(StringComparer.InvariantCultureIgnoreCase)
+			: nameToValue.AsReadOnly();
 
-            _backing = new(attDict, enumStrings);
-        }
-        /// <inheritdoc/>
-        [DebuggerStepThrough]
-        public bool ContainsEnum(TEnum key)
-        {
-            return _backing.EnumStrings.ContainsEnum(key);
-        }
+		_backing = new(attDict, enumStrings);
+	}
+	/// <inheritdoc/>
+	[DebuggerStepThrough]
+	public bool ContainsEnum(TEnum key)
+	{
+		return _backing.EnumStrings.ContainsEnum(key);
+	}
 
-        /// <inheritdoc/>
-        public IEnumerable<TValue> GetAllValues()
-        {
-            foreach (var kvp in _backing.EnumStrings.OrderBy(x => x.Value))
-            {
-                yield return _backing.Attributes[kvp.Key].Value;
-            }
-        }
+	/// <inheritdoc/>
+	public IEnumerable<TValue> GetAllValues()
+	{
+		foreach (var kvp in _backing.EnumStrings.OrderBy(x => x.Value))
+		{
+			yield return _backing.Attributes[kvp.Key].Value;
+		}
+	}
 
-        public Dictionary<TValue, TEnum> ToValueDictionary(IEqualityComparer<TValue>? equalityComparer)
-        {
-            if (equalityComparer is null)
-            {
-                Debug.Fail("You should use the default equality comparer if you don't have a specific reason not to.");
-                if (!typeof(IEquatable<TValue>).IsAssignableFrom(typeof(TValue)))
-                {
-                    throw new InvalidOperationException($"{typeof(TValue).GetName()} must implement IEquatable<T> to use the default equality comparer.");
-                }
-                else if (typeof(string).Equals(typeof(TValue)))
-                {
-                    equalityComparer = (IEqualityComparer<TValue>)StringComparer.OrdinalIgnoreCase;
-                }
-                else
-                {
-                    equalityComparer = EqualityComparer<TValue>.Default;
-                }
-            }
+	public Dictionary<TValue, TEnum> ToValueDictionary(IEqualityComparer<TValue>? equalityComparer)
+	{
+		if (equalityComparer is null)
+		{
+			Debug.Fail("You should use the default equality comparer if you don't have a specific reason not to.");
+			if (!typeof(IEquatable<TValue>).IsAssignableFrom(typeof(TValue)))
+			{
+				throw new InvalidOperationException($"{typeof(TValue).GetName()} must implement IEquatable<T> to use the default equality comparer.");
+			}
+			else if (typeof(string).Equals(typeof(TValue)))
+			{
+				equalityComparer = (IEqualityComparer<TValue>)StringComparer.OrdinalIgnoreCase;
+			}
+			else
+			{
+				equalityComparer = EqualityComparer<TValue>.Default;
+			}
+		}
 
-            Dictionary<TValue, TEnum> dictionary = new(_backing.Attributes.Count, equalityComparer);
-            foreach (var kvp in _backing.EnumStrings)
-            {
-                if (_backing.Attributes.TryGetValue(kvp.Key, out var value))
-                {
-                    _ = dictionary.TryAdd(value.Value, kvp.Value);
-                }
-            }
+		Dictionary<TValue, TEnum> dictionary = new(_backing.Attributes.Count, equalityComparer);
+		foreach (var kvp in _backing.EnumStrings)
+		{
+			if (_backing.Attributes.TryGetValue(kvp.Key, out var value))
+			{
+				_ = dictionary.TryAdd(value.Value, kvp.Value);
+			}
+		}
 
-            return dictionary;
-        }
+		return dictionary;
+	}
 
-        [DebuggerStepThrough]
-        public IEnumerator<TEnum> GetEnumerator()
-        {
-            return _backing.EnumStrings.Values.GetEnumerator();
-        }
-        [DebuggerStepThrough]
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+	[DebuggerStepThrough]
+	public IEnumerator<TEnum> GetEnumerator()
+	{
+		return _backing.EnumStrings.Values.GetEnumerator();
+	}
+	[DebuggerStepThrough]
+	IEnumerator IEnumerable.GetEnumerator()
+	{
+		return this.GetEnumerator();
+	}
 
-        [DebuggerStepThrough]
-        [return: NotNullIfNotNull(nameof(defaultValue))]
-        public TValue? GetValueOrDefault(TEnum key, [AllowNull] TValue defaultValue = default)
-        {
-            return this.TryGetAttribute(key, out TAtt? attribute)
-                ? attribute.Value
-                : defaultValue;
-        }
+	[DebuggerStepThrough]
+	[return: NotNullIfNotNull(nameof(defaultValue))]
+	public TValue? GetValueOrDefault(TEnum key, [AllowNull] TValue defaultValue = default)
+	{
+		return this.TryGetAttribute(key, out TAtt? attribute)
+			? attribute.Value
+			: defaultValue;
+	}
 
-        public TValue GetValue(TEnum key)
-        {
-            return this.TryGetAttribute(key, out TAtt? attribute)
-                ? attribute.Value
-                : _backing.EnumStrings.HasDefaultName
-                    ? _backing.Attributes[_backing.EnumStrings.DefaultName].Value
-                    : throw new ArgumentException("The specified enumeration key is not defined and no default value exists.", nameof(key));
-        }
-        [DebuggerStepThrough]
-        public bool TryGetAttribute(TEnum key, [NotNullWhen(true)] out TAtt? attribute)
-        {
-            if (_backing.EnumStrings.TryGetName(key, out string? name)
-                &&
-                _backing.Attributes.TryGetValue(name, out attribute))
-            {
-                return true;
-            }
-            else
-            {
-                attribute = null;
-                return false;
-            }
-        }
-        /// <inheritdoc/>
-        [DebuggerStepThrough]
-        public bool TryGetValue(TEnum key, [NotNullWhen(true)] out TValue? value)
-        {
-            if (this.TryGetAttribute(key, out TAtt? attribute))
-            {
-                value = attribute.Value;
-                return true;
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
-        }
+	public TValue GetValue(TEnum key)
+	{
+		return this.TryGetAttribute(key, out TAtt? attribute)
+			? attribute.Value
+			: _backing.EnumStrings.HasDefaultName
+				? _backing.Attributes[_backing.EnumStrings.DefaultName].Value
+				: throw new ArgumentException("The specified enumeration key is not defined and no default value exists.", nameof(key));
+	}
+	[DebuggerStepThrough]
+	public bool TryGetAttribute(TEnum key, [NotNullWhen(true)] out TAtt? attribute)
+	{
+		if (_backing.EnumStrings.TryGetName(key, out string? name)
+			&&
+			_backing.Attributes.TryGetValue(name, out attribute))
+		{
+			return true;
+		}
+		else
+		{
+			attribute = null;
+			return false;
+		}
+	}
+	/// <inheritdoc/>
+	[DebuggerStepThrough]
+	public bool TryGetValue(TEnum key, [NotNullWhen(true)] out TValue? value)
+	{
+		if (this.TryGetAttribute(key, out TAtt? attribute))
+		{
+			value = attribute.Value;
+			return true;
+		}
+		else
+		{
+			value = default;
+			return false;
+		}
+	}
 
-        private static Dictionary<string, TAtt> CreateFromEnumsAndFields(IEnumStrings<TEnum> enumStrings)
-        {
-            FieldInfo[] fields = ArrayPool<FieldInfo>.Shared.Rent(int.Max(enumStrings.NameCount, 32));
-            Span<FieldInfo> fieldSpan = fields.AsSpan(0, enumStrings.NameCount);
-            Type attType = typeof(TAtt);
+	private static Dictionary<string, TAtt> CreateFromEnumsAndFields(IEnumStrings<TEnum> enumStrings)
+	{
+		FieldInfo[] fields = ArrayPool<FieldInfo>.Shared.Rent(int.Max(enumStrings.NameCount, 32));
+		Span<FieldInfo> fieldSpan = fields.AsSpan(0, enumStrings.NameCount);
+		Type attType = typeof(TAtt);
 
-            int written = PopulateNamedFields(enumStrings, attType, fieldSpan);
-            if (written < fieldSpan.Length)
-            {
-                fieldSpan = fieldSpan.Slice(0, written);
-            }
+		int written = PopulateNamedFields(enumStrings, attType, fieldSpan);
+		if (written < fieldSpan.Length)
+		{
+			fieldSpan = fieldSpan.Slice(0, written);
+		}
 
-            var dict = CreateDictionary(fieldSpan);
-            ArrayPool<FieldInfo>.Shared.Return(fields);
-            return dict;
-        }
-        private static Dictionary<string, TAtt> CreateDictionary(Span<FieldInfo> fields)
-        {
-            Dictionary<string, TAtt> nameToAtt = new(fields.Length, StringComparer.OrdinalIgnoreCase);
-            foreach (FieldInfo fi in fields)
-            {
-                var att = fi.GetCustomAttributes<TAtt>(inherit: false).FirstOrDefault();
-                if (att is not null)
-                {
-                    _ = nameToAtt.TryAdd(fi.Name, att);
-                }
-            }
+		var dict = CreateDictionary(fieldSpan);
+		ArrayPool<FieldInfo>.Shared.Return(fields);
+		return dict;
+	}
+	private static Dictionary<string, TAtt> CreateDictionary(Span<FieldInfo> fields)
+	{
+		Dictionary<string, TAtt> nameToAtt = new(fields.Length, StringComparer.OrdinalIgnoreCase);
+		foreach (FieldInfo fi in fields)
+		{
+			var att = fi.GetCustomAttributes<TAtt>(inherit: false).FirstOrDefault();
+			if (att is not null)
+			{
+				_ = nameToAtt.TryAdd(fi.Name, att);
+			}
+		}
 
-            return nameToAtt;
-        }
-        private static int PopulateNamedFields(IEnumStrings<TEnum> enumStrings, Type attributeType, Span<FieldInfo> fieldsSpan)
-        {
-            Type enumType = typeof(TEnum);
+		return nameToAtt;
+	}
+	private static int PopulateNamedFields(IEnumStrings<TEnum> enumStrings, Type attributeType, Span<FieldInfo> fieldsSpan)
+	{
+		Type enumType = typeof(TEnum);
 
-            string[] array = ArrayPool<string>.Shared.Rent(enumStrings.NameCount);
-            Span<string> span = array.AsSpan(0, enumStrings.NameCount);
-            int count = enumStrings.CopyNamesTo(span);
+		string[] array = ArrayPool<string>.Shared.Rent(enumStrings.NameCount);
+		Span<string> span = array.AsSpan(0, enumStrings.NameCount);
+		int count = enumStrings.CopyNamesTo(span);
 
-            if (count < span.Length)
-            {
-                span = span.Slice(0, count);
-            }
+		if (count < span.Length)
+		{
+			span = span.Slice(0, count);
+		}
 
-            int written = 0;
-            foreach (string name in span)
-            {
-                FieldInfo? fi = enumType.GetField(name);
-                if (fi is not null && fi.IsDefined(attributeType, inherit: false))
-                {
-                    fieldsSpan[written++] = fi;
-                }
-            }
+		int written = 0;
+		foreach (string name in span)
+		{
+			FieldInfo? fi = enumType.GetField(name);
+			if (fi is not null && fi.IsDefined(attributeType, inherit: false))
+			{
+				fieldsSpan[written++] = fi;
+			}
+		}
 
-            ArrayPool<string>.Shared.Return(array);
-            return written;
-        }
-    }
+		ArrayPool<string>.Shared.Return(array);
+		return written;
+	}
 }
 

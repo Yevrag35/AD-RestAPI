@@ -1,7 +1,6 @@
-namespace AD.Api.Validation
+namespace AD.Api.Validation;
+
+public interface IValidatableEncoding : IValidatableProperty<string>
 {
-    public interface IValidatableEncoding : IValidatableProperty<string>
-    {
-    }
 }
 

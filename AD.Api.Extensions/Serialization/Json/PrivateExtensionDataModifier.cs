@@ -24,12 +24,12 @@ public sealed class PrivateExtensionDataAttribute : Attribute { }
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class PrivateExtensionDataClassAttribute : Attribute
 {
-    public Type ExtensionDataClassType { get; }
+	public Type ExtensionDataClassType { get; }
 
-    public PrivateExtensionDataClassAttribute(Type extensionDataClassType)
-    {
-        this.ExtensionDataClassType = extensionDataClassType;
-    }
+	public PrivateExtensionDataClassAttribute(Type extensionDataClassType)
+	{
+		this.ExtensionDataClassType = extensionDataClassType;
+	}
 }
 
 /// <summary>
@@ -37,129 +37,129 @@ public sealed class PrivateExtensionDataClassAttribute : Attribute
 /// </summary>
 public static class PrivateExtensionDataModifier
 {
-    public static void AddPrivateExtensionData(JsonTypeInfo typeInfo)
-    {
-        if (typeInfo.Kind != JsonTypeInfoKind.Object)
-            return;
+	public static void AddPrivateExtensionData(JsonTypeInfo typeInfo)
+	{
+		if (typeInfo.Kind != JsonTypeInfoKind.Object)
+			return;
 
-        OneOf<FieldInfo, PropertyInfo> firstMember = GetFirstPrivateMember(typeInfo);
+		OneOf<FieldInfo, PropertyInfo> firstMember = GetFirstPrivateMember(typeInfo);
 
-        if (firstMember.IsDefault)
-            return;
+		if (firstMember.IsDefault)
+			return;
 
-        JsonPropertyInfo info = firstMember.Match(state: typeInfo,
-            (state, field) => CreateFromField(field, state),
-            (state, property) => CreateFromProperty(property, state));
+		JsonPropertyInfo info = firstMember.Match(state: typeInfo,
+			(state, field) => CreateFromField(field, state),
+			(state, property) => CreateFromProperty(property, state));
 
-        typeInfo.Properties.Add(info);
-    }
+		typeInfo.Properties.Add(info);
+	}
 
-    private static OneOf<FieldInfo, PropertyInfo> GetFirstPrivateMember(JsonTypeInfo typeInfo)
-    {
-        Type attType = typeof(PrivateExtensionDataClassAttribute);
+	private static OneOf<FieldInfo, PropertyInfo> GetFirstPrivateMember(JsonTypeInfo typeInfo)
+	{
+		Type attType = typeof(PrivateExtensionDataClassAttribute);
 
-        IEnumerable<OneOf<FieldInfo, PropertyInfo>> members;
-        if (typeInfo.Type.IsDefined(attType, inherit: true))
-        {
-            PrivateExtensionDataClassAttribute? baseAtt = typeInfo.Type
-                .GetCustomAttribute<PrivateExtensionDataClassAttribute>();
+		IEnumerable<OneOf<FieldInfo, PropertyInfo>> members;
+		if (typeInfo.Type.IsDefined(attType, inherit: true))
+		{
+			PrivateExtensionDataClassAttribute? baseAtt = typeInfo.Type
+				.GetCustomAttribute<PrivateExtensionDataClassAttribute>();
 
-            Type baseType = ValidateClassTypeIsBaseType(baseAtt, typeInfo.Type);
-            members = GetPrivateFieldAndProperties(baseType);
-        }
-        else
-        {
-            members = GetPrivateFieldAndProperties(typeInfo.Type);
-        }
+			Type baseType = ValidateClassTypeIsBaseType(baseAtt, typeInfo.Type);
+			members = GetPrivateFieldAndProperties(baseType);
+		}
+		else
+		{
+			members = GetPrivateFieldAndProperties(typeInfo.Type);
+		}
 
-        OneOf<FieldInfo, PropertyInfo> firstMember = members.FirstOrDefault();
-        return firstMember;
-    }
+		OneOf<FieldInfo, PropertyInfo> firstMember = members.FirstOrDefault();
+		return firstMember;
+	}
 
-    private static JsonPropertyInfo CreateFromField(FieldInfo field, JsonTypeInfo typeInfo)
-    {
-        JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(field.FieldType, field.Name);
+	private static JsonPropertyInfo CreateFromField(FieldInfo field, JsonTypeInfo typeInfo)
+	{
+		JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(field.FieldType, field.Name);
 
-        info.IsExtensionData = true;
-        info.Get = field.GetValue;
-        info.Set = field.SetValue;
+		info.IsExtensionData = true;
+		info.Get = field.GetValue;
+		info.Set = field.SetValue;
 
-        return info;
-    }
-    private static JsonPropertyInfo CreateFromProperty(PropertyInfo property, JsonTypeInfo typeInfo)
-    {
-        JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(property.PropertyType, property.Name);
+		return info;
+	}
+	private static JsonPropertyInfo CreateFromProperty(PropertyInfo property, JsonTypeInfo typeInfo)
+	{
+		JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(property.PropertyType, property.Name);
 
-        info.IsExtensionData = true;
-        info.Get = property.GetValue;
-        info.Set = property.SetValue;
+		info.IsExtensionData = true;
+		info.Get = property.GetValue;
+		info.Set = property.SetValue;
 
-        return info;
-    }
+		return info;
+	}
 
-    private static IEnumerable<OneOf<FieldInfo, PropertyInfo>> GetPrivateFieldAndProperties(Type contractType)
-    {
-        foreach (FieldInfo field in contractType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
-        {
-            if (IsValidPrivateMember(field, field.FieldType))
-            {
-                yield return field;
-            }
-        }
+	private static IEnumerable<OneOf<FieldInfo, PropertyInfo>> GetPrivateFieldAndProperties(Type contractType)
+	{
+		foreach (FieldInfo field in contractType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
+		{
+			if (IsValidPrivateMember(field, field.FieldType))
+			{
+				yield return field;
+			}
+		}
 
-        foreach (PropertyInfo property in contractType.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic))
-        {
-            if (property.CanWrite && IsValidPrivateMember(property, property.PropertyType))
-            {
-                yield return property;
-            }
-        }
-    }
+		foreach (PropertyInfo property in contractType.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic))
+		{
+			if (property.CanWrite && IsValidPrivateMember(property, property.PropertyType))
+			{
+				yield return property;
+			}
+		}
+	}
 
-    private static bool IsValidPrivateMember<T>(T member, Type memberType) where T : MemberInfo
-    {
-        if (!member.IsDefined(typeof(PrivateExtensionDataAttribute)))
-        {
-            return false;
-        }
+	private static bool IsValidPrivateMember<T>(T member, Type memberType) where T : MemberInfo
+	{
+		if (!member.IsDefined(typeof(PrivateExtensionDataAttribute)))
+		{
+			return false;
+		}
 
-        if (!typeof(IDictionary<string, object>).IsAssignableFrom(memberType)
-            &&
-            typeof(IDictionary<string, JsonElement>).IsAssignableFrom(memberType))
-        {
-            return false;
-        }
+		if (!typeof(IDictionary<string, object>).IsAssignableFrom(memberType)
+			&&
+			typeof(IDictionary<string, JsonElement>).IsAssignableFrom(memberType))
+		{
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="extensionDataClassType"></param>
-    /// <param name="jsonType"></param>
-    /// <exception cref="InvalidOperationException"></exception>
-    private static Type ValidateClassTypeIsBaseType(PrivateExtensionDataClassAttribute? attribute, Type jsonType)
-    {
-        if (attribute is null)
-        {
-            return jsonType;
-        }
-        else if (jsonType.Equals(attribute.ExtensionDataClassType))
-        {
-            return jsonType;
-        }
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="extensionDataClassType"></param>
+	/// <param name="jsonType"></param>
+	/// <exception cref="InvalidOperationException"></exception>
+	private static Type ValidateClassTypeIsBaseType(PrivateExtensionDataClassAttribute? attribute, Type jsonType)
+	{
+		if (attribute is null)
+		{
+			return jsonType;
+		}
+		else if (jsonType.Equals(attribute.ExtensionDataClassType))
+		{
+			return jsonType;
+		}
 
-        if (attribute.ExtensionDataClassType.IsInterface)
-        {
-            throw new InvalidOperationException($"The extension data class type '{attribute.ExtensionDataClassType.GetName()}' cannot be an interface and must be a base type of '{jsonType.GetName()}'.");
-        }
+		if (attribute.ExtensionDataClassType.IsInterface)
+		{
+			throw new InvalidOperationException($"The extension data class type '{attribute.ExtensionDataClassType.GetName()}' cannot be an interface and must be a base type of '{jsonType.GetName()}'.");
+		}
 
-        if (!attribute.ExtensionDataClassType.IsAssignableFrom(jsonType))
-        {
-            throw new InvalidOperationException($"The extension data class type '{attribute.ExtensionDataClassType.GetName()}' must be a base type from the JSON type '{jsonType.GetName()}'.");
-        }
+		if (!attribute.ExtensionDataClassType.IsAssignableFrom(jsonType))
+		{
+			throw new InvalidOperationException($"The extension data class type '{attribute.ExtensionDataClassType.GetName()}' must be a base type from the JSON type '{jsonType.GetName()}'.");
+		}
 
-        return attribute.ExtensionDataClassType;
-    }
+		return attribute.ExtensionDataClassType;
+	}
 }

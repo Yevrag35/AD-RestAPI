@@ -16,54 +16,54 @@ namespace AD.Api.Controllers.Users;
 [Route("passwords")]
 public sealed class PasswordController : ControllerBase
 {
-    private readonly IPasswordChangeService _changeSvc;
-    private readonly IAuthorizer _authorizer;
-    private readonly IPasswordResetService _resetSvc;
+	private readonly IPasswordChangeService _changeSvc;
+	private readonly IAuthorizer _authorizer;
+	private readonly IPasswordResetService _resetSvc;
 
-    public PasswordController(IAuthorizer authorizer, IPasswordChangeService changeSvc, IPasswordResetService resetSvc)
-    {
-        _authorizer = authorizer;
-        _changeSvc = changeSvc;
-        _resetSvc = resetSvc;
-    }
+	public PasswordController(IAuthorizer authorizer, IPasswordChangeService changeSvc, IPasswordResetService resetSvc)
+	{
+		_authorizer = authorizer;
+		_changeSvc = changeSvc;
+		_resetSvc = resetSvc;
+	}
 
-    [HttpPut]
-    [Route("change")]
-    [JwtAuth(AuthorizedRole.PasswordChanger, PossiblyScoped = true)]
-    public IActionResult ChangePassword(
-        [FromBody] PasswordChangeRequestByDN request,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpPut]
+	[Route("change")]
+	[JwtAuth(AuthorizedRole.PasswordChanger, PossiblyScoped = true)]
+	public IActionResult ChangePassword(
+		[FromBody] PasswordChangeRequestByDN request,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        if (!_authorizer.IsAuthorized(this.HttpContext, request.DistinguishedName, out var role))
-        {
-            return new ForbidResult();
-        }
+		if (!_authorizer.IsAuthorized(this.HttpContext, request.DistinguishedName, out var role))
+		{
+			return new ForbidResult();
+		}
 
-        return _changeSvc.Change(in target, request);
-    }
+		return _changeSvc.Change(in target, request);
+	}
 
-    [HttpPut]
-    [Route("reset")]
-    [JwtAuth(AuthorizedRole.PasswordResetter, PossiblyScoped = true)]
-    public IActionResult ResetPassword(
-        [FromBody] PasswordResetRequestByDN request,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpPut]
+	[Route("reset")]
+	[JwtAuth(AuthorizedRole.PasswordResetter, PossiblyScoped = true)]
+	public IActionResult ResetPassword(
+		[FromBody] PasswordResetRequestByDN request,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        if (!_authorizer.IsAuthorized(this.HttpContext, request.DistinguishedName, out _))
-        {
-            return new ForbidResult();
-        }
+		if (!_authorizer.IsAuthorized(this.HttpContext, request.DistinguishedName, out _))
+		{
+			return new ForbidResult();
+		}
 
-        return _resetSvc.Reset(in target, request);
-    }
+		return _resetSvc.Reset(in target, request);
+	}
 }

@@ -2,61 +2,60 @@ using AD.Api.Core.Security;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.Versioning;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap;
+
+public sealed class ChallengeContext : ConnectionContext
 {
-    public sealed class ChallengeContext : ConnectionContext
-    {
-        private readonly ILdapCredential _credential;
-        [SupportedOSPlatform("WINDOWS")]
-        private readonly Dictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
+	private readonly ILdapCredential _credential;
+	[SupportedOSPlatform("WINDOWS")]
+	private readonly Dictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
 
-        public ChallengeContext(RegisteredDomain domain, string connectionName, ILdapCredential credential, IServiceProvider services)
-            : base(domain, connectionName, services)
-        {
-            _credential = credential;
-            if (OperatingSystem.IsWindows())
-            {
-                _dirContexts = [];
-            }
-        }
+	public ChallengeContext(RegisteredDomain domain, string connectionName, ILdapCredential credential, IServiceProvider services)
+		: base(domain, connectionName, services)
+	{
+		_credential = credential;
+		if (OperatingSystem.IsWindows())
+		{
+			_dirContexts = [];
+		}
+	}
 
-        protected override LdapConnection CreateConnection(RegisteredDomain domain, LdapDirectoryIdentifier identifier)
-        {
-            LdapConnection con = new(identifier)
-            {
-                AutoBind = true,
-                AuthType = AuthType.Ntlm,
-            };
+	protected override LdapConnection CreateConnection(RegisteredDomain domain, LdapDirectoryIdentifier identifier)
+	{
+		LdapConnection con = new(identifier)
+		{
+			AutoBind = true,
+			AuthType = AuthType.Ntlm,
+		};
 
-            _credential.SetCredential(con);
-            return con;
-        }
+		_credential.SetCredential(con);
+		return con;
+	}
 
-        [SupportedOSPlatform("WINDOWS")]
-        public override bool TryGetDirectoryContext(DirectoryContextType contextType, [NotNullWhen(true)] out DirectoryContext? directoryContext)
-        {
-            if (contextType == DirectoryContextType.Forest && !this.IsForestRoot)
-            {
-                Debug.Fail($"'{this.DomainName}' is not a forest root.");
-                directoryContext = null;
-                return false;
-            }
+	[SupportedOSPlatform("WINDOWS")]
+	public override bool TryGetDirectoryContext(DirectoryContextType contextType, [NotNullWhen(true)] out DirectoryContext? directoryContext)
+	{
+		if (contextType == DirectoryContextType.Forest && !this.IsForestRoot)
+		{
+			Debug.Fail($"'{this.DomainName}' is not a forest root.");
+			directoryContext = null;
+			return false;
+		}
 
-            if (!_dirContexts.TryGetValue(contextType, out directoryContext))
-            {
-                try
-                {
-                    directoryContext = new(contextType, this.DomainName);
-                }
-                catch (Exception e)
-                {
-                    Debug.Fail(e.Message);
-                    return false;
-                }
-            }
+		if (!_dirContexts.TryGetValue(contextType, out directoryContext))
+		{
+			try
+			{
+				directoryContext = new(contextType, this.DomainName);
+			}
+			catch (Exception e)
+			{
+				Debug.Fail(e.Message);
+				return false;
+			}
+		}
 
-            return true;
-        }
-    }
+		return true;
+	}
 }
 

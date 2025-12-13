@@ -1,12 +1,11 @@
-﻿namespace AD.Api.Core.Ldap.Filters
+﻿namespace AD.Api.Core.Ldap.Filters;
+
+public enum FilterTokenType
 {
-    public enum FilterTokenType
-    {
-        Begin = 0x0,
-        StartKeyword,
-        PropertyName,
-        FilterValue,
-        EndKeyword,
-        End,
-    }
+	Begin = 0x0,
+	StartKeyword,
+	PropertyName,
+	FilterValue,
+	EndKeyword,
+	End,
 }

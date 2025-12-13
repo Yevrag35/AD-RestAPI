@@ -1,11 +1,10 @@
-namespace AD.Api.Core.Ldap.Results
-{
-    public interface ISearchResultEntry
-    {
-        int Count { get; }
-        Guid LeaseId { get; }
+namespace AD.Api.Core.Ldap.Results;
 
-        bool TryApplyResponse(string? domain, [NotNullWhen(true)] SearchResponse? response);
-    }
+public interface ISearchResultEntry
+{
+	int Count { get; }
+	Guid LeaseId { get; }
+
+	bool TryApplyResponse(string? domain, [NotNullWhen(true)] SearchResponse? response);
 }
 

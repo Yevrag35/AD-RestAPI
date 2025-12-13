@@ -6,97 +6,96 @@ using System.Security.Cryptography.Pkcs;
 using System.Text;
 using Base64 = AD.Api.Strings.Base64Extensions;
 
-namespace AD.Api.Core.Security.Encryption
+namespace AD.Api.Core.Security.Encryption;
+
+internal sealed class PasswordCertificateDecryptor : PasswordHandler
 {
-    internal sealed class PasswordCertificateDecryptor : PasswordHandler
-    {
-        public PasswordCertificateDecryptor(PasswordOperationSettings options)
-            : base(options)
-        {
-            
-        }
+	public PasswordCertificateDecryptor(PasswordOperationSettings options)
+		: base(options)
+	{
 
-        /// <exception cref="CryptographicException"/>
-        /// <exception cref="FormatException"/>
-        private static void DecodePassword(ReadOnlySpan<char> password, EnvelopedCms cms)
-        {
-            int length = Base64.GetByteLength(password);
-            Span<byte> bytes = stackalloc byte[length];
+	}
 
-            if (!Convert.TryFromBase64Chars(password, bytes, out int written))
-            {
-                throw new FormatException("Invalid base64 sequence.");
-            }
+	/// <exception cref="CryptographicException"/>
+	/// <exception cref="FormatException"/>
+	private static void DecodePassword(ReadOnlySpan<char> password, EnvelopedCms cms)
+	{
+		int length = Base64.GetByteLength(password);
+		Span<byte> bytes = stackalloc byte[length];
 
-            cms.Decode(bytes.Slice(0, written));
-        }
-        protected override SecureString Decrypt(ReadOnlySpan<char> password, Encoding encoding)
-        {
-            if (password.IsEmpty)
-            {
-                return new SecureString();
-            }
+		if (!Convert.TryFromBase64Chars(password, bytes, out int written))
+		{
+			throw new FormatException("Invalid base64 sequence.");
+		}
 
-            EnvelopedCms cms = new();
-            try
-            {
-                DecodePassword(password, cms);
-                cms.Decrypt();
-            }
-            catch (Exception e)
-            {
-                throw new AdApiException("Failed to decrypt the encrypted string", e);
-            }
+		cms.Decode(bytes.Slice(0, written));
+	}
+	protected override SecureString Decrypt(ReadOnlySpan<char> password, Encoding encoding)
+	{
+		if (password.IsEmpty)
+		{
+			return new SecureString();
+		}
 
-            SecureString secure = new();
-            byte[] plainBytes = cms.ContentInfo.Content;
-            int length = encoding.GetMaxCharCount(plainBytes.Length);
+		EnvelopedCms cms = new();
+		try
+		{
+			DecodePassword(password, cms);
+			cms.Decrypt();
+		}
+		catch (Exception e)
+		{
+			throw new AdApiException("Failed to decrypt the encrypted string", e);
+		}
 
-            Span<char> chars = stackalloc char[length];
-            int written = encoding.GetChars(plainBytes, chars);
+		SecureString secure = new();
+		byte[] plainBytes = cms.ContentInfo.Content;
+		int length = encoding.GetMaxCharCount(plainBytes.Length);
 
-            foreach (char c in chars.Slice(0, written))
-            {
-                secure.AppendChar(c);
-            }
+		Span<char> chars = stackalloc char[length];
+		int written = encoding.GetChars(plainBytes, chars);
 
-            Array.Clear(plainBytes);
-            return secure;
-        }
+		foreach (char c in chars.Slice(0, written))
+		{
+			secure.AppendChar(c);
+		}
 
-        //private static X509Certificate2 GetCertificate(string? thumbprint)
-        //{
-        //    ArgumentException.ThrowIfNullOrWhiteSpace(thumbprint);
+		Array.Clear(plainBytes);
+		return secure;
+	}
 
-        //    if (TryGetCertificateFromStore(thumbprint, StoreLocation.LocalMachine, out X509Certificate2? userCert))
-        //    {
-        //        return userCert;
-        //    }
-        //    else if (TryGetCertificateFromStore(thumbprint, StoreLocation.LocalMachine, out X509Certificate2? compCert))
-        //    {
-        //        return compCert;
-        //    }
+	//private static X509Certificate2 GetCertificate(string? thumbprint)
+	//{
+	//    ArgumentException.ThrowIfNullOrWhiteSpace(thumbprint);
 
-        //    throw new AdApiStartupException(typeof(PasswordCertificateDecryptor),
-        //        $"The certificate with thumbprint '{thumbprint}' was not found in either the CurrentUser or LocalMachine stores.");
-        //}
-        //private static bool TryGetCertificateFromStore(string thumbprint, StoreLocation location, [NotNullWhen(true)] out X509Certificate2? certificate)
-        //{
-        //    using X509Store store = new(location);
-        //    store.Open(OpenFlags.ReadOnly);
+	//    if (TryGetCertificateFromStore(thumbprint, StoreLocation.LocalMachine, out X509Certificate2? userCert))
+	//    {
+	//        return userCert;
+	//    }
+	//    else if (TryGetCertificateFromStore(thumbprint, StoreLocation.LocalMachine, out X509Certificate2? compCert))
+	//    {
+	//        return compCert;
+	//    }
 
-        //    X509Certificate2Collection collection = store.Certificates
-        //        .Find(X509FindType.FindByThumbprint, thumbprint, false);
+	//    throw new AdApiStartupException(typeof(PasswordCertificateDecryptor),
+	//        $"The certificate with thumbprint '{thumbprint}' was not found in either the CurrentUser or LocalMachine stores.");
+	//}
+	//private static bool TryGetCertificateFromStore(string thumbprint, StoreLocation location, [NotNullWhen(true)] out X509Certificate2? certificate)
+	//{
+	//    using X509Store store = new(location);
+	//    store.Open(OpenFlags.ReadOnly);
 
-        //    if (0 == collection.Count)
-        //    {
-        //        certificate = null;
-        //        return false;
-        //    }
+	//    X509Certificate2Collection collection = store.Certificates
+	//        .Find(X509FindType.FindByThumbprint, thumbprint, false);
 
-        //    certificate = collection[0];
-        //    return true;
-        //}
-    }
+	//    if (0 == collection.Count)
+	//    {
+	//        certificate = null;
+	//        return false;
+	//    }
+
+	//    certificate = collection[0];
+	//    return true;
+	//}
 }
 

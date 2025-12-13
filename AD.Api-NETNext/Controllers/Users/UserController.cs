@@ -23,247 +23,247 @@ namespace AD.Api.Controllers.Users;
 [Route(ROUTE_NAME)]
 public sealed class UsersController : ControllerBase
 {
-    private const string ROUTE_NAME = "users";
-    static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+	private const string ROUTE_NAME = "users";
+	static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-    public IUserService UserService { get; }
+	public IUserService UserService { get; }
 
-    public UsersController(IUserService userSvc)
-    {
-        this.UserService = userSvc;
-    }
+	public UsersController(IUserService userSvc)
+	{
+		this.UserService = userSvc;
+	}
 
-    [HttpGet]
-    [Route("{sid:objectsid}")]
-    [JwtAuth(AuthorizedRole.Reader)]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CollectionResponse))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    public IActionResult GetUser(
-        [FromQuery] SearchParameters parameters,
-        [FromRouteSid] SidString sid)
-    {
-        return this.UserService.FindOne(sid, parameters, this.HttpContext.RequestServices);
-    }
+	[HttpGet]
+	[Route("{sid:objectsid}")]
+	[JwtAuth(AuthorizedRole.Reader)]
+	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CollectionResponse))]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	public IActionResult GetUser(
+		[FromQuery] SearchParameters parameters,
+		[FromRouteSid] SidString sid)
+	{
+		return this.UserService.FindOne(sid, parameters, this.HttpContext.RequestServices);
+	}
 
-    private const string SID_ROUTE_PREFIX = "/" + ROUTE_NAME + "/";
-    [HttpPost]
-    [JwtAuth(AuthorizedRole.UserCreator, PossiblyScoped = true)]
-    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CreatedResult))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult CreateUser(
-        [FromBody] CreateUserRequest request,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-           return new ApiBadRequestResult(this.ModelState);
-        }
+	private const string SID_ROUTE_PREFIX = "/" + ROUTE_NAME + "/";
+	[HttpPost]
+	[JwtAuth(AuthorizedRole.UserCreator, PossiblyScoped = true)]
+	[ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CreatedResult))]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public IActionResult CreateUser(
+		[FromBody] CreateUserRequest request,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        return this.UserService.Create(in target, request, SID_ROUTE_PREFIX);
-    }
+		return this.UserService.Create(in target, request, SID_ROUTE_PREFIX);
+	}
 
-    [HttpDelete]
-    [Route("{sid:objectsid}")]
-    [JwtAuth(AuthorizedRole.UserDeleter, PossiblyScoped = true)]
-    public IActionResult DeleteUser(
-        [FromRouteSid] SidString sid,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpDelete]
+	[Route("{sid:objectsid}")]
+	[JwtAuth(AuthorizedRole.UserDeleter, PossiblyScoped = true)]
+	public IActionResult DeleteUser(
+		[FromRouteSid] SidString sid,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        return this.UserService.Delete(sid, in target);
-    }
+		return this.UserService.Delete(sid, in target);
+	}
 
-    private static readonly string[] _uac = [AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.USER_ACCOUNT_CONTROL];
-    [HttpPut]
-    [Route("{sid:objectsid}/disable")]
-    [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
-    public IActionResult DisableUser(
-        [FromRouteSid] SidString sid,
-        [FromServices] IUserUpdateService updateSvc,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	private static readonly string[] _uac = [AttributeConstants.DISTINGUISHED_NAME, AttributeConstants.USER_ACCOUNT_CONTROL];
+	[HttpPut]
+	[Route("{sid:objectsid}/disable")]
+	[JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
+	public IActionResult DisableUser(
+		[FromRouteSid] SidString sid,
+		[FromServices] IUserUpdateService updateSvc,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        var userSearch = this.UserService.FindOneAndContinue(sid, in target, _uac);
-        if (userSearch.TryGetT1(out var error, out var continuation))
-        {
-            return error;
-        }
+		var userSearch = this.UserService.FindOneAndContinue(sid, in target, _uac);
+		if (userSearch.TryGetT1(out var error, out var continuation))
+		{
+			return error;
+		}
 
-        return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(false), continuation, in target);
-    }
-    [HttpPut]
-    [Route("{sid:objectsid}/enable")]
-    [JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
-    public IActionResult EnableUser(
-        [FromRouteSid] SidString sid,
-        [FromServices] IUserUpdateService updateSvc,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+		return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(false), continuation, in target);
+	}
+	[HttpPut]
+	[Route("{sid:objectsid}/enable")]
+	[JwtAuth(AuthorizedRole.UserAdmin, PossiblyScoped = true)]
+	public IActionResult EnableUser(
+		[FromRouteSid] SidString sid,
+		[FromServices] IUserUpdateService updateSvc,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        var userSearch = this.UserService.FindOneAndContinue(sid, in target, _uac);
-        if (userSearch.TryGetT1(out var error, out var continuation))
-        {
-            return error;
-        }
+		var userSearch = this.UserService.FindOneAndContinue(sid, in target, _uac);
+		if (userSearch.TryGetT1(out var error, out var continuation))
+		{
+			return error;
+		}
 
-        return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(true), continuation, in target);
-    }
+		return updateSvc.ToggleStatus(sid, new AccountStatusUpdateRequest(true), continuation, in target);
+	}
 
-    [HttpGet]
-    [Route("{sid:objectsid}/groups")]
-    [JwtAuth(AuthorizedRole.Reader)]
-    public IActionResult GetUserGroups(
-        [FromRouteSid] SidString sid,
-        [FromServices] IGroupService groupSearcher,
-        [FromQuery] SearchParameters parameters)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpGet]
+	[Route("{sid:objectsid}/groups")]
+	[JwtAuth(AuthorizedRole.Reader)]
+	public IActionResult GetUserGroups(
+		[FromRouteSid] SidString sid,
+		[FromServices] IGroupService groupSearcher,
+		[FromQuery] SearchParameters parameters)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        return this.UserService.ResolveUserGroups(sid, parameters, parameters.Info);
-    }
+		return this.UserService.ResolveUserGroups(sid, parameters, parameters.Info);
+	}
 
-    [HttpPut]
-    [Route("{sid:objectsid}/move")]
-    [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult MoveUser(
-        [FromBody] UserMoveRequest request,
-        [FromRouteSid] SidString sid,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpPut]
+	[Route("{sid:objectsid}/move")]
+	[JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
+	[ProducesResponseType(StatusCodes.Status202Accepted)]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public IActionResult MoveUser(
+		[FromBody] UserMoveRequest request,
+		[FromRouteSid] SidString sid,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        return this.UserService.Move(sid, request, in target);
-    }
+		return this.UserService.Move(sid, request, in target);
+	}
 
-    [HttpPut]
-    [Route("{sid:objectsid}/rename")]
-    [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult RenameUser(
-        [FromBody] RenameRequest request,
-        [FromRouteSid] SidString sid,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpPut]
+	[Route("{sid:objectsid}/rename")]
+	[JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
+	[ProducesResponseType(StatusCodes.Status202Accepted)]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public IActionResult RenameUser(
+		[FromBody] RenameRequest request,
+		[FromRouteSid] SidString sid,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        return this.UserService.Rename(sid, request, in target);
-    }
+		return this.UserService.Rename(sid, request, in target);
+	}
 
-    [HttpPatch]
-    [Route("{sid:objectsid}")]
-    [JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
-    [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult UpdateUser(
-        [FromBody] EditObjectRequest body,
-        [FromServices] IUserUpdateService updateSvc,
-        [FromRouteSid] SidString sid,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	[HttpPatch]
+	[Route("{sid:objectsid}")]
+	[JwtAuth(AuthorizedRole.UserEditor, PossiblyScoped = true)]
+	[ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public IActionResult UpdateUser(
+		[FromBody] EditObjectRequest body,
+		[FromServices] IUserUpdateService updateSvc,
+		[FromRouteSid] SidString sid,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        var oneOf = this.UserService.FindOneAndContinue(sid, in target);
-        if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
-        {
-            return error;
-        }
+		var oneOf = this.UserService.FindOneAndContinue(sid, in target);
+		if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
+		{
+			return error;
+		}
 
-        return updateSvc.UpdateUser(sid, body, continueWith, in target)
-                        .WithLocation(sid.Value, ROUTE_NAME, in target);
-    }
+		return updateSvc.UpdateUser(sid, body, continueWith, in target)
+						.WithLocation(sid.Value, ROUTE_NAME, in target);
+	}
 
-    // Remove User
+	// Remove User
 
-    // Change Password
-    [HttpPut]
-    [LdapRequiresSSL]
-    [Route("{sid:objectsid}/password")]
-    [JwtAuth(AuthorizedRole.PasswordChanger, PossiblyScoped = true)]
-    [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
-    public IActionResult ChangeUserPassword(
-        [FromBody] PasswordChangeRequest request,
-        [FromServices] IPasswordChangeService pwdChangeSvc,
-        [FromRouteSid] SidString sid,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	// Change Password
+	[HttpPut]
+	[LdapRequiresSSL]
+	[Route("{sid:objectsid}/password")]
+	[JwtAuth(AuthorizedRole.PasswordChanger, PossiblyScoped = true)]
+	[ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	[ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
+	public IActionResult ChangeUserPassword(
+		[FromBody] PasswordChangeRequest request,
+		[FromServices] IPasswordChangeService pwdChangeSvc,
+		[FromRouteSid] SidString sid,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        var oneOf = this.UserService.FindOneAndContinue(sid, in target);
-        if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
-        {
-            return error;
-        }
+		var oneOf = this.UserService.FindOneAndContinue(sid, in target);
+		if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
+		{
+			return error;
+		}
 
-        request.SetContinuation(continueWith);
+		request.SetContinuation(continueWith);
 
-        return pwdChangeSvc.Change(in target, request)
-                           .WithLocation(sid.Value, ROUTE_NAME, in target);
-    }
+		return pwdChangeSvc.Change(in target, request)
+						   .WithLocation(sid.Value, ROUTE_NAME, in target);
+	}
 
-    // Reset Password
-    [HttpPut]
-    [LdapRequiresSSL]
-    [Route("{sid:objectsid}/password/reset")]
-    [JwtAuth(AuthorizedRole.PasswordResetter, PossiblyScoped = true)]
-    [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
-    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
-    public IActionResult ResetUserPassword(
-        [FromBody] PasswordResetRequest request,
-        [FromServices] IPasswordResetService pwdResetSvc,
-        [FromRouteSid] SidString sid,
-        [Domain] DomainQuery target)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return new ApiBadRequestResult(this.ModelState);
-        }
+	// Reset Password
+	[HttpPut]
+	[LdapRequiresSSL]
+	[Route("{sid:objectsid}/password/reset")]
+	[JwtAuth(AuthorizedRole.PasswordResetter, PossiblyScoped = true)]
+	[ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(AcceptedResult))]
+	[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ModelStateErrorBody))]
+	[ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
+	public IActionResult ResetUserPassword(
+		[FromBody] PasswordResetRequest request,
+		[FromServices] IPasswordResetService pwdResetSvc,
+		[FromRouteSid] SidString sid,
+		[Domain] DomainQuery target)
+	{
+		if (!this.ModelState.IsValid)
+		{
+			return new ApiBadRequestResult(this.ModelState);
+		}
 
-        var oneOf = this.UserService.FindOneAndContinue(sid, in target);
-        if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
-        {
-            return error;
-        }
+		var oneOf = this.UserService.FindOneAndContinue(sid, in target);
+		if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continueWith))
+		{
+			return error;
+		}
 
-        request.SetContinuation(continueWith);
+		request.SetContinuation(continueWith);
 
-        return pwdResetSvc.Reset(in target, request)
-                          .WithLocation(sid.Value, ROUTE_NAME, in target);
-    }
+		return pwdResetSvc.Reset(in target, request)
+						  .WithLocation(sid.Value, ROUTE_NAME, in target);
+	}
 }

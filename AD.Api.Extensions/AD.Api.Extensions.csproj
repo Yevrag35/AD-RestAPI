@@ -9,11 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Exceptions\Services\**" />
+    <EmbeddedResource Remove="Exceptions\Services\**" />
+    <None Remove="Exceptions\Services\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ConcurrentHashSet" Version="1.3.0" />
-    <PackageReference Include="MG.Extensions.Strings" Version="1.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
-    <PackageReference Include="NLog" Version="6.0.7" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="6.1.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -39,9 +42,5 @@
       <Compile Update="**\*-*.cs">
 		<DependentUpon>$([System.Text.RegularExpressions.Regex]::Replace('$([System.String]::Copy(%(Filename)))', '^(.+)\-.+$', '$1.cs'))</DependentUpon>
       </Compile>
-	</ItemGroup>
-	
-	<ItemGroup>
-	  <Folder Include="Exceptions\Services\" />
 	</ItemGroup>
 </Project>

@@ -1,10 +1,9 @@
 using System.Linq.Expressions;
 
-namespace AD.Api.Validation
+namespace AD.Api.Validation;
+
+public interface IValidatableProperty<T>
 {
-    public interface IValidatableProperty<T>
-    {
-        Expression<Func<object, T?>>? GetValidatableProperty();
-    }
+	Expression<Func<object, T?>>? GetValidatableProperty();
 }
 

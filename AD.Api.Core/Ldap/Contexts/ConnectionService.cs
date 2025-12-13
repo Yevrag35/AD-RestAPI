@@ -11,208 +11,207 @@ using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.Versioning;
 
-namespace AD.Api.Core.Ldap
+namespace AD.Api.Core.Ldap;
+
+public interface IConnectionService
 {
-    public interface IConnectionService
-    {
-        ContextLibrary RegisteredConnections { get; }
+	ContextLibrary RegisteredConnections { get; }
 
-        OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
-        OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null);
-        bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
-    }
+	OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
+	OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null);
+	bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
+}
 
-    [DynamicDependencyRegistration]
-    internal sealed class ConnectionService : IConnectionService
-    {
-        private const string DEFAULT = "Default";
+[DynamicDependencyRegistration]
+internal sealed class ConnectionService : IConnectionService
+{
+	private const string DEFAULT = "Default";
 
-        private readonly IServiceScopeFactory _scopeFactory;
-        public ContextLibrary RegisteredConnections { get; }
+	private readonly IServiceScopeFactory _scopeFactory;
+	public ContextLibrary RegisteredConnections { get; }
 
-        private ConnectionService(Dictionary<string, ConnectionContext> pairs, IServiceScopeFactory scopeFactory)
-        {
-            this.RegisteredConnections = new(pairs);
-            _scopeFactory = scopeFactory;
-        }
+	private ConnectionService(Dictionary<string, ConnectionContext> pairs, IServiceScopeFactory scopeFactory)
+	{
+		this.RegisteredConnections = new(pairs);
+		_scopeFactory = scopeFactory;
+	}
 
-        public OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
-        {
-            if (!this.TryGetConnection(key, out LdapConnection? connection))
-            {
-                return StatedCallback.Create(state, onNotFound);
-            }
+	public OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
+	{
+		if (!this.TryGetConnection(key, out LdapConnection? connection))
+		{
+			return StatedCallback.Create(state, onNotFound);
+		}
 
-            return connection;
-        }
-        public bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection)
-        {
-            if (!this.RegisteredConnections.TryGetValue(key, out ConnectionContext? context))
-            {
-                connection = null;
-                return false;
-            }
+		return connection;
+	}
+	public bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection)
+	{
+		if (!this.RegisteredConnections.TryGetValue(key, out ConnectionContext? context))
+		{
+			connection = null;
+			return false;
+		}
 
-            connection = context.CreateConnection();
-            connection.Bind();
-            return true;
-        }
-        public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
-        {
-            if (!this.RegisteredConnections.TryGetValue(target.Domain, out ConnectionContext? context))
-            {
-                return new DomainNotFoundResult(target.Domain);
-            }
+		connection = context.CreateConnection();
+		connection.Bind();
+		return true;
+	}
+	public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
+	{
+		if (!this.RegisteredConnections.TryGetValue(target.Domain, out ConnectionContext? context))
+		{
+			return new DomainNotFoundResult(target.Domain);
+		}
 
-            try
-            {
-                return context.CreateConnection(target.DomainController, forceSsl.HasValue ? forceSsl.Value : target.RequiresSSL);
-            }
-            catch (LdapException e)
-            {
-                return new LdapExceptionResult(e);
-            }
-        }
+		try
+		{
+			return context.CreateConnection(target.DomainController, forceSsl.HasValue ? forceSsl.Value : target.RequiresSSL);
+		}
+		catch (LdapException e)
+		{
+			return new LdapExceptionResult(e);
+		}
+	}
 
-        [DynamicDependencyRegistrationMethod]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        private static void AddToServices(IServiceCollection services)
-        {
-            services.AddSingleton<IConnectionService>(provider =>
-            {
-                IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
-                IConfigurationSection domains = configuration.GetSection("Domains");
-                IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
-                IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
-                var dict = ReadCredentialsFromConfig(domains, encSvc, provider);
-                return new ConnectionService(dict, scopeFactory);
-            });
-        }
-        private static void AddDefaultContext(ConnectionContext? defaultContext, Dictionary<string, ConnectionContext> contexts)
-        {
-            if (defaultContext is not null)
-            {
-                contexts[DEFAULT] = defaultContext;
-                contexts[string.Empty] = defaultContext;
-            }
-        }
+	[DynamicDependencyRegistrationMethod]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	private static void AddToServices(IServiceCollection services)
+	{
+		services.AddSingleton<IConnectionService>(provider =>
+		{
+			IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
+			IConfigurationSection domains = configuration.GetSection("Domains");
+			IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
+			IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
+			var dict = ReadCredentialsFromConfig(domains, encSvc, provider);
+			return new ConnectionService(dict, scopeFactory);
+		});
+	}
+	private static void AddDefaultContext(ConnectionContext? defaultContext, Dictionary<string, ConnectionContext> contexts)
+	{
+		if (defaultContext is not null)
+		{
+			contexts[DEFAULT] = defaultContext;
+			contexts[string.Empty] = defaultContext;
+		}
+	}
 
-        [SupportedOSPlatform("WINDOWS")]
-        private static Forest GetForest()
-        {
-            try
-            {
-                return Forest.GetCurrentForest();
-            }
-            catch (ActiveDirectoryOperationException e)
-            {
-                throw new AdApiStartupException(typeof(ConnectionService), e);
-            }
-        }
-        private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService, IServiceProvider provider)
-        {
-            Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
-            ConnectionContext? defaultContext = null;
+	[SupportedOSPlatform("WINDOWS")]
+	private static Forest GetForest()
+	{
+		try
+		{
+			return Forest.GetCurrentForest();
+		}
+		catch (ActiveDirectoryOperationException e)
+		{
+			throw new AdApiStartupException(typeof(ConnectionService), e);
+		}
+	}
+	private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService, IServiceProvider provider)
+	{
+		Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
+		ConnectionContext? defaultContext = null;
 
-            List<ValidationResult> results = [];
-            if (domainsSection.Exists())
-            {
-                foreach (IConfigurationSection domain in domainsSection.GetChildren())
-                {
-                    if (string.IsNullOrWhiteSpace(domain.Key))
-                    {
-                        results.Add(new ValidationResult("A registered domain must have a name (key) identifier for connections.", [nameof(domain)]));
+		List<ValidationResult> results = [];
+		if (domainsSection.Exists())
+		{
+			foreach (IConfigurationSection domain in domainsSection.GetChildren())
+			{
+				if (string.IsNullOrWhiteSpace(domain.Key))
+				{
+					results.Add(new ValidationResult("A registered domain must have a name (key) identifier for connections.", [nameof(domain)]));
 
-                        continue;
-                    }
+					continue;
+				}
 
-                    RegisteredDomain info = ReadDomainFromConfig(domain);
+				RegisteredDomain info = ReadDomainFromConfig(domain);
 
-                    info.Name = domain.Key;
-                    if (string.IsNullOrWhiteSpace(info.DomainName))
-                    {
-                        info.DomainName = domain.Key;
-                    }
+				info.Name = domain.Key;
+				if (string.IsNullOrWhiteSpace(info.DomainName))
+				{
+					info.DomainName = domain.Key;
+				}
 
-                    var result = encryptionService.ReadCredentials(domain);
-                    results.AddRange(result.Errors);
+				var result = encryptionService.ReadCredentials(domain);
+				results.AddRange(result.Errors);
 
-                    if (TryCreateContextFromResult(domain.Key, info, result, results, provider, out var context))
-                    {
-                        SetDefaultContext(context, info, ref defaultContext);
-                        _ = dict.TryAdd(domain.Key, context);
-                        _ = dict.TryAdd(info.DomainName, context);
-                    }
-                }
-            }
+				if (TryCreateContextFromResult(domain.Key, info, result, results, provider, out var context))
+				{
+					SetDefaultContext(context, info, ref defaultContext);
+					_ = dict.TryAdd(domain.Key, context);
+					_ = dict.TryAdd(info.DomainName, context);
+				}
+			}
+		}
 
-            if (dict.Count <= 0)
-            {
-                if (!OperatingSystem.IsWindows())
-                {
-                    throw new AdApiStartupException(typeof(ConnectionService), "No domains were found in the configuration.");
-                }
+		if (dict.Count <= 0)
+		{
+			if (!OperatingSystem.IsWindows())
+			{
+				throw new AdApiStartupException(typeof(ConnectionService), "No domains were found in the configuration.");
+			}
 
-                using Forest forest = GetForest();
-                defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider);
-                _ = dict.TryAdd(forest.Name, defaultContext);
-                _ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
-                using var de = forest.RootDomain.GetDirectoryEntry();
-                _ = dict.TryAdd((string)de.Properties["name"].Value!, defaultContext);
-            }
+			using Forest forest = GetForest();
+			defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider);
+			_ = dict.TryAdd(forest.Name, defaultContext);
+			_ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
+			using var de = forest.RootDomain.GetDirectoryEntry();
+			_ = dict.TryAdd((string)de.Properties["name"].Value!, defaultContext);
+		}
 
-            AddDefaultContext(defaultContext, dict);
+		AddDefaultContext(defaultContext, dict);
 
-            StartupValidationException.ThrowIfNotEmpty<ConnectionService>(results);
-            return dict;
-        }
-        private static RegisteredDomain ReadDomainFromConfig(IConfigurationSection domain)
-        {
-            RegisteredDomain? parsed = domain.Get<RegisteredDomain>(x => x.ErrorOnUnknownConfiguration = false);
-            if (parsed is null)
-            {
-                throw new AdApiStartupException(typeof(ConnectionService), $"Unable to parse the settings for the domain '{domain.Key}'.");
-            }
+		StartupValidationException.ThrowIfNotEmpty<ConnectionService>(results);
+		return dict;
+	}
+	private static RegisteredDomain ReadDomainFromConfig(IConfigurationSection domain)
+	{
+		RegisteredDomain? parsed = domain.Get<RegisteredDomain>(x => x.ErrorOnUnknownConfiguration = false);
+		if (parsed is null)
+		{
+			throw new AdApiStartupException(typeof(ConnectionService), $"Unable to parse the settings for the domain '{domain.Key}'.");
+		}
 
-            return parsed;
-        }
-        private static void SetDefaultContext(ConnectionContext context, RegisteredDomain domain, ref ConnectionContext? defaultContext)
-        {
-            if (domain.IsDefault && defaultContext is null)
-            {
-                defaultContext = context;
-            }
-        }
-        private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, IServiceProvider provider, [NotNullWhen(true)] out ConnectionContext? context)
-        {
-            context = null;
-            if (result.Errors.Count > 0)
-            {
-                return false;
-            }
+		return parsed;
+	}
+	private static void SetDefaultContext(ConnectionContext context, RegisteredDomain domain, ref ConnectionContext? defaultContext)
+	{
+		if (domain.IsDefault && defaultContext is null)
+		{
+			defaultContext = context;
+		}
+	}
+	private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, IServiceProvider provider, [NotNullWhen(true)] out ConnectionContext? context)
+	{
+		context = null;
+		if (result.Errors.Count > 0)
+		{
+			return false;
+		}
 
-            if (!result.HasCredential || result.Credential.IsEmpty)
-            {
-                if (!OperatingSystem.IsWindows())
-                {
-                    errors.Add(new ValidationResult($"'{key}' has no credentials and Negotitate is only supported on Windows platforms.", [key]));
-                    context = null;
-                    return false;
-                }
+		if (!result.HasCredential || result.Credential.IsEmpty)
+		{
+			if (!OperatingSystem.IsWindows())
+			{
+				errors.Add(new ValidationResult($"'{key}' has no credentials and Negotitate is only supported on Windows platforms.", [key]));
+				context = null;
+				return false;
+			}
 
-                context = new NegotiateContext(domain, key, provider);
-                return true;
-            }
+			context = new NegotiateContext(domain, key, provider);
+			return true;
+		}
 
-            if (result.HasCredential && OperatingSystem.IsWindows())
-            {
-                context = new ChallengeContext(domain, key, result.Credential, provider);
-                return true;
-            }
+		if (result.HasCredential && OperatingSystem.IsWindows())
+		{
+			context = new ChallengeContext(domain, key, result.Credential, provider);
+			return true;
+		}
 
-            errors.Add(new ValidationResult($"'{key}' - couldn't find a supportable authentication mechanism for this domain. Coming soon.", [key]));
-            return false;
-        }
-    }
+		errors.Add(new ValidationResult($"'{key}' - couldn't find a supportable authentication mechanism for this domain. Coming soon.", [key]));
+		return false;
+	}
 }
 

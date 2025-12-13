@@ -8,58 +8,58 @@ namespace AD.Api.Core.Schema;
 [SupportedOSPlatform("WINDOWS")]
 public static class SchemaLoader
 {
-    private const string TOP = "top";
+	private const string TOP = "top";
 
-    public static async Task<SchemaClassPropertyDictionary> LoadSchemaAsync(ConnectionContext context, SemaphoreSlim semaphore, string[] classNames, CancellationToken token = default)
-    {
-        
-        using SchemaDictionaryBuilder builder = new(context);
-        try
-        {
-            await semaphore.WaitAsync(token).ConfigureAwait(false);
+	public static async Task<SchemaClassPropertyDictionary> LoadSchemaAsync(ConnectionContext context, SemaphoreSlim semaphore, string[] classNames, CancellationToken token = default)
+	{
 
-            List<Task> tasks = new(classNames.Length);
+		using SchemaDictionaryBuilder builder = new(context);
+		try
+		{
+			await semaphore.WaitAsync(token).ConfigureAwait(false);
 
-            foreach (string className in classNames)
-            {
-                tasks.Add(builder.ReadFromAsync(className, GetClassHeirarchy, token));
-            }
+			List<Task> tasks = new(classNames.Length);
 
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-        }
-        finally
-        {
-            semaphore.Release();
-        }
+			foreach (string className in classNames)
+			{
+				tasks.Add(builder.ReadFromAsync(className, GetClassHeirarchy, token));
+			}
 
-        return builder.Build();
-    }
+			await Task.WhenAll(tasks).ConfigureAwait(false);
+		}
+		finally
+		{
+			semaphore.Release();
+		}
 
-    private static ImmutableArray<string> GetClassHeirarchy(ActiveDirectorySchemaClass schemaClass)
-    {
-        return [];
-    }
-    [Obsolete("The logic for this method is not completely accurate (functionally).", true)]
-    private static ImmutableArray<string> GetClassHeirarchy_Testing(ActiveDirectorySchemaClass schemaClass)
-    {
-        List<string> heirarchy = new(2)
-        {
-            schemaClass.Name,
-        };
+		return builder.Build();
+	}
 
-        ActiveDirectorySchemaClass? parent = schemaClass.SubClassOf;
-        while (parent is not null)
-        {
-            heirarchy.Add(parent.Name);
-            if (TOP.Equals(parent.Name, StringComparison.OrdinalIgnoreCase))
-            {
-                heirarchy.Add(TOP);
-                break;
-            }
+	private static ImmutableArray<string> GetClassHeirarchy(ActiveDirectorySchemaClass schemaClass)
+	{
+		return [];
+	}
+	[Obsolete("The logic for this method is not completely accurate (functionally).", true)]
+	private static ImmutableArray<string> GetClassHeirarchy_Testing(ActiveDirectorySchemaClass schemaClass)
+	{
+		List<string> heirarchy = new(2)
+		{
+			schemaClass.Name,
+		};
 
-            parent = parent.SubClassOf;
-        }
+		ActiveDirectorySchemaClass? parent = schemaClass.SubClassOf;
+		while (parent is not null)
+		{
+			heirarchy.Add(parent.Name);
+			if (TOP.Equals(parent.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				heirarchy.Add(TOP);
+				break;
+			}
 
-        return [.. heirarchy];
-    }
+			parent = parent.SubClassOf;
+		}
+
+		return [.. heirarchy];
+	}
 }

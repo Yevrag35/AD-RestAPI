@@ -1,7 +1,6 @@
-﻿namespace AD.Api.Pooling
+﻿namespace AD.Api.Pooling;
+
+public interface IPoolLeaseReturner<T> where T : class
 {
-    public interface IPoolLeaseReturner<T> where T : class
-    {
-        void Return(Guid itemId, T? item);
-    }
+	void Return(Guid itemId, T? item);
 }

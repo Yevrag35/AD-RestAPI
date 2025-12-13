@@ -6,183 +6,182 @@ using AD.Api.Startup.Exceptions;
 using System.Collections.Frozen;
 using System.ComponentModel;
 
-namespace AD.Api.Core
+namespace AD.Api.Core;
+
+public interface IDefaults
 {
-    public interface IDefaults
-    {
-        int TotalDefaultAttributeCount { get; }
-        int TotalGlobalAttributeCount { get; }
+	int TotalDefaultAttributeCount { get; }
+	int TotalGlobalAttributeCount { get; }
 
-        ref readonly ISearchDefaults this[string key] { get; }
+	ref readonly ISearchDefaults this[string key] { get; }
 
-        int GetAttributeCount(FilteredRequestType types);
-        int GetAttributeCount(FilteredRequestType types, bool includeGlobal);
+	int GetAttributeCount(FilteredRequestType types);
+	int GetAttributeCount(FilteredRequestType types, bool includeGlobal);
 
-        bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, out int count);
-        bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count);
+	bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, out int count);
+	bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count);
 
-        bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults);
-    }
+	bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults);
+}
 
-    [DynamicDependencyRegistration]
-    internal sealed class DefaultsService : IDefaults
-    {
-        private readonly FrozenDictionary<string, ISearchDefaults> _dictionary;
+[DynamicDependencyRegistration]
+internal sealed class DefaultsService : IDefaults
+{
+	private readonly FrozenDictionary<string, ISearchDefaults> _dictionary;
 
-        public ref readonly ISearchDefaults this[string key] => ref _dictionary[key];
+	public ref readonly ISearchDefaults this[string key] => ref _dictionary[key];
 
-        public IEnumStrings<FilteredRequestType> RequestTypes { get; }
-        public int TotalDefaultAttributeCount { get; }
-        public int TotalGlobalAttributeCount { get; }
+	public IEnumStrings<FilteredRequestType> RequestTypes { get; }
+	public int TotalDefaultAttributeCount { get; }
+	public int TotalGlobalAttributeCount { get; }
 
-        private DefaultsService(IEnumStrings<FilteredRequestType> types, IDictionary<string, ISearchDefaults> dictionary)
-        {
-            _dictionary = dictionary.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
-            this.TotalGlobalAttributeCount = _dictionary[string.Empty].Attributes.Length;
-            this.TotalDefaultAttributeCount = _dictionary.Values
-                .Where(x => !x.IsGlobal)
-                .Sum(x => x.Attributes.Length);
+	private DefaultsService(IEnumStrings<FilteredRequestType> types, IDictionary<string, ISearchDefaults> dictionary)
+	{
+		_dictionary = dictionary.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+		this.TotalGlobalAttributeCount = _dictionary[string.Empty].Attributes.Length;
+		this.TotalDefaultAttributeCount = _dictionary.Values
+			.Where(x => !x.IsGlobal)
+			.Sum(x => x.Attributes.Length);
 
-            this.RequestTypes = types;
-        }
+		this.RequestTypes = types;
+	}
 
-        [DebuggerStepThrough]
-        public int GetAttributeCount(FilteredRequestType types)
-        {
-            return this.GetAttributeCount(types, includeGlobal: true);
-        }
-        public int GetAttributeCount(FilteredRequestType types, bool includeGlobal)
-        {
-            int count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
-            foreach (FilteredRequestType flag in types.EnumerateFlags())
-            {
-                if (this.RequestTypes.TryGetName(flag, out string? name)
-                    &&
-                    _dictionary.TryGetValue(name, out var defaults))
-                {
-                    count += defaults.Attributes.Length;
-                }
-            }
+	[DebuggerStepThrough]
+	public int GetAttributeCount(FilteredRequestType types)
+	{
+		return this.GetAttributeCount(types, includeGlobal: true);
+	}
+	public int GetAttributeCount(FilteredRequestType types, bool includeGlobal)
+	{
+		int count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
+		foreach (FilteredRequestType flag in types.EnumerateFlags())
+		{
+			if (this.RequestTypes.TryGetName(flag, out string? name)
+				&&
+				_dictionary.TryGetValue(name, out var defaults))
+			{
+				count += defaults.Attributes.Length;
+			}
+		}
 
-            return count;
-        }
+		return count;
+	}
 
-        [DebuggerStepThrough]
-        public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, out int count)
-        {
-            return this.TryGetAllAttributes(types, attributes, includeGlobal: true, out count);
-        }
-        public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count)
-        {
-            count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
-            int nonDefaultCount = 0;
+	[DebuggerStepThrough]
+	public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, out int count)
+	{
+		return this.TryGetAllAttributes(types, attributes, includeGlobal: true, out count);
+	}
+	public bool TryGetAllAttributes(FilteredRequestType types, Span<string> attributes, bool includeGlobal, out int count)
+	{
+		count = includeGlobal ? this.TotalGlobalAttributeCount : 0;
+		int nonDefaultCount = 0;
 
-            foreach (FilteredRequestType flag in types.EnumerateFlags())
-            {
-                if (this.TryGetDefaultsFromFlag(flag, out ISearchDefaults? defaults))
-                {
-                    defaults.Attributes.CopyTo(attributes.Slice(nonDefaultCount));
-                    nonDefaultCount += defaults.Attributes.Length;
-                }
-            }
+		foreach (FilteredRequestType flag in types.EnumerateFlags())
+		{
+			if (this.TryGetDefaultsFromFlag(flag, out ISearchDefaults? defaults))
+			{
+				defaults.Attributes.CopyTo(attributes.Slice(nonDefaultCount));
+				nonDefaultCount += defaults.Attributes.Length;
+			}
+		}
 
-            if (nonDefaultCount > 0)
-            {
-                if (includeGlobal)
-                {
-                    _dictionary[string.Empty].Attributes.CopyTo(attributes.Slice(nonDefaultCount));
-                }
+		if (nonDefaultCount > 0)
+		{
+			if (includeGlobal)
+			{
+				_dictionary[string.Empty].Attributes.CopyTo(attributes.Slice(nonDefaultCount));
+			}
 
-                count += nonDefaultCount;
+			count += nonDefaultCount;
 
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        public bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults)
-        {
-            foreach (FilteredRequestType flag in types.EnumerateFlags())
-            {
-                if (this.RequestTypes.TryGetName(flag, out string? name)
-                    &&
-                    _dictionary.TryGetValue(name, out defaults))
-                {
-                    return true;
-                }
-            }
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	public bool TryGetFirstDefaults(FilteredRequestType types, [NotNullWhen(true)] out ISearchDefaults? defaults)
+	{
+		foreach (FilteredRequestType flag in types.EnumerateFlags())
+		{
+			if (this.RequestTypes.TryGetName(flag, out string? name)
+				&&
+				_dictionary.TryGetValue(name, out defaults))
+			{
+				return true;
+			}
+		}
 
-            defaults = null;
-            return false;
-        }
+		defaults = null;
+		return false;
+	}
 
-        private bool TryGetDefaultsFromFlag(FilteredRequestType singleType, [NotNullWhen(true)] out ISearchDefaults? defaults)
-        {
-            defaults = default;
+	private bool TryGetDefaultsFromFlag(FilteredRequestType singleType, [NotNullWhen(true)] out ISearchDefaults? defaults)
+	{
+		defaults = default;
 
-            return this.RequestTypes.TryGetName(singleType, out string? name)
-                   && 
-                   _dictionary.TryGetValue(name, out defaults);
-        }
+		return this.RequestTypes.TryGetName(singleType, out string? name)
+			   &&
+			   _dictionary.TryGetValue(name, out defaults);
+	}
 
-        [DynamicDependencyRegistrationMethod]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        private static void AddToServices(IServiceCollection services, IConfiguration configuration)
-        {
-            IConfigurationSection section = configuration
-                .GetRequiredSection("Settings")
-                .GetRequiredSection("SearchDefaults");
+	[DynamicDependencyRegistrationMethod]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	private static void AddToServices(IServiceCollection services, IConfiguration configuration)
+	{
+		IConfigurationSection section = configuration
+			.GetRequiredSection("Settings")
+			.GetRequiredSection("SearchDefaults");
 
-            if (!section.Exists())
-            {
-                throw new AdApiStartupException(typeof(DefaultsService), "The 'Settings:SearchDefaults' section is missing from the configuration.");
-            }
+		if (!section.Exists())
+		{
+			throw new AdApiStartupException(typeof(DefaultsService), "The 'Settings:SearchDefaults' section is missing from the configuration.");
+		}
 
-            
-            IConfigurationSection globalSection = section.GetRequiredSection("Global");
-            if (!globalSection.Exists())
-            {
-                throw new AdApiStartupException(typeof(DefaultsService), "The 'Settings:SearchDefaults:Global' section is missing from the configuration.");
-            }
 
-            SearchDefaultSettings globalSettings = SearchDefaultSettings.ParseFromConfig(globalSection)!;
-            globalSettings.UseGlobalAttributes = true;
+		IConfigurationSection globalSection = section.GetRequiredSection("Global");
+		if (!globalSection.Exists())
+		{
+			throw new AdApiStartupException(typeof(DefaultsService), "The 'Settings:SearchDefaults:Global' section is missing from the configuration.");
+		}
 
-            Dictionary<string, ISearchDefaults> dictionary = new(6, StringComparer.OrdinalIgnoreCase)
-            {
-                { "Global", globalSettings },
-                { "Default", globalSettings },
-                { string.Empty, globalSettings },
-            };
+		SearchDefaultSettings globalSettings = SearchDefaultSettings.ParseFromConfig(globalSection)!;
+		globalSettings.UseGlobalAttributes = true;
 
-            HashSet<string> globals = new(globalSettings.DefaultAttributes, StringComparer.OrdinalIgnoreCase);
-            HashSet<string> working = new(globals.Comparer);
+		Dictionary<string, ISearchDefaults> dictionary = new(6, StringComparer.OrdinalIgnoreCase)
+			{
+				{ "Global", globalSettings },
+				{ "Default", globalSettings },
+				{ string.Empty, globalSettings },
+			};
 
-            foreach (IConfigurationSection child in section.GetChildren().Where(x => x.Key != "Global"))
-            {
-                working.Clear();
-                SearchDefaultSettings settings = SearchDefaultSettings.ParseFromConfig(child)!;
-                settings.IsGlobal = false;
-                if (settings.UseGlobalAttributes)
-                {
-                    working.UnionWith(globals);
-                }
+		HashSet<string> globals = new(globalSettings.DefaultAttributes, StringComparer.OrdinalIgnoreCase);
+		HashSet<string> working = new(globals.Comparer);
 
-                working.UnionWith(settings.DefaultAttributes);
-                settings.AllAttributes = [.. working];
+		foreach (IConfigurationSection child in section.GetChildren().Where(x => x.Key != "Global"))
+		{
+			working.Clear();
+			SearchDefaultSettings settings = SearchDefaultSettings.ParseFromConfig(child)!;
+			settings.IsGlobal = false;
+			if (settings.UseGlobalAttributes)
+			{
+				working.UnionWith(globals);
+			}
 
-                dictionary.Add(child.Key, settings);
-            }
+			working.UnionWith(settings.DefaultAttributes);
+			settings.AllAttributes = [.. working];
 
-            dictionary.TrimExcess();
+			dictionary.Add(child.Key, settings);
+		}
 
-            services.AddSingleton<IDefaults>(x =>
-            {
-                return new DefaultsService(x.GetRequiredService<IEnumStrings<FilteredRequestType>>(), dictionary);
-            });
-        }
-    }
+		dictionary.TrimExcess();
+
+		services.AddSingleton<IDefaults>(x =>
+		{
+			return new DefaultsService(x.GetRequiredService<IEnumStrings<FilteredRequestType>>(), dictionary);
+		});
+	}
 }
 

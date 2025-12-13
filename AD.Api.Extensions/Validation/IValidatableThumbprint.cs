@@ -1,7 +1,6 @@
-namespace AD.Api.Validation
+namespace AD.Api.Validation;
+
+public interface IValidatableThumbprint : IValidatableProperty<string>
 {
-    public interface IValidatableThumbprint : IValidatableProperty<string>
-    {
-    }
 }
 

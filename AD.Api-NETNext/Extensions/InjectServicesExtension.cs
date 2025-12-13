@@ -1,56 +1,53 @@
-﻿using Microsoft.OpenApi.Models;
+﻿namespace AD.Api.Services;
 
-namespace AD.Api.Services
+public static class InjectServicesExtensions
 {
-    public static class InjectServicesExtensions
-    {
-        //public static IServiceCollection AddADApiServices(this IServiceCollection services)
-        //{
-        //    return services
-        //        .AddSingleton<IConnectionService, ConnectionService>()
-        //        .AddSingleton<IIdentityService, IdentityService>()
-        //        .AddSingleton<IPasswordService, PasswordService>()
-        //        .AddSingleton<IRestrictionService, RestrictionService>()
-        //        .AddSingleton<IResultService, ResultService>()
-        //        .AddSingleton<ISchemaService, SchemaService>()
-        //        .AddSingleton<ISerializationService, SerializationService>()
-        //        .AddScoped<ICreateService, LdapCreateService>()
-        //        .AddScoped<IDeleteService, DeleteService>()
-        //        .AddScoped<IEditService, LdapEditService>()
-        //        .AddScoped<IMoveService, MoveService>()
-        //        .AddScoped<IQueryService, LdapQueryService>()
-        //        .AddScoped<IRenameService, RenameService>()
-        //        .AddTransient<IEncryptionService, EncryptionService>();
-        //}
+	//public static IServiceCollection AddADApiServices(this IServiceCollection services)
+	//{
+	//    return services
+	//        .AddSingleton<IConnectionService, ConnectionService>()
+	//        .AddSingleton<IIdentityService, IdentityService>()
+	//        .AddSingleton<IPasswordService, PasswordService>()
+	//        .AddSingleton<IRestrictionService, RestrictionService>()
+	//        .AddSingleton<IResultService, ResultService>()
+	//        .AddSingleton<ISchemaService, SchemaService>()
+	//        .AddSingleton<ISerializationService, SerializationService>()
+	//        .AddScoped<ICreateService, LdapCreateService>()
+	//        .AddScoped<IDeleteService, DeleteService>()
+	//        .AddScoped<IEditService, LdapEditService>()
+	//        .AddScoped<IMoveService, MoveService>()
+	//        .AddScoped<IQueryService, LdapQueryService>()
+	//        .AddScoped<IRenameService, RenameService>()
+	//        .AddTransient<IEncryptionService, EncryptionService>();
+	//}
 
-        //public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)
-        //{
-        //    ILdapEnumDictionary dict = EnumReader.GetLdapEnums(assemblies);
-        //    return services
-        //        .AddSingleton(dict);
-        //}
+	//public static IServiceCollection AddLdapEnumTypes(this IServiceCollection services, Assembly[] assemblies)
+	//{
+	//    ILdapEnumDictionary dict = EnumReader.GetLdapEnums(assemblies);
+	//    return services
+	//        .AddSingleton(dict);
+	//}
 
-        public static IServiceCollection AddSwaggerWithOptions(this IServiceCollection services, IConfigurationSection openApiConfig,
-            bool includeXmlComments = true)
-        {
-            var model = openApiConfig.Get<OpenApiInfo>();
-            return services.AddSwaggerGen(options =>
-            {
-                options.SwaggerDoc("v1", model);
+	public static IServiceCollection AddSwaggerWithOptions(this IServiceCollection services, IConfigurationSection openApiConfig,
+		bool includeXmlComments = true)
+	{
+		var model = openApiConfig.Get<OpenApiInfo>();
+		return services.AddSwaggerGen(options =>
+		{
+			options.SwaggerDoc("v1", model);
 
-                if (includeXmlComments)
-                {
-                    foreach (string xmlFile in GetXmlCommentFiles(AppContext.BaseDirectory))
-                    {
-                        options.IncludeXmlComments(xmlFile, true);
-                    }
-                }
-            });
-        }
+			if (includeXmlComments)
+			{
+				foreach (string xmlFile in GetXmlCommentFiles(AppContext.BaseDirectory))
+				{
+					options.IncludeXmlComments(xmlFile, true);
+				}
+			}
+		});
+	}
 
-        private static IEnumerable<string> GetXmlCommentFiles(string baseDirectory)
-        {
-            return Directory.EnumerateFiles(baseDirectory, "*.xml", SearchOption.TopDirectoryOnly);
-        }
-    }
+	private static IEnumerable<string> GetXmlCommentFiles(string baseDirectory)
+	{
+		return Directory.EnumerateFiles(baseDirectory, "*.xml", SearchOption.TopDirectoryOnly);
+	}
 }

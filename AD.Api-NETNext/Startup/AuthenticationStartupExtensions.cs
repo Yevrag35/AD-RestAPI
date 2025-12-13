@@ -12,133 +12,132 @@ using Microsoft.Identity.Web;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AD.Api.Startup
+namespace AD.Api.Startup;
+
+internal static class AuthenticationStartupExtensions
 {
-    internal static class AuthenticationStartupExtensions
-    {
-        internal static IServiceCollection AddApiAuthenticationAuthorization(this IServiceCollection services, ConfigurationManager configuration, out Action<WebApplication>? callback, out bool isJwt)
-        {
-            services.AddEnumStringDictionary<AuthorizedRole>(out var roles);
-            IConfigurationSection authSection = configuration.GetRequiredSection("Authentication");
-            callback = null;
+	internal static IServiceCollection AddApiAuthenticationAuthorization(this IServiceCollection services, ConfigurationManager configuration, out Action<WebApplication>? callback, out bool isJwt)
+	{
+		services.AddEnumStringDictionary<AuthorizedRole>(out var roles);
+		IConfigurationSection authSection = configuration.GetRequiredSection("Authentication");
+		callback = null;
 
-            isJwt = false;
-            string? authType = authSection.GetValue("Type", string.Empty)?.ToUpperInvariant();
-            switch (authType)
-            {
-                case "AD":
-                case "NEGOTIATE":
-                case "NTLM":
-                    AddNegotiate(services, roles);
-                    break;
+		isJwt = false;
+		string? authType = authSection.GetValue("Type", string.Empty)?.ToUpperInvariant();
+		switch (authType)
+		{
+			case "AD":
+			case "NEGOTIATE":
+			case "NTLM":
+				AddNegotiate(services, roles);
+				break;
 
-                case "AAD":
-                case "AZUREAD":
-                case "ENTRA":
-                case "ENTRAID":
-                    AddEntraID(services, configuration);
-                    break;
+			case "AAD":
+			case "AZUREAD":
+			case "ENTRA":
+			case "ENTRAID":
+				AddEntraID(services, configuration);
+				break;
 
-                case "CUSTOMJWT":
-                case "JWT":
-                    isJwt = true;
-                    AddCustomJwt(services, authSection, roles);
-                    break;
+			case "CUSTOMJWT":
+			case "JWT":
+				isJwt = true;
+				AddCustomJwt(services, authSection, roles);
+				break;
 
-                case "KERBEROS":
-                    callback = (app) => app.UseImpersonationMiddleware();
-                    goto case "AD";
+			case "KERBEROS":
+				callback = (app) => app.UseImpersonationMiddleware();
+				goto case "AD";
 
-                default:
-                    throw new AdApiStartupException(typeof(AuthenticationStartupExtensions),
-                        "No authentication type was specified in the configuration file.");
-            }
+			default:
+				throw new AdApiStartupException(typeof(AuthenticationStartupExtensions),
+					"No authentication type was specified in the configuration file.");
+		}
 
-            return services;
-        }
-        private static void AddEntraID(IServiceCollection services, ConfigurationManager configuration)
-        {
-            IConfigurationSection entraIDSection = GetEntraIDSection(configuration);
+		return services;
+	}
+	private static void AddEntraID(IServiceCollection services, ConfigurationManager configuration)
+	{
+		IConfigurationSection entraIDSection = GetEntraIDSection(configuration);
 
-            services.AddSingleton<IJwtService, NoJwtService>()
-                    .AddAuthentication()
-                    .AddMicrosoftIdentityWebApi(entraIDSection);
-        }
-        private static void AddCustomJwt(IServiceCollection services, IConfigurationSection authorizationSection, IEnumStrings<AuthorizedRole> roles)
-        {
-            services.AddJwtAuthentication(authorizationSection, roles);
-        }
-        private static void AddNegotiate(IServiceCollection services, IEnumStrings<AuthorizedRole> enumStrings)
-        {
-            var noTokens = new NoJwtService();
-            services.AddSingleton<IAuthorizer, NegotiateAuthorizer>()
-                    .AddSingleton<IJwtService>(noTokens)
-                    .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-                    .AddNegotiate(o => o.Validate())
-                    .AddJwtBearer(x =>
-                    {
-                        x.TimeProvider = TimeProvider.System;
-                        x.TokenHandlers.Clear();
-                        x.TokenHandlers.Add(noTokens);
-                    });
+		services.AddSingleton<IJwtService, NoJwtService>()
+				.AddAuthentication()
+				.AddMicrosoftIdentityWebApi(entraIDSection);
+	}
+	private static void AddCustomJwt(IServiceCollection services, IConfigurationSection authorizationSection, IEnumStrings<AuthorizedRole> roles)
+	{
+		services.AddJwtAuthentication(authorizationSection, roles);
+	}
+	private static void AddNegotiate(IServiceCollection services, IEnumStrings<AuthorizedRole> enumStrings)
+	{
+		var noTokens = new NoJwtService();
+		services.AddSingleton<IAuthorizer, NegotiateAuthorizer>()
+				.AddSingleton<IJwtService>(noTokens)
+				.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+				.AddNegotiate(o => o.Validate())
+				.AddJwtBearer(x =>
+				{
+					x.TimeProvider = TimeProvider.System;
+					x.TokenHandlers.Clear();
+					x.TokenHandlers.Add(noTokens);
+				});
 
-            services.AddAuthorization(x =>
-            {
-                var policy = new AuthorizationPolicyBuilder(NegotiateDefaults.AuthenticationScheme)
-                    .RequireAuthenticatedUser()
-                    .Build();
+		services.AddAuthorization(x =>
+		{
+			var policy = new AuthorizationPolicyBuilder(NegotiateDefaults.AuthenticationScheme)
+				.RequireAuthenticatedUser()
+				.Build();
 
-                x.FallbackPolicy = policy;
+			x.FallbackPolicy = policy;
 
-                foreach (AuthorizedRole role in enumStrings.Values)
-                {
-                    x.AddPolicy(enumStrings[role], policy);
-                }
-            });
-        }
+			foreach (AuthorizedRole role in enumStrings.Values)
+			{
+				x.AddPolicy(enumStrings[role], policy);
+			}
+		});
+	}
 
-        private static IConfigurationSection GetEntraIDSection(IConfiguration configuration)
-        {
-            string[]? array = null;
-            Span<string> names = GetSectionNames(ref array);
+	private static IConfigurationSection GetEntraIDSection(IConfiguration configuration)
+	{
+		string[]? array = null;
+		Span<string> names = GetSectionNames(ref array);
 
-            ArrayRefEnumerator<string> enumerator = new(names);
-            IConfigurationSection section = null!;
-            bool flag = false;
+		ArrayRefEnumerator<string> enumerator = new(names);
+		IConfigurationSection section = null!;
+		bool flag = false;
 
-            while (enumerator.MoveNext(in flag))
-            {
-                section = configuration.GetSection(enumerator.Current);
-                flag = section.Exists();
-            }
+		while (enumerator.MoveNext(in flag))
+		{
+			section = configuration.GetSection(enumerator.Current);
+			flag = section.Exists();
+		}
 
-            if (flag)
-            {
-                return section;
-            }
+		if (flag)
+		{
+			return section;
+		}
 
-            enumerator.Reset();
-            configuration = configuration.GetRequiredSection("Authorization");
+		enumerator.Reset();
+		configuration = configuration.GetRequiredSection("Authorization");
 
-            while (enumerator.MoveNext(in flag))
-            {
-                section = configuration.GetSection(enumerator.Current);
-                flag = section.Exists();
-            }
+		while (enumerator.MoveNext(in flag))
+		{
+			section = configuration.GetSection(enumerator.Current);
+			flag = section.Exists();
+		}
 
-            ArrayPool<string>.Shared.Return(array);
-            return flag ? section : throw new AdApiStartupException(typeof(AuthenticationStartupExtensions),
-                "No EntraID/AzureID settings sections were found in the configuration file.");
-        }
-        private static Span<string> GetSectionNames([NotNull] ref string[]? names)
-        {
-            names = ArrayPool<string>.Shared.Rent(4);
-            names[0] = "AzureAD";
-            names[1] = "EntraID";
-            names[2] = "AAD";
-            names[3] = "Entra";
+		ArrayPool<string>.Shared.Return(array);
+		return flag ? section : throw new AdApiStartupException(typeof(AuthenticationStartupExtensions),
+			"No EntraID/AzureID settings sections were found in the configuration file.");
+	}
+	private static Span<string> GetSectionNames([NotNull] ref string[]? names)
+	{
+		names = ArrayPool<string>.Shared.Rent(4);
+		names[0] = "AzureAD";
+		names[1] = "EntraID";
+		names[2] = "AAD";
+		names[3] = "Entra";
 
-            return names.AsSpan(0, 4);
-        }
-    }
+		return names.AsSpan(0, 4);
+	}
 }
