@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http.Metadata;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Binding.Attributes;
 

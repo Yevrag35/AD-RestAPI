@@ -6,7 +6,6 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Computers;
 using AD.Api.Core.Security;
 using AD.Api.Core.Web;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Computers;
 

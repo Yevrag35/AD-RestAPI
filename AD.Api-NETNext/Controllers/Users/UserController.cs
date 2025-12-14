@@ -13,7 +13,6 @@ using AD.Api.Core.Operations;
 using AD.Api.Core.Security;
 using AD.Api.Core.Web;
 using AD.Api.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace AD.Api.Controllers.Users;

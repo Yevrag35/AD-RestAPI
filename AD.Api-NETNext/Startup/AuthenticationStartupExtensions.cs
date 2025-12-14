@@ -9,8 +9,6 @@ using AD.Api.Startup.Exceptions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
-using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 
 namespace AD.Api.Startup;
 

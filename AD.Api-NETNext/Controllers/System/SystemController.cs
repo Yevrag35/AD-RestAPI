@@ -5,7 +5,6 @@ using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace AD.Api.Controllers.System;

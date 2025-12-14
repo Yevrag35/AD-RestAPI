@@ -6,7 +6,6 @@ using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Users;
 

@@ -1,9 +1,7 @@
 ﻿using AD.Api.Components;
 using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Core.Web;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Services.Jwt;
 

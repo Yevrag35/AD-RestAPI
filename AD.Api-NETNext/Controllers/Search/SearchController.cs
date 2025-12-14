@@ -4,7 +4,6 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Controllers.Search;
 

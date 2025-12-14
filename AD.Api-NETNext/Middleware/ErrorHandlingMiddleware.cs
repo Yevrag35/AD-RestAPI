@@ -3,7 +3,6 @@ using AD.Api.Enums;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Extensions;
 using NLog;
-using System.DirectoryServices.Protocols;
 
 namespace AD.Api.Middleware;
 

@@ -5,7 +5,6 @@ using AD.Api.Core.Security;
 using AD.Api.Reflection;
 using AD.Api.Validation;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Reflection;
 
 namespace AD.Api.Swagger.Filters;
 

@@ -4,12 +4,9 @@ using AD.Api.Core.Serialization.Json;
 using AD.Api.Enums;
 using AD.Api.Serialization.Json;
 using AD.Api.Statics;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using NLog;
-using System.Buffers;
-using System.DirectoryServices.Protocols;
 using System.Text.Json;
 
 using ColEx = AD.Api.Collections.CollectionExtensions;

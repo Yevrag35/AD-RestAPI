@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AD.Api</RootNamespace>
 	<DebugType>full</DebugType>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -31,6 +32,21 @@
 	<ItemGroup>
 		<AssemblyAttribute Include="AD.Api.Assemblies.DependencyAssemblyAttribute" />
 	</ItemGroup>
+
+  <ItemGroup>
+	<Using Include="Microsoft.AspNetCore.Mvc" />
+	<Using Include="Microsoft.Extensions.Configuration" />
+	<Using Include="Microsoft.Extensions.DependencyInjection" />
+	<Using Include="System.Buffers" />
+	<Using Include="System.Collections" />
+	<Using Include="System.ComponentModel" />
+	<Using Include="System.Diagnostics" />
+	<Using Include="System.Diagnostics.CodeAnalysis" />
+	<Using Include="System.DirectoryServices.Protocols" />
+	<Using Include="System.Reflection" />
+	<Using Include="System.Runtime.CompilerServices" />
+	<Using Include="System.Runtime.InteropServices" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <NoWarn>1591;1701;1702</NoWarn>

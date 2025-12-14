@@ -2,7 +2,6 @@
 using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Core.Web;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 
 namespace AD.Api.Controllers;

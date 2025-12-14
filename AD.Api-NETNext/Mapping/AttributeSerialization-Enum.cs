@@ -1,7 +1,5 @@
 ﻿using AD.Api.Core.Serialization;
 using AD.Api.Enums;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace AD.Api.Mapping;

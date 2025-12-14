@@ -1,7 +1,6 @@
 ﻿using AD.Api.Core.Extensions;
 using AD.Api.Enums;
 using NLog;
-using System.Diagnostics;
 using System.Net;
 
 namespace AD.Api.Middleware;

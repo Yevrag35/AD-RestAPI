@@ -1,6 +1,4 @@
 ﻿using AD.Api.Core;
-using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace AD.Api.Extensions;
 

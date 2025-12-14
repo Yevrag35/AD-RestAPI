@@ -22,8 +22,6 @@ using Microsoft.IdentityModel.Logging;
 using NLog;
 using NLog.Web;
 using System.DirectoryServices.ActiveDirectory;
-using System.DirectoryServices.Protocols;
-using System.Reflection;
 
 #region EXPLICIT LOADS
 
