@@ -6,7 +6,9 @@ public readonly partial struct ObjEither<T1, T2> where T1 : class where T2 : cla
 	internal readonly object? _value;
 	private readonly uint _index;
 
+	[MemberNotNullWhen(true, nameof(AsT1)), MemberNotNullWhen(false, nameof(AsT2))]
 	public bool IsT1 => _index == 1;
+	[MemberNotNullWhen(true, nameof(AsT2)), MemberNotNullWhen(false, nameof(AsT1))]
 	public bool IsT2 => _index == 2;
 	public uint Index => _index;
 	public T1? AsT1 => (T1?)_value;

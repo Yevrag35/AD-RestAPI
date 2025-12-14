@@ -160,7 +160,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 		ArrayPool<string>.Shared.Return(properties);
 		return result;
 	}
-	private static OneOf<string, ModelBindingResult> GetValue(ModelBindingContext context)
+	private static Either<string, ModelBindingResult> GetValue(ModelBindingContext context)
 	{
 		string? value = context.GetFirstValue();
 		if (value is null)

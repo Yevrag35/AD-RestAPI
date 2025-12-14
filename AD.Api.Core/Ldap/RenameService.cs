@@ -7,6 +7,7 @@ namespace AD.Api.Core.Ldap;
 public interface IRenameService
 {
 	IActionResult RenameObject(RelativeName newName, ConnectedResponse continuation);
+	IResult RenameObject(RelativeName newName, ConnectedResponse continuation);
 }
 
 [DependencyRegistration(typeof(IRenameService), Lifetime = ServiceLifetime.Singleton)]
@@ -36,5 +37,10 @@ internal sealed class RenameService : IRenameService
 		}
 
 		return new AcceptedResult();
+	}
+
+	IResult IRenameService.RenameObject(RelativeName newName, ConnectedResponse continuation)
+	{
+		throw new NotImplementedException();
 	}
 }

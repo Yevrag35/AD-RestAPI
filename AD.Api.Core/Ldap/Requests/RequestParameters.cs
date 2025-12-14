@@ -9,7 +9,7 @@ public abstract class RequestParameters
 	[Domain]
 	public DomainQuery Info { get; set; }
 
-	public OneOf<LdapConnection, IActionResult> ApplyConnection(IConnectionService connectionService)
+	public ObjEither<LdapConnection, DomainNotFoundResult> ApplyConnection(IConnectionService connectionService)
 	{
 		string domain = this.Info.Domain;
 

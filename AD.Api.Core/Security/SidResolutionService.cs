@@ -21,9 +21,9 @@ public interface ISidResolutionService : IRestrictedSids
 /// Provides a service for resolving and caching SID (Security Identifier) strings.
 /// </summary>
 [DynamicDependencyRegistration]
-internal class SidResolutionService : ISidResolutionService
+internal sealed class SidResolutionService : ISidResolutionService
 {
-	private static readonly TimeSpan DEFAULT_EXPIRATION = TimeSpan.FromMinutes(15);
+	private static readonly TimeSpan s_defaultExpiration = TimeSpan.FromMinutes(15);
 
 	private readonly IMemoryCache _cache;
 	private readonly IRestrictedSids _restrictedSids;
@@ -68,7 +68,7 @@ internal class SidResolutionService : ISidResolutionService
 
 			_ = _cache.Set(securityIdentifier, sid, new MemoryCacheEntryOptions
 			{
-				AbsoluteExpirationRelativeToNow = DEFAULT_EXPIRATION,
+				AbsoluteExpirationRelativeToNow = s_defaultExpiration,
 				Priority = CacheItemPriority.Low,
 				Size = 5L,
 			});
@@ -81,8 +81,8 @@ internal class SidResolutionService : ISidResolutionService
 	/// Adds the <see cref="SidResolutionService"/> services to the service collection.
 	/// </summary>
 	/// <param name="services">The service collection to add services to.</param>
-	[DynamicDependencyRegistrationMethod]
 	[EditorBrowsable(EditorBrowsableState.Never)]
+	[DynamicDependencyRegistrationMethod, SuppressMessage("Style", "IDE0051")]
 	private static void AddToServices(IServiceCollection services)
 	{
 		services.AddSingleton<ISidResolutionService>(x =>

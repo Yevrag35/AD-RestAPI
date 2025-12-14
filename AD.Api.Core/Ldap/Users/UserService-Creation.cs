@@ -20,7 +20,7 @@ internal sealed partial class UserService
 			return error;
 		}
 
-		OneOf<ResultEntry, IActionResult> oneOf;
+		Either<ResultEntry, IActionResult> oneOf;
 		using (connection)
 		{
 			IReadOnlyDictionary<string, object?> attributes = GetAttributesFromRequest(request);

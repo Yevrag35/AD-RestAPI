@@ -11,7 +11,7 @@ public interface IRequestService
 {
 	IConnectionService Connections { get; }
 
-	OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters);
+	ObjEither<LdapConnection, DomainNotFoundResult> Connect(RequestParameters parameters);
 	bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
 
 	bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult);
@@ -26,11 +26,11 @@ public interface IRequestService
 		where T : LdapRequest
 		where TResponse : SearchResponse;
 
-	OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
+	ObjEither<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
 		where TResponse : SearchResponse
 		where T : LdapRequest;
 
-	OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
+	ObjEither<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
 		where TResponse : DirectoryResponse;
 }
 
@@ -50,17 +50,25 @@ internal sealed class RequestService : IRequestService
 
 	// CONNECTIONS
 	[DebuggerStepThrough]
-	public OneOf<LdapConnection, IActionResult> Connect(RequestParameters parameters)
+	public ObjEither<LdapConnection, DomainNotFoundResult> Connect(RequestParameters parameters)
 	{
 		return parameters.ApplyConnection(this.Connections);
 	}
 	[DebuggerStepThrough]
-	public bool TryConnect(RequestParameters parameters, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
+	public bool TryConnect(
+		RequestParameters parameters,
+		[NotNullWhen(true)] out LdapConnection? connection,
+		[NotNullWhen(false)] out DomainNotFoundResult? errorResult)
 	{
-		return this.Connect(parameters).TryGetT0(out connection, out errorResult);
+		var either = this.Connect(parameters);
+		connection = either.IsT1 ? either.AsT1 : null;
+		errorResult = either.IsT2 ? either.AsT2 : null;
 	}
 	[DebuggerStepThrough]
-	public bool TryConnect(string? domainKey, [NotNullWhen(true)] out LdapConnection? connection, [NotNullWhen(false)] out IActionResult? errorResult)
+	public bool TryConnect(
+		string? domainKey,
+		[NotNullWhen(true)] out LdapConnection? connection,
+		[NotNullWhen(false)] out IActionResult? errorResult)
 	{
 		if (!this.Connections.TryGetConnection(domainKey, out connection))
 		{
@@ -75,11 +83,13 @@ internal sealed class RequestService : IRequestService
 	}
 
 	// SEARCH REQUESTS
-	public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
-		where TResponse : SearchResponse
-		where T : LdapRequest
+	public IActionResult FindAll<T, TResponse>(
+		RequestParameters<T, TResponse> parameters,
+		IServiceProvider requestServices)
+			where TResponse : SearchResponse
+			where T : LdapRequest
 	{
-		if (!this.TryConnect(parameters, out LdapConnection? connection, out IActionResult? error))
+		if (!this.TryConnect(parameters, out LdapConnection? connection, out DomainNotFoundResult? error))
 		{
 			return error;
 		}
@@ -89,16 +99,20 @@ internal sealed class RequestService : IRequestService
 			return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, connection, requestServices, isMultiRequest: true);
 		}
 	}
-	public IActionResult FindAll<T, TResponse>(RequestParameters<T, TResponse> parameters, ConnectedResponse continuation)
-		where TResponse : SearchResponse
-		where T : LdapRequest
+	public IActionResult FindAll<T, TResponse>(
+		RequestParameters<T, TResponse> parameters,
+		ConnectedResponse continuation)
+			where TResponse : SearchResponse
+			where T : LdapRequest
 	{
 		return this.SendSearchRequest<T, ResultEntryCollection, TResponse>(parameters, continuation.ActiveConnection, continuation, isMultiRequest: true);
 	}
 
-	public IActionResult FindOne<T, TResponse>(RequestParameters<T, TResponse> parameters, IServiceProvider requestServices)
-		where TResponse : SearchResponse
-		where T : LdapRequest
+	public IActionResult FindOne<T, TResponse>(
+		RequestParameters<T, TResponse> parameters,
+		IServiceProvider requestServices)
+			where TResponse : SearchResponse
+			where T : LdapRequest
 	{
 		var oneOf = parameters.ApplyConnection(this.Connections);
 		if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
@@ -111,21 +125,21 @@ internal sealed class RequestService : IRequestService
 			return this.SendSearchRequest<T, ResultEntry, TResponse>(parameters, connection, requestServices, isMultiRequest: false);
 		}
 	}
-	public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
+	public ObjEither<ConnectedResponse, IActionResult> FindOneAndContinue<T, TResponse>(RequestParameters<T, TResponse> parameters)
 		where TResponse : SearchResponse
 		where T : LdapRequest
 	{
 		var oneOf = parameters.ApplyConnection(this.Connections);
 		if (oneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
 		{
-			return OneOf<ConnectedResponse>.FromT1(error);
+			return new(error);
 		}
 
 		var responseOr = this.SendForResponse<TResponse>(parameters.Request, connection);
 		if (responseOr.TryGetT1(out error, out TResponse? response))
 		{
 			connection.Dispose();
-			return OneOf<ConnectedResponse>.FromT1(error);
+			return new(error);
 		}
 
 		return ConnectedResponse.Continue(connection, response, parameters.Info);
@@ -137,15 +151,16 @@ internal sealed class RequestService : IRequestService
 		where TResponse : SearchResponse
 	{
 		var oneOf = this.SendForResponse<TResponse>(parameters.Request, connection);
-		if (oneOf.TryGetT1(out IActionResult? error, out TResponse? response))
+		//if (oneOf.TryGetT1(out IActionResult? error, out TResponse? response))
+		if (oneOf.IsT2)
 		{
-			return error;
+			return oneOf.AsT2;
 		}
 
 		TCollection collection = requestServices.GetRequiredService<IPooledItem<TCollection>>().Value;
-		if (!collection.TryApplyResponse(parameters.Info.Domain, response))
+		if (!collection.TryApplyResponse(parameters.Info.Domain, oneOf.AsT1))
 		{
-			return SendCustomExceptionResult(response, isMultiRequest);
+			return SendCustomExceptionResult(oneOf.AsT1, isMultiRequest);
 		}
 
 		if (!isMultiRequest)
@@ -154,14 +169,16 @@ internal sealed class RequestService : IRequestService
 		}
 
 		CollectionResponse respCol = requestServices.GetRequiredService<CollectionResponse>();
-		respCol.SetData(response, resultEntries: collection);
+		respCol.SetData(oneOf.AsT1, resultEntries: collection);
 
 		return respCol;
 	}
 
 	// REQUEST SENDING
-	public OneOf<TResponse, IActionResult> SendForResponse<TResponse>([DisallowNull] DirectoryRequest request, LdapConnection connection)
-		where TResponse : DirectoryResponse
+	public ObjEither<TResponse, IActionResult> SendForResponse<TResponse>(
+		[DisallowNull] DirectoryRequest request,
+		LdapConnection connection)
+			where TResponse : DirectoryResponse
 	{
 		try
 		{
