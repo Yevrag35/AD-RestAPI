@@ -1,6 +1,4 @@
-using AD.Api.Collections;
-
-namespace AD.Api.Extensions.Collections;
+namespace AD.Api.Collections.Extensions;
 
 public static class ArrayExtensions
 {
@@ -22,15 +20,11 @@ public static class ArrayExtensions
 	{
 		return source is T[] array
 			? array
-			: source.ToArray();
+			: [.. source];
 	}
 	public static RentedArray<T> ToRentedArray<T>(this ReadOnlySpan<T> readOnlySpan)
 	{
-		return RentedArray<T>.FromSpan(readOnlySpan);
-	}
-	public static RentedArray<T> ToRentedArray<T>(this Span<T> span)
-	{
-		return RentedArray<T>.FromSpan(span);
+		return new(readOnlySpan);
 	}
 	public static RentedArray<T> ToRentedArray<T>(this T[] array, int length)
 	{
@@ -41,8 +35,8 @@ public static class ArrayExtensions
 		ArgumentNullException.ThrowIfNull(array);
 
 		return array.Length > 0
-			? ToRentedArray(span: array.AsSpan(index, length))
-			: RentedArray.Empty<T>();
+			? ToRentedArray(array.AsSpan(index, length))
+			: [];
 	}
 }
 

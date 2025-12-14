@@ -1,6 +1,5 @@
-﻿using AD.Api.Core.Security;
-using AD.Api.Statics;
-using System.Buffers;
+﻿using AD.Api.Buffers;
+using AD.Api.Core.Security;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -9,20 +8,7 @@ namespace AD.Api.Constraints;
 public sealed class SidRouteConstraint : IRouteConstraint
 {
 	private const int MIN_NUMBER_OF_HYPHENS_AFTER_PREFIX = 2;
-	private static readonly char HYPHEN = CharConstants.HYPHEN;
 	public const string ConstraintName = "objectsid";
-	private static readonly SearchValues<char> _numerals;
-	//private static readonly SearchValues<char> _numeralsAndHyphen;
-	static SidRouteConstraint()
-	{
-		CharRange range = new('0', '9');
-		Span<char> searchChars = stackalloc char[range.Length + 1];
-		range.CopyTo(searchChars.Slice(1));
-		//searchChars[0] = CharConstants.HYPHEN;
-
-		_numerals = SearchValues.Create(searchChars.Slice(1));
-		//_numeralsAndHyphen = SearchValues.Create(searchChars);
-	}
 
 	public bool Match(HttpContext? httpContext, IRouter? route, string routeKey, RouteValueDictionary values, RouteDirection routeDirection)
 	{
@@ -37,7 +23,7 @@ public sealed class SidRouteConstraint : IRouteConstraint
 
 	private static bool HasMinimumNumberOfHyphens(ReadOnlySpan<char> value)
 	{
-		int count = value.Count(HYPHEN);
+		int count = value.Count('-');
 		bool result = MIN_NUMBER_OF_HYPHENS_AFTER_PREFIX <= count;
 		Debug.Assert(result, "The SID has less than the minimum number of required hyphens.");
 		return result;
@@ -49,7 +35,7 @@ public sealed class SidRouteConstraint : IRouteConstraint
 			return false;
 		}
 
-		Span<char> prefix = ['S', HYPHEN];
+		Span<char> prefix = ['S', '-'];
 
 		return value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
 			&& SectionsAreValid(value.Slice(prefix.Length))
@@ -62,9 +48,10 @@ public sealed class SidRouteConstraint : IRouteConstraint
 	}
 	private static bool SectionsAreValid(ReadOnlySpan<char> value)
 	{
-		foreach (ReadOnlySpan<char> section in value.SpanSplit(in HYPHEN))
+		foreach (Range section in value.Split('-'))
 		{
-			if (section.IsEmpty || section.ContainsAnyExcept(_numerals))
+			ReadOnlySpan<char> span = value[section].Trim();
+			if (span.IsEmpty || span.ContainsAnyExcept(CharCollections.Numbers))
 			{
 				return false;
 			}

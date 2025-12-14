@@ -1,0 +1,48 @@
+﻿using AD.Api.Validation;
+using System.Numerics;
+
+namespace AD.Api.Buffers;
+
+/// <summary>
+/// A helper class for working with bits.
+/// </summary>
+public static class BitHelper
+{
+	/// <summary>
+	/// The largest power of 2 that can be represented by an <see cref="int"/>.
+	/// </summary>
+	/// <value>
+	/// <c>2^30</c> -or- <c>1,073,741,824</c>.
+	/// </value>
+	public const uint LargestIntPowerOf2 = 1_073_741_824;
+	private const int MINIMUM_POWER = 2;
+
+	/// <summary>
+	/// Rounds the given <see cref="int"/> value up to the next power of 2.
+	/// </summary>
+	/// <param name="value">The value to round up.</param>
+	/// <returns>The next power of 2 greater than or equal to the specified value.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is negative.</exception>
+	public static int RoundUpToPowerOf2(int value)
+	{
+		ThrowHelper.ThrowIfNegativeOrGreaterThan(value, LargestIntPowerOf2);
+
+		return value switch
+		{
+			< MINIMUM_POWER => MINIMUM_POWER,
+			_ => (int)BitOperations.RoundUpToPowerOf2((uint)value),
+		};
+	}
+	/// <summary>
+	/// Rounds and sets the given <see cref="int"/> value up to the next power of 2.
+	/// </summary>
+	/// <remarks>
+	/// This method does not check for negative or overflowable values.
+	/// </remarks>
+	/// <param name="value">The value to round up.</param>
+	public static int RoundUpToPowerOf2Unsafe(int value)
+	{
+		Debug.Assert(value > 0, "Value is 0 or negative!");
+		return (int)BitOperations.RoundUpToPowerOf2((uint)value);
+	}
+}

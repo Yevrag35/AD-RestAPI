@@ -1,4 +1,4 @@
-using AD.Api.Extensions.Collections;
+using AD.Api.Collections.Extensions;
 using System.Collections;
 
 namespace AD.Api.Collections.Enumerators;
@@ -52,4 +52,3 @@ public struct ArrayEnumerator<T> : IEnumerator<T>
 
 	#endregion
 }
-

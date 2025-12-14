@@ -1,9 +1,9 @@
-﻿using AD.Api.Core.Ldap;
+﻿using AD.Api.Collections.Extensions;
+using AD.Api.Core.Ldap;
 using AD.Api.Core.Operations;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Core.Serialization.Json.Ldap;
-using AD.Api.Extensions.Collections;
 using AD.Api.Serialization.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -41,20 +41,19 @@ public static class MvcJsonOptionsExtensions
 
 	private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
 	{
-		options.Converters.AddRange([
+		options.Converters.AddMany(
 			new ClearOperationConverter(),
-				new DistinguishedNameConverter(),
-				new KeyValuePairArrayConverter<DistinguishedName>() { IsOrdered = true },
-				new OneEditOperationConverter<AddDictionary>(),
-				new OneEditOperationConverter<RemoveDictionary>(),
-				new OneEditOperationConverter<SetDictionary>(),
-				new RelativeNameConverter(),
-				new ReplaceOperationConverter(),
-				new ResultEntryConverter(converter),
-				new ResultEntryCollectionConverter(converter),
-				new SidStringConverter(),
-				new StringValuesConverter(),
-			]);
+			new DistinguishedNameConverter(),
+			new KeyValuePairArrayConverter<DistinguishedName>() { IsOrdered = true },
+			new OneEditOperationConverter<AddDictionary>(),
+			new OneEditOperationConverter<RemoveDictionary>(),
+			new OneEditOperationConverter<SetDictionary>(),
+			new RelativeNameConverter(),
+			new ReplaceOperationConverter(),
+			new ResultEntryConverter(converter),
+			new ResultEntryCollectionConverter(converter),
+			new SidStringConverter(),
+			new StringValuesConverter());
 	}
 	private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder, SerializationSettings settings)
 	{

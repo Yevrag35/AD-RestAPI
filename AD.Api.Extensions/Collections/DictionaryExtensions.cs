@@ -2,7 +2,7 @@ using AD.Api.Extensions.Comparisons;
 using System.Collections;
 using System.Collections.Concurrent;
 
-namespace AD.Api.Collections;
+namespace AD.Api.Collections.Extensions;
 
 public static class DictionaryExtensions
 {

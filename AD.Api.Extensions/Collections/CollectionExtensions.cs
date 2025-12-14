@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Collections;
 
-namespace AD.Api.Collections;
+namespace AD.Api.Collections.Extensions;
 
 public static class CollectionExtensions
 {
