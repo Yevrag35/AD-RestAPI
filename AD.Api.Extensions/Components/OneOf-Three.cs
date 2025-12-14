@@ -1,6 +1,6 @@
 namespace AD.Api.Components;
 
-[DebuggerStepThrough]
+[DebuggerStepThrough, Obsolete("Use Either<T1, T2, T3> instead.")]
 [StructLayout(LayoutKind.Auto)]
 [DebuggerDisplay(@"\{IsT0={IsT0}, IsT1={IsT1}, IsT2={IsT2}, Value={Value}\}")]
 public readonly struct OneOf<T0, T1, T2>

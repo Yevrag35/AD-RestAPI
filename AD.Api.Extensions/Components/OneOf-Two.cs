@@ -1,5 +1,6 @@
 ﻿namespace AD.Api.Components;
 
+[Obsolete("Use Either instead.")]
 public static class OneOf<T>
 {
 	public static OneOf<T0, T> FromT0<T0>(T0 item0)
@@ -12,7 +13,7 @@ public static class OneOf<T>
 	}
 }
 
-[DebuggerStepThrough]
+[DebuggerStepThrough, Obsolete("Use Either<T1, T2> instead.")]
 [StructLayout(LayoutKind.Auto)]
 [DebuggerDisplay(@"\{IsT0={IsT0}, IsT1={IsT1}, Value={Value}\}")]
 public readonly struct OneOf<T0, T1>

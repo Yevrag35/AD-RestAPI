@@ -2,6 +2,7 @@ using AD.Api.Components;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Enums;
 using AD.Api.Strings;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -58,7 +59,7 @@ internal sealed class JwtHandler : TokenHandler
 		};
 	}
 
-	internal OneOf<(BearerToken, AuthorizedUser), IActionResult> CreateToken(IJwtLogin loginRequest)
+	internal Either<(BearerToken, AuthorizedUser), IActionResult> CreateToken(IJwtLogin loginRequest)
 	{
 		Span<byte> byteBuffer = stackalloc byte[Base64Extensions.GetByteLength(loginRequest.Key.Length)];
 		_ = Convert.TryFromBase64String(loginRequest.Key, byteBuffer, out int written);
@@ -75,6 +76,27 @@ internal sealed class JwtHandler : TokenHandler
 		if (!BCryptNet.Verify(chars.Slice(0, written).ToString(), user.UserHash, hashType: user.HashType))
 		{
 			return new UnauthorizedResult();
+		}
+
+		return (this.GenerateToken(user), user);
+	}
+	internal Either<(BearerToken, AuthorizedUser), IResult> CreateTokenMinimal(IJwtLogin loginRequest)
+	{
+		Span<byte> byteBuffer = stackalloc byte[Base64Extensions.GetByteLength(loginRequest.Key.Length)];
+		_ = Convert.TryFromBase64String(loginRequest.Key, byteBuffer, out int written);
+
+		byteBuffer = byteBuffer.Slice(0, written);
+		Span<char> chars = stackalloc char[Encoding.UTF8.GetCharCount(byteBuffer)];
+		written = Encoding.UTF8.GetChars(byteBuffer, chars);
+
+		if (!_authorizations.Users.TryGetValue(loginRequest.UserName, out var user))
+		{
+			return Either.FromT2<(BearerToken, AuthorizedUser), IResult>(Results.Unauthorized());
+		}
+
+		if (!BCryptNet.Verify(chars.Slice(0, written).ToString(), user.UserHash, hashType: user.HashType))
+		{
+			return Either.FromT2<(BearerToken, AuthorizedUser), IResult>(Results.Unauthorized());
 		}
 
 		return (this.GenerateToken(user), user);

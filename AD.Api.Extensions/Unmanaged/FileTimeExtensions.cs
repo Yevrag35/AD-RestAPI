@@ -38,7 +38,7 @@ public static class FileTimeExtensions
 	/// <param name="oneOf"></param>
 	/// <returns></returns>
 	[DebuggerStepThrough]
-	public static bool TryGetFileTimeOrLong(this ReadOnlySpan<char> value, out OneOf<DateTimeOffset, long> oneOf)
+	public static bool TryGetFileTimeOrLong(this ReadOnlySpan<char> value, out Either<DateTimeOffset, long> oneOf)
 	{
 		return TryGetFileTimeOrLongCore(value, isLocal: true, out oneOf);
 	}
@@ -49,11 +49,11 @@ public static class FileTimeExtensions
 	/// <param name="oneOf"></param>
 	/// <returns></returns>
 	[DebuggerStepThrough]
-	public static bool TryGetFileTimeOrLongUtc(this ReadOnlySpan<char> value, out OneOf<DateTimeOffset, long> oneOf)
+	public static bool TryGetFileTimeOrLongUtc(this ReadOnlySpan<char> value, out Either<DateTimeOffset, long> oneOf)
 	{
 		return TryGetFileTimeOrLongCore(value, isLocal: false, out oneOf);
 	}
-	public static bool TryGetFileTimeOrLongCore(ReadOnlySpan<char> value, bool isLocal, out OneOf<DateTimeOffset, long> oneOf)
+	private static bool TryGetFileTimeOrLongCore(ReadOnlySpan<char> value, bool isLocal, out Either<DateTimeOffset, long> oneOf)
 	{
 		if (!long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long longVal))
 		{

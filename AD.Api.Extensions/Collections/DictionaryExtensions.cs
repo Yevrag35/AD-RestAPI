@@ -23,7 +23,7 @@ public static class DictionaryExtensions
 	{
 		if (source is ConcurrentDictionary<TKey, TValue> alreadyConcurrent)
 		{
-			return ShouldUseExisting(in concurrencyLevel, keyComparer, alreadyConcurrent)
+			return ShouldUseExisting(concurrencyLevel, keyComparer, alreadyConcurrent)
 				? alreadyConcurrent
 				: new ConcurrentDictionary<TKey, TValue>(concurrencyLevel, source, keyComparer);
 		}
@@ -83,7 +83,7 @@ public static class DictionaryExtensions
 
 		return existing.GetType().Equals(specified.GetType());
 	}
-	private static bool ShouldUseExisting<TKey, TValue>(in int concurrencyLevel, IEqualityComparer<TKey>? keyComparer, ConcurrentDictionary<TKey, TValue> existing) where TKey : notnull
+	private static bool ShouldUseExisting<TKey, TValue>(int concurrencyLevel, IEqualityComparer<TKey>? keyComparer, ConcurrentDictionary<TKey, TValue> existing) where TKey : notnull
 	{
 		return concurrencyLevel == Environment.ProcessorCount
 			&& ComparerSpecifiedAndMatches(keyComparer, existing.Comparer);
