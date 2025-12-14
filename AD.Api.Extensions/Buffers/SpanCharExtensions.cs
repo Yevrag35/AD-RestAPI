@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace AD.Api.Buffers;
+﻿namespace AD.Api.Buffers;
 
 /// <summary>
 /// Provides extension methods for <see cref="Span{T}"/> and <see cref="ReadOnlySpan{T}"/> types.

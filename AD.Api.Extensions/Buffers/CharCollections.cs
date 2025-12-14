@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace AD.Api.Buffers;
+﻿namespace AD.Api.Buffers;
 
 public static class CharCollections
 {

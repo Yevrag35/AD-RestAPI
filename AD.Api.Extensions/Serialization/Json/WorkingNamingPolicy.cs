@@ -1,5 +1,4 @@
 using AD.Api.Exceptions;
-using System.Text;
 using System.Text.Json;
 
 namespace AD.Api.Serialization.Json;

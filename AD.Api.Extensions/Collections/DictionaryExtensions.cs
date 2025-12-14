@@ -1,5 +1,4 @@
 using AD.Api.Extensions.Comparisons;
-using System.Collections;
 using System.Collections.Concurrent;
 
 namespace AD.Api.Collections.Extensions;
@@ -62,32 +61,6 @@ public static class DictionaryExtensions
 	{
 		initialize = default;
 		return dictionary.TryGetValue(key, out value);
-	}
-	public static bool TryGetValues<T>(this IDictionary dictionary, object key, out T[] values)
-	{
-		ArgumentNullException.ThrowIfNull(dictionary);
-		ArgumentNullException.ThrowIfNull(key);
-
-		if (!dictionary.Contains(key))
-		{
-			values = [];
-			return false;
-		}
-
-		object? o = dictionary[key];
-
-		if (o is T tVal)
-		{
-			values = [tVal];
-			return true;
-		}
-		else if (o is ICollection iCol && iCol.TryGetAll(out values))
-		{
-			return true;
-		}
-
-		values = [];
-		return false;
 	}
 
 	private static bool ComparerSpecifiedAndMatches<TKey>([NotNullWhen(true)] IEqualityComparer<TKey>? specified, IEqualityComparer<TKey> existing) where TKey : notnull

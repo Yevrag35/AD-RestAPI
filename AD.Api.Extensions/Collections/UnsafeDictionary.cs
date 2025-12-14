@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace AD.Api.Collections;
 
 [DebuggerDisplay("Count = {Count}")]

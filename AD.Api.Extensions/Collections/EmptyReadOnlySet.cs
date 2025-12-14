@@ -1,5 +1,4 @@
 using AD.Api.Collections.Exceptions;
-using System.Collections;
 
 namespace AD.Api.Collections;
 
@@ -7,7 +6,7 @@ namespace AD.Api.Collections;
 /// A <see langword="static"/> class for creating empty, read-only sets with caching mechanisms similar to 
 /// <see cref="Array.Empty{T}"/>.
 /// </summary>
-[DebuggerStepThrough]
+[DebuggerStepThrough, Obsolete("This class is obsolete and will be removed in a future version.")]
 public static class EmptyReadOnlySet
 {
 	private static readonly Lazy<TypeSetDictionary> _cache = new();
@@ -21,6 +20,7 @@ public static class EmptyReadOnlySet
 	/// <returns>
 	/// A new or cached empty, read-only set of the specified type that implements <see cref="ISet{T}"/>.
 	/// </returns>
+	[Obsolete("This method is obsolete and will be removed in a future version.")]
 	public static ISet<T> Get<T>()
 	{
 		return GetOrAdd<T>();
@@ -34,6 +34,7 @@ public static class EmptyReadOnlySet
 	/// <returns>
 	/// A new or cached empty, read-only set of the specified type that implements <see cref="IReadOnlySet{T}"/>.
 	/// </returns>
+	[Obsolete("This method is obsolete and will be removed in a future version.")]
 	public static IReadOnlySet<T> GetReadOnly<T>()
 	{
 		return GetOrAddReadOnly<T>();

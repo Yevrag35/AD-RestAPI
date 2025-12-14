@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace AD.Api.Exceptions;
 

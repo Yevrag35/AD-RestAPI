@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace AD.Api.Buffers;
+﻿namespace AD.Api.Buffers;
 
 /// <summary>
 /// Provides methods for creating and managing rented buffers using the shared <see cref="ArrayPool{T}"/>.

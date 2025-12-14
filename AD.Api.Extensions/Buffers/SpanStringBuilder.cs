@@ -1,7 +1,6 @@
 ﻿using AD.Api.Statics;
 using AD.Api.Unmanaged;
 using System.Numerics;
-using System.Text;
 
 namespace AD.Api.Buffers;
 

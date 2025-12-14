@@ -1,5 +1,4 @@
 using AD.Api.Collections.Extensions;
-using System.Collections;
 
 namespace AD.Api.Collections.Enumerators;
 

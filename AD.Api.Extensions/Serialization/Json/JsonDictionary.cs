@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Text.Json;
 
 namespace AD.Api.Serialization.Json;

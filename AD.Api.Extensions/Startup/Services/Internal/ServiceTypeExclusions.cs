@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace AD.Api.Startup.Services.Internal;
 
 internal sealed class ServiceTypeExclusions : IAddServiceTypeExclusions, IServiceTypeExclusions
