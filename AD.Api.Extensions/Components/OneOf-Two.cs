@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace AD.Api.Components;
+﻿namespace AD.Api.Components;
 
 public static class OneOf<T>
 {

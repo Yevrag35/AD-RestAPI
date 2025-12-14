@@ -66,6 +66,8 @@ public static class LengthConstants
 	/// </summary>
 	public const int GUID_FORM_X = 68;
 
+	public const long MaximumFileTime = 2650467743999999999;
+
 	/// <summary>
 	/// Gets the length of a GUID based on the specified format character.
 	/// </summary>

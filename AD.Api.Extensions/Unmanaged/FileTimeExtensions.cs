@@ -19,7 +19,7 @@ public static class FileTimeExtensions
 	{
 		return long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out fileTime)
 			&& !long.IsNegative(fileTime)
-			&& LengthConstants.MaximumFileTimeValue >= fileTime;
+			&& LengthConstants.MaximumFileTime >= fileTime;
 	}
 	[DebuggerStepThrough]
 	public static bool TryGetFileTime(this long value, out DateTimeOffset offset)
@@ -76,7 +76,7 @@ public static class FileTimeExtensions
 	}
 	private static bool TryGetFileTimeCore(in long fileTime, bool isLocal, out DateTimeOffset offset)
 	{
-		if (!long.IsNegative(fileTime) && LengthConstants.MaximumFileTimeValue >= fileTime)
+		if (!long.IsNegative(fileTime) && LengthConstants.MaximumFileTime >= fileTime)
 		{
 			offset = GetDateTimeOffset(fileTime, isLocal);
 			return true;

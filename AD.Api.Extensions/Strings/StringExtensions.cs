@@ -5,7 +5,6 @@ namespace AD.Api.Strings.Extensions;
 /// </summary>
 public static partial class StringExtensions
 {
-	// SpanSplit -> StringExtensions-SpanSplit.cs
 
 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 	private const string COMMA_SPACE = ", ";

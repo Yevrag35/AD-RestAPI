@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
 namespace AD.Api.Enums;
 
 [StructLayout(LayoutKind.Auto)]

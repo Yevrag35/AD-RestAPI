@@ -16,7 +16,9 @@
 
   <ItemGroup>
     <PackageReference Include="ConcurrentHashSet" Version="1.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+    <!--<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />-->
   </ItemGroup>
 
 	<ItemGroup>
@@ -24,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Using Include="AD.Api.Reflection" />
+	    <Using Include="AD.Api.Reflection" />
 		<Using Include="AD.Api.Resources.ErrorStrings" Alias="Errors" />
 		<Using Include="Microsoft.Extensions.Configuration" />
 		<Using Include="Microsoft.Extensions.DependencyInjection" />
@@ -32,6 +34,8 @@
 		<Using Include="System.Diagnostics.CodeAnalysis" />
 		<Using Include="System.IO" />
 		<Using Include="System.Reflection" />
+	    <Using Include="System.Runtime.CompilerServices" />
+		<Using Include="System.Runtime.InteropServices" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,3 +1,4 @@
+using AD.Api.Buffers;
 using AD.Api.Statics;
 using System.Buffers;
 using System.ComponentModel.DataAnnotations;
@@ -24,13 +25,16 @@ public sealed class UserPrincipalNameAttribute : ValidationAttribute
 		Span<char> allowed = stackalloc char[rangeLength + SYMBOL_COUNT];
 		int index = 0;
 		allowed[index++] = CharConstants.AT_SIGN;
-		upper.CopyTo(allowed, ref index);
-		lower.CopyTo(allowed, ref index);
-		digit.CopyTo(allowed, ref index);
+		upper.CopyTo(allowed[index..]);
+		index += upper.Length;
+		lower.CopyTo(allowed[index..]);
+		index += lower.Length;
+		digit.CopyTo(allowed[index..]);
+		index += digit.Length;
 
 		AddAllowedSymbols(allowed, index);
 		_allAllowedChars = SearchValues.Create(allowed);
-		_allowedMinusAt = SearchValues.Create(allowed.Slice(1));
+		_allowedMinusAt = SearchValues.Create(allowed[1..]);
 	}
 	private static void AddAllowedSymbols(Span<char> chars, int index)
 	{

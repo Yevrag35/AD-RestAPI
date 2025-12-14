@@ -1,5 +1,4 @@
 using AD.Api.Pooling;
-using System.Runtime.InteropServices;
 
 namespace AD.Api.Core.Pooling;
 

@@ -1,3 +1,4 @@
+using AD.Api.Buffers;
 using AD.Api.Collections;
 using AD.Api.Statics;
 using AD.Api.Strings;
@@ -65,10 +66,9 @@ public static class ExceptionExtensions
 		private static ReadOnlySpan<char> GetSeparator() => [CharConstants.SEMI_COLON, CharConstants.SPACE];
 		public readonly void WriteTo(scoped Span<char> chars)
 		{
-			this.TypeName.CopyTo(chars);
-			int pos = this.TypeName.Length;
-			GetSeparator().CopyToSlice(chars, ref pos);
-			this.Message.CopyTo(chars.Slice(pos));
+			this.TypeName.CopyTo(chars, out int pos);
+			pos = GetSeparator().CopyToSlice(chars, pos);
+			this.Message.CopyTo(chars[pos..]);
 		}
 	}
 
