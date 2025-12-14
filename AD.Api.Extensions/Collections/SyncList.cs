@@ -107,14 +107,20 @@ public partial class SyncList<T> : IList<T>, IReadOnlyList<T>
 	/// </summary>
 	/// <param name="values">A read-only span containing the values to initialize the list with. The contents of the span are copied into the
 	/// new list.</param>
-	public SyncList(params ReadOnlySpan<T> values)
+	internal SyncList(params ReadOnlySpan<T> values)
 	{
 		_list = [.. values];
 		_mode = 0;
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SyncList{T}"/> class using the specified list as the underlying data source.
+	/// </summary>
+	/// <param name="list">The list to be used as the underlying data source. Cannot be null.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="list"/> is null.</exception>
 	internal SyncList(List<T> list)
 	{
+		ArgumentNullException.ThrowIfNull(list);
 		_list = list;
 		_mode = 0;
 	}
@@ -142,12 +148,19 @@ public partial class SyncList<T> : IList<T>, IReadOnlyList<T>
 	{
 		if (items is List<T> list)
 		{
-			this.AddRange(CollectionsMarshal.AsSpan(list));
+			this.AddRange(
+				items: new ReadOnlySpan<T>(ListMarshal.GetBackingArray(list)));
+
 			return;
 		}
 		else if (items is T[] array)
 		{
-			this.AddRange(array.AsSpan());
+			this.AddRange(new ReadOnlySpan<T>(array));
+			return;
+		}
+		else if (items is IReadOnlyArray<T> roArray)
+		{
+			this.AddRange(roArray.AsSpan());
 			return;
 		}
 
@@ -641,8 +654,9 @@ file static class ListMarshal
 		view._size = size;
 	}
 
-	private static T[] GetBackingArray<T>(List<T> list)
+	internal static T[] GetBackingArray<T>(List<T> list)
 	{
+		Debug.Assert(list is not null, "The list parameter should not be null.");
 		return Unsafe.As<ListView<T>>(list)._items;
 	}
 

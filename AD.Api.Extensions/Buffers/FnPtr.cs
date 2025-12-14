@@ -92,7 +92,7 @@ public readonly unsafe struct FnPtr<T, TOut> where T : allows ref struct
 	/// <exception cref="ArgumentNullException">Thrown if <paramref name="ptr"/> is null.</exception>
 	public FnPtr(delegate* managed<T, TOut> ptr)
 	{
-		ThrowIfNull(ptr);
+		ArgumentNullException.ThrowIfNull(ptr);
 		_ptr = ptr;
 	}
 
@@ -101,7 +101,6 @@ public readonly unsafe struct FnPtr<T, TOut> where T : allows ref struct
 	/// </summary>
 	/// <param name="arg">The input value to pass to the delegate. Cannot be null.</param>
 	/// <returns>The result produced by invoking the delegate with the specified argument.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if the underlying function pointer is null.</exception>*
 	public TOut Invoke(T arg)
 	{
 		return _ptr(arg);
@@ -111,33 +110,7 @@ public readonly unsafe struct FnPtr<T, TOut> where T : allows ref struct
 	/// Implicitly converts a raw managed function pointer to a <see cref="FnPtr{T, TOut}"/> wrapper.
 	/// </summary>
 	/// <param name="ptr">The managed function pointer to convert.</param>
-	public static implicit operator FnPtr<T, TOut>(delegate*<T, TOut> ptr) => new FnPtr<T, TOut>(ptr);
-
-	/// <summary>
-	/// Throws an exception if the current instance is in an invalid state.
-	/// </summary>
-	/// <remarks>Call this method or check the value of <see cref="IsValid"/> to ensure that the underlying pointer is not null before performing operations
-	/// that require a valid instance. This method is typically used to guard against null reference errors when accessing
-	/// unmanaged resources.</remarks>
-	/// <exception cref="ArgumentException"><see cref="_ptr"/> is null.</exception>
-	public void ThrowIfInvalid()
-	{
-		ThrowIfNull(_ptr, nameof(FnPtr<,>));
-	}
-
-	/// <summary>
-	/// Throws an exception if the specified function pointer is null.
-	/// </summary>
-	/// <param name="ptr">The function pointer to validate. Must not be null.</param>
-	/// <exception cref="ArgumentException">Thrown if the <paramref name="ptr"/> parameter is null.</exception>
-	[StackTraceHidden, DebuggerStepThrough]
-	private static void ThrowIfNull(delegate*<T, TOut> ptr, [CallerArgumentExpression(nameof(ptr))] string? paramName = null)
-	{
-		if (ptr is null)
-		{
-			throw new ArgumentException("The function pointer cannot be null.", paramName);
-		}
-	}
+	public static implicit operator FnPtr<T, TOut>(delegate* managed<T, TOut> ptr) => new FnPtr<T, TOut>(ptr);
 }
 
 /// <summary>
@@ -164,7 +137,7 @@ public readonly unsafe struct FnPtr<T0, T1, TOut>
 	/// <exception cref="ArgumentNullException">Thrown if <paramref name="ptr"/> is null.</exception>
 	public FnPtr(delegate* managed<T0, T1, TOut> ptr)
 	{
-		ThrowIfNull(ptr);
+		ArgumentNullException.ThrowIfNull(ptr);
 		_ptr = ptr;
 	}
 	/// <summary>
@@ -184,20 +157,6 @@ public readonly unsafe struct FnPtr<T0, T1, TOut>
 	/// </summary>
 	/// <param name="ptr">The managed function pointer to convert.</param>
 	public static implicit operator FnPtr<T0, T1, TOut>(delegate* managed<T0, T1, TOut> ptr) => new FnPtr<T0, T1, TOut>(ptr);
-
-	/// <summary>
-	/// Throws an exception if the specified function pointer is null.
-	/// </summary>
-	/// <param name="ptr">The function pointer to validate. Must not be null.</param>
-	/// <exception cref="InvalidOperationException">Thrown if <paramref name="ptr"/> is null.</exception>
-	[StackTraceHidden, DebuggerStepThrough]
-	private static void ThrowIfNull(delegate*<T0, T1, TOut> ptr)
-	{
-		if (ptr is null)
-		{
-			throw new InvalidOperationException("The function pointer cannot be null.");
-		}
-	}
 }
 
 /// <summary>
@@ -225,7 +184,7 @@ public readonly unsafe struct FnPtr<T0, T1, T2, TOut>
 	/// <exception cref="ArgumentNullException">Thrown if <paramref name="ptr"/> is null.</exception>
 	public FnPtr(delegate* managed<T0, T1, T2, TOut> ptr)
 	{
-		ThrowIfNull(ptr);
+		ArgumentNullException.ThrowIfNull(ptr);
 		_ptr = ptr;
 	}
 	/// <summary>
@@ -245,18 +204,4 @@ public readonly unsafe struct FnPtr<T0, T1, T2, TOut>
 	/// </summary>
 	/// <param name="ptr">The managed function pointer to convert.</param>
 	public static implicit operator FnPtr<T0, T1, T2, TOut>(delegate* managed<T0, T1, T2, TOut> ptr) => new FnPtr<T0, T1, T2, TOut>(ptr);
-
-	/// <summary>
-	/// Throws an exception if the specified function pointer is null.
-	/// </summary>
-	/// <param name="ptr">The function pointer to validate. Must not be null.</param>
-	/// <exception cref="InvalidOperationException">Thrown if <paramref name="ptr"/> is null.</exception>
-	[StackTraceHidden, DebuggerStepThrough]
-	private static void ThrowIfNull(delegate*<T0, T1, T2, TOut> ptr)
-	{
-		if (ptr is null)
-		{
-			throw new InvalidOperationException("The function pointer cannot be null.");
-		}
-	}
 }
