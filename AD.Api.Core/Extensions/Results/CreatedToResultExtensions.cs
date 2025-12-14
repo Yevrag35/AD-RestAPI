@@ -28,9 +28,9 @@ public static class CreatedToResultExtensions
 		Span<char> chars = stackalloc char[target.UrlQueryLength + 1 + sid.Value.Length + createdAt.Length];
 		int pos = 0;
 
-		createdAt.CopyToSlice(chars, ref pos);
+		pos = createdAt.CopyToSlice(chars, pos);
 
-		sid.CopyToSlice(chars, ref pos);
+		pos = sid.CopyToSlice(chars, pos);
 		if (target != DomainQuery.Default)
 		{
 			chars[pos++] = CharConstants.QUESTION;

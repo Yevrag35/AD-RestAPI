@@ -106,12 +106,8 @@ public partial class SyncList<T>
 		public void Dispose()
 		{
 			T[]? array = _array;
-			uint count = _count;
 			this = default;
-			if (count > 0 && array is not null)
-			{
-				ArrayHelper.ReturnToPool(array);
-			}
+			Rent.Return(array);
 		}
 		public bool MoveNext()
 		{
