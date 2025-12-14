@@ -1,10 +1,15 @@
 using AD.Api.Core.Web;
+using AD.Api.Serialization.Converters;
 using AD.Api.Serialization.Json;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
-public sealed class CollectionResponseConverter : JsonConverter<CollectionResponse>
+public sealed class CollectionResponseConverter : ByPolicyJsonConverter<CollectionResponse>
 {
+	public CollectionResponseConverter(WorkingNamingPolicy namingPolicy) : base(namingPolicy)
+	{
+	}
+
 	public override CollectionResponse? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
 		throw new NotSupportedException();
@@ -13,44 +18,43 @@ public sealed class CollectionResponseConverter : JsonConverter<CollectionRespon
 	public override void Write(Utf8JsonWriter writer, CollectionResponse value, JsonSerializerOptions options)
 	{
 		writer.WriteStartObject();
-		WorkingNamingPolicy policy = new(options);
 
 		if (value.Result is not null)
 		{
-			policy.WritePropertyName(writer, "Result"u8);
+			this.NamingPolicy.WritePropertyName(writer, "Result"u8);
 			JsonSerializer.Serialize(writer, value.Result, value.Result.GetType(), options);
 
 			if (value.ErrorCode.HasValue)
 			{
-				policy.WritePropertyName(writer, "ErrorCode"u8);
+				this.NamingPolicy.WritePropertyName(writer, "ErrorCode"u8);
 				writer.WriteNumberValue(value.ErrorCode.Value);
 			}
 
 			if (value.AddResultCode)
 			{
 				Enum result = value.Result;
-				policy.WritePropertyName(writer, "ResultCode"u8);
+				this.NamingPolicy.WritePropertyName(writer, "ResultCode"u8);
 				writer.WriteNumberValue(Convert.ToInt32(result));
 			}
 		}
 
 		if (!string.IsNullOrEmpty(value.Error))
 		{
-			policy.WritePropertyName(writer, "errorMessage"u8);
+			this.NamingPolicy.WritePropertyName(writer, "errorMessage"u8);
 			writer.WriteStringValue(value.Error);
 		}
 
-		policy.WritePropertyName(writer, "Count"u8);
+		this.NamingPolicy.WritePropertyName(writer, "Count"u8);
 		writer.WriteNumberValue(value.Count);
 
 		//if (!string.IsNullOrEmpty(value.NextPageUrl))
 		//{
 
-		//   policy.WritePropertyName(writer, "NextPageUrl"u8);
+		//   this.NamingPolicy.WritePropertyName(writer, "NextPageUrl"u8);
 		//   writer.WriteStringValue(value.NextPageUrl);
 		//}
 
-		policy.WritePropertyName(writer, "Data"u8);
+		this.NamingPolicy.WritePropertyName(writer, "Data"u8);
 		writer.WriteStartArray();
 		if (value.Count > 0)
 		{

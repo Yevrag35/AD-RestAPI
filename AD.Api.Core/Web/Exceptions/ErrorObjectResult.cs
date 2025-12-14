@@ -1,4 +1,5 @@
 using AD.Api.Core.Serialization.Json;
+using MinimalJsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
 namespace AD.Api.Core.Web;
@@ -53,11 +54,16 @@ public abstract class ErrorObjectResult : ObjectResult, IResult
 
 	public async Task ExecuteAsync(HttpContext httpContext)
 	{
+		if (!ReferenceEquals(_body, this.Value))
+		{
+			this.Value = _body;
+		}
+
 		HttpResponse response = httpContext.Response;
 		response.ContentType = JsonConstants.ContentTypeWithCharset;
 		response.StatusCode = this.StaticStatusCode;
 
-		var options = httpContext.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>().Value.SerializerOptions;
+		JsonSerializerOptions options = httpContext.RequestServices.GetRequiredService<IOptions<MinimalJsonOptions>>().Value.SerializerOptions;
 		await JsonSerializer.SerializeAsync(response.Body, _body, options: options, cancellationToken: httpContext.RequestAborted)
 							.ConfigureAwait(false);
 	}

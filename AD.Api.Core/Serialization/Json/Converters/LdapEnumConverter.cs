@@ -1,6 +1,6 @@
 using System.Collections.Frozen;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
 public interface ILdapEnumConverterOptions
 {

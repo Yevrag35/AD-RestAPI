@@ -1,5 +1,5 @@
 using AD.Api.Core.Ldap.Results;
-using AD.Api.Core.Serialization.Json;
+using AD.Api.Core.Serialization.Json.Converters;
 using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Serialization;

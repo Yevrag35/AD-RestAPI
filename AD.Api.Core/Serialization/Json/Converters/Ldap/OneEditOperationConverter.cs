@@ -1,7 +1,7 @@
 using AD.Api.Core.Operations;
 using AD.Api.Serialization.Json;
 
-namespace AD.Api.Core.Serialization.Json.Ldap;
+namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
 public sealed class OneEditOperationConverter<T> : EditOperationConverter<T, DirectoryAttributeModification>
 	where T : EditOperationDictionary<DirectoryAttributeModification>, IAppendableSingleOperation, new()

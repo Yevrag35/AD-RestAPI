@@ -1,6 +1,6 @@
 using AD.Api.Core.Operations;
 
-namespace AD.Api.Core.Serialization.Json.Ldap;
+namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
 public sealed class ClearOperationConverter : EditOperationConverter<ClearDictionary, DirectoryAttributeModification>
 {

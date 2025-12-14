@@ -8,4 +8,3 @@ public sealed class SerializationSettings
 	public bool WriteIndented { get; init; }
 	public bool WriteSimpleObjectClass { get; init; }
 }
-

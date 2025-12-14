@@ -1,54 +1,46 @@
-using System.Text.Json;
-
 namespace AD.Api.Serialization.Json;
 
-public class JsonSpanCamelCaseNamingPolicy : JsonNamingPolicy
+/// <summary>
+/// Provides a naming policy for converting JSON property names to camel case using spans.
+/// </summary>
+public sealed class JsonSpanCamelCaseNamingPolicy : JsonNamingPolicy
 {
-	public static readonly JsonNamingPolicy SpanPolicy = new JsonSpanCamelCaseNamingPolicy();
+	private static readonly JsonNamingPolicy s_camelCase = CamelCase;
+	/// <summary>
+	/// Gets the singleton instance of the <see cref="JsonSpanCamelCaseNamingPolicy"/> class.
+	/// </summary>
+	public static readonly JsonSpanCamelCaseNamingPolicy SpanPolicy = new();
 
-	public JsonSpanCamelCaseNamingPolicy()
+	/// <summary>
+	/// Converts the specified name to camel case.
+	/// </summary>
+	/// <param name="name">The name to convert.</param>
+	/// <returns>The camel case version of the name.</returns>
+	public override string ConvertName(string name)
 	{
+		return s_camelCase.ConvertName(name);
 	}
 
-	public void ConvertSpan(Span<char> span)
-	{
-		if (span.IsEmpty)
-		{
-			return;
-		}
-
-		this.ConvertSpanCore(span);
-	}
-	public void ConvertSpan(Span<byte> utf8Text)
-	{
-		if (utf8Text.IsEmpty)
-		{
-			return;
-		}
-
-		this.ConvertSpanCore(utf8Text);
-	}
-	public sealed override string ConvertName(string name)
-	{
-		if (string.IsNullOrWhiteSpace(name))
-		{
-			return name;
-		}
-
-		return string.Create(name.Length, (@this: this, name), (chars, state) =>
-		{
-			state.name.CopyTo(chars);
-			state.@this.ConvertSpanCore(chars);
-		});
-	}
-
-	protected virtual void ConvertSpanCore(Span<char> span)
+	/// <summary>
+	/// Converts the specified span of characters to camel case.
+	/// </summary>
+	/// <param name="span">The span of characters to convert.</param>
+	/// <returns>The camel case version of the span.</returns>
+	public Span<char> ConvertSpan(Span<char> span)
 	{
 		FixCasing(span);
+		return span;
 	}
-	protected virtual void ConvertSpanCore(Span<byte> utf8Text)
+
+	/// <summary>
+	/// Converts the specified span of UTF-8 bytes to camel case.
+	/// </summary>
+	/// <param name="utf8Text">The span of UTF-8 bytes to convert.</param>
+	/// <returns>The camel case version of the span.</returns>
+	public Span<byte> ConvertSpan(Span<byte> utf8Text)
 	{
 		FixCasing(utf8Text);
+		return utf8Text;
 	}
 
 	private static void FixCasing(Span<char> chars)
@@ -60,13 +52,13 @@ public class JsonSpanCamelCaseNamingPolicy : JsonNamingPolicy
 				break;
 			}
 
-			bool hasNext = (i + 1 < chars.Length);
+			int next = i + 1;
 
 			// Stop when next char is already lowercase.
-			if (i > 0 && hasNext && !char.IsUpper(chars[i + 1]))
+			if (i > 0 && next < chars.Length && !char.IsUpper(chars[next]))
 			{
 				// If the next char is a space, lowercase current char before exiting.
-				if (chars[i + 1] == ' ')
+				if (chars[next] == ' ')
 				{
 					chars[i] = char.ToLowerInvariant(chars[i]);
 				}
@@ -77,11 +69,16 @@ public class JsonSpanCamelCaseNamingPolicy : JsonNamingPolicy
 			chars[i] = char.ToLowerInvariant(chars[i]);
 		}
 	}
+
 	private static void FixCasing(Span<byte> utf8Bytes)
 	{
+		if (utf8Bytes.IsEmpty)
+		{
+			return;
+		}
+
 		// Decode the first rune from the span.
 		var status = Rune.DecodeFromUtf8(utf8Bytes, out Rune firstRune, out int bytesConsumed);
-		Debug.Assert(status == OperationStatus.Done);
 		if (status != OperationStatus.Done)
 		{
 			throw new JsonException("Invalid UTF-8 sequence.");
@@ -91,7 +88,7 @@ public class JsonSpanCamelCaseNamingPolicy : JsonNamingPolicy
 		Span<byte> tempSlice = utf8Bytes.Slice(0, bytesConsumed);
 
 		// Convert the first rune to lowercase.
-		Rune lowerRune = Rune.ToLowerInvariant(firstRune);
+		var lowerRune = Rune.ToLowerInvariant(firstRune);
 
 		// Check if a change is needed
 		if (firstRune != lowerRune)
@@ -106,4 +103,3 @@ public class JsonSpanCamelCaseNamingPolicy : JsonNamingPolicy
 		}
 	}
 }
-

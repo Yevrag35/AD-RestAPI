@@ -2,7 +2,7 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Schema;
 using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Core.Serialization.SerializerAction>;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
 public sealed class PropertyConverter
 {

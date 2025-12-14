@@ -1,7 +1,7 @@
 using AD.Api.Enums;
 using System.Text;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
 public sealed class EnumFlagConverter : LdapEnumConverter
 {

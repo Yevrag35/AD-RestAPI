@@ -3,7 +3,7 @@ using AD.Api.Core.Operations;
 using AD.Api.Serialization.Json;
 using System.Globalization;
 
-namespace AD.Api.Core.Serialization.Json.Ldap;
+namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
 public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 	where T : EditOperationDictionary<TValue>

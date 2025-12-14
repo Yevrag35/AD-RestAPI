@@ -1,7 +1,7 @@
 using AD.Api.Core.Schema;
 using AD.Api.Serialization.Json;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
 public sealed class KeyValuePairArrayConverter<T> : JsonConverter<KeyValuePair<string, T>[]>
 {

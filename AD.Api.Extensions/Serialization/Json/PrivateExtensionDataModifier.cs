@@ -1,5 +1,4 @@
 ﻿using AD.Api.Components;
-using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
 namespace AD.Api.Serialization.Json;

@@ -1,7 +1,7 @@
 using AD.Api.Components;
 using AD.Api.Core.Operations;
 
-namespace AD.Api.Core.Serialization.Json.Ldap;
+namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
 public sealed class ReplaceOperationConverter : EditOperationConverter<ReplaceDictionary, DirectoryAttributeModification[]>
 {

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Primitives;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
 public sealed class StringValuesConverter : JsonConverter<StringValues>
 {

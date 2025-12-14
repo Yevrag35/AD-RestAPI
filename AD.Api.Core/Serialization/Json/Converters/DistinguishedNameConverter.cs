@@ -5,7 +5,7 @@ using System.Text;
 
 using ColEx = AD.Api.Collections.CollectionExtensions;
 
-namespace AD.Api.Core.Serialization.Json;
+namespace AD.Api.Core.Serialization.Json.Converters;
 
 public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName>
 {

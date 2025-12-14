@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace AD.Api.Serialization.Json;
 
 public interface IJsonDeserializableOnce : IJsonOnDeserialized

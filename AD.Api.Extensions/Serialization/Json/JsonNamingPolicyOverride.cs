@@ -1,4 +1,4 @@
-using AD.Api.Buffers;
+﻿using AD.Api.Buffers;
 
 namespace AD.Api.Serialization.Json;
 
@@ -7,16 +7,22 @@ namespace AD.Api.Serialization.Json;
 /// property names during JSON serialization.
 /// </summary>
 /// <remarks>
-/// This class acts as a working container for a JSON naming policy. It supports both the standard
+/// This readonly ref struct acts as a working container for a JSON naming policy. It supports both the standard
 /// conversion mechanism (using <see cref="JsonNamingPolicy"/>) and a more efficient span-based conversion when
 /// the naming policy implements <see cref="JsonSpanCamelCaseNamingPolicy"/>. When a naming policy is defined in
 /// the provided <see cref="JsonSerializerOptions"/>, this struct enables the conversion of property names
 /// (typically to a format like camelCase) with minimal allocations by leveraging span-based operations.
+/// <para>
+/// If no naming policy is provided, property names remain unchanged. Because this struct is declared as a ref struct,
+/// its lifetime is strictly limited to the stack, preventing accidental storage on the heap.
+/// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 [DebuggerDisplay(@"\{HasPolicy = {HasPolicy}, IsSpanPolicy = {IsSpanPolicy}, Policy = {Policy}\}")]
-public sealed class WorkingNamingPolicy : JsonNamingPolicy
+public readonly ref struct JsonNamingPolicyOverride
 {
 	private const int MAX_STACKALLOC = 128;
+	private readonly JsonSpanCamelCaseNamingPolicy? _spanPolicy;
 
 	/// <summary>
 	/// Gets a value indicating whether a naming policy is present.
@@ -25,7 +31,13 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// <see langword="true"/> if a naming policy is present; otherwise, <see langword="false"/>.
 	/// </value>
 	[MemberNotNullWhen(true, nameof(Policy), nameof(Options))]
-	public bool HasPolicy { get; }
+	public readonly bool HasPolicy { get; }
+
+	/// <summary>
+	/// Gets the JSON serializer options.
+	/// </summary>
+	public readonly JsonSerializerOptions? Options;
+
 	/// <summary>
 	/// Gets a value indicating whether the naming policy is a span policy.
 	/// </summary>
@@ -33,27 +45,21 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// <see langword="true"/> if the naming policy is a span policy; otherwise, <see langword="false"/>.
 	/// </value>
 	[MemberNotNullWhen(true, nameof(Policy), nameof(_spanPolicy), nameof(Options))]
-	public bool IsSpanPolicy { get; }
+	public readonly bool IsSpanPolicy { get; }
 
-	/// <summary>
-	/// Gets the JSON serializer options.
-	/// </summary>
-	public JsonSerializerOptions? Options { get; }
-
-	private readonly JsonSpanCamelCaseNamingPolicy? _spanPolicy;
 	/// <summary>
 	/// Gets the JSON naming policy.
 	/// </summary>
-	public JsonNamingPolicy? Policy { get; }
+	public readonly JsonNamingPolicy? Policy;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="WorkingNamingPolicy"/> struct with the specified JSON serializer options.
 	/// </summary>
 	/// <param name="options">The JSON serializer options.</param>
-	public WorkingNamingPolicy(JsonSerializerOptions? options)
+	public JsonNamingPolicyOverride(JsonSerializerOptions? options, bool @override)
 	{
-		this.Options = options;
-		JsonNamingPolicy? pol = options?.PropertyNamingPolicy;
+		Options = options;
+		JsonNamingPolicy? pol = !@override ? options?.PropertyNamingPolicy : null;
 		bool hasPol = pol is not null;
 		if (hasPol && pol is JsonSpanCamelCaseNamingPolicy spanPolicy)
 		{
@@ -62,27 +68,22 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 		}
 
 		this.HasPolicy = hasPol;
-		this.Policy = pol;
-	}
-
-	public override string ConvertName(string name)
-	{
-		return this.HasPolicy ? this.Policy.ConvertName(name) : name;
+		Policy = pol;
 	}
 	/// <summary>
-	/// Creates a new instance of <see cref="JsonNamingPolicyOverride"/> using the current options and the specified
-	/// override setting.
+	/// Initializes a new instance of the <see cref="JsonNamingPolicyOverride"/> struct using the specified naming policy and override
+	/// flag.
 	/// </summary>
-	/// <param name="override">A value indicating whether to apply the override naming policy. Specify <see langword="true"/> to enable the
-	/// override; otherwise, <see langword="false"/>.</param>
-	/// <returns>A <see cref="JsonNamingPolicyOverride"/> instance configured with the provided override setting.</returns>
-	public JsonNamingPolicyOverride GetOverrideNamingPolicy(bool @override)
+	/// <param name="policy">The WorkingNamingPolicy instance that provides the naming options and policy to apply.</param>
+	/// <param name="override">A value indicating whether to override the provided naming policy. If <see langword="true"/>, the override is
+	/// applied and the original policy is ignored.</param>
+	internal JsonNamingPolicyOverride(WorkingNamingPolicy policy, bool @override)
 	{
-		return new(this.Options, @override);
-	}
-	internal void SetOverride(ref JsonSpanCamelCaseNamingPolicy? spanPolicy)
-	{
-		spanPolicy = _spanPolicy;
+		Options = policy.Options;
+		policy.SetOverride(ref _spanPolicy);
+		this.HasPolicy = !@override && policy.HasPolicy;
+		this.IsSpanPolicy = !@override && policy.IsSpanPolicy;
+		Policy = policy.Policy;
 	}
 
 	/// <summary>
@@ -91,7 +92,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// <param name="utf8PropertyName">The UTF-8 property name.</param>
 	/// <param name="buffer">The buffer to store the converted name.</param>
 	/// <returns>The converted name as a read-only span of bytes.</returns>
-	public ReadOnlySpan<byte> ConvertName(ReadOnlySpan<byte> utf8PropertyName, Span<byte> buffer)
+	public readonly ReadOnlySpan<byte> ConvertName(ReadOnlySpan<byte> utf8PropertyName, Span<byte> buffer)
 	{
 		if (this.IsSpanPolicy && utf8PropertyName.TryCopyTo(buffer))
 		{
@@ -111,7 +112,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 				: max))
 		{
 			int written = Encoding.UTF8.GetChars(utf8PropertyName, chars.Span);
-			string name = this.Policy.ConvertName(new string(chars[..written]));
+			string name = Policy.ConvertName(new string(chars[..written]));
 
 			if (Encoding.UTF8.GetMaxByteCount(name.Length) > buffer.Length)
 			{
@@ -133,7 +134,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// <returns>
 	/// <see langword="true"/> if the conversion was successful; otherwise, <see langword="false"/>.
 	/// </returns>
-	public bool TryConvertName([NotNullWhen(true)] string? propertyName, Span<char> destination)
+	public readonly bool TryConvertName([NotNullWhen(true)] string? propertyName, Span<char> destination)
 	{
 		if (!this.IsSpanPolicy || string.IsNullOrWhiteSpace(propertyName) || !propertyName.TryCopyTo(destination))
 			return false;
@@ -150,7 +151,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// <returns>
 	/// <see langword="true"/> if the conversion was successful; otherwise, <see langword="false"/>.
 	/// </returns>
-	public bool TryConvertName(ReadOnlySpan<char> propertyName, Span<char> destination)
+	public readonly bool TryConvertName(ReadOnlySpan<char> propertyName, Span<char> destination)
 	{
 		if (!this.IsSpanPolicy || !propertyName.TryCopyTo(destination))
 			return false;
@@ -167,7 +168,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// <returns>
 	/// <see langword="true"/> if the conversion was successful; otherwise, <see langword="false"/>.
 	/// </returns>
-	public bool TryConvertName(ReadOnlySpan<byte> utf8PropertyName, Span<byte> destination)
+	public readonly bool TryConvertName(ReadOnlySpan<byte> utf8PropertyName, Span<byte> destination)
 	{
 		if (!this.IsSpanPolicy || !utf8PropertyName.TryCopyTo(destination))
 			return false;
@@ -181,7 +182,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// </summary>
 	/// <param name="writer">The JSON writer.</param>
 	/// <param name="propertyName">The property name.</param>
-	public void WritePropertyName(Utf8JsonWriter writer, string propertyName)
+	public readonly void WritePropertyName(Utf8JsonWriter writer, string propertyName)
 	{
 		ArgumentException.ThrowIfNullOrEmpty(propertyName);
 		if (this.HasPolicy)
@@ -192,7 +193,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 				return;
 			}
 
-			propertyName = this.Policy.ConvertName(propertyName);
+			propertyName = Policy.ConvertName(propertyName);
 		}
 
 		writer.WritePropertyName(propertyName);
@@ -203,8 +204,9 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// </summary>
 	/// <param name="writer">The JSON writer.</param>
 	/// <param name="propertyNameSpan">The property name as a read-only span of characters.</param>
-	public void WritePropertyName(Utf8JsonWriter writer, ReadOnlySpan<char> propertyNameSpan)
+	public readonly void WritePropertyName(Utf8JsonWriter writer, ReadOnlySpan<char> propertyNameSpan)
 	{
+		//EmptyStructException.ThrowIf(propertyNameSpan.IsEmpty, propertyNameSpan);
 		if (this.HasPolicy)
 		{
 			if (this.IsSpanPolicy)
@@ -213,7 +215,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 				return;
 			}
 
-			propertyNameSpan = this.Policy.ConvertName(propertyNameSpan.ToString());
+			propertyNameSpan = Policy.ConvertName(new(propertyNameSpan));
 			Debug.Fail("An allocation happened here ^");
 		}
 
@@ -225,8 +227,9 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	/// </summary>
 	/// <param name="writer">The JSON writer.</param>
 	/// <param name="propertyName">The property name as a read-only span of bytes.</param>
-	public void WritePropertyName(Utf8JsonWriter writer, ReadOnlySpan<byte> propertyName)
+	public readonly void WritePropertyName(Utf8JsonWriter writer, ReadOnlySpan<byte> propertyName)
 	{
+		//EmptyStructException.ThrowIf(propertyName.IsEmpty, propertyName);
 		if (!this.HasPolicy)
 		{
 			writer.WritePropertyName(propertyName);
@@ -253,8 +256,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 				: length))
 		{
 			int written = Encoding.UTF8.GetChars(propertyName, chars.Span);
-			writer.WritePropertyName(this.Policy.ConvertName(new string(chars[..written])));
-
+			writer.WritePropertyName(Policy.ConvertName(new string(chars[..written])));
 			Debug.Fail("An allocation happened here ^");
 		}
 	}
@@ -268,6 +270,7 @@ public sealed class WorkingNamingPolicy : JsonNamingPolicy
 	private static void WriteCharSpan(Utf8JsonWriter writer, JsonSpanCamelCaseNamingPolicy spanPolicy, ReadOnlySpan<char> propertyName)
 	{
 		int maxLength = Encoding.UTF8.GetMaxByteCount(propertyName.Length);
+
 		using (var buffer = RentedBuffer.Rent<byte>(
 			maxLength <= MAX_STACKALLOC
 				? stackalloc byte[maxLength]

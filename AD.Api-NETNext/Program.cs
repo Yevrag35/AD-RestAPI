@@ -4,7 +4,7 @@ using AD.Api.Constraints;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Security.Encryption;
-using AD.Api.Core.Serialization.Json;
+using AD.Api.Core.Serialization.Json.Converters;
 using AD.Api.Core.Web;
 using AD.Api.Core.Web.Validation;
 using AD.Api.Expressions;
