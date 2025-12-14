@@ -271,7 +271,7 @@ public ref partial struct RentedBuffer<T> : IDisposable
 		if (_state.IsRented)
 		{
 			T[] oldArray = _array!;
-			ArrayHelper.ReturnToPool(oldArray, _state.ClearOnDispose);
+			Rent.Return(oldArray, _state.ClearOnDispose);
 		}
 
 		_state.IsRented = true;

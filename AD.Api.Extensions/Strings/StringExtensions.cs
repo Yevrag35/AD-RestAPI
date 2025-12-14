@@ -45,23 +45,5 @@ public static partial class StringExtensions
 
 		return count == 0;
 	}
-
-	public static bool TryCopyTo(this string? value, Span<char> destination, out int charsWritten)
-	{
-		charsWritten = 0;
-		ReadOnlySpan<char> chars = value;
-		if (chars.IsEmpty)
-		{
-			return true;
-		}
-		else if (chars.Length > destination.Length)
-		{
-			return false;
-		}
-
-		charsWritten = chars.Length;
-		chars.CopyTo(destination);
-		return true;
-	}
 }
 

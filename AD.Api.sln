@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.32014.148
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11304.174
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AD.Api.Ldap", "AD.Api.Ldap\AD.Api.Ldap.csproj", "{44BBF079-9C69-4BB9-95A7-107BAC2D3402}"
 EndProject
@@ -35,6 +35,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{73D0F436-6612-4BAC-9889-E81C82EB7311}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api.Core.Tests", "AD.Api.Core.Tests\AD.Api.Core.Tests.csproj", "{5326EB1B-0326-4563-AB04-A81D29DA998B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD.Api-Minimal", "AD.Api-Minimal\AD.Api-Minimal.csproj", "{EF64C9C0-5BD9-4DA0-A8CD-66C77A73FDDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,6 +84,10 @@ Global
 		{5326EB1B-0326-4563-AB04-A81D29DA998B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5326EB1B-0326-4563-AB04-A81D29DA998B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5326EB1B-0326-4563-AB04-A81D29DA998B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF64C9C0-5BD9-4DA0-A8CD-66C77A73FDDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF64C9C0-5BD9-4DA0-A8CD-66C77A73FDDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF64C9C0-5BD9-4DA0-A8CD-66C77A73FDDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF64C9C0-5BD9-4DA0-A8CD-66C77A73FDDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

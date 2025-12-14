@@ -340,7 +340,7 @@ public sealed class SidString :
 		// Span to store the resulting SID string
 		int position = 0;
 		Span<char> start = ['S', CharConstants.HYPHEN];
-		start.CopyToSlice(destination, ref position);
+		position = start.CopyToSlice(destination, position);
 
 		_ = revision.TryFormat(destination.Slice(position), out int written);
 		position += written;
@@ -555,7 +555,7 @@ public sealed class SidString :
 	{
 		foreach (byte b in byteArray)
 		{
-			builder = builder.Append(3, b, (span, singleByte) =>
+			builder.Append(3, b, (span, singleByte) =>
 			{
 				int bufferIndex = 0;
 				span[bufferIndex++] = '\\';

@@ -32,7 +32,7 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 			&&
 			int.TryParse(chars.Slice(index + 1, 4), NumberStyles.HexNumber, null, out int unicodeHex))
 		{
-			builder = builder.Append((char)unicodeHex);
+			builder.Append((char)unicodeHex);
 			index += 4; // Skip the next 4 characters.
 		}
 		else
@@ -46,39 +46,41 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 		bool isRented = false;
 		char[]? array = null;
 
-		Span<char> span = length <= 256
+		scoped Span<char> span = length <= 256
 			? stackalloc char[length]
 			: ColEx.RentArray(in length, ref isRented, ref array);
 
+		scoped ReadOnlySpan<char> value;
 		if (reader.ValueIsEscaped)
 		{
-			span = UnescapeValue(reader.ValueSpan, span, in length);
+			value = UnescapeValue(reader.ValueSpan, span, in length);
 		}
 		else
 		{
 			int written = Encoding.UTF8.GetChars(reader.ValueSpan, span);
-			span = span.Slice(0, written);
+			value = span.Slice(0, written);
 		}
 
-		if (!DistinguishedName.TryCountNumberOfRelativeNames(span, out int count))
+		if (!DistinguishedName.TryCountNumberOfRelativeNames(value, out int count))
 		{
 			return DistinguishedName.Empty;
 		}
 
 		RelativeName[] buffer = ArrayPool<RelativeName>.Shared.Rent(count);
-		if (!DistinguishedName.TrySplit(span, buffer.AsSpan(0, count), out int namesWritten))
+		try
 		{
-			ArrayPool<RelativeName>.Shared.Return(buffer);
-			return DistinguishedName.Empty;
-		}
+			if (!DistinguishedName.TrySplit(span, buffer.AsSpan(0, count), out int namesWritten))
+			{
+				ArrayPool<RelativeName>.Shared.Return(buffer);
+				return DistinguishedName.Empty;
+			}
 
-		DistinguishedName result = new(buffer.AsSpan(0, namesWritten));
-		if (isRented)
+			return new(buffer.AsSpan(0, namesWritten));
+		}
+		finally
 		{
-			ArrayPool<char>.Shared.Return(array!);
+			ArrayHelper.ReturnToPool(buffer);
 		}
-
-		return result;
 	}
 	private static Span<char> UnescapeValue(ReadOnlySpan<byte> value, Span<char> buffer, in int length)
 	{
@@ -105,27 +107,27 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 					case '"':
 					case '\\':
 					case '/':
-						builder = builder.Append(c);
+						builder.Append(c);
 						break;
 
 					case 'b':
-						builder = builder.Append('\b');
+						builder.Append('\b');
 						break;
 
 					case 'f':
-						builder = builder.Append('\f');
+						builder.Append('\f');
 						break;
 
 					case 'n':
-						builder = builder.Append('\n');
+						builder.Append('\n');
 						break;
 
 					case 'r':
-						builder = builder.Append('\r');
+						builder.Append('\r');
 						break;
 
 					case 't':
-						builder = builder.Append('\t');
+						builder.Append('\t');
 						break;
 
 					case 'u':
@@ -144,7 +146,7 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 			}
 			else
 			{
-				builder = builder.Append(c);
+				builder.Append(c);
 			}
 		}
 
@@ -158,7 +160,7 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 			ArrayPool<char>.Shared.Return(array!);
 		}
 
-		return builder.AsSpan();
+		return builder.
 	}
 
 	public override void Write(Utf8JsonWriter writer, DistinguishedName value, JsonSerializerOptions options)

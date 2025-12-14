@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using AD.Api.Statics;
+using AD.Api.Unmanaged;
+using System.Globalization;
 using System.Numerics;
 using System.Text;
 
@@ -38,7 +40,7 @@ public ref struct FilterSpanWriter
 	{
 		this.ValidateEnd();
 
-		_builder = _builder.Append(')');
+		_builder.Append(')');
 		_depth--;
 		return this;
 	}
@@ -50,7 +52,7 @@ public ref struct FilterSpanWriter
 		}
 
 		int howMany = _depth;
-		_builder = _builder.Append(')', howMany);
+		_builder.Append(')', howMany);
 		_depth = 0;
 		return this;
 	}
@@ -104,7 +106,7 @@ public ref struct FilterSpanWriter
 	}
 
 	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		int length = value.GetLength();
 		Span<char> intChars = stackalloc char[LengthConstants.INT128_MAX];
@@ -113,7 +115,7 @@ public ref struct FilterSpanWriter
 		return this.Equal(propertyName, intChars.Slice(0, intLength));
 	}
 	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
@@ -122,7 +124,7 @@ public ref struct FilterSpanWriter
 		return this.Equal(nameChars.Slice(0, count), value);
 	}
 	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		if (modifier.IsWhiteSpace())
 		{
@@ -136,7 +138,7 @@ public ref struct FilterSpanWriter
 		return this.Equal(combined, value);
 	}
 	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
@@ -200,18 +202,18 @@ public ref struct FilterSpanWriter
 	}
 	public FilterSpanWriter Start()
 	{
-		_builder = _builder.Append('(');
+		_builder.Append('(');
 		_depth++;
 		return this;
 	}
 
 	internal FilterSpanWriter WriteRaw(scoped ReadOnlySpan<char> rawText)
 	{
-		_builder = _builder.Append(rawText);
+		_builder.Append(rawText);
 		return this;
 	}
 
-	public readonly Span<char> AsSpan()
+	public readonly ReadOnlySpan<char> AsSpan()
 	{
 		return _builder.AsSpan();
 	}
@@ -243,7 +245,7 @@ public ref struct FilterSpanWriter
 	}
 	private void WriteKeyword(scoped Span<char> keywordChars)
 	{
-		_builder = _builder.Append(keywordChars);
+		_builder.Append(keywordChars);
 		_depth++;
 	}
 }

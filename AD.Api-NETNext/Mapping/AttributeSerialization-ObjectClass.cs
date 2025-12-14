@@ -1,5 +1,4 @@
 ﻿using AD.Api.Core.Serialization;
-using System.Text.Json;
 
 namespace AD.Api.Mapping;
 
