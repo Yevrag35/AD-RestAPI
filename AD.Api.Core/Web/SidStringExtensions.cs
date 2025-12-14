@@ -1,6 +1,4 @@
 ﻿using AD.Api.Core.Security;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Web.Extensions;
 

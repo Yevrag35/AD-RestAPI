@@ -7,7 +7,7 @@ namespace AD.Api.Services.Jwt;
 
 internal sealed class NoJwtService : TokenHandler, IJwtService
 {
-	private readonly OneOf<BearerToken, IActionResult> _result;
+	private readonly JwtNotEnabledResult _result;
 	private readonly NoSecurityToken _noToken;
 
 	public TimeProvider Clock { get; set; } = TimeProvider.System;
@@ -20,11 +20,15 @@ internal sealed class NoJwtService : TokenHandler, IJwtService
 
 	public NoJwtService()
 	{
-		_result = OneOf<BearerToken>.FromT1<IActionResult>(new JwtNotEnabledResult());
+		_result = new JwtNotEnabledResult();
 		_noToken = new();
 	}
 
-	public OneOf<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
+	public ObjEither<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
+	{
+		return _result;
+	}
+	public ObjEither<BearerToken, IResult> CreateTokenMinimal(IJwtLogin loginRequest)
 	{
 		return _result;
 	}

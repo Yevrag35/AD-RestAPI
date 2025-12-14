@@ -3,7 +3,6 @@ using AD.Api.Serialization.Json;
 using AD.Api.Validation;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 using UAC = AD.Api.Core.Ldap.UserAccountControl;
 

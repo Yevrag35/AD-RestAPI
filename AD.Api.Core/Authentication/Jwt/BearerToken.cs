@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Text.Json.Serialization;
 #if !DEBUG
 using System.Text.Json.Serialization;
 #endif

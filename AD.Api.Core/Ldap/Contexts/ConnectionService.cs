@@ -5,7 +5,6 @@ using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Web;
 using AD.Api.Exceptions;
 using AD.Api.Startup.Exceptions;
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.DirectoryServices.ActiveDirectory;

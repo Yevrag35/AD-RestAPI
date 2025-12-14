@@ -1,8 +1,6 @@
 ﻿using AD.Api.Collections.Extensions;
 using AD.Api.Components;
 using AD.Api.Core.Extensions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 
@@ -13,10 +11,9 @@ public interface IJwtService
 	bool IsFunctional { get; }
 	TimeProvider Clock { get; }
 
-	Either<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest);
-	Either<BearerToken, IResult> CreateTokenMinimal(IJwtLogin loginRequest);
+	ObjEither<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest);
+	ObjEither<BearerToken, IResult> CreateTokenMinimal(IJwtLogin loginRequest);
 }
-
 
 internal sealed class JwtCache : IJwtService
 {
@@ -53,19 +50,21 @@ internal sealed class JwtCache : IJwtService
 			Size = 10L,
 		});
 	}
-	public Either<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
+	public ObjEither<BearerToken, IActionResult> CreateToken(IJwtLogin loginRequest)
 	{
 		var oneOf = _handler.CreateToken(loginRequest);
-		return oneOf.Match(this,
-			f1: (result, cache) => Either.FromT1<BearerToken, IActionResult>(cache.AddToken(result.Item2, result.Item1)),
-			f2: (fail, cache) => Either.FromT2<BearerToken, IActionResult>(fail));
+		return oneOf.Match<ObjEither<BearerToken, IActionResult>, JwtCache>(
+			state: this,
+			f1: (userToken, cache) => cache.AddToken(userToken.User, userToken.Token),
+			f2: (fail, cache) => new(fail));
 	}
-	public Either<BearerToken, IResult> CreateTokenMinimal(IJwtLogin loginRequest)
+	public ObjEither<BearerToken, IResult> CreateTokenMinimal(IJwtLogin loginRequest)
 	{
 		var oneOf = _handler.CreateTokenMinimal(loginRequest);
-		return oneOf.Match(this,
-			f1: (result, cache) => Either.FromT1<BearerToken, IResult>(cache.AddToken(result.Item2, result.Item1)),
-			f2: (fail, cache) => Either.FromT2<BearerToken, IResult>(fail));
+		return oneOf.Match<ObjEither<BearerToken, IResult>, JwtCache>(
+			state: this,
+			f1: (userToken, cache) => cache.AddToken(userToken.User, userToken.Token),
+			f2: (fail, cache) => new(fail));
 	}
 	private static TokenKey CreateTokenKey(string key)
 	{
@@ -93,11 +92,4 @@ internal sealed class JwtCache : IJwtService
 			   &&
 			   !this.IsExpired(token);
 	}
-
-	Either<BearerToken, IActionResult> IJwtService.CreateToken(IJwtLogin loginRequest)
-	{
-		throw new NotImplementedException();
-	}
-
-	
 }

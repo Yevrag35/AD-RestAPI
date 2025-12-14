@@ -1,6 +1,4 @@
 using System.Collections.Frozen;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Serialization.Json;
 

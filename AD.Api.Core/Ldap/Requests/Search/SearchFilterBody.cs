@@ -4,7 +4,6 @@ using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
 using AD.Api.Validation;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Ldap;
 

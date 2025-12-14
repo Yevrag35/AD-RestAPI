@@ -2,8 +2,6 @@ using AD.Api.Components;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Enums;
 using AD.Api.Strings;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -59,13 +57,13 @@ internal sealed class JwtHandler : TokenHandler
 		};
 	}
 
-	internal Either<(BearerToken, AuthorizedUser), IActionResult> CreateToken(IJwtLogin loginRequest)
+	internal Either<UserToken, IActionResult> CreateToken(IJwtLogin loginRequest)
 	{
 		Span<byte> byteBuffer = stackalloc byte[Base64Extensions.GetByteLength(loginRequest.Key.Length)];
 		_ = Convert.TryFromBase64String(loginRequest.Key, byteBuffer, out int written);
 
 		byteBuffer = byteBuffer.Slice(0, written);
-		Span<char> chars = stackalloc char[Encoding.UTF8.GetCharCount(byteBuffer)];
+		Span<char> chars = stackalloc char[Encoding.UTF8.GetMaxCharCount(written)];
 		written = Encoding.UTF8.GetChars(byteBuffer, chars);
 
 		if (!_authorizations.Users.TryGetValue(loginRequest.UserName, out var user))
@@ -78,28 +76,28 @@ internal sealed class JwtHandler : TokenHandler
 			return new UnauthorizedResult();
 		}
 
-		return (this.GenerateToken(user), user);
+		return new UserToken(user, this.GenerateToken(user));
 	}
-	internal Either<(BearerToken, AuthorizedUser), IResult> CreateTokenMinimal(IJwtLogin loginRequest)
+	internal Either<UserToken, IResult> CreateTokenMinimal(IJwtLogin loginRequest)
 	{
 		Span<byte> byteBuffer = stackalloc byte[Base64Extensions.GetByteLength(loginRequest.Key.Length)];
 		_ = Convert.TryFromBase64String(loginRequest.Key, byteBuffer, out int written);
 
 		byteBuffer = byteBuffer.Slice(0, written);
-		Span<char> chars = stackalloc char[Encoding.UTF8.GetCharCount(byteBuffer)];
+		Span<char> chars = stackalloc char[Encoding.UTF8.GetMaxCharCount(written)];
 		written = Encoding.UTF8.GetChars(byteBuffer, chars);
 
 		if (!_authorizations.Users.TryGetValue(loginRequest.UserName, out var user))
 		{
-			return Either.FromT2<(BearerToken, AuthorizedUser), IResult>(Results.Unauthorized());
+			return Either.FromT2<UserToken, IResult>(Results.Unauthorized());
 		}
 
 		if (!BCryptNet.Verify(chars.Slice(0, written).ToString(), user.UserHash, hashType: user.HashType))
 		{
-			return Either.FromT2<(BearerToken, AuthorizedUser), IResult>(Results.Unauthorized());
+			return Either.FromT2<UserToken, IResult>(Results.Unauthorized());
 		}
 
-		return (this.GenerateToken(user), user);
+		return new UserToken(user, this.GenerateToken(user));
 	}
 
 	private BearerToken GenerateToken(AuthorizedUser user)
@@ -171,6 +169,18 @@ internal sealed class JwtHandler : TokenHandler
 				IsValid = false,
 				Exception = e,
 			};
+		}
+	}
+
+	[DebuggerStepThrough]
+	internal readonly struct UserToken
+	{
+		public readonly AuthorizedUser User;
+		public readonly BearerToken Token;
+		public UserToken(AuthorizedUser user, BearerToken token)
+		{
+			User = user;
+			Token = token;
 		}
 	}
 }

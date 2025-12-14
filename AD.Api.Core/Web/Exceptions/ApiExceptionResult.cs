@@ -1,8 +1,4 @@
 using AD.Api.Exceptions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
 namespace AD.Api.Core.Web;
@@ -97,7 +93,7 @@ public abstract class ApiExceptionResult : ApiResult
 		}
 	}
 
-	protected sealed override Task SerializeAsync(Stream bodyStream, JsonSerializerOptions options, int statusCode, ActionContext context, CancellationToken cancellationToken)
+	protected sealed override Task SerializeAsync(Stream bodyStream, JsonSerializerOptions options, int statusCode, HttpContext httpContext, CancellationToken cancellationToken)
 	{
 		return JsonSerializer
 			.SerializeAsync(bodyStream, this, this.GetType(), options, cancellationToken);

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Primitives;
-using System.Text.Json.Serialization;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
 namespace AD.Api.Core.Web;

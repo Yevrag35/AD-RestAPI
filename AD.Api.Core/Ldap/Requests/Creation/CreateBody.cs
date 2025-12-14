@@ -1,7 +1,6 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Requests;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Ldap;
 

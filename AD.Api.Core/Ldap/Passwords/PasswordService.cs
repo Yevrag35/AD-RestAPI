@@ -1,8 +1,6 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Core.Web;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using System.ComponentModel;
 
 namespace AD.Api.Core.Ldap.Passwords;

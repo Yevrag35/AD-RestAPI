@@ -1,6 +1,5 @@
 ﻿using AD.Api.Core;
 using AD.Api.Core.Web;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Primitives;

@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Primitives;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Serialization.Json;
 

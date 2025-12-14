@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace AD.Api.Core.Serialization;
 
 public ref struct SerializationContext

@@ -1,5 +1,4 @@
 using AD.Api.Core.Ldap;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace AD.Api.Core.Authentication;

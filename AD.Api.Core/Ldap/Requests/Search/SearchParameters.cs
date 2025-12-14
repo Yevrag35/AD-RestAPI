@@ -1,7 +1,5 @@
 using AD.Api.Core.Web;
 using AD.Api.Pooling;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Collections.Frozen;
 using System.ComponentModel.DataAnnotations;

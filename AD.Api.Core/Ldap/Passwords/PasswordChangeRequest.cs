@@ -1,6 +1,5 @@
 using AD.Api.Core.Ldap.Results;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Ldap.Passwords;
 

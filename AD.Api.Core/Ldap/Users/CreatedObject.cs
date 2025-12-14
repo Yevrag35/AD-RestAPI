@@ -1,5 +1,4 @@
 using AD.Api.Core.Security;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Ldap.Users;
 

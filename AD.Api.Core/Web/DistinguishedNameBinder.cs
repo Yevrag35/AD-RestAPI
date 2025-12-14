@@ -3,7 +3,6 @@ using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Enums;
 using AD.Api.Statics;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;

@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AD.Api</RootNamespace>
-	<DebugType>full</DebugType>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
@@ -37,6 +36,7 @@
 	<Using Include="Microsoft.AspNetCore.Mvc" />
 	<Using Include="Microsoft.Extensions.Configuration" />
 	<Using Include="Microsoft.Extensions.DependencyInjection" />
+	<Using Include="Microsoft.Extensions.Options" />
 	<Using Include="System.Buffers" />
 	<Using Include="System.Collections" />
 	<Using Include="System.ComponentModel" />
@@ -46,6 +46,8 @@
 	<Using Include="System.Reflection" />
 	<Using Include="System.Runtime.CompilerServices" />
 	<Using Include="System.Runtime.InteropServices" />
+	<Using Include="System.Text" />
+	<Using Include="System.Text.Json" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -54,10 +56,6 @@
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <NoWarn>1591;1701;1702</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Optimize>False</Optimize>
   </PropertyGroup>
 
 	<ItemGroup>

@@ -5,7 +5,6 @@ using AD.Api.Core.Operations;
 using AD.Api.Core.Security;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Web;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Ldap.Users;
 

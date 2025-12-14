@@ -1,7 +1,7 @@
 ﻿namespace AD.Api.Components;
 
 [StructLayout(LayoutKind.Sequential), DebuggerDisplay(@"\{Index = {_index}, Value = {_value}\}")]
-public readonly struct ObjEither<T1, T2> where T1 : class where T2 : class
+public readonly partial struct ObjEither<T1, T2> where T1 : class where T2 : class
 {
 	internal readonly object? _value;
 	private readonly uint _index;

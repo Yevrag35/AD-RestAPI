@@ -1,7 +1,6 @@
 using AD.Api.Components;
 using AD.Api.Core.Extensions.Results;
 using AD.Api.Core.Ldap.Results;
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Frozen;
 
 namespace AD.Api.Core.Ldap.Users;

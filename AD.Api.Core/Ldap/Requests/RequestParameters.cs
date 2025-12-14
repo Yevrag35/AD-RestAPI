@@ -1,7 +1,6 @@
 using AD.Api.Binding.Attributes;
 using AD.Api.Components;
 using AD.Api.Core.Web;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Ldap;
 

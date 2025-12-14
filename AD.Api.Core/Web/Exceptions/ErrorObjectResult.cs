@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+using AD.Api.Core.Serialization.Json;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
 namespace AD.Api.Core.Web;
 
 [DebuggerStepThrough]
-public abstract class ErrorObjectResult : ObjectResult
+public abstract class ErrorObjectResult : ObjectResult, IResult
 {
 	private readonly ErrorBody _body;
 
@@ -49,6 +49,17 @@ public abstract class ErrorObjectResult : ObjectResult
 
 		this.StatusCode = this.StaticStatusCode;
 		return base.ExecuteResultAsync(context);
+	}
+
+	public async Task ExecuteAsync(HttpContext httpContext)
+	{
+		HttpResponse response = httpContext.Response;
+		response.ContentType = JsonConstants.ContentTypeWithCharset;
+		response.StatusCode = this.StaticStatusCode;
+
+		var options = httpContext.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>().Value.SerializerOptions;
+		await JsonSerializer.SerializeAsync(response.Body, _body, options: options, cancellationToken: httpContext.RequestAborted)
+							.ConfigureAwait(false);
 	}
 }
 

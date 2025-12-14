@@ -1,6 +1,5 @@
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Ldap.Users;
 

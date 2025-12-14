@@ -4,8 +4,6 @@ using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
 using AD.Api.Enums;
 using AD.Api.Pooling;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Ldap;
 

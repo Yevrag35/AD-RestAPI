@@ -5,7 +5,6 @@ using AD.Api.Core.Ldap.Groups;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Security;
 using AD.Api.Pooling;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Ldap.Users;
 

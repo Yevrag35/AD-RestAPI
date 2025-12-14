@@ -4,8 +4,6 @@ using AD.Api.Core.Ldap;
 using AD.Api.Enums;
 using AD.Api.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Frozen;
 using System.Security.Claims;

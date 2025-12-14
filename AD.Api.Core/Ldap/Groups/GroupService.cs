@@ -4,7 +4,6 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Web;
 using AD.Api.Pooling;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AD.Api.Core.Ldap.Groups;
 

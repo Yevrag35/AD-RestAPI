@@ -1,6 +1,5 @@
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Schema;
-using System.Text.Json;
 using FrozenDict = System.Collections.Frozen.FrozenDictionary<string, AD.Api.Core.Serialization.SerializerAction>;
 
 namespace AD.Api.Core.Serialization.Json;

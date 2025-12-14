@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace AD.Api.Core.Ldap.Requests;
 
 public sealed class RenameByDNRequest : RenameRequest, IScopedRequest

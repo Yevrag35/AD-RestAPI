@@ -1,12 +1,8 @@
 using AD.Api.Core.Serialization.Json;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
 
 namespace AD.Api.Core.Web;
 
-public abstract class ApiResult : IActionResult
+public abstract class ApiResult : IActionResult, IResult
 {
 	public async Task ExecuteResultAsync(ActionContext context)
 	{
@@ -18,7 +14,21 @@ public abstract class ApiResult : IActionResult
 		response.StatusCode = this.GetResponseStatusCode();
 
 		await this.SerializeAsync(response.Body, jsonOptions.Value.JsonSerializerOptions, response.StatusCode,
-			context, context.HttpContext.RequestAborted)
+			context.HttpContext, context.HttpContext.RequestAborted)
+				  .ConfigureAwait(false);
+	}
+
+	public async Task ExecuteAsync(HttpContext httpContext)
+	{
+		IOptions<JsonOptions> jsonOptions = httpContext.RequestServices
+			.GetRequiredService<IOptions<JsonOptions>>();
+
+		HttpResponse response = httpContext.Response;
+		response.ContentType = JsonConstants.ContentTypeWithCharset;
+		response.StatusCode = this.GetResponseStatusCode();
+
+		await this.SerializeAsync(response.Body, jsonOptions.Value.JsonSerializerOptions, response.StatusCode,
+			httpContext, httpContext.RequestAborted)
 				  .ConfigureAwait(false);
 	}
 
@@ -60,6 +70,6 @@ public abstract class ApiResult : IActionResult
 				return true;
 		}
 	}
-	protected abstract Task SerializeAsync(Stream bodyStream, JsonSerializerOptions options, int statusCode, ActionContext context, CancellationToken cancellationToken);
+	protected abstract Task SerializeAsync(Stream bodyStream, JsonSerializerOptions options, int statusCode, HttpContext httpContext, CancellationToken cancellationToken);
 }
 

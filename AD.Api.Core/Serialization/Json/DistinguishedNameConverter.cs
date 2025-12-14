@@ -2,8 +2,6 @@ using AD.Api.Core.Ldap;
 using AD.Api.Statics;
 using System.Globalization;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using ColEx = AD.Api.Collections.CollectionExtensions;
 

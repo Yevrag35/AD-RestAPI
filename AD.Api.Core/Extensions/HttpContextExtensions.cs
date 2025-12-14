@@ -1,7 +1,6 @@
 ﻿using AD.Api.Core.Authentication;
 using AD.Api.Core.Authentication.Jwt;
 using AD.Api.Enums;
-using Microsoft.AspNetCore.Http;
 
 namespace AD.Api.Core.Extensions;
 

@@ -1,5 +1,4 @@
 using AD.Api.Core.Operations;
-using System.Text.Json;
 
 namespace AD.Api.Core.Serialization.Json.Ldap;
 

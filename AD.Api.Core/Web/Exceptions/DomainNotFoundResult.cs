@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using System.Text.Json.Serialization;
 using RCode = System.DirectoryServices.Protocols.ResultCode;
 
 namespace AD.Api.Core.Web;

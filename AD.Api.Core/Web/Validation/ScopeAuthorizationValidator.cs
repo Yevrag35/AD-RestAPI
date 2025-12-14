@@ -1,7 +1,6 @@
 ﻿using AD.Api.Core.Authentication;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Requests;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace AD.Api.Core.Web.Validation;

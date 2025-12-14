@@ -1,18 +1,12 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Results;
 using AD.Api.Core.Serialization.Json;
-using AD.Api.Reflection;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Core.Web;
 
 [DependencyRegistration(Lifetime = ServiceLifetime.Scoped)]
 [JsonConverter(typeof(CollectionResponseConverter))]
-public sealed class CollectionResponse : IActionResult, IDisposable
+public sealed class CollectionResponse : IActionResult, IResult, IDisposable
 {
 	private Array? _array;
 	private bool _disposed;
@@ -67,15 +61,20 @@ public sealed class CollectionResponse : IActionResult, IDisposable
 		_needsDisposal = false;
 	}
 
-	public async Task ExecuteResultAsync(ActionContext context)
+	public Task ExecuteResultAsync(ActionContext context)
+	{
+		return this.ExecuteAsync(context.HttpContext);
+	}
+	public async Task ExecuteAsync(HttpContext httpContext)
 	{
 		Debug.Assert(!_needsDisposal || !_disposed);
-		HttpResponse response = context.HttpContext.Response;
+		HttpResponse response = httpContext.Response;
+
 		response.ContentType = JsonConstants.ContentTypeWithCharset;
 		response.StatusCode = this.GetStatusCode();
 
 		await JsonSerializer.SerializeAsync(response.Body, this, this.Options,
-			context.HttpContext.RequestAborted)
+			httpContext.RequestAborted)
 			.ConfigureAwait(false);
 	}
 
