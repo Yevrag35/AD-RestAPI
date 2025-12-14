@@ -80,9 +80,13 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 		}
 
 		ReadOnlySpan<char> value = attributeValue?.ToString();
-		if (TryGetNumber(value, out OneOf<long, decimal> number))
+		if (TryGetNumber(value, out Either<long, decimal> number))
 		{
-			writer.WriteNumberValue(in number);
+			if (number.IsT1)
+				writer.WriteNumberValue(number.AsT1);
+
+			else 
+				writer.WriteNumberValue(number.AsT2);
 		}
 		else if (LdapBoolean.TryParseBool(value, out bool result) || bool.TryParse(value, out result))
 		{
@@ -97,7 +101,7 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 			writer.WriteNullValue();
 		}
 	}
-	private static bool TryGetNumber(ReadOnlySpan<char> span, out OneOf<long, decimal> number)
+	private static bool TryGetNumber(ReadOnlySpan<char> span, out Either<long, decimal> number)
 	{
 		if (long.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out long longVal))
 		{

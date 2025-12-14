@@ -64,7 +64,7 @@ public sealed class CreateUserRequest : CreateBody
 	public string UserPrincipalName
 	{
 		get => (string?)this.Attributes[AttributeConstants.USER_PRINCIPAL_NAME] ?? string.Empty;
-		init => this.Attributes[AttributeConstants.USER_PRINCIPAL_NAME] = value.OrEmpty();
+		init => this.Attributes[AttributeConstants.USER_PRINCIPAL_NAME] = value ?? string.Empty;
 	}
 
 	[BindNever]

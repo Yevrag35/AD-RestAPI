@@ -1,5 +1,4 @@
 using AD.Api.Attributes;
-using AD.Api.Collections.Enumerators;
 using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Enums;
@@ -145,26 +144,19 @@ internal sealed class WellKnownObjectDictionary
 
 		return list;
 	}
-	private static string MatchLocationToGuid(string guid, List<string> locations)
+	private static string MatchLocationToGuid(ReadOnlySpan<char> guid, List<string> locations)
 	{
-		ArrayRefEnumerator<string> enumerator = new(locations);
-		bool flag = false;
-		int index = -1;
-
-		while (enumerator.MoveNext(in flag, ref index))
+		foreach (ReadOnlySpan<char> loc in CollectionsMarshal.AsSpan(locations))
 		{
-			flag = enumerator.Current.AsSpan().Contains(guid, StringComparison.OrdinalIgnoreCase);
+			if (loc.Contains(guid, StringComparison.OrdinalIgnoreCase))
+			{
+				int index = loc.LastIndexOf(':') + 1;
+				return index > 0 && index < loc.Length
+					? new(loc.Slice(index).Trim())
+					: string.Empty;
+			}
 		}
 
-		if (!flag || index < 0)
-		{
-			return string.Empty;
-		}
-
-		ReadOnlySpan<char> location = locations[index].AsSpan();
-		index = location.LastIndexOf(':') + 1;
-		return index > 0 && index < location.Length
-			? location.Slice(index).Trim().ToString()
-			: string.Empty;
+		return string.Empty;
 	}
 }

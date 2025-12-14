@@ -329,7 +329,7 @@ public readonly partial struct DistinguishedName :
 		int count = 1;
 		for (int i = 0; i < path.Length; i++)
 		{
-			if (COMMA == path[i] && !path.IsEscapedAt(in i))
+			if (COMMA == path[i] && !path.IsEscapedAt(i))
 			{
 				count++;
 			}
@@ -362,7 +362,7 @@ public readonly partial struct DistinguishedName :
 		{
 			if (COMMA == path[i])
 			{
-				if (path.IsEscapedAt(in i))
+				if (path.IsEscapedAt(i))
 				{
 					continue;
 				}

@@ -57,9 +57,9 @@ internal sealed class ConversionDictionary : IConversionDictionary
 			: RentArray(charCount, ref array, ref isRented);
 
 		int written = _encoding.GetChars(attributeNames, chars);
-		foreach (ReadOnlySpan<char> attributeName in chars.Slice(0, written).SpanSplit(in separator))
+		foreach (Range section in chars.Slice(0, written).Split(separator))
 		{
-			_dictionary.Add(attributeName.Trim().ToString(), action);
+			_dictionary.Add(chars[section].Trim().ToString(), action);
 		}
 
 		if (isRented)

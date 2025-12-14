@@ -71,7 +71,7 @@ internal sealed class CreationService
 		}
 
 		var entry = target.GetRequiredService<IPooledItem<ResultEntry>>();
-		entry.Value.AddResult(target.Domain.OrEmpty(), searchSuccess.Entries[0]);
+		entry.Value.AddResult(target.Domain ?? string.Empty, searchSuccess.Entries[0]);
 
 		return entry.Value;
 	}

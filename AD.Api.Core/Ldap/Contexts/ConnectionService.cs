@@ -80,6 +80,7 @@ internal sealed class ConnectionService : IConnectionService
 		services.AddSingleton<IConnectionService>(provider =>
 		{
 			IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
+
 			IConfigurationSection domains = configuration.GetSection("Domains");
 			IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
 			IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
@@ -108,10 +109,14 @@ internal sealed class ConnectionService : IConnectionService
 			throw new AdApiStartupException(typeof(ConnectionService), e);
 		}
 	}
-	private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService, IServiceProvider provider)
+	private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(
+		IConfigurationSection domainsSection,
+		IEncryptionService encryptionService,
+		IServiceProvider provider)
 	{
 		Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
 		ConnectionContext? defaultContext = null;
+		var logger = provider.GetRequiredService<ILogger<ConnectionService>>();
 
 		List<ValidationResult> results = [];
 		if (domainsSection.Exists())
@@ -153,7 +158,7 @@ internal sealed class ConnectionService : IConnectionService
 			}
 
 			using Forest forest = GetForest();
-			defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider);
+			defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider, logger);
 			_ = dict.TryAdd(forest.Name, defaultContext);
 			_ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
 			using var de = forest.RootDomain.GetDirectoryEntry();
@@ -185,6 +190,7 @@ internal sealed class ConnectionService : IConnectionService
 	private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, IServiceProvider provider, [NotNullWhen(true)] out ConnectionContext? context)
 	{
 		context = null;
+		var logger = provider.GetRequiredService<ILogger<ConnectionService>>();
 		if (result.Errors.Count > 0)
 		{
 			return false;
@@ -199,13 +205,13 @@ internal sealed class ConnectionService : IConnectionService
 				return false;
 			}
 
-			context = new NegotiateContext(domain, key, provider);
+			context = new NegotiateContext(domain, key, provider, logger);
 			return true;
 		}
 
 		if (result.HasCredential && OperatingSystem.IsWindows())
 		{
-			context = new ChallengeContext(domain, key, result.Credential, provider);
+			context = new ChallengeContext(domain, key, result.Credential, provider, logger);
 			return true;
 		}
 

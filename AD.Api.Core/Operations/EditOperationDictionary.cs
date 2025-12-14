@@ -4,7 +4,7 @@ namespace AD.Api.Core.Operations;
 
 public interface IAppendableSingleOperation
 {
-	bool Add(string propertyName, in Either<string, byte[], string[]> value);
+	bool Add(string propertyName, ObjEither<string, byte[], string[]> value);
 }
 public interface IEditOperation
 {

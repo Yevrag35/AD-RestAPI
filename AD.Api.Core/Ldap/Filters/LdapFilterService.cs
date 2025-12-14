@@ -38,45 +38,54 @@ internal sealed class LdapFilterService : ILdapFilterService
 		}
 
 		FilterSpanWriter writer = new(filter.Length + 130);
-
-		if (addEnclosure)
+		try
 		{
-			writer = writer.And();
-		}
+			if (addEnclosure)
+			{
+				writer = writer.And();
+			}
 
-		int count = this.GetEnumerationNumber(types, ref writer);
-		if (count <= 0)
+			int count = this.GetEnumerationNumber(types, ref writer);
+			if (count <= 0)
+			{
+				writer.Dispose();
+				return filter.ToString();
+			}
+
+			writer.WriteRaw(filter);
+
+			writer.EndAll();
+			return writer.ToString();
+		}
+		finally
 		{
 			writer.Dispose();
-			return filter.ToString();
 		}
-
-		writer = writer.WriteRaw(filter);
-
-		writer = writer.EndAll();
-
-		string s = writer.Build();
-		return s;
 	}
 	public string GetFilter(FilteredRequestType types, bool addEnclosure)
 	{
 		FilterSpanWriter writer = new(stackalloc char[256]);
-		if (addEnclosure)
+		try
 		{
-			writer = writer.And();
-		}
+			if (addEnclosure)
+			{
+				writer = writer.And();
+			}
 
-		int count = this.GetEnumerationNumber(types, ref writer);
-		if (count <= 0)
+			int count = this.GetEnumerationNumber(types, ref writer);
+			if (count <= 0)
+			{
+				writer.Dispose();
+				return string.Empty;
+			}
+
+			writer.EndAll();
+			return writer.ToString();
+		}
+		finally
 		{
 			writer.Dispose();
-			return string.Empty;
 		}
-
-		writer = writer.EndAll();
-
-		string s = writer.Build();
-		return s;
 	}
 
 	[DebuggerStepThrough]
@@ -92,17 +101,24 @@ internal sealed class LdapFilterService : ILdapFilterService
 		}
 
 		FilterSpanWriter writer = new(stackalloc char[256]);
-		writer = writer.And();
+		try
+		{
+			writer.And();
 
-		_ = this.GetEnumerationNumber(types, ref writer);
-		writer.Equal("objectSid"u8, sidString, sidString.LdapStringLength, SidString.LdapFormat);
-		writer.EndAll();
+			_ = this.GetEnumerationNumber(types, ref writer);
+			writer.Equal("objectSid"u8, sidString, sidString.LdapStringLength, SidString.LdapFormat);
+			writer.EndAll();
 
-		filter = writer.Build();
+			filter = writer.Build();
 
-		return !noCache
-			? this.AddFilterToCache(sidString, filter)
-			: filter;
+			return !noCache
+				? this.AddFilterToCache(sidString, filter)
+				: filter;
+		}
+		finally
+		{
+			writer.Dispose();
+		}
 	}
 
 	[DebuggerStepThrough]
@@ -119,7 +135,7 @@ internal sealed class LdapFilterService : ILdapFilterService
 	{
 		if (this.FilterValues.TryGetValue(value, out string? filter))
 		{
-			writer = writer.WriteRaw(filter);
+			writer.WriteRaw(filter);
 			return 1;
 		}
 
@@ -130,7 +146,7 @@ internal sealed class LdapFilterService : ILdapFilterService
 		{
 			if (this.FilterValues.TryGetValue(enumerator.Current, out string? filterValue))
 			{
-				writer = writer.WriteRaw(filterValue);
+				writer.WriteRaw(filterValue);
 			}
 		}
 
@@ -142,4 +158,3 @@ internal sealed class LdapFilterService : ILdapFilterService
 		return _cache.TryGetValueOrRemove(sidString, out filter);
 	}
 }
-

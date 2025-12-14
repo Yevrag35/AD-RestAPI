@@ -1,4 +1,5 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Collections;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Services;
 using System.Runtime.Versioning;
@@ -37,7 +38,7 @@ public sealed class SchemaLoadingService : StartupServiceBase, IDisposable
 	[SupportedOSPlatform("WINDOWS")]
 	private static async Task LoadAllSchemasAsync(IConnectionService connectionSvc, SchDict fullDict, SchemaService schemaSvc, CancellationToken token)
 	{
-		Dictionary<ConnectionContext, ConcurrentHashSet<string>> constructed = new(4);
+		Dictionary<ConnectionContext, ConcurrentSet<string>> constructed = new(4);
 		List<Task<SchemaClassPropertyDictionary>> tasks = new(connectionSvc.RegisteredConnections.Count);
 		using SemaphoreSlim semaphore = new(1, 1);
 
@@ -49,10 +50,10 @@ public sealed class SchemaLoadingService : StartupServiceBase, IDisposable
 				continue;
 			}
 
-			if (!constructed.TryGetValue(context, out ConcurrentHashSet<string>? nameSet))
+			if (!constructed.TryGetValue(context, out ConcurrentSet<string>? nameSet))
 			{
 				tasks.Add(SchemaLoader.LoadSchemaAsync(context, semaphore, schemaSvc.ClassNames, token));
-				nameSet = new(Environment.ProcessorCount, 4, StringComparer.OrdinalIgnoreCase);
+				nameSet = new(4, StringComparer.OrdinalIgnoreCase);
 				constructed.TryAdd(context, nameSet);
 			}
 

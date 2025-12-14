@@ -136,9 +136,9 @@ internal sealed partial class JwtAuthorizationService : IAuthorizer
 
 			Log.UserAuthorizedForScope(logger, userName, winningScope.Domain, winningScope.Base);
 		}
-		else
+		else if (logger.IsEnabled(LogLevel.Warning))
 		{
-			Log.UserUnauthorizedForScope(logger, userName, scope.DomainName, scope.DistinguishedName);
+			Log.UserUnauthorizedForScope(logger, userName, new(scope.DomainName), new(scope.DistinguishedName));
 		}
 
 		return flag;
@@ -165,7 +165,7 @@ internal sealed partial class JwtAuthorizationService : IAuthorizer
 		internal static partial void UserAuthorizedForScope(ILogger logger, string userName, string scopeDomain, string scopeBase);
 
 		[LoggerMessage(LogLevel.Warning, Message = "User {UserName} unauthorized for scope: {ScopeDomain} ({DistinguishedName}.")]
-		internal static partial void UserUnauthorizedForScope(ILogger logger, string userName, ReadOnlySpan<char> scopeDomain, ReadOnlySpan<char> distinguishedName);
+		internal static partial void UserUnauthorizedForScope(ILogger logger, string userName, string scopeDomain, string distinguishedName);
 	}
 }
 

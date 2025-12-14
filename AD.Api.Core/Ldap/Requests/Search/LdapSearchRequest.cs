@@ -107,8 +107,9 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 		bool wantsDefault = false;
 		char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
 
-		foreach (ReadOnlySpan<char> section in attributeString.SpanSplit(in separator))
+		foreach (Range range in attributeString.Split(separator))
 		{
+			var section = attributeString[range];
 			if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
 				||
 				section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
