@@ -3,9 +3,8 @@
 /// <summary>
 /// Represents a bounded region of a given span with an index and a length. This structure defines the starting index and the length of a segment within a span.
 /// </summary>
-[DebuggerStepThrough]
 [StructLayout(LayoutKind.Sequential)]
-[DebuggerDisplay(@"\{Index={Index}, Length={Length}\}")]
+[DebuggerStepThrough, DebuggerDisplay(@"\{Index={Index}, Length={Length}\}")]
 public readonly struct SpanPosition : IComparable<SpanPosition>, IEquatable<int>, IEquatable<SpanPosition>
 {
 	/// <summary>
@@ -47,12 +46,9 @@ public readonly struct SpanPosition : IComparable<SpanPosition>, IEquatable<int>
 	public int CompareTo(SpanPosition other)
 	{
 		int comparison = Index.CompareTo(other.Index);
-		if (comparison == 0)
-		{
-			comparison = Length.CompareTo(other.Length);
-		}
-
-		return comparison;
+		return comparison == 0
+			? Length.CompareTo(other.Length)
+			: comparison;
 	}
 	/// <summary>
 	/// Determines whether the current <see cref="SpanPosition"/> is equal to the specified integer value representing a starting index.
@@ -164,18 +160,18 @@ public readonly struct SpanPosition : IComparable<SpanPosition>, IEquatable<int>
 	}
 	public static bool operator >(SpanPosition left, SpanPosition right)
 	{
-		return left.CompareTo(right) > 0;
+		return left.Index != right.Index ? left.Index > right.Index : left.Length > right.Length;
 	}
 	public static bool operator <(SpanPosition left, SpanPosition right)
 	{
-		return left.CompareTo(right) < 0;
+		return left.Index != right.Index ? left.Index < right.Index : left.Length < right.Length;
 	}
 	public static bool operator >=(SpanPosition left, SpanPosition right)
 	{
-		return left.CompareTo(right) >= 0;
+		return !(left < right);
 	}
 	public static bool operator <=(SpanPosition left, SpanPosition right)
 	{
-		return left.CompareTo(right) <= 0;
+		return !(left > right);
 	}
 }
