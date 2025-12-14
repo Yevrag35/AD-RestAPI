@@ -10,7 +10,7 @@ public sealed class ReplaceDictionary : EditOperationDictionary<DirectoryAttribu
 	{
 	}
 
-	public bool Add(string propertyName, OneOf<string, byte[], string[]> oldValue, OneOf<string, byte[], string[]> newValue)
+	public bool Add(string propertyName, ObjEither<string, byte[], string[]> oldValue, ObjEither<string, byte[], string[]> newValue)
 	{
 		if (this.ContainsKey(propertyName))
 		{

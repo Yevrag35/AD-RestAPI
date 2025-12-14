@@ -12,7 +12,7 @@ public sealed class AddDictionary : EditOperationDictionary<DirectoryAttributeMo
 	{
 	}
 
-	public bool Add(string propertyName, OneOf<string, byte[], string[]> value)
+	public bool Add(string propertyName, in Either<string, byte[], string[]> value)
 	{
 		if (this.ContainsKey(propertyName))
 		{

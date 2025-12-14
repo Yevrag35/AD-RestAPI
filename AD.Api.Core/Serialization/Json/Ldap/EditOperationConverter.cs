@@ -31,7 +31,7 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 		this.Deserialize(ref reader, collection, options);
 		return collection;
 	}
-	protected OneOf<string, byte[], string[]> ReadValue(string key, ref Utf8JsonReader reader, JsonSerializerOptions options)
+	protected ObjEither<string, byte[], string[]> ReadValue(string key, ref Utf8JsonReader reader, JsonSerializerOptions options)
 	{
 		return reader.TokenType switch
 		{
@@ -39,8 +39,8 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 			JsonTokenType.True => LdapBoolean.TrueString,
 			JsonTokenType.False => LdapBoolean.FalseString,
 			JsonTokenType.Number => reader.TryGetInt64(out long longValue)
-				? longValue.ToString().OrEmpty()
-				: reader.GetDecimal().ToString().OrEmpty(),
+				? longValue.ToString() ?? string.Empty
+				: reader.GetDecimal().ToString() ?? string.Empty,
 
 			JsonTokenType.StartArray => this.ReadArray(key, ref reader, options),
 			JsonTokenType.Null => throw new JsonException($"Unexpected null value in property '{key}' after deserializing LDAP operation."),
@@ -53,11 +53,11 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 		return JsonSerializer.Deserialize<string[]>(ref reader, options) ?? [];
 	}
 
-	private static OneOf<string, byte[]> ReadGuidOrString(ref Utf8JsonReader reader)
+	private static ObjEither<string, byte[]> ReadGuidOrString(ref Utf8JsonReader reader)
 	{
 		return reader.TryGetGuid(out Guid guid)
 			? guid.ToByteArray()
-			: reader.GetString().OrEmpty();
+			: reader.GetString() ?? string.Empty;
 	}
 
 	protected static void SerializeMultipleValues(Utf8JsonWriter writer, IList list, JsonSerializerOptions options)

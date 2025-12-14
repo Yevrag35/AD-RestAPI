@@ -66,27 +66,6 @@ public static class Either
 		return new(remaining._first!, remaining._third!, remaining._index);
 	}
 
-	internal static Either<T1, T3, T4> FromRemainingOneThreeAndFour<T1, T2, T3, T4>(Either<T1, T2, T3, T4> original)
-	{
-		Debug.Assert(original._index is 1 or 3 or 4, "The index should be either 1, 3, or 4.");
-		return new(in original._first!, in original._third!, in original._fourth!, original.Value!, original._index);
-	}
-	internal static Either<T1, T2, T3> FromRemainingOneTwoAndThree<T1, T2, T3, T4>(Either<T1, T2, T3, T4> original)
-	{
-		Debug.Assert(original._index is > 0 and < 4, "The index should be either 1, 2, or 3.");
-		return new(in original._first!, in original._second!, in original._third!, original.Value!, original._index);
-	}
-	internal static Either<T1, T2, T4> FromRemainingOneTwoAndFour<T1, T2, T3, T4>(Either<T1, T2, T3, T4> original)
-	{
-		Debug.Assert(original._index is 1 or 2 or 4, "The index should be either 1, 2, or 4.");
-		return new(in original._first!, in original._second!, in original._fourth!, original.Value!, original._index);
-	}
-	internal static Either<T2, T3, T4> FromRemainingTwoThreeAndFour<T1, T2, T3, T4>(Either<T1, T2, T3, T4> original)
-	{
-		Debug.Assert(original._index is >= 2 and < 5, "The index should be either 2, 3, or 4.");
-		return new(in original._second!, in original._third!, in original._fourth!, original.Value!, original._index);
-	}
-
 	/// <summary>
 	/// Creates an Either instance from the second and third types of the given Either.
 	/// </summary>
@@ -129,5 +108,16 @@ public static class Either
 
 		Debug.Assert(newIndex is 0 or 1 or 2, "The new index should be either 0, 1, or 2.");
 		return new Either<T2, T1>(either._second, either._first, newIndex);
+	}
+
+	public static Either<T1, T2, T3> Expand<T1, T2, T3>(in Either<T1, T2> either)
+	{
+		Debug.Assert(either._index is 1 or 2);
+		return new(in either._first, in either._second, default!, either._index);
+	}
+	public static Either<T1, T2, T3> Expand<T1, T2, T3>(ObjEither<T1, T2> either) where T1 : class where T2 : class
+	{
+		Debug.Assert(either.Index is 1 or 2);
+		return new(either.AsT1!, either.AsT2!, default!, either.Index);
 	}
 }

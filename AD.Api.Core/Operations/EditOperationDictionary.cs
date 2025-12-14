@@ -1,11 +1,12 @@
 using AD.Api.Components;
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Operations;
 
 public interface IAppendableSingleOperation
 {
-	bool Add(string propertyName, OneOf<string, byte[], string[]> value);
+	bool Add(string propertyName, in Either<string, byte[], string[]> value);
 }
 public interface IEditOperation
 {
@@ -20,13 +21,31 @@ public abstract class EditOperationDictionary : IEditOperation
 {
 	public abstract int Count { get; }
 
-	protected static void AddValue(DirectoryAttributeModification modification, in OneOf<string, byte[], string[]> oneOf)
+	protected static void AddValue(DirectoryAttributeModification modification, ObjEither<string, byte[], string[]> oneOf)
 	{
-		oneOf.Match(modification,
-			a0: (mod, str) => mod.Add(str),
-			a1: (mod, bytes) => mod.Add(bytes),
-			a2: (mod, array) => mod.AddRange(array));
+		Debug.Assert(oneOf.Index != 0);
+
+		switch (oneOf.Index)
+		{
+			case 1:
+				modification.Add(Unsafe.As<string>(oneOf.Value));
+				break;
+
+			case 2:
+				modification.Add(Unsafe.As<byte[]>(oneOf.Value));
+				break;
+
+			case 3:
+				modification.AddRange(Unsafe.As<string[]>(oneOf.Value));
+				break;
+
+			default:
+				return;
+		}
 	}
+
+
+
 	public abstract void ApplyToRequest(ModifyRequest request);
 }
 

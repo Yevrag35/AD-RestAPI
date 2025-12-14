@@ -20,7 +20,7 @@ public readonly partial struct Either<T1, T2, T3>
 	internal readonly T3? _third;
 
 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	internal readonly byte _index;
+	internal readonly uint _index;
 
 	/// <summary>
 	/// Gets the value of the first type if present.
@@ -40,7 +40,7 @@ public readonly partial struct Either<T1, T2, T3>
 	/// <summary>
 	/// Gets the index of the current union indicating which type is present.
 	/// </summary>
-	public readonly byte Index => _index;
+	public readonly uint Index => _index;
 
 	/// <summary>
 	/// Gets a value indicating whether the instance is default or empty.
@@ -65,18 +65,11 @@ public readonly partial struct Either<T1, T2, T3>
 	[MemberNotNullWhen(true, nameof(_third), nameof(AsT3))]
 	public readonly bool IsT3 => _index == 3;
 
-	/// <summary>
-	/// Gets the value stored as a boxed object.
-	/// </summary>
-	public readonly object? Value { get; }
-
-	internal Either([MaybeNull] in T1 first, [MaybeNull] in T2 second, [MaybeNull] in T3 third, [AllowNull] object chosenValue, byte index)
+	internal Either([MaybeNull] in T1 first, [MaybeNull] in T2 second, [MaybeNull] in T3 third, uint index)
 	{
-		Debug.Assert(chosenValue is not null, "You're passing around a default union...");
 		_first = first;
 		_second = second;
 		_third = third;
-		this.Value = chosenValue;
 		_index = index;
 	}
 
@@ -89,7 +82,6 @@ public readonly partial struct Either<T1, T2, T3>
 		_first = first;
 		_second = default;
 		_third = default;
-		this.Value = first;
 		_index = 1;
 	}
 
@@ -102,7 +94,6 @@ public readonly partial struct Either<T1, T2, T3>
 		_first = default;
 		_second = second;
 		_third = default;
-		this.Value = second;
 		_index = 2;
 	}
 
@@ -115,7 +106,6 @@ public readonly partial struct Either<T1, T2, T3>
 		_first = default;
 		_second = default;
 		_third = third;
-		this.Value = third;
 		_index = 3;
 	}
 

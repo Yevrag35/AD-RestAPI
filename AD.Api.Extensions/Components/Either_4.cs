@@ -270,64 +270,64 @@ public readonly partial struct Either<T1, T2, T3, T4>
 		};
 	}
 
-	/// <summary>
-	/// Tries to get the value of the first type.
-	/// </summary>
-	/// <param name="t1">The value of the first type if present.</param>
-	/// <param name="remaining">The remaining Either instance containing the second and third types.</param>
-	/// <returns><see langword="true"/> if the instance is of the first type, otherwise <see langword="false"/>.</returns>
-	/// <exception cref="EmptyStructException"></exception>
-	public readonly bool TryGetT1([NotNullWhen(true)] out T1? t1, out Either<T2, T3, T4> remaining)
-	{
-		t1 = _first;
-		remaining = Either.FromRemainingTwoThreeAndFour(this);
+	///// <summary>
+	///// Tries to get the value of the first type.
+	///// </summary>
+	///// <param name="t1">The value of the first type if present.</param>
+	///// <param name="remaining">The remaining Either instance containing the second and third types.</param>
+	///// <returns><see langword="true"/> if the instance is of the first type, otherwise <see langword="false"/>.</returns>
+	///// <exception cref="EmptyStructException"></exception>
+	//public readonly bool TryGetT1([NotNullWhen(true)] out T1? t1, out Either<T2, T3, T4> remaining)
+	//{
+	//	t1 = _first;
+	//	remaining = Either.FromRemainingTwoThreeAndFour(this);
 
-		return this.IsT1;
-	}
-	/// <summary>
-	/// Tries to get the value of the second type.
-	/// </summary>
-	/// <param name="t2">The value of the second type if present.</param>
-	/// <param name="remaining">The remaining Either instance containing the first and third types.</param>
-	/// <returns><see langword="true"/> if the instance is of the second type, otherwise <see langword="false"/>.</returns>
-	/// <exception cref="EmptyStructException"></exception>
-	public readonly bool TryGetT2([NotNullWhen(true)] out T2? t2, [NotNullWhen(false)] out Either<T1, T3, T4> remaining)
-	{
-		t2 = _second;
-		remaining = Either.FromRemainingOneThreeAndFour(this);
+	//	return this.IsT1;
+	//}
+	///// <summary>
+	///// Tries to get the value of the second type.
+	///// </summary>
+	///// <param name="t2">The value of the second type if present.</param>
+	///// <param name="remaining">The remaining Either instance containing the first and third types.</param>
+	///// <returns><see langword="true"/> if the instance is of the second type, otherwise <see langword="false"/>.</returns>
+	///// <exception cref="EmptyStructException"></exception>
+	//public readonly bool TryGetT2([NotNullWhen(true)] out T2? t2, [NotNullWhen(false)] out Either<T1, T3, T4> remaining)
+	//{
+	//	t2 = _second;
+	//	remaining = Either.FromRemainingOneThreeAndFour(this);
 
-		return this.IsT2;
-	}
-	/// <summary>
-	/// Tries to get the value of the third type.
-	/// </summary>
-	/// <param name="t3">The value of the third type if present.</param>
-	/// <param name="remaining">The remaining Either instance containing the first and second types.</param>
-	/// <returns><see langword="true"/> if the instance is of the third type, otherwise <see langword="false"/>.</returns>
-	/// <exception cref="EmptyStructException"></exception>
-	public readonly bool TryGetT3([NotNullWhen(true)] out T3? t3, [NotNullWhen(false)] out Either<T1, T2, T4> remaining)
-	{
-		t3 = _third;
-		remaining = Either.FromRemainingOneTwoAndFour(this);
+	//	return this.IsT2;
+	//}
+	///// <summary>
+	///// Tries to get the value of the third type.
+	///// </summary>
+	///// <param name="t3">The value of the third type if present.</param>
+	///// <param name="remaining">The remaining Either instance containing the first and second types.</param>
+	///// <returns><see langword="true"/> if the instance is of the third type, otherwise <see langword="false"/>.</returns>
+	///// <exception cref="EmptyStructException"></exception>
+	//public readonly bool TryGetT3([NotNullWhen(true)] out T3? t3, [NotNullWhen(false)] out Either<T1, T2, T4> remaining)
+	//{
+	//	t3 = _third;
+	//	remaining = Either.FromRemainingOneTwoAndFour(this);
 
-		return this.IsT3;
-	}
-	/// <summary>
-	/// Attempts to retrieve the value of the fourth type, <typeparamref name="T4"/>, if it is present.
-	/// </summary>
-	/// <param name="t4">When this method returns <see langword="true"/>, contains the value of type <typeparamref name="T4"/>. When this
-	/// method returns <see langword="false"/>, the value is <see langword="null"/>.</param>
-	/// <param name="remaining">When this method returns <see langword="false"/>, contains the remaining value as an <see cref="Either{T1, T2,
-	/// T3}"/>. When this method returns <see langword="true"/>, the value is <see langword="null"/>.</param>
-	/// <returns><see langword="true"/> if the value of type <typeparamref name="T4"/> is present; otherwise, <see
-	/// langword="false"/>.</returns>
-	public readonly bool TryGetT4([NotNullWhen(true)] out T4? t4, [NotNullWhen(false)] out Either<T1, T2, T3> remaining)
-	{
-		t4 = _fourth;
-		remaining = Either.FromRemainingOneTwoAndThree(this);
+	//	return this.IsT3;
+	//}
+	///// <summary>
+	///// Attempts to retrieve the value of the fourth type, <typeparamref name="T4"/>, if it is present.
+	///// </summary>
+	///// <param name="t4">When this method returns <see langword="true"/>, contains the value of type <typeparamref name="T4"/>. When this
+	///// method returns <see langword="false"/>, the value is <see langword="null"/>.</param>
+	///// <param name="remaining">When this method returns <see langword="false"/>, contains the remaining value as an <see cref="Either{T1, T2,
+	///// T3}"/>. When this method returns <see langword="true"/>, the value is <see langword="null"/>.</param>
+	///// <returns><see langword="true"/> if the value of type <typeparamref name="T4"/> is present; otherwise, <see
+	///// langword="false"/>.</returns>
+	//public readonly bool TryGetT4([NotNullWhen(true)] out T4? t4, [NotNullWhen(false)] out Either<T1, T2, T3> remaining)
+	//{
+	//	t4 = _fourth;
+	//	remaining = Either.FromRemainingOneTwoAndThree(this);
 
-		return this.IsT4;
-	}
+	//	return this.IsT4;
+	//}
 
 #if DEBUG
 	[EditorBrowsable(EditorBrowsableState.Never)]

@@ -14,8 +14,8 @@ public sealed class ReplaceOperationConverter : EditOperationConverter<ReplaceDi
 
 	protected override void Deserialize(ref Utf8JsonReader reader, ReplaceDictionary collection, JsonSerializerOptions options)
 	{
-		var array = ArrayPool<OneOf<string, byte[], string[]>>.Shared.Rent(2);
-		var span = array.AsSpan(0, 2);
+		ObjEither<string, string[]> first = default;
+		ObjEither<string, string[]> second = default;
 		while (reader.TokenType == JsonTokenType.PropertyName)
 		{
 			string key = reader.GetString() ?? throw new JsonException("Property keys cannot be null or empty");
@@ -35,20 +35,18 @@ public sealed class ReplaceOperationConverter : EditOperationConverter<ReplaceDi
 			}
 			else if (replaceValues.Count == 1)
 			{
-				span[0] = replaceValues.Keys.First();
-				span[1] = replaceValues.Values.FirstOrDefault()?.ToString() ?? throw new JsonException("Expected non-null value in replace operation.");
+				first = replaceValues.Keys.First();
+				second = replaceValues.Values.FirstOrDefault()?.ToString() ?? throw new JsonException("Expected non-null value in replace operation.");
 			}
 			else
 			{
-				span[0] = replaceValues.Keys.ToArray();
-				span[1] = replaceValues.Values.Select(x => x?.ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+				first = replaceValues.Keys.ToArray();
+				second = replaceValues.Values.Select(x => x?.ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray()!;
 			}
 
-			collection.Add(key, span[0], span[1]);
+			collection.Add(key, first, second);
 			reader.Read();
 		}
-
-		ArrayPool<OneOf<string, byte[], string[]>>.Shared.Return(array);
 	}
 	protected override bool IsProperStartToken(JsonTokenType type)
 	{
