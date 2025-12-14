@@ -5,6 +5,7 @@ namespace AD.Api.Collections.Extensions;
 
 public static class DictionaryExtensions
 {
+
 	public static void AddMany<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, Span<TKey> keys, TValue value) where TKey : notnull
 	{
 		foreach (TKey key in keys)
@@ -28,6 +29,16 @@ public static class DictionaryExtensions
 		}
 
 		return new(concurrencyLevel, source, keyComparer);
+	}
+
+	public static bool Remove<TKey>(this ConcurrentDictionary<TKey, byte> dictionary, TKey key) where TKey : notnull
+	{
+		return dictionary.TryRemove(key, out _);
+	}
+
+	public static bool TryAdd<TKey>(this ConcurrentDictionary<TKey, byte> dictionary, TKey key) where TKey : notnull
+	{
+		return dictionary.TryAdd(key, default);
 	}
 
 	public static bool TryGetValue<T>(this IDictionary dictionary, object key, [NotNullWhen(true)] out T? value)

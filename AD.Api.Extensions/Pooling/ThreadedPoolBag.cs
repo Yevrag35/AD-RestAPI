@@ -1,6 +1,6 @@
 ﻿using AD.Api.Actions;
+using AD.Api.Collections.Extensions;
 using AD.Api.Pooling;
-using ConcurrentCollections;
 using System.Collections.Concurrent;
 
 namespace AD.Api.Core.Pooling;
@@ -10,12 +10,11 @@ public abstract class ThreadedPoolBag<T> : IPoolReturner<T> where T : class
 	private const int DEFAULT_MAX_SIZE = 10;
 
 	private readonly ConcurrentBag<T> _bag;
-	private readonly ConcurrentHashSet<Guid> _leasedIds;
+	private readonly ConcurrentDictionary<Guid, byte> _leasedIds;
 
 	private readonly IStatedCallback<T> _callback;
 
 	protected bool IsEmpty => _bag.IsEmpty;
-	protected IReadOnlyCollection<Guid> LeasedIds => _leasedIds;
 	public int MaxSize { get; protected set; } = DEFAULT_MAX_SIZE;
 	protected IServiceProvider Services { get; }
 
@@ -52,7 +51,7 @@ public abstract class ThreadedPoolBag<T> : IPoolReturner<T> where T : class
 	protected Guid GenerateLease()
 	{
 		Guid id = Guid.NewGuid();
-		while (!_leasedIds.Add(id))
+		while (!_leasedIds.TryAdd(id))
 		{
 			id = Guid.NewGuid();
 		}
@@ -113,7 +112,7 @@ public abstract class ThreadedPoolBag<T> : IPoolReturner<T> where T : class
 	}
 	private bool ReturnLease(Guid lease)
 	{
-		return _leasedIds.TryRemove(lease);
+		return _leasedIds.Remove(lease);
 	}
 	private bool TryReturn([DisallowNull] T item)
 	{
