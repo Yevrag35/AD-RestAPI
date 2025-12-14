@@ -10,10 +10,9 @@ using System.Security.Claims;
 
 namespace AD.Api.Core.Authentication.Jwt;
 
-internal sealed class JwtAuthorizationService : IAuthorizer
+internal sealed partial class JwtAuthorizationService : IAuthorizer
 {
-	static readonly ForbidResult _forbidden = new(JwtBearerDefaults.AuthenticationScheme);
-	static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+	static readonly ForbidResult s_forbidden = new(JwtBearerDefaults.AuthenticationScheme);
 
 	public FrozenDictionary<string, AuthorizationScope> Scopes { get; }
 	public FrozenDictionary<string, AuthorizedUser> Users { get; }
@@ -30,7 +29,7 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 	{
 		if (!(context.HttpContext.User.Identity?.IsAuthenticated).GetValueOrDefault())
 		{
-			context.Result = _forbidden;
+			context.Result = s_forbidden;
 			return;
 		}
 		else if (role == AuthorizedRole.None)
@@ -42,7 +41,7 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 			||
 			!this.RoleEnums.TryGetEnum(claim.Value, out AuthorizedRole userRole))
 		{
-			context.Result = _forbidden;
+			context.Result = s_forbidden;
 			return;
 		}
 
@@ -53,7 +52,7 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 		}
 		else if (!possiblyScoped || !this.TryAddScopesToContext(context.HttpContext, role))
 		{
-			context.Result = _forbidden;
+			context.Result = s_forbidden;
 			return;
 		}
 	}
@@ -76,8 +75,8 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 			return true;
 		}
 
-		string domain = ((string?)context.Items[DomainQuery.DomainModelName]).OrEmpty();
-		string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier).OrEmpty();
+		string domain = ((string?)context.Items[DomainQuery.DomainModelName]) ?? string.Empty;
+		string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
 		if (distinguishedName.IsEmpty || distinguishedName.Count == 1)
 		{
@@ -87,7 +86,7 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 		Span<char> chars = stackalloc char[distinguishedName.Length];
 		WorkingScope scope = distinguishedName.ToWorkingScope(domain, requiredRole, chars);
 
-		return this.IsAuthorized(name, ref scope);
+		return this.IsAuthorized(name, ref scope, context.RequestServices.GetRequiredService<ILogger<JwtAuthorizationService>>());
 	}
 	[Obsolete("Use IsAuthorized(HttpContext, DistinguishedName, out AuthorizedRole) instead.")]
 	public bool IsAuthorizedByParent(HttpContext context, string? parentPath)
@@ -98,13 +97,13 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 			return true;
 		}
 
-		string domain = ((string?)context.Items[DomainQuery.DomainModelName]).OrEmpty();
-		string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier).OrEmpty();
+		string domain = ((string?)context.Items[DomainQuery.DomainModelName]) ?? string.Empty;
+		string name = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
 		WorkingScope scope = new(domain, parentPath, requiredRole);
-		return this.IsAuthorized(name, ref scope);
+		return this.IsAuthorized(name, ref scope, context.RequestServices.GetRequiredService<ILogger<JwtAuthorizationService>>());
 	}
-	private bool IsAuthorized(string? userName, ref WorkingScope scope)
+	private bool IsAuthorized(string? userName, ref WorkingScope scope, ILogger logger)
 	{
 		if (scope.RequiredRole == AuthorizedRole.None)
 		{
@@ -113,11 +112,11 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 
 		if (string.IsNullOrWhiteSpace(userName) || !this.Users.TryGetValue(userName, out AuthorizedUser? user))
 		{
-			_logger.Warn("User {Name} not found in the authorization library.", userName);
+			Log.UserNotFoundInLibrary(logger, userName ?? "<null>");
 			return false;
 		}
 
-		if (user.Roles.HasFlag(scope.RequiredRole))
+		if ((user.Roles & scope.RequiredRole) != 0)
 		{
 			return true;
 		}
@@ -126,7 +125,7 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 		bool flag = false;
 		int index = -1;
 
-		while (enumerator.MoveNext(in flag, ref index))
+		while (enumerator.MoveNext(flag, ref index))
 		{
 			flag = this.Scopes[enumerator.Current].IsAuthorized(ref scope);
 		}
@@ -135,13 +134,11 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 		{
 			AuthorizationScope winningScope = this.Scopes[user.Scopes[index]];
 
-			_logger.Info("User {Name} authorized for scope: Domain: {Domain} - {Scope}.",
-				userName, winningScope.Domain, winningScope.Roles);
+			Log.UserAuthorizedForScope(logger, userName, winningScope.Domain, winningScope.Base);
 		}
 		else
 		{
-			_logger.Warn("User {Name} is not authorized for path: {Path:l} ({Domain:l})",
-				user.UserName, scope.DistinguishedName.ToString(), scope.DomainName.ToString());
+			Log.UserUnauthorizedForScope(logger, userName, scope.DomainName, scope.DistinguishedName);
 		}
 
 		return flag;
@@ -157,6 +154,18 @@ internal sealed class JwtAuthorizationService : IAuthorizer
 
 		context.AddNeedsScoping(in requiredRole);
 		return true;
+	}
+
+	private static partial class Log
+	{
+		[LoggerMessage(LogLevel.Warning, Message = "User {UserName} not found in the authorization library.")]
+		internal static partial void UserNotFoundInLibrary(ILogger logger, string userName);
+
+		[LoggerMessage(LogLevel.Information, Message = "User {UserName} authorized for scope: {ScopeDomain}/{ScopeBase}.")]
+		internal static partial void UserAuthorizedForScope(ILogger logger, string userName, string scopeDomain, string scopeBase);
+
+		[LoggerMessage(LogLevel.Warning, Message = "User {UserName} unauthorized for scope: {ScopeDomain} ({DistinguishedName}.")]
+		internal static partial void UserUnauthorizedForScope(ILogger logger, string userName, ReadOnlySpan<char> scopeDomain, ReadOnlySpan<char> distinguishedName);
 	}
 }
 

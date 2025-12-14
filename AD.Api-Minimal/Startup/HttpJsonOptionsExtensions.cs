@@ -1,6 +1,5 @@
 ﻿using AD.Api.Core.Serialization;
 using AD.Api.Serialization.Json;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +10,7 @@ internal static class HttpJsonOptionsExtensions
 	internal static IServiceCollection AddJsonWithConverters(this IServiceCollection services)
 	{
 		services.ConfigureHttpJsonOptions(options => ConfigureJsonOptions(options.SerializerOptions));
-		services.AddJsonOptions(x => x.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>().Value.SerializerOptions);
+		services.AddJsonOptions();
 
 		return services;
 	}
