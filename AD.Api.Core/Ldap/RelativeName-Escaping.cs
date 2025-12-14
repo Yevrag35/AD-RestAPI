@@ -113,7 +113,7 @@ public readonly partial struct RelativeName
 	}
 	private static bool IsValidPrefixNoError(ReadOnlySpan<char> working)
 	{
-		ArrayRefEnumerator<string> enumerator = new(_attributeValues.Keys.AsSpan());
+		ArrayRefEnumerator<string> enumerator = new(s_attributeValues.Keys.AsSpan());
 		bool flag = false;
 		while (enumerator.MoveNext(in flag))
 		{

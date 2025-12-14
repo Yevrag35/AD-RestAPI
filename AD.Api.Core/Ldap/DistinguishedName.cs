@@ -274,12 +274,26 @@ public readonly partial struct DistinguishedName :
 		return new WorkingScope(domainKey, buffer.Slice(0, written), requiredRole);
 	}
 
+	/// <summary>
+	/// Attempts to format the value into the provided character span.
+	/// </summary>
+	/// <remarks>If <paramref name="destination"/> is too small to contain the entire formatted value, no data is
+	/// written and <paramref name="charsWritten"/> is set to the number of characters required.</remarks>
+	/// <param name="destination">The span of characters in which to write the formatted value.</param>
+	/// <param name="charsWritten">When this method returns, contains the number of characters written to <paramref name="destination"/>.</param>
+	/// <returns><see langword="true"/> if the value was successfully formatted into <paramref name="destination"/>; otherwise, <see
+	/// langword="false"/>.</returns>
+	public bool TryFormat(Span<char> destination, out int charsWritten)
+	{
+		charsWritten = this.CopyTo(destination);
+		return charsWritten == this.Length;
+	}
+
 	/// <inheritdoc/>
 	[DebuggerStepThrough]
 	bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
 	{
-		charsWritten = this.CopyTo(destination);
-		return charsWritten == this.Length;
+		return this.TryFormat(destination, out charsWritten);
 	}
 
 	#region CASTING OPERATORS

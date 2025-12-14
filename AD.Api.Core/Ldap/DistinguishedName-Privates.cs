@@ -13,7 +13,7 @@ public readonly partial struct DistinguishedName
 		foreach (RelativeName relativeName in segments.Slice(1))
 		{
 			destination[written++] = CharConstants.COMMA;
-			relativeName.Value.CopyToSlice(destination, ref written);
+			written = relativeName.Value.CopyToSlice(destination, written);
 		}
 
 		return written;

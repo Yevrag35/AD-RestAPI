@@ -7,7 +7,6 @@ public static class Rent
 	{
 		return ArrayPool<T>.Shared.Rent(minimumLength);
 	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static void Return<T>(T[]? array, bool clearArray = false)
 	{
 		if (array is not null and { Length: > 0 })

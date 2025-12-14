@@ -5,20 +5,20 @@ using System.Runtime.Versioning;
 
 namespace AD.Api.Core.Ldap;
 
-public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServiceProvider
+public abstract partial class ConnectionContext : IEquatable<ConnectionContext>, IServiceProvider
 {
-	static readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
 	private readonly RegisteredDomain _domain;
 	private readonly LdapIdentifierDictionary _identifiers;
 	private readonly IServiceProvider _provider;
+	protected readonly ILogger _logger;
+
 	public string DefaultNamingContext => _domain.DefaultNamingContext;
 	public string DomainName => _domain.DomainName;
 	public bool IsDefault => _domain.IsDefault;
 	public bool IsForestRoot => _domain.IsForestRoot;
 	public string Name { get; }
 
-	protected ConnectionContext(RegisteredDomain domain, string connectionName, IServiceProvider provider)
+	protected ConnectionContext(RegisteredDomain domain, string connectionName, IServiceProvider provider, ILogger logger)
 	{
 		ArgumentNullException.ThrowIfNull(domain);
 		ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
@@ -26,6 +26,7 @@ public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServic
 		this.Name = connectionName;
 		var identifier = this.CreateIdentifier(domain);
 		_identifiers = new(domain.DomainName, identifier);
+		_logger = logger;
 
 		_provider = provider;
 	}
@@ -67,7 +68,8 @@ public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServic
 		}
 		catch (Exception e)
 		{
-			_logger.Error(e);
+			_logger.LogWarning(e.Message);
+			_logger.LogError(e, "");
 			_identifiers.TryRemove(domainController);
 			try
 			{
@@ -75,7 +77,8 @@ public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServic
 			}
 			catch (Exception ie)
 			{
-				_logger.Warn(ie);
+				_logger.LogWarning(ie.Message);
+				_logger.LogError(e, "");
 			}
 
 			throw;
@@ -163,4 +166,3 @@ public abstract class ConnectionContext : IEquatable<ConnectionContext>, IServic
 	[SupportedOSPlatform("WINDOWS")]
 	public abstract bool TryGetDirectoryContext(DirectoryContextType contextType, [NotNullWhen(true)] out DirectoryContext? directoryContext);
 }
-

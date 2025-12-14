@@ -25,21 +25,38 @@ public static partial class StringExtensions
 	/// </returns>
 	public static readonly string CommaSpace = COMMA_SPACE;
 
-	public static bool ContainsEqualAmount(this ReadOnlySpan<char> value, char open, char close)
+	/// <summary>
+	/// Determines whether the sequence of characters contains balanced opening and closing parentheses.
+	/// </summary>
+	/// <remarks>Only the '<c>(</c>' and '<c>)</c> characters are considered. Other characters are ignored. The method does not
+	/// check for other types of brackets or braces.
+	/// <para>
+	/// If an '<c>)</c>' occurs before a opening sequence, this method will also return <see langword="false"/>. An example would be
+	/// "<c>)((name=*)</c>"
+	/// </para>
+	/// </remarks>
+	/// <param name="value">The span of characters to examine for balanced parentheses.</param>
+	/// <returns>true if all opening parentheses are properly closed and nested; otherwise, false.</returns>
+	public static bool IsParenthesesBalanced(this ReadOnlySpan<char> value)
 	{
-		int count = 0;
+		uint count = 0;
 		foreach (char c in value)
 		{
-			if (c == open)
+			switch (c)
 			{
-				count++;
-				continue;
-			}
+				case '(':
+					count++;
+					break;
 
-			if (c == close)
-			{
-				count--;
-				continue;
+				case ')' when count == 0:
+					return false;	// closes before an open.
+
+				case ')':
+					count--;
+					break;
+
+				default:
+					break;
 			}
 		}
 
