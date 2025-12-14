@@ -1,6 +1,5 @@
 using AD.Api.Core.Operations;
 using AD.Api.Exceptions;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Ldap.Requests;
 

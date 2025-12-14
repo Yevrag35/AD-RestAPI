@@ -1,4 +1,3 @@
-using AD.Api.Collections;
 using AD.Api.Core.Ldap;
 using System.DirectoryServices;
 using System.Runtime.Versioning;

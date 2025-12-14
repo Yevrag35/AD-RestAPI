@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Caching.Memory;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Extensions;
 

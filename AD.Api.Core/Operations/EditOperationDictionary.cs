@@ -1,6 +1,4 @@
 using AD.Api.Components;
-using System.Collections;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Operations;
 
@@ -28,23 +26,24 @@ public abstract class EditOperationDictionary : IEditOperation
 		switch (oneOf.Index)
 		{
 			case 1:
-				modification.Add(Unsafe.As<string>(oneOf.Value));
+				//modification.Add(Unsafe.As<string>(oneOf.Value));
+				modification.Add(oneOf.AsT1!);
 				break;
 
 			case 2:
-				modification.Add(Unsafe.As<byte[]>(oneOf.Value));
+				//modification.Add(Unsafe.As<byte[]>(oneOf.Value));
+				modification.Add(oneOf.AsT2!);
 				break;
 
 			case 3:
-				modification.AddRange(Unsafe.As<string[]>(oneOf.Value));
+				//modification.AddRange(Unsafe.As<string[]>(oneOf.Value));
+				modification.AddRange(oneOf.AsT3!);
 				break;
 
 			default:
 				return;
 		}
 	}
-
-
 
 	public abstract void ApplyToRequest(ModifyRequest request);
 }

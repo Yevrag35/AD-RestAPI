@@ -1,7 +1,6 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Services;
-using ConcurrentCollections;
 using System.Runtime.Versioning;
 using SchDict = System.Collections.Concurrent.ConcurrentDictionary<string, AD.Api.Core.Schema.SchemaClassPropertyDictionary>;
 

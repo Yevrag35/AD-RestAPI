@@ -1,5 +1,4 @@
 using AD.Api.Core.Serialization;
-using System.Collections;
 using System.Collections.Frozen;
 
 namespace AD.Api.Core.Settings;

@@ -1,6 +1,5 @@
 using AD.Api.Core.Serialization;
 using Microsoft.Extensions.ObjectPool;
-using System.Collections;
 
 namespace AD.Api.Core.Ldap.Results;
 

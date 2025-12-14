@@ -1,8 +1,6 @@
 using AD.Api.Extensions.Comparisons;
 using AD.Api.Statics;
 using AD.Api.Strings.Extensions;
-using System.Collections;
-using System.Runtime.CompilerServices;
 
 namespace AD.Api.Core.Security;
 

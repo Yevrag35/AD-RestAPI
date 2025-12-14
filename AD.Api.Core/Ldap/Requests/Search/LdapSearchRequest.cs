@@ -3,7 +3,6 @@ using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
 using AD.Api.Statics;
 using Microsoft.Extensions.ObjectPool;
-using System.Buffers;
 
 namespace AD.Api.Core.Ldap;
 

@@ -2,7 +2,6 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Passwords;
 using AD.Api.Exceptions;
 using AD.Api.Statics;
-using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 
