@@ -58,7 +58,10 @@ public static partial class ServiceExtensions
 				{
 					foreach (var descriptor in AddToDepedencyInjectionAttribute.CreateDescriptorsFromType(type, context.Exclusions))
 					{
-						AddService(context.Services, descriptor, context.AllowsDuplicates);
+						AddService(
+							context.Services,
+							descriptor,
+							context.AllowsDuplicates);
 					}
 				}
 				catch (Exception e) when (e is not DuplicatedServiceException)

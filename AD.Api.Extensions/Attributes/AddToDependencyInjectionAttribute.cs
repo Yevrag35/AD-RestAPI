@@ -1,3 +1,4 @@
+using AD.Api.Buffers;
 using AD.Api.Reflection.Exceptions;
 using AD.Api.Startup.Services;
 
@@ -40,18 +41,26 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 	///     cref="TryCreateDescriptorFromAttribute(ServiceRegistrationBaseAttribute, Type, in IServiceTypeExclusions, out ServiceDescriptor)"
 	///     path="/exception"/>
 	[DebuggerStepThrough]
-	internal static List<ServiceDescriptor> CreateDescriptorsFromType(Type type, IServiceTypeExclusions exclusions)
+	internal static ArraySlice<ServiceDescriptor> CreateDescriptorsFromType(Type type, IServiceTypeExclusions exclusions)
 	{
-		List<ServiceDescriptor> descriptors = new(10);
-		foreach (var attribute in type.GetCustomAttributes<AddToDepedencyInjectionAttribute>(inherit: false))
+		object[] atts = type.GetCustomAttributes(
+			typeof(AddToDepedencyInjectionAttribute),
+			inherit: false);
+
+		if (atts.Length == 0)
+			return [];
+
+		ServiceDescriptor[] descriptors = new ServiceDescriptor[atts.Length];
+		int count = 0;
+		foreach (AddToDepedencyInjectionAttribute attribute in atts)
 		{
 			if (TryCreateDescriptorFromAttribute(attribute, type, exclusions, out ServiceDescriptor? descriptor))
 			{
-				descriptors.Add(descriptor);
+				descriptors[count++] = descriptor;
 			}
 		}
 
-		return descriptors;
+		return new(descriptors, count);
 	}
 
 	[DebuggerStepThrough]
