@@ -225,6 +225,11 @@ public ref struct SpanStringBuilder
 		this.EnsureCapacity(maxLength);
 		_position = formattable.CopyToSlice(_buffer.Span, _position, format, provider);
 	}
+	public void AppendIn<T>(in T formattable, int maxLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : struct, ISpanFormattable
+	{
+		this.EnsureCapacity(maxLength);
+		_position = formattable.CopyToSlice(_buffer.Span, _position, format, provider);
+	}
 	/// <summary>
 	/// Appends the result of the provided <see cref="Action{T, TState}"/> to the current instance.
 	/// </summary>
