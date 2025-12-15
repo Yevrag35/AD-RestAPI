@@ -49,7 +49,7 @@ public static partial class StringExtensions
 					break;
 
 				case ')' when count == 0:
-					return false;	// closes before an open.
+					return false;   // closes before an open.
 
 				case ')':
 					count--;

@@ -17,6 +17,7 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 	/// Will default to the decorated type if not set or <see langword="null"/>.
 	/// </remarks>
 	protected Type? Implementation { get; set; }
+
 	/// <inheritdoc cref="ServiceLifetime"/>
 	public required ServiceLifetime Lifetime { get; init; }
 	/// <summary>

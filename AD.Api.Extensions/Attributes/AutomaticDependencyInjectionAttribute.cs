@@ -8,7 +8,7 @@ namespace AD.Api.Attributes.Services;
 /// </summary>
 public abstract class AutomaticDependencyInjectionAttribute : AccessedViaReflectionAttribute
 {
-	static readonly Type[] _serviceExtensions = [typeof(ServiceExtensions)];
+	static readonly Type[] s_serviceExtensions = [typeof(ServiceExtensions)];
 
 	protected readonly record struct NamedArguments(ServiceLifetime Lifetime, Type? ImplementationType)
 	{
@@ -19,7 +19,7 @@ public abstract class AutomaticDependencyInjectionAttribute : AccessedViaReflect
 	}
 
 	protected AutomaticDependencyInjectionAttribute()
-		: base(_serviceExtensions)
+		: base(s_serviceExtensions)
 	{
 	}
 }

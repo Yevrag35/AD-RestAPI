@@ -85,7 +85,7 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 			if (number.IsT1)
 				writer.WriteNumberValue(number.AsT1);
 
-			else 
+			else
 				writer.WriteNumberValue(number.AsT2);
 		}
 		else if (LdapBoolean.TryParseBool(value, out bool result) || bool.TryParse(value, out result))
