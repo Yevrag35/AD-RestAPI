@@ -23,7 +23,7 @@ public partial interface IUserService
 	/// an <see cref="IActionResult"/> containing the web response result if the operation failed or was unable to
 	/// find the user object.
 	/// </returns>
-	OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString userSid, in DomainQuery target, string[]? extraProperties = null);
+	ObjEither<ConnectedResponse, IActionResult> FindOneAndContinue(SidString userSid, in DomainQuery target, string[]? extraProperties = null);
 
 	IActionResult ResolveUserGroups(SidString userSid, SearchParameters searchParameters, in DomainQuery target);
 }
@@ -64,7 +64,7 @@ internal sealed partial class UserService : IUserService
 
 		return _requestSvc.FindOne(parameters, provider);
 	}
-	public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString userSid, in DomainQuery target, string[]? extraProperties = null)
+	public ObjEither<ConnectedResponse, IActionResult> FindOneAndContinue(SidString userSid, in DomainQuery target, string[]? extraProperties = null)
 	{
 		string filter = _filterSvc.GetFilter(userSid, FilteredRequestType.User);
 		SearchFilterLite searchFilter = SearchFilterLite.Create(filter, FilteredRequestType.User);
@@ -86,7 +86,7 @@ internal sealed partial class UserService : IUserService
 	public IActionResult ResolveUserGroups(SidString userSid, SearchParameters searchParameters, in DomainQuery target)
 	{
 		var oneOf = this.FindOneAndContinue(userSid, in target, _groupSearchProperties);
-		if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continuation))
+		if (oneOf.TryGetT2(out IActionResult? error, out ConnectedResponse? continuation))
 		{
 			return error;
 		}

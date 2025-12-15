@@ -42,7 +42,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 		}
 
 		var oneOf = GetValue(bindingContext);
-		if (oneOf.TryGetT1(out var result, out string? propertiesString))
+		if (oneOf.TryGetT2(out var result, out string? propertiesString))
 		{
 			bindingContext.Result = result;
 			return Task.CompletedTask;

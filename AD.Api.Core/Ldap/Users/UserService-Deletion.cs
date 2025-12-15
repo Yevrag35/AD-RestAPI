@@ -13,7 +13,7 @@ internal sealed partial class UserService
 	public IActionResult Delete(SidString userSid, in DomainQuery target)
 	{
 		var oneOf = this.FindOneAndContinue(userSid, in target);
-		if (oneOf.TryGetT1(out IActionResult? error, out ConnectedResponse? continuation))
+		if (oneOf.TryGetT2(out IActionResult? error, out ConnectedResponse? continuation))
 		{
 			return error;
 		}

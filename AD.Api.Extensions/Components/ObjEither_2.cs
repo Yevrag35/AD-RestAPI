@@ -26,6 +26,43 @@ public readonly partial struct ObjEither<T1, T2> where T1 : class where T2 : cla
 		_index = 2;
 	}
 
+	public bool TryGetT1([NotNullWhen(true)] out T1? value, [NotNullWhen(false)] out T2? other)
+	{
+		switch (_index)
+		{
+			case 1:
+				value = Unsafe.As<T1>(_value!);
+				other = null;
+				return true;
+
+			case 2:
+				value = null;
+				other = Unsafe.As<T2>(_value!);
+				return false;
+
+			default:
+				throw new InvalidOperationException("ObjEither must have a valid index");
+		}
+	}
+	public bool TryGetT2([NotNullWhen(true)] out T2? value, [NotNullWhen(false)] out T1? other)
+	{
+		switch (_index)
+		{
+			case 1:
+				other = Unsafe.As<T1>(_value!);
+				value = null;
+				return false;
+
+			case 2:
+				value = Unsafe.As<T2>(_value!);
+				other = null;
+				return true;
+
+			default:
+				throw new InvalidOperationException("ObjEither must have a valid index");
+		}
+	}
+
 	public static implicit operator ObjEither<T1, T2>(T1 value) => new(value);
 	public static implicit operator ObjEither<T1, T2>(T2 value) => new(value);
 }

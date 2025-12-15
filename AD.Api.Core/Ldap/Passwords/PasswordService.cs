@@ -63,8 +63,8 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 
 			var oneOf = _requests.SendForResponse<ModifyResponse>(modify, connection);
 			return oneOf.Match(
-				f0: success => new AcceptedResult(),
-				f1: fail => fail);
+				f1: success => new AcceptedResult(),
+				f2: fail => fail);
 		}
 		finally
 		{
@@ -102,8 +102,8 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 
 			var oneOf = _requests.SendForResponse<ModifyResponse>(modify, connection);
 			return oneOf.Match(
-				f0: success => new AcceptedResult(),
-				f1: fail => fail);
+				f1: success => new AcceptedResult(),
+				f2: fail => fail);
 		}
 		finally
 		{

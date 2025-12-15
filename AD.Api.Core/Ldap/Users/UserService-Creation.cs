@@ -20,7 +20,7 @@ internal sealed partial class UserService
 			return error;
 		}
 
-		Either<ResultEntry, IActionResult> oneOf;
+		ObjEither<ResultEntry, IActionResult> oneOf;
 		using (connection)
 		{
 			IReadOnlyDictionary<string, object?> attributes = GetAttributesFromRequest(request);
@@ -28,7 +28,7 @@ internal sealed partial class UserService
 			oneOf = _creationSvc.SendRequest(connection, in target, request, attributes);
 		}
 
-		if (oneOf.TryGetT1(out error, out ResultEntry? entry))
+		if (oneOf.TryGetT2(out error, out ResultEntry? entry))
 		{
 			return error;
 		}

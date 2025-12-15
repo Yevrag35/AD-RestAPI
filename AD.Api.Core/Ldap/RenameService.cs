@@ -7,7 +7,7 @@ namespace AD.Api.Core.Ldap;
 public interface IRenameService
 {
 	IActionResult RenameObject(RelativeName newName, ConnectedResponse continuation);
-	IResult RenameObject(RelativeName newName, ConnectedResponse continuation);
+	IResult RenameObject2(RelativeName newName, ConnectedResponse continuation);
 }
 
 [DependencyRegistration(typeof(IRenameService), Lifetime = ServiceLifetime.Singleton)]
@@ -31,7 +31,7 @@ internal sealed class RenameService : IRenameService
 		ModifyDNRequest modify = new((string)currentDn, null, newName.Value);
 
 		var oneOf = _requestSvc.SendForResponse<ModifyDNResponse>(modify, continuation.ActiveConnection);
-		if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
+		if (oneOf.TryGetT2(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
 		{
 			return error ?? new ApiBadRequestResult("The rename was not successful however no error was generated.", ResultCode.OperationsError);
 		}
@@ -39,7 +39,7 @@ internal sealed class RenameService : IRenameService
 		return new AcceptedResult();
 	}
 
-	IResult IRenameService.RenameObject(RelativeName newName, ConnectedResponse continuation)
+	IResult IRenameService.RenameObject2(RelativeName newName, ConnectedResponse continuation)
 	{
 		throw new NotImplementedException();
 	}
