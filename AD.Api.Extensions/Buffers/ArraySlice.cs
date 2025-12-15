@@ -48,11 +48,30 @@ public readonly struct ArraySlice<T> //: IReadOnlyCollection<T>
 	private readonly int _length;
 	private readonly int _offset;
 
+	/// <summary>
+	/// Gets the underlying array represented by this slice.
+	/// </summary>
+	/// <value>
+	/// A reference to the underlying array, or an empty array if the slice is empty
+	/// or default-initialized.
+	/// </value>
 	public T[] Array => _array ?? [];
+	/// <summary>
+	/// Gets the number of elements in the slice.
+	/// </summary>
 	public readonly int Length => _length;
+	/// <summary>
+	/// Gets the zero-based offset in the underlying array where the slice begins.
+	/// </summary>
 	public readonly int Offset => _offset;
 	//int IReadOnlyCollection<T>.Count => _length;
 
+	/// <summary>
+	/// Initializes a new instance of the ArraySlice class that represents an empty slice over the specified array.
+	/// </summary>
+	/// <remarks>This constructor is intended for internal use to create an ArraySlice that represents an empty
+	/// collection. The provided array must have a length of zero.</remarks>
+	/// <param name="empty">An array that must be empty. Used as the underlying storage for the empty slice.</param>
 	internal ArraySlice(T[] empty)
 	{
 		Debug.Assert(empty.Length == 0);
@@ -60,9 +79,23 @@ public readonly struct ArraySlice<T> //: IReadOnlyCollection<T>
 		_length = 0;
 		_offset = 0;
 	}
+	/// <summary>
+	/// Initializes a new instance of the ArraySlice<T> class that represents a slice of the specified array, starting at
+	/// the beginning and containing the specified number of elements.
+	/// </summary>
+	/// <param name="array">The array to create the slice from. Cannot be null.</param>
+	/// <param name="length">The number of elements to include in the slice. Must be non-negative and not greater than the length of the array.</param>
 	public ArraySlice(T[] array, int length) : this(array, 0, length)
 	{
 	}
+	/// <summary>
+	/// Initializes a new instance of the ArraySlice class that represents a contiguous segment of the specified array.
+	/// </summary>
+	/// <param name="array">The array to create a slice from. Cannot be null.</param>
+	/// <param name="offset">The zero-based index in the array at which the slice begins. Must be greater than or equal to 0 and less than or
+	/// equal to the length of the array.</param>
+	/// <param name="length">The number of elements in the slice. Must be non-negative and not exceed the number of elements from offset to the
+	/// end of the array.</param>
 	public ArraySlice(T[] array, int offset, int length)
 	{
 		ArgumentNullException.ThrowIfNull(array);
@@ -80,6 +113,13 @@ public readonly struct ArraySlice<T> //: IReadOnlyCollection<T>
 		offset = _offset;
 	}
 
+	/// <summary>
+	/// Returns a read-only span over the valid segment of the underlying array.
+	/// </summary>
+	/// <remarks>The returned span reflects the current state of the underlying array segment. Modifications to the
+	/// array after obtaining the span are visible through the span. The span does not allocate memory.</remarks>
+	/// <returns>A <see cref="ReadOnlySpan{T}"/> representing the elements in the current segment. Returns an empty span if the
+	/// segment is empty or the underlying array is null.</returns>
 	public ReadOnlySpan<T> AsSpan()
 	{
 		return _array is T[] array && array.Length > 0
@@ -100,6 +140,10 @@ public readonly struct ArraySlice<T> //: IReadOnlyCollection<T>
 			: [];
 	}
 
+	/// <summary>
+	/// Returns an enumerator that iterates through the <see cref="ArraySlice{T}"/>
+	/// </summary>
+	/// <returns>An enumerator that can be used to iterate through the contiguous slice.</returns>
 	public Enumerator GetEnumerator()
 	{
 		return new Enumerator(this);
@@ -113,6 +157,12 @@ public readonly struct ArraySlice<T> //: IReadOnlyCollection<T>
 	//	return new Enumerator(this);
 	//}
 
+	/// <summary>
+	/// Supports iteration over the elements of an <see cref="ArraySlice{T}"/>
+	/// </summary>
+	/// <remarks>The <see cref="Enumerator"/> is a ref struct and cannot be stored on the managed heap, boxed, or used across
+	/// await or yield boundaries. It is typically used in a foreach statement to enumerate the elements of an
+	/// <see cref="ArraySlice{T}"/> in order.</remarks>
 	[StructLayout(LayoutKind.Auto)]
 	public ref struct Enumerator //: IEnumerator<T>
 	{
