@@ -41,24 +41,27 @@ public static class PrivateExtensionDataModifier
 		if (typeInfo.Kind != JsonTypeInfoKind.Object)
 			return;
 
-		OneOf<FieldInfo, PropertyInfo> firstMember = GetFirstPrivateMember(typeInfo);
+		ObjEither<FieldInfo, PropertyInfo> firstMember = GetFirstPrivateMember(typeInfo);
 
-		if (firstMember.IsDefault)
-			return;
+		typeInfo.Properties.Add(firstMember.Match(state: typeInfo, fromField, fromProperty));
 
-		JsonPropertyInfo info = firstMember.Match(state: typeInfo,
-			(state, field) => CreateFromField(field, state),
-			(state, property) => CreateFromProperty(property, state));
+		static JsonPropertyInfo fromProperty(JsonTypeInfo typeInfo, PropertyInfo property)
+		{
+			MemberAccessor accessors = new(property);
+			return CreateJsonPropertyInfo(in accessors, typeInfo);
+		}
 
-		typeInfo.Properties.Add(info);
+		static JsonPropertyInfo fromField(JsonTypeInfo typeInfo, FieldInfo field)
+		{
+			MemberAccessor accessors = new(field);
+			return CreateJsonPropertyInfo(in accessors, typeInfo);
+		}
 	}
 
-	private static OneOf<FieldInfo, PropertyInfo> GetFirstPrivateMember(JsonTypeInfo typeInfo)
+	private static ObjEither<FieldInfo, PropertyInfo> GetFirstPrivateMember(JsonTypeInfo typeInfo)
 	{
-		Type attType = typeof(PrivateExtensionDataClassAttribute);
-
-		IEnumerable<OneOf<FieldInfo, PropertyInfo>> members;
-		if (typeInfo.Type.IsDefined(attType, inherit: true))
+		IEnumerable<ObjEither<FieldInfo, PropertyInfo>> members;
+		if (typeInfo.Type.IsDefined(typeof(PrivateExtensionDataAttribute), inherit: true))
 		{
 			PrivateExtensionDataClassAttribute? baseAtt = typeInfo.Type
 				.GetCustomAttribute<PrivateExtensionDataClassAttribute>();
@@ -71,32 +74,24 @@ public static class PrivateExtensionDataModifier
 			members = GetPrivateFieldAndProperties(typeInfo.Type);
 		}
 
-		OneOf<FieldInfo, PropertyInfo> firstMember = members.FirstOrDefault();
+		ObjEither<FieldInfo, PropertyInfo> firstMember = members.FirstOrDefault();
 		return firstMember;
 	}
 
-	private static JsonPropertyInfo CreateFromField(FieldInfo field, JsonTypeInfo typeInfo)
+	private static JsonPropertyInfo CreateJsonPropertyInfo(in MemberAccessor accessors, JsonTypeInfo typeInfo)
 	{
-		JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(field.FieldType, field.Name);
+		JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(accessors.ValueType, accessors.Name);
 
 		info.IsExtensionData = true;
-		info.Get = field.GetValue;
-		info.Set = field.SetValue;
-
-		return info;
-	}
-	private static JsonPropertyInfo CreateFromProperty(PropertyInfo property, JsonTypeInfo typeInfo)
-	{
-		JsonPropertyInfo info = typeInfo.CreateJsonPropertyInfo(property.PropertyType, property.Name);
-
-		info.IsExtensionData = true;
-		info.Get = property.GetValue;
-		info.Set = property.SetValue;
+		info.Get = accessors.Getter;
+		info.Set = accessors.Setter;
 
 		return info;
 	}
 
-	private static IEnumerable<OneOf<FieldInfo, PropertyInfo>> GetPrivateFieldAndProperties(Type contractType)
+	private static IEnumerable<ObjEither<FieldInfo, PropertyInfo>> GetPrivateFieldAndProperties(
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicPropertiesWithInherited | DynamicallyAccessedMemberTypes.NonPublicFieldsWithInherited)]
+		Type contractType)
 	{
 		foreach (FieldInfo field in contractType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
 		{
@@ -115,7 +110,7 @@ public static class PrivateExtensionDataModifier
 		}
 	}
 
-	private static bool IsValidPrivateMember<T>(T member, Type memberType) where T : MemberInfo
+	private static bool IsValidPrivateMember(MemberInfo member, Type memberType)
 	{
 		if (!member.IsDefined(typeof(PrivateExtensionDataAttribute)))
 		{
@@ -160,5 +155,30 @@ public static class PrivateExtensionDataModifier
 		}
 
 		return attribute.ExtensionDataClassType;
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	private readonly struct MemberAccessor
+	{
+		public readonly Func<object, object?> Getter;
+		public readonly Action<object, object?> Setter;
+		public readonly string Name;
+		public readonly Type ValueType;
+
+		internal MemberAccessor(PropertyInfo property)
+			: this(property, property.GetValue, property.SetValue, property.PropertyType)
+		{
+		}
+		internal MemberAccessor(FieldInfo field)
+			: this(field, field.GetValue, field.SetValue, field.FieldType)
+		{
+		}
+		private MemberAccessor(MemberInfo member, Func<object, object?> getter, Action<object, object?> setter, Type valueType)
+		{
+			Name = member.Name;
+			Getter = getter;
+			Setter = setter;
+			ValueType = valueType;
+		}
 	}
 }

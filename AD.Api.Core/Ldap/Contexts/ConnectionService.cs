@@ -16,8 +16,8 @@ public interface IConnectionService
 {
 	ContextLibrary RegisteredConnections { get; }
 
-	OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
-	OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null);
+	ObjEither<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
+	ObjEither<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null);
 	bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
 }
 
@@ -35,7 +35,7 @@ internal sealed class ConnectionService : IConnectionService
 		_scopeFactory = scopeFactory;
 	}
 
-	public OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
+	public ObjEither<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
 	{
 		if (!this.TryGetConnection(key, out LdapConnection? connection))
 		{
@@ -56,7 +56,7 @@ internal sealed class ConnectionService : IConnectionService
 		connection.Bind();
 		return true;
 	}
-	public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
+	public ObjEither<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
 	{
 		if (!this.RegisteredConnections.TryGetValue(target.Domain, out ConnectionContext? context))
 		{
@@ -73,8 +73,8 @@ internal sealed class ConnectionService : IConnectionService
 		}
 	}
 
-	[DynamicDependencyRegistrationMethod]
 	[EditorBrowsable(EditorBrowsableState.Never)]
+	[DynamicDependencyRegistrationMethod, SuppressMessage("Style", "IDE0051")]
 	private static void AddToServices(IServiceCollection services)
 	{
 		services.AddSingleton<IConnectionService>(provider =>

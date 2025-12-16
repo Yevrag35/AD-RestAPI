@@ -15,7 +15,7 @@ internal sealed partial class UserService
 	public IActionResult Create(in DomainQuery target, CreateUserRequest request, [ConstantExpected] string createdAt)
 	{
 		var conOneOf = _requestSvc.Connections.GetConnection(in target);
-		if (conOneOf.TryGetT1(out IActionResult? error, out LdapConnection? connection))
+		if (conOneOf.TryGetT2(out IActionResult? error, out LdapConnection? connection))
 		{
 			return error;
 		}
