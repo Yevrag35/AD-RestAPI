@@ -155,7 +155,9 @@ public static partial class ServiceExtensions
 
 	#region GET / ENUMERATE METHODS
 	/// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
-	private static MethodInfo? GetFirstDynamicMethodByName(Type type, BindingFlags flags)
+	private static MethodInfo? GetFirstDynamicMethodByName(
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type,
+		BindingFlags flags)
 	{
 		return type
 				.GetMethods(flags)
@@ -165,7 +167,9 @@ public static partial class ServiceExtensions
 	}
 	/// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
 	/// <exception cref="AttributeDIStartupException">More than one dynamic method was found.</exception>
-	private static MethodInfo? GetSingleDynamicMethod(Type type, BindingFlags flags)
+	private static MethodInfo? GetSingleDynamicMethod(
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type,
+		BindingFlags flags)
 	{
 		try
 		{
@@ -241,7 +245,9 @@ public static partial class ServiceExtensions
 	#region ADD SERVICE
 
 	/// <exception cref="AttributeDIStartupException"></exception>
-	private static void AddFromRegistration(ServiceResolutionContext context, Type type)
+	private static void AddFromRegistration(
+		ServiceResolutionContext context,
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type)
 	{
 		MethodInfo? method;
 		try

@@ -41,7 +41,9 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 	///     cref="TryCreateDescriptorFromAttribute(ServiceRegistrationBaseAttribute, Type, in IServiceTypeExclusions, out ServiceDescriptor)"
 	///     path="/exception"/>
 	[DebuggerStepThrough]
-	internal static ArraySlice<ServiceDescriptor> CreateDescriptorsFromType(Type type, IServiceTypeExclusions exclusions)
+	internal static ArraySlice<ServiceDescriptor> CreateDescriptorsFromType(
+		Type type,
+		IServiceTypeExclusions exclusions)
 	{
 		object[] atts = type.GetCustomAttributes(
 			typeof(AddToDepedencyInjectionAttribute),
@@ -64,7 +66,10 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 	}
 
 	[DebuggerStepThrough]
-	private static bool AnyGenericInterfaceMatches(Type serviceType, Type implementationType)
+	private static bool AnyGenericInterfaceMatches(
+		Type serviceType,
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+		Type implementationType)
 	{
 		Type[] intTypes = implementationType.GetInterfaces();
 		for (int i = 0; i < intTypes.Length; i++)
@@ -116,7 +121,11 @@ public abstract class AddToDepedencyInjectionAttribute : AutomaticDependencyInje
 
 	/// <inheritdoc cref="Type.GetGenericTypeDefinition" path="/exception"/>
 	/// <inheritdoc cref="ValidateImplementationType(Type, Type)" path="/exception"/>
-	private static bool TryCreateDescriptorFromAttribute(AddToDepedencyInjectionAttribute attribute, Type type, IServiceTypeExclusions exclusions, [NotNullWhen(true)] out ServiceDescriptor? descriptor)
+	private static bool TryCreateDescriptorFromAttribute(
+		AddToDepedencyInjectionAttribute attribute,
+		Type type,
+		IServiceTypeExclusions exclusions,
+		[NotNullWhen(true)] out ServiceDescriptor? descriptor)
 	{
 		attribute.Service ??= type;
 		attribute.Implementation ??= type;
