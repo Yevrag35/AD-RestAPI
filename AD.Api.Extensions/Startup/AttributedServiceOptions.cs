@@ -25,7 +25,7 @@ public sealed class AttributedServiceOptions
 	/// If this is not set, the current application's <see cref="AppDomain.CurrentDomain"/> assemblies
 	/// will be retrieved.
 	/// </remarks>
-	public Assembly[] AssembliesToScan { private get; set; }
+	public Assembly[]? AssembliesToScan { private get; set; }
 
 	/// <summary>
 	/// Sets the configuration for injecting into <see cref="DynamicServiceRegistrationMethodAttribute"/>
@@ -111,7 +111,7 @@ public sealed class AttributedServiceOptions
 	internal AttributedServiceOptions()
 	{
 		_dynamicMethodFlags = BindingFlags.NonPublic | BindingFlags.Static;
-		this.AssembliesToScan = [];
+		this.AssembliesToScan = null;
 		this.Configuration = null;
 	}
 
@@ -149,7 +149,7 @@ public sealed class AttributedServiceOptions
 			Referencer.LoadAll(_referencerAction);
 		}
 
-		Assembly[] allAssemblies = this.AssembliesToScan.Length > 0
+		Assembly[] allAssemblies = this.AssembliesToScan is not null && this.AssembliesToScan.Length > 0
 			? this.AssembliesToScan
 			: AppDomain.CurrentDomain.GetAssemblies();
 

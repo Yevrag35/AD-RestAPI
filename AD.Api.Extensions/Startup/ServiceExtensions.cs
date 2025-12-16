@@ -1,6 +1,7 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Startup.Exceptions;
 using AD.Api.Startup.Services;
+using AD.Api.Startup.Services.Internal;
 
 namespace AD.Api.Startup;
 
@@ -80,7 +81,7 @@ public static partial class ServiceExtensions
 	private sealed class ServiceResolutionContext
 	{
 		private readonly object[] _overload1;
-		private readonly object?[] _overload2;
+		private readonly object[] _overload2;
 
 		/// <summary>
 		/// Gets a value indicating whether duplicate service registrations are allowed.
@@ -129,10 +130,10 @@ public static partial class ServiceExtensions
 			ThrowOnMultipleDynamic = !options.IgnoreMultipleDynamicRegistrations;
 			ThrowOnMissingDynamic = options.ThrowOnMissingDynamicRegistrationMethod;
 			Services = services;
-			Configuration = options.Configuration;
+			Configuration = options.Configuration ?? new EmptyConfiguration();
 			Exclusions = options.GetServiceTypeExclusions();
-			_overload1 = new object[1] { services };
-			_overload2 = new object?[2] { services, options.Configuration };
+			_overload1 = [services];
+			_overload2 = [services, Configuration];
 		}
 
 		/// <summary>

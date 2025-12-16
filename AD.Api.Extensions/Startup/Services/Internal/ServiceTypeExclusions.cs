@@ -88,7 +88,7 @@ internal sealed class ServiceTypeExclusions : IAddServiceTypeExclusions, IServic
 	{
 		if (configure is null)
 		{
-			return default(EmptyExclusions);
+			return new EmptyExclusions();
 		}
 
 		ServiceTypeExclusions exclusions = new();
@@ -97,23 +97,23 @@ internal sealed class ServiceTypeExclusions : IAddServiceTypeExclusions, IServic
 		return exclusions;
 	}
 
-	private readonly struct EmptyExclusions : IServiceTypeExclusions
+	private sealed class EmptyExclusions : IServiceTypeExclusions
 	{
-		public readonly int Count => 0;
+		public int Count => 0;
 
-		public readonly bool Contains<T>()
+		public bool Contains<T>()
 		{
 			return false;
 		}
-		public readonly bool Contains(Type type)
+		public bool Contains(Type type)
 		{
 			return false;
 		}
-		public readonly IEnumerator<Type> GetEnumerator()
+		public IEnumerator<Type> GetEnumerator()
 		{
 			return Enumerable.Empty<Type>().GetEnumerator();
 		}
-		public readonly bool IsExcluded(Type type)
+		public bool IsExcluded(Type type)
 		{
 			return false;
 		}
