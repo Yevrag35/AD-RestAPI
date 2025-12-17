@@ -1,7 +1,6 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
-using AD.Api.Statics;
 using Microsoft.Extensions.ObjectPool;
 
 namespace AD.Api.Core.Ldap;
@@ -90,48 +89,48 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 		_defaults = defaults;
 		_request = new();
 
-		ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
+		ISearchDefaults globals = _defaults[string.Empty];
 
-		ResetRequest(_request, in globals);
+		ResetRequest(_request, globals);
 		_hasDefaults = true;
 	}
 
-	public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
-	{
-		if (attributeString.IsWhiteSpace())
-		{
-			this.AddAttributesFromTypes(types);
-			return;
-		}
+	//public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
+	//{
+	//	if (attributeString.IsWhiteSpace())
+	//	{
+	//		this.AddAttributesFromTypes(types);
+	//		return;
+	//	}
 
-		bool wantsDefault = false;
-		char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
+	//	bool wantsDefault = false;
+	//	char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
 
-		foreach (Range range in attributeString.Split(separator))
-		{
-			var section = attributeString[range];
-			if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
-				||
-				section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
-			{
-				wantsDefault = true;
-			}
-			else if (!section.IsWhiteSpace())
-			{
-				string s = section.ToString();
-				_ = _request.Attributes.Add(s);
-			}
-		}
+	//	foreach (Range range in attributeString.Split(separator))
+	//	{
+	//		var section = attributeString[range];
+	//		if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
+	//			||
+	//			section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
+	//		{
+	//			wantsDefault = true;
+	//		}
+	//		else if (!section.IsWhiteSpace())
+	//		{
+	//			string s = section.ToString();
+	//			_ = _request.Attributes.Add(s);
+	//		}
+	//	}
 
-		if (!wantsDefault)
-		{
-			this.RemoveDefaultAttributes();
-		}
-		else
-		{
-			this.AddAttributesFromTypes(types);
-		}
-	}
+	//	if (!wantsDefault)
+	//	{
+	//		this.RemoveDefaultAttributes();
+	//	}
+	//	else
+	//	{
+	//		this.AddAttributesFromTypes(types);
+	//	}
+	//}
 	public void AddAttributes(ReadOnlySpan<string> attributes, FilteredRequestType? types)
 	{
 		if (attributes.IsEmpty)
@@ -227,12 +226,12 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	protected override void ResetCore()
 	{
 		_requestId = Guid.Empty;
-		ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
+		ISearchDefaults defaults = _defaults[string.Empty];
 		//_pageSize = 0;
-		ResetRequest(_request, in defaults);
+		ResetRequest(_request, defaults);
 		_hasDefaults = true;
 	}
-	private static void ResetRequest(SearchRequest request, ref readonly ISearchDefaults defaults)
+	private static void ResetRequest(SearchRequest request, ISearchDefaults defaults)
 	{
 		request.Aliases = defaults.DereferenceAlias;
 		request.Attributes.Clear();
