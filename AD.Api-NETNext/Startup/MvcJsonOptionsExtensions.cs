@@ -3,6 +3,7 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Operations;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Serialization.Json.Converters;
+using AD.Api.Core.Serialization.Json.Converters.Ldap;
 using AD.Api.Serialization.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -40,6 +41,7 @@ public static class MvcJsonOptionsExtensions
 	private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
 	{
 		options.Converters.AddMany(
+			new UserAccountControlConverter(),
 			new ClearOperationConverter(),
 			new DistinguishedNameConverter(),
 			new KeyValuePairArrayConverter<DistinguishedName>() { IsOrdered = true },

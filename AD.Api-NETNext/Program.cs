@@ -97,7 +97,10 @@ try
 		conversions.Add("groupType", AttributeSerialization.WriteEnumValue<GroupType>);
 		conversions.Add("objectSid", AttributeSerialization.WriteObjectSID);
 		conversions.Add("sAMAccountType", AttributeSerialization.WriteEnumValue<SamAccountType>);
-		conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
+		conversions.Add("userAccountControl", (writer, ref readonly context) =>
+		{
+
+		});
 
 		if (section.GetValue("WriteSimpleObjectClass", false))
 		{

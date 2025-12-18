@@ -1,7 +1,5 @@
 ﻿using AD.Api.Core.Serialization;
 using AD.Api.Serialization.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace AD.Api.Startup;
 
