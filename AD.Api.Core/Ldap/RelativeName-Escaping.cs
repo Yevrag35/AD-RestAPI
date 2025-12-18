@@ -44,7 +44,7 @@ public readonly partial struct RelativeName
 		// Iterate through each character validating each in sequence.
 		for (int i = 0; i < value.Length; i++)
 		{
-			ref readonly char c = ref value[i];
+			char c = value[i];
 
 			// Check if the character is a non-standard escaped character and not properly escaped
 			if (NonStandardEscapedChars.Contains(c) && !value.IsEscapedAt(i))
