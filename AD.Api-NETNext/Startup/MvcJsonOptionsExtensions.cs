@@ -4,6 +4,7 @@ using AD.Api.Core.Operations;
 using AD.Api.Core.Serialization;
 using AD.Api.Core.Serialization.Json.Converters;
 using AD.Api.Core.Serialization.Json.Converters.Ldap;
+using AD.Api.Serialization.Converters;
 using AD.Api.Serialization.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -21,8 +22,6 @@ public static class MvcJsonOptionsExtensions
 		return addControllers(appBuilder)
 			.AddJsonOptions(options =>
 			{
-				WorkingNamingPolicy policy = new(options.JsonSerializerOptions);
-
 				options.AllowInputFormatterExceptionMessages = isDevelopment;
 				options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 				options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
@@ -30,6 +29,8 @@ public static class MvcJsonOptionsExtensions
 				options.JsonSerializerOptions.WriteIndented = settings.WriteIndented;
 
 				options.JsonSerializerOptions.Converters.Add(enumConverter);
+
+				WorkingNamingPolicy policy = new(options.JsonSerializerOptions);
 				AddAdditionalJsonConverters(options.JsonSerializerOptions, converter, policy);
 
 				options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
@@ -46,6 +47,7 @@ public static class MvcJsonOptionsExtensions
 			new ClearOperationConverter(policy),
 			new DistinguishedNameConverter(),
 			new KeyValuePairArrayConverter<DistinguishedName>(policy) { IsOrdered = true },
+			new ImmutableArrayConverter<string>(),
 			new OneEditOperationConverter<AddDictionary>(policy),
 			new OneEditOperationConverter<RemoveDictionary>(policy),
 			new OneEditOperationConverter<SetDictionary>(policy),
