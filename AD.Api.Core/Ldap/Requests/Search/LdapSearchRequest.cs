@@ -1,4 +1,6 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Collections;
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
 using Microsoft.Extensions.ObjectPool;
@@ -18,11 +20,13 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	private readonly SearchRequest _request;
 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 	private Guid _requestId;
+	private readonly LdapPropertyList _attributes;
 
 	private bool _hasDefaults;
 	protected override DirectoryRequest BackingRequest => _request;
 	protected override string DefaultRequestId => _defaultRequestId;
 
+	public LdapPropertyList Attributes => _attributes;
 	public int ControlCount => _request.Controls.Count;
 
 	/// <summary>
@@ -90,8 +94,10 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 		_request = new();
 
 		ISearchDefaults globals = _defaults[string.Empty];
+		_attributes = new();
+		RequestMarshal.ReplaceAttributes(_request, _attributes);
 
-		ResetRequest(_request, globals);
+		ResetRequest(_request, _attributes, globals);
 		_hasDefaults = true;
 	}
 
@@ -160,7 +166,7 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 				}
 			}
 
-			_ = _request.Attributes.Add(att);
+			_attributes.Add(att);
 		}
 
 		if (!wantsDefault)
@@ -179,23 +185,7 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 			return;
 		}
 
-		int count = _defaults.GetAttributeCount(types.Value, includeGlobal: false);
-		if (count <= 0)
-		{
-			return;
-		}
-
-		string[] array = ArrayPool<string>.Shared.Rent(count);
-		Span<string> attributes = array.AsSpan(0, count);
-
-		_defaults.TryGetAllAttributes(types.Value, attributes, includeGlobal: false, out count);
-
-		foreach (string s in attributes.Slice(0, count))
-		{
-			_request.Attributes.Add(s);
-		}
-
-		ArrayPool<string>.Shared.Return(array);
+		_defaults.CopyTo(_attributes, types.Value);
 	}
 	protected override void OnApplyingContext(ConnectionContext context)
 	{
@@ -211,11 +201,12 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 			return;
 		}
 
-		int i = _defaults.TotalGlobalAttributeCount - 1;
-		for (; i >= 0; i--)
-		{
-			_request.Attributes.RemoveAt(i);
-		}
+		_attributes.RemoveAll(_defaults[string.Empty].Attributes);
+		//int i = _defaults.TotalGlobalAttributeCount - 1;
+		//for (; i >= 0; i--)
+		//{
+		//	_request.Attributes.RemoveAt(i);
+		//}
 
 		_hasDefaults = false;
 	}
@@ -228,14 +219,14 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 		_requestId = Guid.Empty;
 		ISearchDefaults defaults = _defaults[string.Empty];
 		//_pageSize = 0;
-		ResetRequest(_request, defaults);
+		ResetRequest(_request, _attributes, defaults);
 		_hasDefaults = true;
 	}
-	private static void ResetRequest(SearchRequest request, ISearchDefaults defaults)
+	private static void ResetRequest(SearchRequest request, LdapPropertyList attributes, ISearchDefaults defaults)
 	{
 		request.Aliases = defaults.DereferenceAlias;
-		request.Attributes.Clear();
-		request.Attributes.AddRange(defaults.Attributes);
+		attributes.Clear();
+		attributes.AddRange(defaults.Attributes);
 		request.DistinguishedName = string.Empty;
 		request.Filter = string.Empty;
 		request.Scope = defaults.Scope;

@@ -14,6 +14,7 @@ namespace AD.Api.Collections;
 /// cref="ReadOnlySpan{T}"/> for performance-critical scenarios. <para> The collection is not thread-safe and should be
 /// synchronized externally if accessed concurrently  from multiple threads. </para></remarks>
 [DebuggerDisplay("Count = {Count}")]
+[CollectionBuilder(typeof(LdapPropertyList), nameof(Create))]
 public sealed class LdapPropertyList : ArrayList,
 	IList<string>,
 	IReadOnlyList<string>,
@@ -75,14 +76,14 @@ public sealed class LdapPropertyList : ArrayList,
 	/// Functionally equivalent to the <c>Count</c> property, but avoids the overhead of 
 	/// a virtual call.
 	/// </summary>
-	internal int TotalCount => _propSet.Count;
+	public int TotalCount => _propSet.Count;
 	public override bool IsFixedSize => false;
 	public override bool IsReadOnly => false;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="LdapPropertyList"/> class with the default capacity.
 	/// </summary>
-	internal LdapPropertyList()
+	public LdapPropertyList()
 		: base(DEFAULT_CAPACITY)
 	{
 		_propSet = new(DEFAULT_CAPACITY, StringComparer.OrdinalIgnoreCase);
@@ -95,7 +96,7 @@ public sealed class LdapPropertyList : ArrayList,
 	/// <paramref name="initialValues"/>. Duplicate values (case-insensitive) are ignored.</remarks>
 	/// <param name="initialValues">A read-only span of strings representing the initial values to populate the property list. Each value is added to
 	/// the list using a case-insensitive comparison.</param>
-	internal LdapPropertyList(params ReadOnlySpan<string> initialValues)
+	public LdapPropertyList(params ReadOnlySpan<string> initialValues)
 		: base(GetCapacity(initialValues.Length, out int capacity))
 	{
 		_propSet = new(capacity, StringComparer.OrdinalIgnoreCase);
@@ -196,11 +197,11 @@ public sealed class LdapPropertyList : ArrayList,
 		}
 	}
 
-	internal ReadOnlyMemory<string> AsMemory()
+	public ReadOnlyMemory<string> AsMemory()
 	{
 		return ArrayListMarshal.AsMemory<string>(this);
 	}
-	internal ReadOnlySpan<string> AsSpan()
+	public ReadOnlySpan<string> AsSpan()
 	{
 		return ArrayListMarshal.AsSpan<string>(this);
 	}
@@ -210,7 +211,7 @@ public sealed class LdapPropertyList : ArrayList,
 		_propSet.Clear();
 		base.Clear();
 	}
-	internal LdapPropertyList CloneCore()
+	private LdapPropertyList CloneCore()
 	{
 		return new(this);
 	}
@@ -230,7 +231,7 @@ public sealed class LdapPropertyList : ArrayList,
 	{
 		return _alternate.Contains(value);
 	}
-	internal int CopyTo(Span<string> buffer, bool sortPrior = false)
+	public int CopyTo(Span<string> buffer, bool sortPrior = false)
 	{
 		if (sortPrior)
 		{
@@ -324,7 +325,7 @@ public sealed class LdapPropertyList : ArrayList,
 	/// value, if available. If the substring cannot be resolved, the method returns -1.</remarks>
 	/// <param name="value">The substring to locate within the current instance. This parameter cannot be empty.</param>
 	/// <returns>The zero-based index of the first occurrence of <paramref name="value"/> if found; otherwise, -1.</returns>
-	internal int IndexOf(ReadOnlySpan<char> value)
+	public int IndexOf(ReadOnlySpan<char> value)
 	{
 		return this.TryGetValue(value, out string? realValue)
 			? base.IndexOf(realValue)
@@ -383,7 +384,7 @@ public sealed class LdapPropertyList : ArrayList,
 	/// <param name="index">The zero-based index at which the new elements should be inserted. If the index is equal to the current count of
 	/// the collection, the elements are added to the end.</param>
 	/// <param name="collection">The collection of strings to insert. Strings that are null, empty, or consist only of whitespace are ignored.</param>
-	internal void InsertRange(int index, IEnumerable<string> collection)
+	public void InsertRange(int index, IEnumerable<string> collection)
 	{
 		if (index == this.Count)
 		{
@@ -467,7 +468,7 @@ public sealed class LdapPropertyList : ArrayList,
 	/// <remarks>Each element in the specified collection is individually removed from the current instance.  If an
 	/// element does not exist in the current instance, it is ignored.</remarks>
 	/// <param name="collection">A collection of strings to be removed. If the collection is <see langword="null"/>, the method performs no action.</param>
-	internal void RemoveAll(IEnumerable<string> collection)
+	public void RemoveAll(IEnumerable<string> collection)
 	{
 		if (collection is null)
 		{
@@ -576,7 +577,7 @@ public sealed class LdapPropertyList : ArrayList,
 	/// <param name="index">When this method returns, contains the zero-based index of the specified value if found;  otherwise, -1. This
 	/// parameter is passed uninitialized.</param>
 	/// <returns><see langword="true"/> if the specified value is found in the collection; otherwise, <see langword="false"/>.</returns>
-	internal bool TryGetIndex(ReadOnlySpan<char> value, out int index)
+	public bool TryGetIndex(ReadOnlySpan<char> value, out int index)
 	{
 		index = this.TryGetValue(value, out string? actualValue)
 			? base.IndexOf(actualValue)
@@ -592,7 +593,7 @@ public sealed class LdapPropertyList : ArrayList,
 	/// otherwise, <see langword="null"/>. This parameter is passed uninitialized.</param>
 	/// <returns><see langword="true"/> if the property is found and its value is successfully retrieved; otherwise, <see
 	/// langword="false"/>.</returns>
-	internal bool TryGetValue(ReadOnlySpan<char> property, [NotNullWhen(true)] out string? actualValue)
+	public bool TryGetValue(ReadOnlySpan<char> property, [NotNullWhen(true)] out string? actualValue)
 	{
 		return _alternate.TryGetValue(property, out actualValue);
 	}
@@ -729,6 +730,10 @@ public sealed class LdapPropertyList : ArrayList,
 		}
 	}
 
+	public static LdapPropertyList Create(params ReadOnlySpan<string> values)
+	{
+		return new LdapPropertyList(values);
+	}
 	//bool IResettable.TryReset()
 	//{
 	//	// Upper‑bound enforcement: act only if we ever grew past MAX_CAPACITY.
