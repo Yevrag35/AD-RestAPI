@@ -12,19 +12,14 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 {
 	private const string DEFAULTS = "defaults";
 
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	private static readonly string _defaultRequestId = Guid.Empty.ToString();
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private static readonly string s_defaultRequestId = Guid.Empty.ToString();
 	private readonly IDefaults _defaults;
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 	private readonly SearchRequest _request;
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	private Guid _requestId;
 	private readonly LdapPropertyList _attributes;
 
 	private bool _hasDefaults;
 	protected override DirectoryRequest BackingRequest => _request;
-	protected override string DefaultRequestId => _defaultRequestId;
+	protected override string DefaultRequestId => s_defaultRequestId;
 
 	public LdapPropertyList Attributes => _attributes;
 	public int ControlCount => _request.Controls.Count;
@@ -33,7 +28,7 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	/// The <see cref="RequestId"/> contains the unique identifier for the LDAP request.
 	/// </summary>
 	/// <remarks>
-	/// Each request will have its own RequestId per scoped-HTTP request.
+	/// Each request will have its own RequestId per scoped request.
 	/// </remarks>
 	/// <returns>
 	/// The requestID for the LDAP request as a <see cref="Guid"/> value.
@@ -41,18 +36,18 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	public Guid RequestId
 	{
 		[DebuggerStepThrough]
-		get => _requestId;
+		get;
 		set
 		{
 			if (value == Guid.Empty)
 			{
-				_request.RequestId = _defaultRequestId;
-				_requestId = Guid.Empty;
+				_request.RequestId = s_defaultRequestId;
+				field = Guid.Empty;
 			}
 			else
 			{
-				_requestId = value;
 				_request.RequestId = value.ToString();
+				field = value;
 			}
 		}
 	}
@@ -89,16 +84,16 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 
 	public LdapSearchRequest(IDefaults defaults)
 	{
-		_requestId = Guid.Empty;
 		_defaults = defaults;
 		_request = new();
+		_attributes = [];
 
 		ISearchDefaults globals = _defaults[string.Empty];
-		_attributes = new();
 		RequestMarshal.ReplaceAttributes(_request, _attributes);
 
+		this.RequestId = Guid.Empty;
 		ResetRequest(_request, _attributes, globals);
-		_hasDefaults = true;
+		_hasDefaults = globals.IsGlobal;
 	}
 
 	//public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
@@ -137,6 +132,18 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	//		this.AddAttributesFromTypes(types);
 	//	}
 	//}
+	/// <summary>
+	/// Adds the specified attribute properties to the current request, optionally including default attributes based on the
+	/// provided values.
+	/// </summary>
+	/// <remarks>If any entry in the <paramref name="attributes"/> span indicates a request for default attributes,
+	/// those defaults are added in addition to any explicitly specified attributes. If no such entry is present, any
+	/// previously added default attributes are removed. Attribute names are added as provided; duplicate or invalid names
+	/// are not filtered by this method.</remarks>
+	/// <param name="attributes">A read-only span of attribute names to add. Each entry should be a non-empty, non-whitespace string. If the span is
+	/// empty, only default attributes are considered.</param>
+	/// <param name="types">An optional value specifying which types of default attributes to include if requested. If null, the method uses
+	/// the default set of types.</param>
 	public void AddAttributes(ReadOnlySpan<string> attributes, FilteredRequestType? types)
 	{
 		if (attributes.IsEmpty)
@@ -216,7 +223,7 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	/// </remarks>
 	protected override void ResetCore()
 	{
-		_requestId = Guid.Empty;
+		this.RequestId = Guid.Empty;
 		ISearchDefaults defaults = _defaults[string.Empty];
 		//_pageSize = 0;
 		ResetRequest(_request, _attributes, defaults);

@@ -128,8 +128,6 @@ public sealed class LdapPropertyList : ArrayList,
 	/// Adds the specified value to the collection if it is not null, empty, or whitespace.
 	/// </summary>
 	/// <param name="value">The string value to add to the collection. Must not be null, empty, or consist only of whitespace.</param>
-	/// <returns>The index at which the value was added if the operation was successful; otherwise, -1 if the value is null, empty,
-	/// or whitespace.</returns>
 	public void Add([DisallowNull] string value)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(value);
@@ -197,15 +195,30 @@ public sealed class LdapPropertyList : ArrayList,
 		}
 	}
 
+	/// <summary>
+	/// Returns a read-only memory region containing the elements of the collection as strings.
+	/// </summary>
+	/// <returns>A <see cref="ReadOnlyMemory{T}"/> of type <see cref="string"/> that represents the elements of the collection. The
+	/// memory region is read-only and reflects the current state of the collection at the time of the call.</returns>
 	public ReadOnlyMemory<string> AsMemory()
 	{
 		return ArrayListMarshal.AsMemory<string>(this);
 	}
+	/// <summary>
+	/// Returns a read-only span of the elements in the collection.
+	/// </summary>
+	/// <remarks>The returned span reflects the current state of the collection. Modifying the collection after
+	/// obtaining the span may invalidate the span or result in undefined behavior.</remarks>
+	/// <returns>A <see cref="ReadOnlySpan{T}"/> of strings representing the elements contained in the collection.</returns>
 	public ReadOnlySpan<string> AsSpan()
 	{
 		return ArrayListMarshal.AsSpan<string>(this);
 	}
-
+	/// <summary>
+	/// Removes all items from the collection.
+	/// </summary>
+	/// <remarks>After calling this method, the collection will be empty. This method overrides the base
+	/// implementation to ensure that all associated resources and internal state are also cleared.</remarks>
 	public override void Clear()
 	{
 		_propSet.Clear();
@@ -223,14 +236,35 @@ public sealed class LdapPropertyList : ArrayList,
 	{
 		return item is string strItem && this.Contains(strItem);
 	}
+	/// <summary>
+	/// Determines whether the collection contains the specified value.
+	/// </summary>
+	/// <param name="value">The value to locate in the collection. Can be null if the collection supports null values.</param>
+	/// <returns>true if the value is found in the collection; otherwise, false.</returns>
 	public bool Contains(string value)
 	{
 		return _propSet.Contains(value);
 	}
+	/// <summary>
+	/// Determines whether the current instance contains the specified sequence of characters.
+	/// </summary>
+	/// <param name="value">The read-only span of characters to locate within the current instance.</param>
+	/// <returns>true if the specified value is found within the current instance; otherwise, false.</returns>
 	public bool Contains(ReadOnlySpan<char> value)
 	{
 		return _alternate.Contains(value);
 	}
+	/// <summary>
+	/// Copies the elements of the collection to the specified buffer. Optionally sorts the elements in a case-insensitive
+	/// manner before copying.
+	/// </summary>
+	/// <remarks>If sortPrior is set to true, the elements are sorted using ordinal, case-insensitive comparison
+	/// before being copied. The method does not resize the buffer; ensure that buffer.Length is at least equal to the
+	/// number of elements in the collection to avoid incomplete copies.</remarks>
+	/// <param name="buffer">The destination span that receives the copied elements. The span must be large enough to hold all elements in the
+	/// collection.</param>
+	/// <param name="sortPrior">true to sort the elements in case-insensitive order before copying; otherwise, false to preserve the current order.</param>
+	/// <returns>The number of elements copied to the buffer.</returns>
 	public int CopyTo(Span<string> buffer, bool sortPrior = false)
 	{
 		if (sortPrior)
