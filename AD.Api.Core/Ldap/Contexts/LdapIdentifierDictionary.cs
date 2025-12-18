@@ -1,5 +1,5 @@
+using AD.Api.Extensions.Strings;
 using AD.Api.Statics;
-using AD.Api.Strings;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 

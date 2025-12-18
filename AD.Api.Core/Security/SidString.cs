@@ -399,7 +399,7 @@ public sealed class SidString :
 	/// <typeparamref name="T"/> is not <see cref="char"/> nor <see cref="byte"/>, <see langword="false"/>.
 	/// </returns>
 	[DebuggerStepThrough]
-	public static bool IsLengthInRange<T>(in int length) where T : struct
+	public static bool IsLengthInRange<T>(int length) where T : struct
 	{
 		int min;
 		int max;

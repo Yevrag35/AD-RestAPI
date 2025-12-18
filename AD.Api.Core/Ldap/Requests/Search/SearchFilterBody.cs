@@ -1,7 +1,7 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Requests;
+using AD.Api.Extensions.Strings;
 using AD.Api.Statics;
-using AD.Api.Strings.Extensions;
 using AD.Api.Validation;
 using System.ComponentModel.DataAnnotations;
 

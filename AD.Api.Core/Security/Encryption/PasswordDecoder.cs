@@ -1,7 +1,7 @@
 using AD.Api.Core.Ldap.Passwords;
 using System.Security;
 using System.Text;
-using Base64 = AD.Api.Strings.Base64Extensions;
+using Base64 = AD.Api.Extensions.Strings.Base64Extensions;
 
 namespace AD.Api.Core.Security.Encryption;
 

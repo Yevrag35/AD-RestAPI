@@ -2,7 +2,7 @@ using AD.Api.Components;
 using AD.Api.Statics;
 using System.Globalization;
 
-namespace AD.Api.Unmanaged;
+namespace AD.Api.Extensions;
 
 /// <summary>
 /// Extension methods for parsing FILETIME values from string or <see cref="long"/> objects.

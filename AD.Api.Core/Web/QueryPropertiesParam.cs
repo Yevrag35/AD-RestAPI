@@ -154,7 +154,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 		}
 
 		ModelBindingResult result = context.ModelState.IsValid
-			? ReadModelIntoSuccessResult(properties, in count)
+			? ReadModelIntoSuccessResult(properties, count)
 			: ReturnErroredSuccess(context);
 
 		ArrayPool<string>.Shared.Return(properties);
@@ -179,7 +179,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 			return value;
 		}
 	}
-	private static ModelBindingResult ReadModelIntoSuccessResult(string[] properties, in int count)
+	private static ModelBindingResult ReadModelIntoSuccessResult(string[] properties, int count)
 	{
 		string[] finalArray = new string[count];
 		Array.Copy(properties, finalArray, count);

@@ -34,7 +34,7 @@ public readonly partial struct DistinguishedName
 
 		return length;
 	}
-	private static string ToString(ReadOnlySpan<RelativeName> segments, in int totalLength)
+	private static string ToString(ReadOnlySpan<RelativeName> segments, int totalLength)
 	{
 		Span<char> chars = stackalloc char[totalLength];
 		int written = CopyTo(segments, chars);

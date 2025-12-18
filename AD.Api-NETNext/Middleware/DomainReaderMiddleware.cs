@@ -3,29 +3,29 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Serialization.Json;
 using AD.Api.Enums;
 using AD.Api.Serialization.Json;
-using AD.Api.Statics;
 using Microsoft.Extensions.Primitives;
-using NLog;
-
-using ColEx = AD.Api.Collections.CollectionExtensions;
+using System.Globalization;
 
 namespace AD.Api.Middleware;
 
 public class DomainReaderMiddleware
 {
-	private const string NOT_REGISTERED = "The requested domain is not registered: {DomainName}";
+	private const string w = "The requested domain is not registered: {0}";
+	private static readonly CompositeFormat s_notRegistered = CompositeFormat.Parse("The requested domain is not registered: {0}");
 	private const int MAX_MSG_LENGTH = 256;
-	static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+	//static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
 	private readonly RequestDelegate _next;
 	private readonly IConnectionService _connections;
 	private readonly IEnumStrings<ResultCode> _errorCodes;
+	private readonly ILogger _logger;
 
-	public DomainReaderMiddleware(RequestDelegate next, IConnectionService connections, IEnumStrings<ResultCode> enumStrings)
+	public DomainReaderMiddleware(RequestDelegate next, IConnectionService connections, IEnumStrings<ResultCode> enumStrings, ILogger<DomainReaderMiddleware> logger)
 	{
 		_next = next;
 		_connections = connections;
 		_errorCodes = enumStrings;
+		_logger = logger;
 	}
 
 	public Task Invoke(HttpContext httpContext)
@@ -47,21 +47,25 @@ public class DomainReaderMiddleware
 
 	private async Task WriteErrorBodyAsync(HttpContext context, string? domain)
 	{
-		//string msg = $"The requested domain is not registered: \"{domain}\".";
-		_logger.Warn(NOT_REGISTERED, domain);
-		var options = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>();
+		var options = context.RequestServices.GetRequiredService<IJsonOptions>();
 
 		context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
 		context.Response.ContentType = JsonConstants.ContentTypeWithCharset;
-		await using Utf8JsonWriter writer = new(context.Response.Body);
+		Utf8JsonWriter writer = new(context.Response.Body);
 
-		this.WriteJsonBody(writer, domain, options.Value.JsonSerializerOptions);
+		await using (writer.ConfigureAwait(false))
+		{
+			this.WriteJsonBody(writer, domain, options.SerializerOptions, out string message);
 
-		await writer.FlushAsync(context.RequestAborted).ConfigureAwait(false);
+			Task task = writer.FlushAsync(context.RequestAborted);
+			_logger.LogWarning(message);
+
+			await task.ConfigureAwait(false);
+		}
 	}
 
-	private void WriteJsonBody(Utf8JsonWriter writer, ReadOnlySpan<char> domain, JsonSerializerOptions options)
+	private void WriteJsonBody(Utf8JsonWriter writer, string? domain, JsonSerializerOptions options, out string message)
 	{
 		writer.WriteStartObject();
 		WorkingNamingPolicy policy = new(options);
@@ -72,35 +76,14 @@ public class DomainReaderMiddleware
 		writer.WriteNumberValue((int)ResultCode.Unavailable);
 
 		policy.WritePropertyName(writer, "Message"u8);
-		WriteMessage(writer, domain, options);
+		WriteMessage(writer, domain, options, out message);
 
 		writer.WriteEndObject();
 	}
-	private static void WriteMessage(Utf8JsonWriter writer, ReadOnlySpan<char> domain, JsonSerializerOptions options)
+	private static void WriteMessage(Utf8JsonWriter writer, string? domain, JsonSerializerOptions options, out string message)
 	{
-		ReadOnlySpan<char> msg = NOT_REGISTERED;
-		msg = msg.Slice(0, msg.IndexOf(['{'], StringComparison.Ordinal));
-		int length = msg.Length + domain.Length + 2;
-
-		char[]? array = null;
-		bool isRented = false;
-
-		Span<char> buffer = length < MAX_MSG_LENGTH
-			? stackalloc char[length]
-			: ColEx.RentArray(in length, ref isRented, ref array);
-
-		msg.CopyTo(buffer);
-		int pos = msg.Length;
-		buffer[pos++] = CharConstants.DOUBLE_QUOTE;
-		domain.CopyToSlice(buffer, ref pos);
-		buffer[pos++] = CharConstants.DOUBLE_QUOTE;
-
-		writer.WriteStringValue(buffer.Slice(0, pos));
-
-		if (isRented)
-		{
-			ArrayPool<char>.Shared.Return(array!);
-		}
+		message = string.Format(CultureInfo.CurrentCulture, s_notRegistered, domain ?? "<null>");
+		writer.WriteStringValue(message);
 	}
 }
 

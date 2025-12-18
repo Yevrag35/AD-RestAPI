@@ -101,7 +101,7 @@ public readonly partial struct RelativeName
 		return true;
 	}
 
-	private static bool IsProperEquals(ReadOnlySpan<char> working, in int index)
+	private static bool IsProperEquals(ReadOnlySpan<char> working, int index)
 	{
 		if (index < 1 || index >= working.Length - 1)
 		{

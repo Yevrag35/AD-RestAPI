@@ -1,7 +1,7 @@
 using AD.Api.Buffers;
 using AD.Api.Collections.Extensions;
+using AD.Api.Extensions.Strings;
 using AD.Api.Statics;
-using AD.Api.Strings;
 using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Exceptions;

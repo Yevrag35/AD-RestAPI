@@ -78,7 +78,7 @@ public readonly partial struct DistinguishedName :
 		}
 	}
 
-	private DistinguishedName(in ImmutableArray<RelativeName> segments, in int length)
+	private DistinguishedName(in ImmutableArray<RelativeName> segments, int length)
 	{
 		_notDefault = true;
 		_length = length;
@@ -224,7 +224,7 @@ public readonly partial struct DistinguishedName :
 
 		ref readonly RelativeName first = ref this.GetFirst();
 		int length = _length - first.Value.Length - 1;
-		return ToString(parentSegments, in length);
+		return ToString(parentSegments, length);
 	}
 	/// <summary>
 	/// Creates a new <see cref="DistinguishedName"/> object that represents
@@ -241,7 +241,7 @@ public readonly partial struct DistinguishedName :
 
 		int length = _length - first.Value.Length - 1;
 		var array = ImmutableArray.Create(_segments, 1, _segments.Length - 1);
-		return new(in array, in length);
+		return new(in array, length);
 	}
 
 	/// <summary>
@@ -250,7 +250,7 @@ public readonly partial struct DistinguishedName :
 	/// <returns>The string representation of the full distinguished name.</returns>
 	public override readonly string ToString()
 	{
-		return !this.IsEmpty ? ToString(_segments.AsSpan(), in _length) : string.Empty;
+		return !this.IsEmpty ? ToString(_segments.AsSpan(), _length) : string.Empty;
 	}
 	/// <inheritdoc/>
 	[DebuggerStepThrough]
@@ -401,7 +401,7 @@ public readonly partial struct DistinguishedName :
 		}
 
 		int length = GetTotalLength(segments);
-		return ToString(segments, in length);
+		return ToString(segments, length);
 	}
 
 	#endregion

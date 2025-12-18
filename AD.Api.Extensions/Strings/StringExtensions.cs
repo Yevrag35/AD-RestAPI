@@ -1,4 +1,4 @@
-namespace AD.Api.Strings.Extensions;
+namespace AD.Api.Extensions.Strings;
 
 /// <summary>
 /// An class of extension methods for <see cref="string"/> and <see cref="ReadOnlySpan{T}"/>.

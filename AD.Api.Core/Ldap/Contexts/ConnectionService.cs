@@ -26,13 +26,11 @@ internal sealed class ConnectionService : IConnectionService
 {
 	private const string DEFAULT = "Default";
 
-	private readonly IServiceScopeFactory _scopeFactory;
 	public ContextLibrary RegisteredConnections { get; }
 
-	private ConnectionService(Dictionary<string, ConnectionContext> pairs, IServiceScopeFactory scopeFactory)
+	private ConnectionService(Dictionary<string, ConnectionContext> pairs)
 	{
 		this.RegisteredConnections = new(pairs);
-		_scopeFactory = scopeFactory;
 	}
 
 	public ObjEither<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
@@ -83,9 +81,8 @@ internal sealed class ConnectionService : IConnectionService
 
 			IConfigurationSection domains = configuration.GetSection("Domains");
 			IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
-			IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
 			var dict = ReadCredentialsFromConfig(domains, encSvc, provider);
-			return new ConnectionService(dict, scopeFactory);
+			return new ConnectionService(dict);
 		});
 	}
 	private static void AddDefaultContext(ConnectionContext? defaultContext, Dictionary<string, ConnectionContext> contexts)

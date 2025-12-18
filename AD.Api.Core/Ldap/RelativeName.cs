@@ -90,7 +90,7 @@ public readonly partial struct RelativeName :
 	/// </summary>
 	public readonly string Value => _value ?? string.Empty;
 
-	private RelativeName(RelativeNameType attributeType, string value, in int nameIndex)
+	private RelativeName(RelativeNameType attributeType, string value, int nameIndex)
 	{
 		this.AttributeType = attributeType;
 		if (!string.IsNullOrWhiteSpace(value))
@@ -105,7 +105,7 @@ public readonly partial struct RelativeName :
 		}
 	}
 
-	private static ReadOnlySpan<char> BuildPrefix(in RelativeNameType nameTypeIfNotPresent, Span<char> buffer, ReadOnlySpan<char> span, ref ReadOnlySpan<char> prefix)
+	private static ReadOnlySpan<char> BuildPrefix(RelativeNameType nameTypeIfNotPresent, Span<char> buffer, ReadOnlySpan<char> span, ref ReadOnlySpan<char> prefix)
 	{
 		prefix = AttributeStrings.GetValue(nameTypeIfNotPresent);
 		prefix.CopyTo(buffer);
@@ -142,14 +142,14 @@ public readonly partial struct RelativeName :
 
 		if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
 		{
-			return new(nameType, value.ToString(), in index);
+			return new(nameType, value.ToString(), index);
 		}
 
 		Span<char> chars = stackalloc char[value.Length + prefix.Length];
 		prefix.CopyTo(chars);
 		value.CopyTo(chars.Slice(prefix.Length));
 
-		return new(nameType, new string(chars), in index);
+		return new(nameType, new string(chars), index);
 	}
 
 	/// <summary>
@@ -232,7 +232,7 @@ public readonly partial struct RelativeName :
 			prefix.CopyTo(chars);
 			value.CopyTo(chars.Slice(prefixLength));
 
-			relativeName = new(typeToUseWhenNotPresent, new string(chars), in prefixLength);
+			relativeName = new(typeToUseWhenNotPresent, new string(chars), prefixLength);
 			return true;
 		}
 		else if (TryGetRelativeNameType(value.Slice(0, equalsIndex + 1), out var type)
@@ -246,7 +246,7 @@ public readonly partial struct RelativeName :
 				prefix.CopyTo(chars);
 				value.Slice(equalsIndex + 1).CopyTo(chars.Slice(prefixLength));
 
-				relativeName = new(type, new string(chars), in prefixLength);
+				relativeName = new(type, new string(chars), prefixLength);
 			}
 			else
 			{

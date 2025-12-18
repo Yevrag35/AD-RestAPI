@@ -47,12 +47,12 @@ public abstract class ApiResult : IActionResult, IResult
 		return statusCode;
 	}
 	protected abstract int GetStatusCode();
-	protected static bool IsStatusCodeFailure(in int statusCode)
+	protected static bool IsStatusCodeFailure(int statusCode)
 	{
 		return statusCode < StatusCodes.Status100Continue
 			|| statusCode >= StatusCodes.Status400BadRequest;
 	}
-	protected static bool IsStatusCodeSuccess(in int statusCode)
+	protected static bool IsStatusCodeSuccess(int statusCode)
 	{
 		return statusCode >= StatusCodes.Status200OK
 			&& statusCode < StatusCodes.Status400BadRequest;

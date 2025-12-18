@@ -1,4 +1,4 @@
-using AD.Api.Strings.Extensions;
+using AD.Api.Extensions.Strings;
 using System.Collections.Frozen;
 using System.Collections.ObjectModel;
 

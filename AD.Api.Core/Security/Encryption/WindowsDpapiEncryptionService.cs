@@ -1,6 +1,6 @@
 using AD.Api.Core.Security.Accounts;
 using AD.Api.Core.Settings.Credentials;
-using AD.Api.Strings;
+using AD.Api.Extensions.Strings;
 using System.Buffers.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Net;

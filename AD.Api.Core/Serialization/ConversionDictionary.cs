@@ -73,7 +73,7 @@ internal sealed class ConversionDictionary : IConversionDictionary
 		return _dictionary.ToFrozenDictionary(_dictionary.Comparer);
 	}
 
-	private static Span<char> RentArray(in int length, [NotNull] ref char[]? array, ref bool isRented)
+	private static Span<char> RentArray(int length, [NotNull] ref char[]? array, ref bool isRented)
 	{
 		array = ArrayPool<char>.Shared.Rent(length);
 		isRented = true;

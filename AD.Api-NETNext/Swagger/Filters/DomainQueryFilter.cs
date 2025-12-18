@@ -4,6 +4,7 @@ using AD.Api.Core.Ldap;
 using AD.Api.Core.Security;
 using AD.Api.Reflection;
 using AD.Api.Validation;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AD.Api.Swagger.Filters;
@@ -94,51 +95,51 @@ public sealed class DomainQueryFilter : IOperationFilter, ISchemaFilter
 
 		if (typeof(SidString).Equals(context.Type))
 		{
-			schema.Nullable = false;
+			//schema.Nullable = false;
 			schema.Title = "ObjectSID";
 			schema.Default = null;
 			schema.Description = "The Security Identifier (SID) of the object.";
 			schema.MinLength = SidString.MinSidStringLength;
 			schema.MaxLength = SidString.MaxSidStringLength;
 			schema.Example = new OpenApiString("S-1-5-21-000000000-000000000-000000000-500");
-			schema.Type = "string";
+			schema.Type = JsonSchemaType.String;
 			schema.Items = null;
 			schema.AdditionalProperties = null;
-			schema.Properties.Clear();
+			schema.Properties?.Clear();
 			schema.Format = "objectSid";
 		}
 
 		if (typeof(RelativeName).Equals(context.Type.TryGetNullable(out Type? rNullable) ? rNullable : context.Type))
 		{
 			schema.Title = nameof(RelativeName);
-			schema.Type = "string";
+			schema.Type = JsonSchemaType.String;
 			schema.Items = null;
 			schema.AdditionalProperties = null;
 			schema.MinLength = 2;
 			bool isNullable = rNullable is not null
 						   && context.MemberInfo.GetCustomAttribute<RequiredAfterDeserializationAttribute>() is null;
 
-			schema.Nullable = isNullable;
+			//schema.Nullable = isNullable;
 			schema.Default = isNullable ? new OpenApiNull() : new OpenApiString(string.Empty);
 			schema.Description = "A relative distinguishedName (RDN) for the given object. If the attribute prefix is missing from the value, then 'CN=' will be prepended.";
 			schema.Example = new OpenApiString("CN=John Doe");
 			schema.Format = "relativeDistinguishedName";
-			schema.Properties.Clear();
+			schema.Properties?.Clear();
 		}
 
 		if (typeof(DistinguishedName).Equals(context.Type.TryGetNullable(out Type? underlying) ? underlying : context.Type))
 		{
 			schema.Title = nameof(DistinguishedName);
-			schema.Type = "string";
+			schema.Type = JsonSchemaType.String;
 			schema.Items = null;
 			schema.AdditionalProperties = null;
 			schema.AdditionalPropertiesAllowed = false;
 			schema.Format = "distinguishedName";
 			schema.Description = "The LDAP distinguished name of the object.";
-			schema.Properties.Clear();
+			schema.Properties?.Clear();
 			schema.Example = new OpenApiString("CN=John Doe,OU=Users,DC=contoso,DC=com");
-			schema.Nullable = underlying is not null
-						   && context.MemberInfo?.GetCustomAttribute<RequiredAfterDeserializationAttribute>() is null;
+			//schema.Nullable = underlying is not null
+			//			   && context.MemberInfo?.GetCustomAttribute<RequiredAfterDeserializationAttribute>() is null;
 		}
 	}
 }

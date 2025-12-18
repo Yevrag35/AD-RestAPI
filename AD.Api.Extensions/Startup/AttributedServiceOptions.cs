@@ -11,7 +11,7 @@ public sealed class AttributedServiceOptions
 {
 	private BindingFlags _dynamicMethodFlags;
 	private Action<IAddServiceTypeExclusions>? _exclusionAction;
-	private Action<Referencer>? _referencerAction;
+	private List<Assembly>? _loadAssemblies;
 
 	/// <summary>
 	/// Gets or sets a value indicating whether duplicate service registrations are allowed.
@@ -25,7 +25,40 @@ public sealed class AttributedServiceOptions
 	/// If this is not set, the current application's <see cref="AppDomain.CurrentDomain"/> assemblies
 	/// will be retrieved.
 	/// </remarks>
-	public Assembly[]? AssembliesToScan { private get; set; }
+	public IReadOnlyList<Assembly>? AssembliesToScan
+	{
+		private get => _loadAssemblies;
+		set
+		{
+			if (value is null)
+				return;
+
+			if (value.TryGetNonEnumeratedCount(out int count))
+			{
+				if (count == 0)
+					return;
+
+				if (_loadAssemblies is null)
+				{
+					_loadAssemblies = new(count);
+				}
+				else
+				{
+					_ = _loadAssemblies.EnsureCapacity(count + _loadAssemblies.Count);
+				}
+
+				_loadAssemblies.AddRange(value);
+			}
+			else if (_loadAssemblies is null)
+			{
+				_loadAssemblies = [.. value];
+			}
+			else
+			{
+				_loadAssemblies.AddRange(value);
+			}
+		}
+	}
 
 	/// <summary>
 	/// Sets the configuration for injecting into <see cref="DynamicServiceRegistrationMethodAttribute"/>
@@ -111,7 +144,6 @@ public sealed class AttributedServiceOptions
 	internal AttributedServiceOptions()
 	{
 		_dynamicMethodFlags = BindingFlags.NonPublic | BindingFlags.Static;
-		this.AssembliesToScan = null;
 		this.Configuration = null;
 	}
 
@@ -134,7 +166,7 @@ public sealed class AttributedServiceOptions
 	public AttributedServiceOptions LoadReferences(Action<Referencer> action)
 	{
 		ArgumentNullException.ThrowIfNull(action);
-		_referencerAction = action;
+		action(default);
 		return this;
 	}
 
@@ -144,18 +176,24 @@ public sealed class AttributedServiceOptions
 	/// <returns>An enumerable of assemblies to be scanned.</returns>
 	internal IEnumerable<Assembly> GetAssemblies()
 	{
-		if (_referencerAction is not null)
+		if (_loadAssemblies is null)
 		{
-			Referencer.LoadAll(_referencerAction);
+			return this.FilterFromArray(AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain));
 		}
 
-		Assembly[] allAssemblies = this.AssembliesToScan is not null && this.AssembliesToScan.Length > 0
-			? this.AssembliesToScan
-			: AppDomain.CurrentDomain.GetAssemblies();
+		_ = _loadAssemblies.RemoveAll(!this.IncludeDynamicAssembliesInScan
+			? this.IsAttributeServicableAssembly
+			: this.IsServicableAssembly);
 
-		return !this.IncludeNonAttributedAssembliesInScan
-			? allAssemblies.Where(this.IsAttributeServicableAssembly)
-			: allAssemblies.Where(this.IsServicableAssembly);
+		Debug.Assert(_loadAssemblies.Count > 0, "There should be at least one assembly to scan at this point.");
+		return _loadAssemblies;
+	}
+
+	private IEnumerable<Assembly> FilterFromArray(Assembly[] assemblies)
+	{
+		return !this.IncludeDynamicAssembliesInScan
+			? assemblies.Where(this.IsAttributeServicableAssembly)
+			: assemblies.Where(this.IsServicableAssembly);
 	}
 
 	internal BindingFlags GetDynamicMethodBindingFlags()

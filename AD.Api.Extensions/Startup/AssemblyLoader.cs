@@ -1,4 +1,4 @@
-namespace AD.Api.Extensions.Startup;
+namespace AD.Api.Startup;
 
 /// <summary>
 /// A <see langword="static"/> class that returns the assemblies loaded in the current application domain.

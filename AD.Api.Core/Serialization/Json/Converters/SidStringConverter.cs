@@ -13,7 +13,7 @@ public sealed class SidStringConverter : JsonConverter<SidString>
 		}
 
 		int length = Encoding.UTF8.GetMaxCharCount(reader.ValueSpan.Length);
-		if (!SidString.IsLengthInRange<char>(in length))
+		if (!SidString.IsLengthInRange<char>(length))
 		{
 			//TODO: Log not SID message.
 			return null;
