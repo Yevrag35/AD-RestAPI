@@ -6,6 +6,8 @@ namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 public sealed class OneEditOperationConverter<T> : EditOperationConverter<T, DirectoryAttributeModification>
 	where T : EditOperationDictionary<DirectoryAttributeModification>, IAppendableSingleOperation, new()
 {
+	public OneEditOperationConverter(WorkingNamingPolicy policy) : base(policy) { }
+
 	protected override T CreateCollection()
 	{
 		return new();

@@ -1,9 +1,12 @@
 using AD.Api.Core.Operations;
+using AD.Api.Serialization.Json;
 
 namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
 public sealed class ClearOperationConverter : EditOperationConverter<ClearDictionary, DirectoryAttributeModification>
 {
+	public ClearOperationConverter(WorkingNamingPolicy policy) : base(policy) { }
+
 	protected override ClearDictionary CreateCollection()
 	{
 		return [];

@@ -21,6 +21,7 @@ public static class MvcJsonOptionsExtensions
 		return addControllers(appBuilder)
 			.AddJsonOptions(options =>
 			{
+				WorkingNamingPolicy policy = new(options.JsonSerializerOptions);
 
 				options.AllowInputFormatterExceptionMessages = isDevelopment;
 				options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
@@ -29,7 +30,7 @@ public static class MvcJsonOptionsExtensions
 				options.JsonSerializerOptions.WriteIndented = settings.WriteIndented;
 
 				options.JsonSerializerOptions.Converters.Add(enumConverter);
-				AddAdditionalJsonConverters(options.JsonSerializerOptions, converter);
+				AddAdditionalJsonConverters(options.JsonSerializerOptions, converter, policy);
 
 				options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
 				{
@@ -38,22 +39,22 @@ public static class MvcJsonOptionsExtensions
 			});
 	}
 
-	private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter)
+	private static void AddAdditionalJsonConverters(JsonSerializerOptions options, PropertyConverter converter, WorkingNamingPolicy policy)
 	{
 		options.Converters.AddMany(
 			new UserAccountControlConverter(),
-			new ClearOperationConverter(),
+			new ClearOperationConverter(policy),
 			new DistinguishedNameConverter(),
-			new KeyValuePairArrayConverter<DistinguishedName>() { IsOrdered = true },
-			new OneEditOperationConverter<AddDictionary>(),
-			new OneEditOperationConverter<RemoveDictionary>(),
-			new OneEditOperationConverter<SetDictionary>(),
+			new KeyValuePairArrayConverter<DistinguishedName>(policy) { IsOrdered = true },
+			new OneEditOperationConverter<AddDictionary>(policy),
+			new OneEditOperationConverter<RemoveDictionary>(policy),
+			new OneEditOperationConverter<SetDictionary>(policy),
 			new RelativeNameConverter(),
-			new ReplaceOperationConverter(),
+			new ReplaceOperationConverter(policy),
 			new ResultEntryConverter(converter),
 			new ResultEntryCollectionConverter(converter),
 			new SidStringConverter(),
-			new StringValuesConverter());
+			new StringValuesAsStringConverter());
 	}
 	private static LdapEnumConverter ConfigureAndAddEnumConverter(IHostApplicationBuilder appBuilder, SerializationSettings settings)
 	{
