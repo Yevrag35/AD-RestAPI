@@ -1,3 +1,4 @@
+using AD.Api.Core.Settings;
 using AD.Api.Startup;
 using NLog.Extensions.Logging;
 using WebApp = Microsoft.AspNetCore.Builder.WebApplication;
@@ -29,3 +30,14 @@ builder.Logging.ClearProviders()
 					CaptureMessageTemplates = true,
 				});
 
+// Add Settings Reader for environment variable translation.
+builder.Services.AddSettingsReader(out ISettingsReader settingsReader)
+				.AddSingleton(TimeProvider.System);
+
+builder.Services.AddValidation()
+				.AddProblemDetails(x => x.CustomizeProblemDetails = ctx =>
+				{
+					const string correlationId = "correlationId";
+					_ = ctx.ProblemDetails.Extensions.TryAdd(correlationId, ctx.HttpContext.TraceIdentifier);
+				});
+				
