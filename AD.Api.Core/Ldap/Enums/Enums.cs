@@ -1,5 +1,6 @@
 using AD.Api.Attributes;
 using AD.Api.Attributes.Ldap;
+using AD.Api.Generators;
 
 namespace AD.Api.Core.Ldap;
 
@@ -15,6 +16,7 @@ public enum CreationType
 
 [Flags]
 [LdapEnum("groupType")]
+[GenerateEnumToString]
 public enum GroupType
 {
 	BuiltIn = 0x00000001,
@@ -37,6 +39,7 @@ public enum Protocol
 /// </summary>
 [Flags]
 [LdapEnum("sAMAccountType")]
+[GenerateEnumToString]
 public enum SamAccountType
 {
 	DomainObject = 0x0,
@@ -65,6 +68,7 @@ public enum SamAccountType
 /// <remarks>Specify any combination of the flags to control the specified account.</remarks>
 [Flags]
 [LdapEnum("userAccountControl")]
+[GenerateEnumToString]
 public enum UserAccountControl
 {
 	/// <summary>
@@ -233,6 +237,7 @@ public enum UserAccountControl
 	UseAESKeys = 0x4000000, // 67108864
 }
 
+[GenerateEnumToString]
 public enum WellKnownObjectValue
 {
 	None,

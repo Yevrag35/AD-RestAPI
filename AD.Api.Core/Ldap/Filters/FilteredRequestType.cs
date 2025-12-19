@@ -1,8 +1,9 @@
 using AD.Api.Attributes;
+using AD.Api.Generators;
 
 namespace AD.Api.Core.Ldap.Filters;
 
-[Flags]
+[Flags, GenerateEnumToString]
 public enum FilteredRequestType
 {
 	Any = 0,

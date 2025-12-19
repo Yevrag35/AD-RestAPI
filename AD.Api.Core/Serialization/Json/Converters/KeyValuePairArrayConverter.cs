@@ -1,9 +1,10 @@
 using AD.Api.Core.Schema;
+using AD.Api.Serialization.Converters;
 using AD.Api.Serialization.Json;
 
 namespace AD.Api.Core.Serialization.Json.Converters;
 
-public sealed class KeyValuePairArrayConverter<T> : JsonConverter<KeyValuePair<string, T>[]>
+public sealed class KeyValuePairArrayConverter<T> : ByPolicyJsonConverter<KeyValuePair<string, T>[]>
 {
 	private static readonly Type _typeDef = typeof(KeyValuePair<,>);
 	private static readonly Type _keyType = SchemaProperty.StringType;
@@ -11,7 +12,7 @@ public sealed class KeyValuePairArrayConverter<T> : JsonConverter<KeyValuePair<s
 
 	public bool IsOrdered { get; init; }
 
-	public KeyValuePairArrayConverter()
+	public KeyValuePairArrayConverter(WorkingNamingPolicy policy) : base(policy)
 	{
 		_type = typeof(KeyValuePair<string, T>[]);
 	}

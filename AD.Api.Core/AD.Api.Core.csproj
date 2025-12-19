@@ -66,5 +66,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AD.Api.Extensions\AD.Api.Extensions.csproj" />
+    <ProjectReference Include="..\AD.Api.Generators\AD.Api.Generators.csproj"
+					  OutputItemType="Analyzer"
+					  ReferenceOutputAssembly="false"/>
   </ItemGroup>
 </Project>

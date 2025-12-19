@@ -1,13 +1,19 @@
 using AD.Api.Components;
 using AD.Api.Core.Operations;
+using AD.Api.Serialization.Converters;
+using AD.Api.Serialization.Json;
 using System.Globalization;
 
 namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
-public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
+public abstract class EditOperationConverter<T, TValue> : ByPolicyJsonConverter<T>
 	where T : EditOperationDictionary<TValue>
 	where TValue : notnull
 {
+	protected EditOperationConverter(WorkingNamingPolicy policy) : base(policy)
+	{
+	}
+
 	protected abstract T CreateCollection();
 	protected abstract void Deserialize(ref Utf8JsonReader reader, T collection, JsonSerializerOptions options);
 	protected abstract bool IsProperStartToken(JsonTokenType type);
