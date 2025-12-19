@@ -21,5 +21,5 @@ public interface IEnvironmentSetting<TSelf> where TSelf : class, IEnvironmentSet
 	/// a getter delegate and a setter delegate for a single configurable property.
 	/// </remarks>
 	/// <returns>An array of <see cref="GetSetString{TClass}"/> describing environment-backed properties.</returns>
-	static abstract RentedBuffer<GetSetString<TSelf>> GetAccessors();
+	static abstract GetSetString<TSelf>[] GetAccessors();
 }

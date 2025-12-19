@@ -4,6 +4,9 @@ using AD.Api.Enums;
 
 namespace AD.Api.Core.Extensions;
 
+/// <summary>
+/// Extension methods for working with <see cref="HttpContext"/> instances.
+/// </summary>
 public static class HttpContextExtensions
 {
 	public const string TRACE_ID_HEADER = "X-Trace-Id";
@@ -47,6 +50,18 @@ public static class HttpContextExtensions
 	{
 		return context.Items.Remove(AuthorizationScope.NeedsScoping);
 	}
+	/// <summary>
+	/// Attempts to retrieve the current routing <see cref="Endpoint"/> associated with the current <see cref="HttpContext"/>.
+	/// </summary>
+	/// <param name="context">The HTTP context from which to obtain the endpoint.</param>
+	/// <param name="endpoint">When this method returns, contains the endpoint associated with the context if one is available; otherwise, <see langword="null"/>.</param>
+	/// <returns><see langword="true"/> if an endpoint is associated with the context; otherwise, <see langword="false"/>.</returns>
+	public static bool TryGetEndpoint(this HttpContext context, [NotNullWhen(true)] out Endpoint? endpoint)
+	{
+		endpoint = context.GetEndpoint();
+		return endpoint is not null;
+	}
+
 	public static bool TryGetScopes(this HttpContext context, [NotNullWhen(true)] out AuthorizationScope[]? scopes)
 	{
 		if (context.Items.TryGetValue(AuthorizationScope.CLAIM_TYPE, out object? value) && value is AuthorizationScope[] authScopes)

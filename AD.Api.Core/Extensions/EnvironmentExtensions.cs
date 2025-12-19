@@ -3,6 +3,13 @@ using Microsoft.Extensions.Hosting;
 
 namespace AD.Api.Core.Extensions;
 
+/// <summary>
+/// Provides extension methods for configuring the application environment based on command-line arguments or
+/// environment variables.
+/// </summary>
+/// <remarks>This class offers utilities to assist with setting the application's environment (such as
+/// Development, Staging, or Production) by parsing command-line arguments or reading environment variables. It is
+/// intended to complement standard host builder environment configuration in ASP.NET Core applications.</remarks>
 public static class EnvironmentExtensions
 {
 	private const string STARTING = "--environment=";

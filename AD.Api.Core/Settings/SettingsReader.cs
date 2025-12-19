@@ -19,21 +19,18 @@ internal sealed partial class SettingsReaderService : ISettingsReader
 	/// <summary>
 	/// Initializes a new instance of the <see cref="SettingsReaderService"/> class.
 	/// </summary>
-	public SettingsReaderService() { }
+	internal SettingsReaderService() { }
 
 	public T ReplaceAppEnvironmentSettings<T>(T model) where T : class, IEnvironmentSetting<T>
 	{
 		Debug.Assert(model is not null, $"{nameof(model)} should not be null.");
 
-		using (var accessors = T.GetAccessors())
+		foreach (GetSetString<T> accessor in T.GetAccessors())
 		{
-			foreach (GetSetString<T> accessor in accessors)
-			{
-				PerformTranslation(model, accessor);
-			}
-
-			return model;
+			PerformTranslation(model, accessor);
 		}
+
+		return model;
 	}
 
 	private static void PerformTranslation<T>(T model, GetSetString<T> accessor) where T : class

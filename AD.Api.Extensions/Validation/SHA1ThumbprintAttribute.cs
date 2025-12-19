@@ -3,11 +3,17 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AD.Api.Validation;
 
+/// <summary>
+/// Specifies that a property must contain a valid SHA-1 thumbprint string for validation purposes.
+/// </summary>
+/// <remarks>A valid SHA-1 thumbprint is a 40-character hexadecimal string consisting only of the characters 0-9,
+/// a-f, or A-F. This attribute can be applied to string properties to enforce this format during validation. If the
+/// property implements <see cref="IValidatableThumbprint"/>, validation is delegated to the nested property.</remarks>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 public sealed class SHA1ThumbprintAttribute : ValidatablePropertyAttribute<string>
 {
 	private const int THUMBPRINT_LENGTH = 40;
-	private static readonly SearchValues<char> _sha1Chars;
+	private static readonly SearchValues<char> s_sha1Chars;
 	static SHA1ThumbprintAttribute()
 	{
 		CharRange numerals = new('0', '9');
@@ -23,7 +29,7 @@ public sealed class SHA1ThumbprintAttribute : ValidatablePropertyAttribute<strin
 
 		uppercase.CopyTo(chars.Slice(pos));
 
-		_sha1Chars = SearchValues.Create(chars);
+		s_sha1Chars = SearchValues.Create(chars);
 	}
 
 	public SHA1ThumbprintAttribute()
@@ -53,7 +59,7 @@ public sealed class SHA1ThumbprintAttribute : ValidatablePropertyAttribute<strin
 		{
 			msg = string.Format(Errors.Validation_Thumbprint_IncorrectLength, sha1Str.Length);
 		}
-		else if (sha1Str.AsSpan().ContainsAnyExcept(_sha1Chars))
+		else if (sha1Str.AsSpan().ContainsAnyExcept(s_sha1Chars))
 		{
 			msg = string.Format(Errors.Validation_Thumbprint_InvalidChars, sha1Str);
 		}
