@@ -19,6 +19,9 @@
 	<Using Include="System.Diagnostics.CodeAnalysis" />
 	<Using Include="System.DirectoryServices" />
 	<Using Include="System.DirectoryServices.Protocols" />
+	<Using Include="System.Globalization" />
+	<Using Include="System.Net.Http" />
+	<Using Include="System.Net.Http.Headers" />
 	<Using Include="System.Reflection" />
 	<Using Include="System.Runtime.CompilerServices" />
 	<Using Include="System.Runtime.InteropServices" />
@@ -27,7 +30,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+	<PackageReference Include="Microsoft.Identity.Web" Version="4.2.0" />
+	<PackageReference Include="Microsoft.OpenApi" Version="3.1.1" />
+	<PackageReference Include="NLog.DiagnosticSource" Version="6.0.3" />
+	<PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" />
+	<PackageReference Include="NLog.Web.AspNetCore" Version="6.1.0" />
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
   </ItemGroup>
 
   <ItemGroup>
