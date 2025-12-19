@@ -1,5 +1,7 @@
 using AD.Api.Core.Settings;
+using AD.Api.Http;
 using AD.Api.Startup;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NLog.Extensions.Logging;
 using WebApp = Microsoft.AspNetCore.Builder.WebApplication;
 
@@ -31,8 +33,12 @@ builder.Logging.ClearProviders()
 				});
 
 // Add Settings Reader for environment variable translation.
-builder.Services.AddSettingsReader(out ISettingsReader settingsReader)
-				.AddSingleton(TimeProvider.System);
+builder.Services.AddSettingsReader(out ISettingsReader settingsReader);
+
+builder.Services.Configure<RouteOptions>(options =>
+{
+	options.ConstraintMap.Add(SidRouteConstraint.ConstraintName, typeof(SidRouteConstraint));
+});
 
 builder.Services.AddValidation()
 				.AddProblemDetails(x => x.CustomizeProblemDetails = ctx =>
@@ -40,4 +46,5 @@ builder.Services.AddValidation()
 					const string correlationId = "correlationId";
 					_ = ctx.ProblemDetails.Extensions.TryAdd(correlationId, ctx.HttpContext.TraceIdentifier);
 				});
-				
+
+builder.Services.TryAddSingleton(TimeProvider.System);

@@ -1,7 +1,7 @@
-﻿using AD.Api.Buffers;
-using AD.Api.Core.Security;
+﻿using AD.Api.Core.Security;
+using Microsoft.AspNetCore.Routing;
 
-namespace AD.Api.Constraints;
+namespace AD.Api.Http;
 
 public sealed class SidRouteConstraint : IRouteConstraint
 {

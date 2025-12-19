@@ -43,4 +43,9 @@
     <ProjectReference Include="..\AD.Api.Core\AD.Api.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Middleware\" />
+    <Folder Include="Routes\" />
+  </ItemGroup>
+
 </Project>
