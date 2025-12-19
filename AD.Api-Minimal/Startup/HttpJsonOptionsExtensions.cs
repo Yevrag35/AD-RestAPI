@@ -59,7 +59,7 @@ internal static class HttpJsonOptionsExtensions
 			new ResultEntryConverter(propertyConverter),
 			new ResultEntryCollectionConverter(propertyConverter),
 			new SidStringConverter(),
-			new StringValuesAsStringConverter());
+			StringValuesConverter.AsArray);
 	}
 	private static SerializationSettings GetSerializationSettings(IServiceCollection services, IConfiguration configuration)
 	{
@@ -71,17 +71,17 @@ internal static class HttpJsonOptionsExtensions
 			{
 				DateTimeAttributes = [
 					"accountExpires",
-						"badPasswordTime",
-						"lastLogon",
-						"lastLogonTimestamp",
-						"lockoutTime",
-						"pwdLastSet",
-						"whenChanged",
-						"whenCreated",
+					"badPasswordTime",
+					"lastLogon",
+					"lastLogonTimestamp",
+					"lockoutTime",
+					"pwdLastSet",
+					"whenChanged",
+					"whenCreated",
 				],
 				GuidAttributes = [
 					"ms-DS-ConsistencyGuid",
-						"objectGUID",
+					"objectGUID",
 				],
 				WriteEnumFlagsAsArray = false,
 				WriteIndented = true,

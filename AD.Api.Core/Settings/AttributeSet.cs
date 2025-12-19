@@ -1,5 +1,5 @@
 using AD.Api.Core.Serialization;
-using System.Collections.Frozen;
+using System.Collections.Immutable;
 
 namespace AD.Api.Core.Settings;
 
@@ -10,21 +10,21 @@ namespace AD.Api.Core.Settings;
 public abstract class AttributeSet : IReadOnlySet<string>
 {
 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	private readonly IReadOnlySet<string> _attributes;
+	private readonly ImmutableHashSet<string> _attributes;
 
 	public int Count => _attributes.Count;
 	public abstract SerializerAction SerializerAction { get; }
 	public abstract Type SerializationType { get; }
 
 	[DebuggerStepThrough]
-	protected private AttributeSet()
+	private protected AttributeSet()
 	{
-		_attributes = FrozenSet<string>.Empty;
+		_attributes = [];
 	}
 	[DebuggerStepThrough]
-	protected private AttributeSet(string[] attributes)
+	private protected AttributeSet(string[] attributes)
 	{
-		_attributes = new HashSet<string>(attributes, StringComparer.OrdinalIgnoreCase);
+		_attributes = ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase, attributes);
 	}
 
 	public static AttributeSet<T> Create<T>(IConfigurationSection configurationSection, SerializerAction action)
@@ -69,8 +69,17 @@ public abstract class AttributeSet : IReadOnlySet<string>
 		return _attributes.SetEquals(other);
 	}
 
+	/// <summary>
+	/// Returns an enumerator that iterates through the collection.
+	/// </summary>
+	/// <returns>An <see cref="Enumerator"/> that can be used to iterate through the collection.</returns>
 	[DebuggerStepThrough]
-	public IEnumerator<string> GetEnumerator()
+	public Enumerator GetEnumerator()
+	{
+		return new Enumerator(this);
+	}
+	[DebuggerStepThrough]
+	IEnumerator<string> IEnumerable<string>.GetEnumerator()
 	{
 		return _attributes.GetEnumerator();
 	}
@@ -78,6 +87,34 @@ public abstract class AttributeSet : IReadOnlySet<string>
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return this.GetEnumerator();
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct Enumerator : IEnumerator<string>
+	{
+		private ImmutableHashSet<string>.Enumerator _enumerator;
+
+		public readonly string Current => _enumerator.Current;
+		readonly object? IEnumerator.Current => _enumerator.Current;
+
+		internal Enumerator(AttributeSet set)
+		{
+			_enumerator = set._attributes.GetEnumerator();
+		}
+
+		public bool MoveNext()
+		{
+			return _enumerator.MoveNext();
+		}
+
+		public void Dispose()
+		{
+			_enumerator.Dispose();
+		}
+		void IEnumerator.Reset()
+		{
+			throw new NotSupportedException();
+		}
 	}
 }
 
@@ -95,12 +132,12 @@ public abstract class AttributeSet<T> : AttributeSet
 	public sealed override SerializerAction SerializerAction { get; }
 	public sealed override Type SerializationType { get; }
 
-	protected private AttributeSet(SerializerAction action) : base()
+	private protected AttributeSet(SerializerAction action) : base()
 	{
 		this.SerializerAction = action;
 		this.SerializationType = typeof(T);
 	}
-	protected private AttributeSet(string[] attributes, SerializerAction action) : base(attributes)
+	private protected AttributeSet(string[] attributes, SerializerAction action) : base(attributes)
 	{
 		this.SerializerAction = action;
 		this.SerializationType = typeof(T);

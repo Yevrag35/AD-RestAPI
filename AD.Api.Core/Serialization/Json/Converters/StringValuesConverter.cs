@@ -12,6 +12,8 @@ public abstract class StringValuesConverter : JsonConverter<StringValues>
 	private static readonly StringValues s_false = bool.FalseString;
 	private static readonly StringValues s_true = bool.TrueString;
 
+	public static readonly StringValuesConverter AsArray = new ArrayConverter();
+
 	/// <summary>
 	/// Gets the serialization mode used by the current instance.
 	/// </summary>

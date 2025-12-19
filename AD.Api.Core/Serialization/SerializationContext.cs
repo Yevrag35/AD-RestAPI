@@ -1,31 +1,30 @@
 namespace AD.Api.Core.Serialization;
 
+[StructLayout(LayoutKind.Auto)]
 public ref struct SerializationContext
 {
 	private readonly IServiceProvider _provider;
-	private ReadOnlySpan<char> _attributeName;
 	private readonly JsonSerializerOptions _options;
-	private object _value;
 
 	public ReadOnlySpan<char> AttributeName
 	{
-		readonly get => _attributeName;
-		internal set => _attributeName = value;
+		readonly get;
+		internal set;
 	}
 	public readonly JsonSerializerOptions Options => _options;
 	public readonly IServiceProvider Services => _provider;
 	public object Value
 	{
-		readonly get => _value;
-		internal set => _value = value;
+		readonly get;
+		internal set;
 	}
 
 	internal SerializationContext(JsonSerializerOptions options, IServiceProvider scopedProvider)
 	{
-		_attributeName = default;
+		this.AttributeName = default;
 		_provider = scopedProvider;
 		_options = options;
-		_value = string.Empty;
+		this.Value = string.Empty;
 	}
 }
 
