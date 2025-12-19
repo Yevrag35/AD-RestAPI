@@ -1,4 +1,5 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Collections;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
 using AD.Api.Enums;
@@ -15,6 +16,7 @@ public interface IDefaults
 
 	ref readonly ISearchDefaults this[string key] { get; }
 
+	int CopyTo(LdapPropertyList attributes, FilteredRequestType types, bool includeGlobals = false);
 	int GetAttributeCount(FilteredRequestType types);
 	int GetAttributeCount(FilteredRequestType types, bool includeGlobal);
 
@@ -44,6 +46,29 @@ internal sealed class DefaultsService : IDefaults
 			.Sum(x => x.Attributes.Length);
 
 		this.RequestTypes = types;
+	}
+
+	public int CopyTo(LdapPropertyList attributes, FilteredRequestType types, bool includeGlobals = false)
+	{
+		int count = 0;
+		foreach (FilteredRequestType flag in types.EnumerateFlags())
+		{
+			if (this.RequestTypes.TryGetName(flag, out string? name)
+				&&
+				_dictionary.TryGetValue(name, out var defaults))
+			{
+				attributes.AddRange(defaults.Attributes);
+				count += defaults.Attributes.Length;
+			}
+		}
+
+		if (includeGlobals)
+		{
+			attributes.AddRange(_dictionary[string.Empty].Attributes);
+			count += this.TotalGlobalAttributeCount;
+		}
+
+		return count;
 	}
 
 	[DebuggerStepThrough]

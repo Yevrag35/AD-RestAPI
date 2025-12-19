@@ -24,7 +24,8 @@ public readonly ref struct Referencer
 	/// <returns>
 	///     The same <see cref="Referencer"/> for chaining.
 	/// </returns>
-	public readonly Referencer Reference(Type type)
+	public readonly Referencer Reference(
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)] Type type)
 	{
 		return this;
 	}

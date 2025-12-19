@@ -1,5 +1,6 @@
 using AD.Api.Actions;
 using AD.Api.Attributes.Services;
+using AD.Api.Collections.Extensions;
 using AD.Api.Core.Pooling;
 using AD.Api.Core.Schema;
 using AD.Api.Core.Serialization;
@@ -18,7 +19,7 @@ public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<
 	private readonly IStatedCallback<ResultEntry> _createEntry;
 	private readonly IStatedCallback<ResultEntryCollection> _createCollection;
 	private readonly ConcurrentBag<ResultEntry> _entries;
-	private readonly ConcurrentHashSet<Guid> _leaseIds;
+	private readonly ConcurrentDictionary<Guid, byte> _leaseIds;
 
 	private int _colCount; int _entCount;
 
@@ -58,7 +59,7 @@ public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<
 
 	public void Return(ResultEntry? item)
 	{
-		if (!TryReset(item) || !_leaseIds.TryRemove(item.LeaseId))
+		if (!TryReset(item) || !_leaseIds.Remove(item.LeaseId))
 		{
 			return;
 		}
@@ -69,15 +70,15 @@ public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<
 	{
 		if (item is null)
 		{
-			_leaseIds.TryRemove(itemId);
+			_leaseIds.Remove(itemId);
 			return;
 		}
 
-		if (itemId == item.LeaseId && !_leaseIds.TryRemove(itemId))
+		if (itemId == item.LeaseId && !_leaseIds.Remove(itemId))
 		{
 			return;
 		}
-		else if (itemId != item.LeaseId && !_leaseIds.TryRemove(itemId) && !_leaseIds.TryRemove(item.LeaseId))
+		else if (itemId != item.LeaseId && !_leaseIds.Remove(itemId) && !_leaseIds.Remove(item.LeaseId))
 		{
 			return;
 		}
@@ -90,14 +91,14 @@ public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<
 	}
 	public void Return(Guid itemId, ResultEntryCollection? item)
 	{
-		if (_leaseIds.TryRemove(itemId) && TryReset(item))
+		if (_leaseIds.Remove(itemId) && TryReset(item))
 		{
 			Return(item, _collections, ref _colCount, MAX_COL_SIZE);
 		}
 	}
 	public void Return(ResultEntryCollection? collection)
 	{
-		if (TryReset(collection) && _leaseIds.TryRemove(collection.LeaseId))
+		if (TryReset(collection) && _leaseIds.Remove(collection.LeaseId))
 		{
 			Return(collection, _collections, ref _colCount, MAX_COL_SIZE);
 		}
@@ -106,7 +107,7 @@ public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<
 	private Guid GenerateLease()
 	{
 		Guid id = Guid.NewGuid();
-		while (!_leaseIds.Add(id))
+		while (!_leaseIds.TryAdd(id))
 		{
 			id = Guid.NewGuid();
 		}
@@ -139,7 +140,7 @@ public sealed class ResultEntryPool : IPoolReturner<ResultEntry>, IPoolReturner<
 		return item is not null && item.TryReset();
 	}
 
-	[DynamicDependencyRegistrationMethod]
+	[DynamicDependencyRegistrationMethod, SuppressMessage("Style", "IDE0051")]
 	private static void AddToServices(IServiceCollection services)
 	{
 		services.AddSingleton<ResultEntryPool>()

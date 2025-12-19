@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using AD.Api.Statics;
+using AD.Api.Extensions;
+using System.Globalization;
 using System.Numerics;
 using System.Text;
 
@@ -34,118 +36,114 @@ public ref struct FilterSpanWriter
 	}
 
 	/// <inheritdoc cref="ValidateEnd" path="/exception"/>
-	public FilterSpanWriter End()
+	public void End()
 	{
 		this.ValidateEnd();
 
-		_builder = _builder.Append(')');
+		_builder.Append(')');
 		_depth--;
-		return this;
 	}
-	public FilterSpanWriter EndAll()
+	public void EndAll()
 	{
-		if (_depth <= 0)
+		if (_depth > 0)
 		{
-			return this;
+			int howMany = _depth;
+			_builder.Append(')', howMany);
+			_depth = 0;
 		}
-
-		int howMany = _depth;
-		_builder = _builder.Append(')', howMany);
-		_depth = 0;
-		return this;
 	}
 
-	public FilterSpanWriter Equal(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> value)
+	public void Equal(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> value)
 	{
-		_builder = _builder.Append('(')
-						   .Append(propertyName.Trim())
-						   .Append('=')
-						   .Append(value.Trim())
-						   .Append(')');
-
-		return this;
+		_builder.Append('(');
+		_builder.Append(propertyName.Trim());
+		_builder.Append('=');
+		_builder.Append(value.Trim());
+		_builder.Append(')');
 	}
-	public FilterSpanWriter Equal(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, scoped ReadOnlySpan<char> value)
+	public void Equal(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, scoped ReadOnlySpan<char> value)
 	{
 		if (modifier.IsWhiteSpace())
 		{
-			return this.Equal(propertyName, value);
+			this.Equal(propertyName, value);
+			return;
 		}
 
 		Span<char> combined = stackalloc char[propertyName.Length + modifier.Length];
 		propertyName.CopyTo(combined);
 		modifier.CopyTo(combined.Slice(propertyName.Length));
 
-		return this.Equal(combined, value);
+		this.Equal(combined, value);
 	}
-	public FilterSpanWriter Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> value)
+	public void Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> value)
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
 		count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
-		return this.Equal(nameChars.Slice(0, count), value);
+		this.Equal(nameChars.Slice(0, count), value);
 	}
-	public FilterSpanWriter Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, scoped ReadOnlySpan<char> value)
+	public void Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, scoped ReadOnlySpan<char> value)
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
 		count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
-		return this.Equal(nameChars.Slice(0, count), modifier, value);
+		this.Equal(nameChars.Slice(0, count), modifier, value);
 	}
-	public FilterSpanWriter Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<byte> utf8Value)
+	public void Equal(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<byte> utf8Value)
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8Value.Length);
 		Span<char> valChars = stackalloc char[count];
 		count = Encoding.UTF8.GetChars(utf8PropertyName, valChars);
 
-		return this.Equal(utf8PropertyName, valChars.Slice(0, count));
+		this.Equal(utf8PropertyName, valChars.Slice(0, count));
 	}
 
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+	public void Equal<T>(scoped ReadOnlySpan<char> propertyName, T value)
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		int length = value.GetLength();
 		Span<char> intChars = stackalloc char[LengthConstants.INT128_MAX];
 		_ = value.TryFormat(intChars, out int intLength, default, CultureInfo.InvariantCulture);
 
-		return this.Equal(propertyName, intChars.Slice(0, intLength));
+		this.Equal(propertyName, intChars.Slice(0, intLength));
 	}
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+	public void Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value)
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
 		count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
-		return this.Equal(nameChars.Slice(0, count), value);
+		this.Equal(nameChars.Slice(0, count), value);
 	}
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+	public void Equal<T>(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, T value)
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		if (modifier.IsWhiteSpace())
 		{
-			return this.Equal(propertyName, value);
+			this.Equal(propertyName, value);
+			return;
 		}
 
 		Span<char> combined = stackalloc char[propertyName.Length + modifier.Length];
 		propertyName.CopyTo(combined);
 		modifier.CopyTo(combined.Slice(propertyName.Length));
 
-		return this.Equal(combined, value);
+		this.Equal(combined, value);
 	}
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, T value)
-		where T : unmanaged, INumber<T>, IMinMaxValue<T>, ISpanFormattable
+	public void Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, scoped ReadOnlySpan<char> modifier, T value)
+		where T : unmanaged, INumber<T>, IMinMaxValue<T>, IBinaryInteger<T>, ISpanFormattable
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
 		count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
-		return this.Equal(nameChars.Slice(0, count), modifier, value);
+		this.Equal(nameChars.Slice(0, count), modifier, value);
 	}
 
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+	public void Equal<T>(scoped ReadOnlySpan<char> propertyName, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
 		where T : ISpanFormattable
 	{
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxValueLength);
@@ -155,18 +153,18 @@ public ref struct FilterSpanWriter
 			throw new FormatException("Unable to format the value to the character span.");
 		}
 
-		return this.Equal(propertyName, valChars.Slice(0, written));
+		this.Equal(propertyName, valChars.Slice(0, written));
 	}
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
+	public void Equal<T>(scoped ReadOnlySpan<byte> utf8PropertyName, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
 		where T : ISpanFormattable
 	{
 		int count = Encoding.UTF8.GetMaxCharCount(utf8PropertyName.Length);
 		Span<char> nameChars = stackalloc char[count];
 		count = Encoding.UTF8.GetChars(utf8PropertyName, nameChars);
 
-		return this.Equal(nameChars.Slice(0, count), value, maxValueLength, format, provider);
+		this.Equal(nameChars.Slice(0, count), value, maxValueLength, format, provider);
 	}
-	public FilterSpanWriter Equal<T>(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : ISpanFormattable
+	public void Equal<T>(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> modifier, T value, int maxValueLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : ISpanFormattable
 	{
 		Span<char> valChars = stackalloc char[maxValueLength];
 		if (!value.TryFormat(valChars, out int written, format, provider))
@@ -174,44 +172,38 @@ public ref struct FilterSpanWriter
 			throw new FormatException("Unable to format the value to the character span.");
 		}
 
-		return this.Equal(propertyName, modifier, valChars.Slice(0, written));
+		this.Equal(propertyName, modifier, valChars.Slice(0, written));
 	}
 
-	public FilterSpanWriter Not()
+	public void Not()
 	{
 		this.WriteKeyword(['(', '!']);
-		return this;
 	}
-	public FilterSpanWriter NotEqual(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> value)
+	public void NotEqual(scoped ReadOnlySpan<char> propertyName, scoped ReadOnlySpan<char> value)
 	{
-		_builder = _builder.Append(['(', '!', '('])
-						   .Append(propertyName.Trim())
-						   .Append('=')
-						   .Append(value.Trim())
-						   .Append(')', 2);
-
-		return this;
+		_builder.AppendChars('(', '!', '(');
+		_builder.Append(propertyName.Trim());
+		_builder.Append('=');
+		_builder.Append(value.Trim());
+		_builder.Append(')', 2);
 	}
 
-	public FilterSpanWriter Or()
+	public void Or()
 	{
 		this.WriteKeyword(['(', '|']);
-		return this;
 	}
-	public FilterSpanWriter Start()
+	public void Start()
 	{
-		_builder = _builder.Append('(');
+		_builder.Append('(');
 		_depth++;
-		return this;
 	}
 
-	internal FilterSpanWriter WriteRaw(scoped ReadOnlySpan<char> rawText)
+	internal void WriteRaw(scoped ReadOnlySpan<char> rawText)
 	{
-		_builder = _builder.Append(rawText);
-		return this;
+		_builder.Append(rawText);
 	}
 
-	public readonly Span<char> AsSpan()
+	public readonly ReadOnlySpan<char> AsSpan()
 	{
 		return _builder.AsSpan();
 	}
@@ -243,7 +235,7 @@ public ref struct FilterSpanWriter
 	}
 	private void WriteKeyword(scoped Span<char> keywordChars)
 	{
-		_builder = _builder.Append(keywordChars);
+		_builder.Append(keywordChars);
 		_depth++;
 	}
 }

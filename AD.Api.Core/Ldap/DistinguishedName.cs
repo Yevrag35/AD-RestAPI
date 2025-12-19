@@ -78,7 +78,7 @@ public readonly partial struct DistinguishedName :
 		}
 	}
 
-	private DistinguishedName(in ImmutableArray<RelativeName> segments, in int length)
+	private DistinguishedName(in ImmutableArray<RelativeName> segments, int length)
 	{
 		_notDefault = true;
 		_length = length;
@@ -224,7 +224,7 @@ public readonly partial struct DistinguishedName :
 
 		ref readonly RelativeName first = ref this.GetFirst();
 		int length = _length - first.Value.Length - 1;
-		return ToString(parentSegments, in length);
+		return ToString(parentSegments, length);
 	}
 	/// <summary>
 	/// Creates a new <see cref="DistinguishedName"/> object that represents
@@ -241,7 +241,7 @@ public readonly partial struct DistinguishedName :
 
 		int length = _length - first.Value.Length - 1;
 		var array = ImmutableArray.Create(_segments, 1, _segments.Length - 1);
-		return new(in array, in length);
+		return new(in array, length);
 	}
 
 	/// <summary>
@@ -250,7 +250,7 @@ public readonly partial struct DistinguishedName :
 	/// <returns>The string representation of the full distinguished name.</returns>
 	public override readonly string ToString()
 	{
-		return !this.IsEmpty ? ToString(_segments.AsSpan(), in _length) : string.Empty;
+		return !this.IsEmpty ? ToString(_segments.AsSpan(), _length) : string.Empty;
 	}
 	/// <inheritdoc/>
 	[DebuggerStepThrough]
@@ -274,12 +274,26 @@ public readonly partial struct DistinguishedName :
 		return new WorkingScope(domainKey, buffer.Slice(0, written), requiredRole);
 	}
 
+	/// <summary>
+	/// Attempts to format the value into the provided character span.
+	/// </summary>
+	/// <remarks>If <paramref name="destination"/> is too small to contain the entire formatted value, no data is
+	/// written and <paramref name="charsWritten"/> is set to the number of characters required.</remarks>
+	/// <param name="destination">The span of characters in which to write the formatted value.</param>
+	/// <param name="charsWritten">When this method returns, contains the number of characters written to <paramref name="destination"/>.</param>
+	/// <returns><see langword="true"/> if the value was successfully formatted into <paramref name="destination"/>; otherwise, <see
+	/// langword="false"/>.</returns>
+	public bool TryFormat(Span<char> destination, out int charsWritten)
+	{
+		charsWritten = this.CopyTo(destination);
+		return charsWritten == this.Length;
+	}
+
 	/// <inheritdoc/>
 	[DebuggerStepThrough]
 	bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
 	{
-		charsWritten = this.CopyTo(destination);
-		return charsWritten == this.Length;
+		return this.TryFormat(destination, out charsWritten);
 	}
 
 	#region CASTING OPERATORS
@@ -315,7 +329,7 @@ public readonly partial struct DistinguishedName :
 		int count = 1;
 		for (int i = 0; i < path.Length; i++)
 		{
-			if (COMMA == path[i] && !path.IsEscapedAt(in i))
+			if (COMMA == path[i] && !path.IsEscapedAt(i))
 			{
 				count++;
 			}
@@ -348,7 +362,7 @@ public readonly partial struct DistinguishedName :
 		{
 			if (COMMA == path[i])
 			{
-				if (path.IsEscapedAt(in i))
+				if (path.IsEscapedAt(i))
 				{
 					continue;
 				}
@@ -387,7 +401,7 @@ public readonly partial struct DistinguishedName :
 		}
 
 		int length = GetTotalLength(segments);
-		return ToString(segments, in length);
+		return ToString(segments, length);
 	}
 
 	#endregion

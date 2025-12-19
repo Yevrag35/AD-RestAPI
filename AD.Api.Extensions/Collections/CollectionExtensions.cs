@@ -19,6 +19,7 @@ public static class CollectionExtensions
 		return collection is IList nonGenList && nonGenList.IsFixedSize;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IReadOnlyCollection<T>? collection)
 	{
 		return collection is null || collection.Count <= 0;

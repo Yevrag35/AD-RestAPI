@@ -1,5 +1,6 @@
 ﻿using AD.Api.Binding.Attributes;
 using AD.Api.Core.Security;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AD.Api.Swagger.Filters;

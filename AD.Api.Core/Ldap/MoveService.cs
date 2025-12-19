@@ -26,7 +26,7 @@ internal sealed class MoveService : IMoveService
 		ModifyDNRequest modify = new((string)continuation.FoundObject, (string)newParentDn, newRdn);
 
 		var oneOf = _requestSvc.SendForResponse<ModifyDNResponse>(modify, continuation.ActiveConnection);
-		if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
+		if (oneOf.TryGetT2(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
 		{
 			return error ?? new ApiBadRequestResult("The move was not successful however no error was generated.", ResultCode.OperationsError);
 		}

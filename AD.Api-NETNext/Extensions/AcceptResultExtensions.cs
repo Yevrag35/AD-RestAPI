@@ -1,10 +1,15 @@
-﻿using AD.Api.Core;
+﻿using AD.Api.Buffers;
+using AD.Api.Core;
 
 namespace AD.Api.Extensions;
 
 public static class AcceptResultExtensions
 {
-	public static IActionResult WithLocation(this IActionResult result, string identifier, [ConstantExpected] string controllerRoute, in DomainQuery target)
+	public static IActionResult WithLocation(
+		this IActionResult result,
+		string identifier,
+		[ConstantExpected] string controllerRoute,
+		in DomainQuery target)
 	{
 		if (result is not AcceptedResult accepted)
 		{
@@ -13,7 +18,12 @@ public static class AcceptResultExtensions
 
 		return WithAcceptedLocation(acceptedResult: accepted, identifier, controllerRoute, in target);
 	}
-	public static IActionResult WithLocation(this IActionResult result, string identifier, [ConstantExpected] string controllerRoute, [ConstantExpected] string actionRoute, in DomainQuery target)
+	public static IActionResult WithLocation(
+		this IActionResult result,
+		string identifier,
+		[ConstantExpected] string controllerRoute,
+		[ConstantExpected] string actionRoute,
+		in DomainQuery target)
 	{
 		if (result is not AcceptedResult accepted)
 		{
@@ -22,50 +32,66 @@ public static class AcceptResultExtensions
 
 		return WithAcceptedLocation(acceptedResult: accepted, identifier, controllerRoute, actionRoute, in target);
 	}
-	public static AcceptedResult WithAcceptedLocation(this AcceptedResult acceptedResult, string identifier, [ConstantExpected] string controllerRoute, in DomainQuery target)
+	public static AcceptedResult WithAcceptedLocation(
+		this AcceptedResult acceptedResult,
+		string identifier,
+		[ConstantExpected] string controllerRoute,
+		in DomainQuery target)
 	{
-		SpanStringBuilder builder = new(stackalloc char[256]);
-		builder = controllerRoute.StartsWith('/')
-			? builder.Append(controllerRoute)
-			: builder.Append('/').Append(controllerRoute);
-
-		builder = controllerRoute.EndsWith('/')
-			? builder.Append(identifier)
-			: builder.Append('/').Append(identifier);
-
-		builder = builder.Append(target.UrlQueryLength, target, (chars, state) =>
+		using (SpanStringBuilder builder = new(stackalloc char[256]))
 		{
-			state.AppendAsQuery(chars, out int written);
-			return written;
-		});
+			if (!controllerRoute.StartsWith('/'))
+			{
+				builder.Append('/');
+			}
 
-		acceptedResult.Location = builder.Build();
+			builder.Append(controllerRoute);
 
-		return acceptedResult;
+			if (!controllerRoute.EndsWith('/'))
+			{
+				builder.Append('/');
+			}
+
+			builder.Append(identifier);
+			builder.AppendIn(in target, target.UrlQueryLength);
+
+			acceptedResult.Location = builder.ToString();
+			return acceptedResult;
+		}
 	}
-	public static AcceptedResult WithAcceptedLocation(this AcceptedResult acceptedResult, string identifier, [ConstantExpected] string controllerRoute, [ConstantExpected] string routeValues, in DomainQuery target)
+	public static AcceptedResult WithAcceptedLocation(
+		this AcceptedResult acceptedResult,
+		string identifier,
+		[ConstantExpected] string controllerRoute,
+		[ConstantExpected] string routeValues,
+		in DomainQuery target)
 	{
-		SpanStringBuilder builder = new(stackalloc char[256]);
-		builder = controllerRoute.StartsWith('/')
-			? builder.Append(controllerRoute)
-			: builder.Append('/').Append(controllerRoute);
-
-		builder = controllerRoute.EndsWith('/')
-			? builder.Append(identifier)
-			: builder.Append('/').Append(identifier);
-
-		builder = routeValues.StartsWith('/')
-			? builder.Append(routeValues)
-			: builder.Append('/').Append(routeValues);
-
-		builder = builder.Append(target.UrlQueryLength, target, (chars, state) =>
+		using (SpanStringBuilder builder = new(stackalloc char[256]))
 		{
-			state.AppendAsQuery(chars, out int written);
-			return written;
-		});
+			if (!controllerRoute.StartsWith('/'))
+			{
+				builder.Append('/');
+			}
 
-		acceptedResult.Location = builder.Build();
+			builder.Append(controllerRoute);
 
-		return acceptedResult;
+			if (!controllerRoute.EndsWith('/'))
+			{
+				builder.Append('/');
+			}
+
+			builder.Append(identifier);
+
+			if (!routeValues.StartsWith('/'))
+			{
+				builder.Append('/');
+			}
+
+			builder.Append(routeValues);
+			builder.AppendIn(in target, target.UrlQueryLength);
+
+			acceptedResult.Location = builder.ToString();
+			return acceptedResult;
+		}
 	}
 }

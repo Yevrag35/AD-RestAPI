@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace AD.Api.Strings;
+namespace AD.Api.Extensions.Strings;
 
 public static class Base64Extensions
 {
@@ -15,11 +15,7 @@ public static class Base64Extensions
 	}
 	public static int GetByteLength(int length)
 	{
-		return length switch
-		{
-			> 0 => CalculateLength(in length),
-			_ => 0,
-		};
+		return length > 0 ? CalculateLength(length) : 0;
 	}
 	public static int GetByteLengthFrom<T>(T length) where T : struct, INumber<T>
 	{
@@ -29,9 +25,9 @@ public static class Base64Extensions
 		}
 
 		int intLength = (int)Math.Ceiling(double.CreateChecked(length));
-		return CalculateLength(in intLength);
+		return CalculateLength(intLength);
 	}
-	private static int CalculateLength(in int length)
+	private static int CalculateLength(int length)
 	{
 		return ((length * 3) + 3) / 4;
 	}

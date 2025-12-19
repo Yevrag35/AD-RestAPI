@@ -20,25 +20,21 @@ public sealed class RelativeNameConverter : JsonConverter<RelativeName>
 
 	private static RelativeName ParseFromSpan(ref Utf8JsonReader reader)
 	{
+		const int MAX_STACKALLOC_SIZE = 256;
 		int length = Encoding.UTF8.GetMaxCharCount(reader.ValueSpan.Length);
-		bool isRented = false;
-		char[]? array = null;
 
-		Span<char> span = length <= 256
-			? stackalloc char[length]
-			: SpanExtensions.RentArray(in length, ref isRented, ref array);
-
-		int written = Encoding.UTF8.GetChars(reader.ValueSpan, span);
-		RelativeName result = RelativeName.TryParse(span.Slice(0, written), RelativeNameType.CommonName, out RelativeName rn)
-			? rn
-			: RelativeName.Empty;
-
-		if (isRented)
+		using (var buffer = RentedBuffer.Rent<char>(
+			length <= MAX_STACKALLOC_SIZE
+				? stackalloc char[length]
+				: length))
 		{
-			ArrayPool<char>.Shared.Return(array!);
-		}
+			int written = Encoding.UTF8.GetChars(reader.ValueSpan, buffer.Span);
+			RelativeName result = RelativeName.TryParse(buffer[..written], RelativeNameType.CommonName, out RelativeName rn)
+				? rn
+				: RelativeName.Empty;
 
-		return result;
+			return result;
+		}
 	}
 
 	public override void Write(Utf8JsonWriter writer, RelativeName value, JsonSerializerOptions options)

@@ -13,7 +13,7 @@ public readonly partial struct DistinguishedName
 		foreach (RelativeName relativeName in segments.Slice(1))
 		{
 			destination[written++] = CharConstants.COMMA;
-			relativeName.Value.CopyToSlice(destination, ref written);
+			written = relativeName.Value.CopyToSlice(destination, written);
 		}
 
 		return written;
@@ -34,7 +34,7 @@ public readonly partial struct DistinguishedName
 
 		return length;
 	}
-	private static string ToString(ReadOnlySpan<RelativeName> segments, in int totalLength)
+	private static string ToString(ReadOnlySpan<RelativeName> segments, int totalLength)
 	{
 		Span<char> chars = stackalloc char[totalLength];
 		int written = CopyTo(segments, chars);

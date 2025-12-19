@@ -1,6 +1,7 @@
 using AD.Api.Attributes.Services;
 using AD.Api.Startup.Exceptions;
 using AD.Api.Startup.Services;
+using AD.Api.Startup.Services.Internal;
 
 namespace AD.Api.Startup;
 
@@ -58,7 +59,10 @@ public static partial class ServiceExtensions
 				{
 					foreach (var descriptor in AddToDepedencyInjectionAttribute.CreateDescriptorsFromType(type, context.Exclusions))
 					{
-						AddService(context.Services, descriptor, context.AllowsDuplicates);
+						AddService(
+							context.Services,
+							descriptor,
+							context.AllowsDuplicates);
 					}
 				}
 				catch (Exception e) when (e is not DuplicatedServiceException)
@@ -77,7 +81,7 @@ public static partial class ServiceExtensions
 	private sealed class ServiceResolutionContext
 	{
 		private readonly object[] _overload1;
-		private readonly object?[] _overload2;
+		private readonly object[] _overload2;
 
 		/// <summary>
 		/// Gets a value indicating whether duplicate service registrations are allowed.
@@ -126,10 +130,10 @@ public static partial class ServiceExtensions
 			ThrowOnMultipleDynamic = !options.IgnoreMultipleDynamicRegistrations;
 			ThrowOnMissingDynamic = options.ThrowOnMissingDynamicRegistrationMethod;
 			Services = services;
-			Configuration = options.Configuration;
+			Configuration = options.Configuration ?? new EmptyConfiguration();
 			Exclusions = options.GetServiceTypeExclusions();
-			_overload1 = new object[1] { services };
-			_overload2 = new object?[2] { services, options.Configuration };
+			_overload1 = [services];
+			_overload2 = [services, Configuration];
 		}
 
 		/// <summary>
@@ -151,7 +155,9 @@ public static partial class ServiceExtensions
 
 	#region GET / ENUMERATE METHODS
 	/// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
-	private static MethodInfo? GetFirstDynamicMethodByName(Type type, BindingFlags flags)
+	private static MethodInfo? GetFirstDynamicMethodByName(
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type,
+		BindingFlags flags)
 	{
 		return type
 				.GetMethods(flags)
@@ -161,7 +167,9 @@ public static partial class ServiceExtensions
 	}
 	/// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
 	/// <exception cref="AttributeDIStartupException">More than one dynamic method was found.</exception>
-	private static MethodInfo? GetSingleDynamicMethod(Type type, BindingFlags flags)
+	private static MethodInfo? GetSingleDynamicMethod(
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type,
+		BindingFlags flags)
 	{
 		try
 		{
@@ -237,7 +245,9 @@ public static partial class ServiceExtensions
 	#region ADD SERVICE
 
 	/// <exception cref="AttributeDIStartupException"></exception>
-	private static void AddFromRegistration(ServiceResolutionContext context, Type type)
+	private static void AddFromRegistration(
+		ServiceResolutionContext context,
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type)
 	{
 		MethodInfo? method;
 		try

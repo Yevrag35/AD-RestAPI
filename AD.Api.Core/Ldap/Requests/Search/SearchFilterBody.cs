@@ -1,7 +1,7 @@
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Ldap.Requests;
+using AD.Api.Extensions.Strings;
 using AD.Api.Statics;
-using AD.Api.Strings.Extensions;
 using AD.Api.Validation;
 using System.ComponentModel.DataAnnotations;
 
@@ -45,6 +45,7 @@ public sealed class SearchFilterBody : IScopedRequest, ISearchFilter, IValidatab
 	[AllowedValues("asc", "desc", "0", "1", "ascending", "descending", "", null)]
 	public string? SortDirection { get; init; }
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool IsAllFilter(ReadOnlySpan<char> filter)
 	{
 		return filter.Length == 1 && CharConstants.STAR == filter[0];
@@ -60,10 +61,9 @@ public sealed class SearchFilterBody : IScopedRequest, ISearchFilter, IValidatab
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 	{
 		ReadOnlySpan<char> filter = this.Filter;
-		if (!IsAllFilter(filter) && !filter.ContainsEqualAmount('(', ')'))
-		{
-			yield return new ValidationResult("The LDAP filter is not properly formatted - are you missing parentheses?", [nameof(this.Filter)]);
-		}
+		return !IsAllFilter(filter) && !filter.IsParenthesesBalanced()
+			? [new ValidationResult("The LDAP filter is not properly formatted - are you missing parentheses?", [nameof(this.Filter)])]
+			: [];
 	}
 }
 

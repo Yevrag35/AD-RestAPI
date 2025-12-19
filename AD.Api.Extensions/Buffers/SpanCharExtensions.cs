@@ -165,21 +165,20 @@ public static class SpanCharExtensions
 	/// Set to 0 if <paramref name="value"/> is <see langword="null"/> or empty.</param>
 	/// <returns><see langword="true"/> if the characters were successfully copied to <paramref name="destination"/>; otherwise,
 	/// <see langword="false"/> if <paramref name="destination"/> is too small to hold the characters.</returns>
-	public static bool TryCopyTo(this string? value, Span<char> destination, out int charsWritten)
+	public static bool TryCopyTo(this ReadOnlySpan<char> value, Span<char> destination, out int charsWritten)
 	{
 		charsWritten = 0;
-		ReadOnlySpan<char> chars = value;
-		if (chars.IsEmpty)
+		if (value.IsEmpty)
 		{
 			return true;
 		}
-		else if (chars.Length > destination.Length)
+		else if (value.Length > destination.Length)
 		{
 			return false;
 		}
 
-		charsWritten = chars.Length;
-		chars.CopyTo(destination);
+		value.CopyTo(destination);
+		charsWritten = value.Length;
 		return true;
 	}
 
@@ -213,21 +212,21 @@ public static class SpanCharExtensions
 		return index != -1;
 	}
 
-	/// <summary>
-	/// Attempts to find the index of the first occurrence of a specified substring within the read-only span.
-	/// </summary>
-	/// <typeparam name="T">The type of elements in the span. Must be unmanaged and implement <see cref="IEquatable{T}"/>.</typeparam>
-	/// <param name="span">The read-only span to search within.</param>
-	/// <param name="value">The substring to locate within the span.</param>
-	/// <param name="index">When this method returns, contains the zero-based index of the first occurrence of <paramref name="value"/> within
-	/// <paramref name="span"/>, if found; otherwise, -1.</param>
-	/// <returns><see langword="true"/> if <paramref name="value"/> is found within <paramref name="span"/>; otherwise, <see
-	/// langword="false"/>.</returns>
-	public static bool TryIndexOf<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value, out int index) where T : unmanaged, IEquatable<T>
-	{
-		index = span.IndexOf(value);
-		return index != -1;
-	}
+	///// <summary>
+	///// Attempts to find the index of the first occurrence of a specified substring within the read-only span.
+	///// </summary>
+	///// <typeparam name="T">The type of elements in the span. Must be unmanaged and implement <see cref="IEquatable{T}"/>.</typeparam>
+	///// <param name="span">The read-only span to search within.</param>
+	///// <param name="value">The substring to locate within the span.</param>
+	///// <param name="index">When this method returns, contains the zero-based index of the first occurrence of <paramref name="value"/> within
+	///// <paramref name="span"/>, if found; otherwise, -1.</param>
+	///// <returns><see langword="true"/> if <paramref name="value"/> is found within <paramref name="span"/>; otherwise, <see
+	///// langword="false"/>.</returns>
+	//public static bool TryIndexOf<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value, out int index) where T : unmanaged, IEquatable<T>
+	//{
+	//	index = span.IndexOf(value);
+	//	return index != -1;
+	//}
 	/// <summary>
 	/// Attempts to find the index of the first occurrence of either of the specified characters in the read-only character
 	/// span.
@@ -238,7 +237,6 @@ public static class SpanCharExtensions
 	/// <param name="index">When this method returns, contains the zero-based index of the first occurrence of either character if found;
 	/// otherwise, -1.</param>
 	/// <returns>true if either character is found in the span; otherwise, false.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool TryIndexOfAny(this ReadOnlySpan<char> str, char value0, char value1, out int index)
 	{
 		index = str.IndexOfAny(value0, value1);
@@ -258,7 +256,7 @@ public static class SpanCharExtensions
 	public static bool TryLastIndexOf(this ReadOnlySpan<char> chars, char c, out int index)
 	{
 		index = chars.LastIndexOf(c);
-		return index >= 0;
+		return index != -1;
 	}
 	/// <summary>
 	/// Attempts to find the last occurrence of a specified substring within the current span using the specified string
@@ -273,22 +271,6 @@ public static class SpanCharExtensions
 	public static bool TryLastIndexOf(this ReadOnlySpan<char> chars, ReadOnlySpan<char> value, StringComparison comparisonType, out int index)
 	{
 		index = chars.LastIndexOf(value, comparisonType);
-		return index >= 0;
-	}
-	/// <summary>
-	/// Attempts to find the last occurrence of a specified substring within the current string, using the specified
-	/// comparison rules.
-	/// </summary>
-	/// <param name="str">The string to search within. Cannot be <see langword="null"/>.</param>
-	/// <param name="value">The substring to locate within <paramref name="str"/>. Cannot be <see langword="null"/> or empty.</param>
-	/// <param name="comparisonType">The type of string comparison to use, such as <see cref="StringComparison.OrdinalIgnoreCase"/>.</param>
-	/// <param name="index">When this method returns, contains the zero-based index of the last occurrence of <paramref name="value"/> within
-	/// <paramref name="str"/>,  or -1 if <paramref name="value"/> is not found.</param>
-	/// <returns><see langword="true"/> if <paramref name="value"/> is found within <paramref name="str"/>; otherwise, <see
-	/// langword="false"/>.</returns>
-	public static bool TryLastIndexOf(this string str, string value, StringComparison comparisonType, out int index)
-	{
-		index = str.LastIndexOf(value, comparisonType);
-		return index >= 0;
+		return index != -1;
 	}
 }

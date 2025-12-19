@@ -41,6 +41,6 @@ public readonly partial struct DistinguishedName
 		int newLength = @this._length + relativeName.Value.Length + 1;
 
 		array = array.Insert(relativeNameIndex, relativeName);
-		return new DistinguishedName(in array, in newLength);
+		return new DistinguishedName(in array, newLength);
 	}
 }

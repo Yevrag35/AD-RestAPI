@@ -49,7 +49,7 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 			connection = continuation.ActiveConnection;
 			dontDispose = true;
 		}
-		else if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out connection))
+		else if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT2(out var error, out connection))
 		{
 			return error;
 		}
@@ -63,8 +63,8 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 
 			var oneOf = _requests.SendForResponse<ModifyResponse>(modify, connection);
 			return oneOf.Match(
-				f0: success => new AcceptedResult(),
-				f1: fail => fail);
+				f1: success => new AcceptedResult(),
+				f2: fail => fail);
 		}
 		finally
 		{
@@ -88,7 +88,7 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 			connection = continuation.ActiveConnection;
 			dontDispose = true;
 		}
-		else if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT1(out var error, out connection))
+		else if (_requests.Connections.GetConnection(in target, forceSsl: true).TryGetT2(out var error, out connection))
 		{
 			return error;
 		}
@@ -102,8 +102,8 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 
 			var oneOf = _requests.SendForResponse<ModifyResponse>(modify, connection);
 			return oneOf.Match(
-				f0: success => new AcceptedResult(),
-				f1: fail => fail);
+				f1: success => new AcceptedResult(),
+				f2: fail => fail);
 		}
 		finally
 		{
@@ -128,8 +128,8 @@ internal sealed class PasswordService : IPasswordChangeService, IPasswordResetSe
 		}
 	}
 
-	[DynamicDependencyRegistrationMethod]
 	[EditorBrowsable(EditorBrowsableState.Never)]
+	[DynamicDependencyRegistrationMethod, SuppressMessage("Style", "IDE0051")]
 	private static void AddToServices(IServiceCollection services, IConfiguration configuration)
 	{
 		IConfigurationSection section = configuration

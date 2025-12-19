@@ -11,12 +11,12 @@ public sealed class NegotiateContext : ConnectionContext
 {
 	private readonly ConcurrentDictionary<DirectoryContextType, DirectoryContext> _dirContexts = null!;
 
-	public NegotiateContext(Forest forest, bool isDefault, string connectionName, IServiceProvider services)
-		: this(FromForest(forest, isDefault, connectionName), connectionName, services)
+	public NegotiateContext(Forest forest, bool isDefault, string connectionName, IServiceProvider services, ILogger logger)
+		: this(FromForest(forest, isDefault, connectionName), connectionName, services, logger)
 	{
 	}
-	public NegotiateContext(RegisteredDomain domain, string connectionName, IServiceProvider provider)
-		: base(domain, connectionName, provider)
+	public NegotiateContext(RegisteredDomain domain, string connectionName, IServiceProvider provider, ILogger logger)
+		: base(domain, connectionName, provider, logger)
 	{
 		_dirContexts = new(Environment.ProcessorCount, 1);
 		bool added = _dirContexts.TryAdd(DirectoryContextType.Domain, new(DirectoryContextType.Domain, domain.DomainName));

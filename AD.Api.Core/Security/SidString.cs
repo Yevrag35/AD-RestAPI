@@ -1,6 +1,5 @@
 using AD.Api.Extensions.Comparisons;
 using AD.Api.Statics;
-using AD.Api.Strings.Extensions;
 
 namespace AD.Api.Core.Security;
 
@@ -340,7 +339,7 @@ public sealed class SidString :
 		// Span to store the resulting SID string
 		int position = 0;
 		Span<char> start = ['S', CharConstants.HYPHEN];
-		start.CopyToSlice(destination, ref position);
+		position = start.CopyToSlice(destination, position);
 
 		_ = revision.TryFormat(destination.Slice(position), out int written);
 		position += written;
@@ -400,7 +399,7 @@ public sealed class SidString :
 	/// <typeparamref name="T"/> is not <see cref="char"/> nor <see cref="byte"/>, <see langword="false"/>.
 	/// </returns>
 	[DebuggerStepThrough]
-	public static bool IsLengthInRange<T>(in int length) where T : struct
+	public static bool IsLengthInRange<T>(int length) where T : struct
 	{
 		int min;
 		int max;
@@ -555,7 +554,7 @@ public sealed class SidString :
 	{
 		foreach (byte b in byteArray)
 		{
-			builder = builder.Append(3, b, (span, singleByte) =>
+			builder.Append(3, b, (span, singleByte) =>
 			{
 				int bufferIndex = 0;
 				span[bufferIndex++] = '\\';
@@ -598,49 +597,52 @@ public sealed class SidString :
 
 	private static bool TryConvertSidStringToBinary(ReadOnlySpan<char> sidString, Span<byte> buffer, out int bytesWritten)
 	{
-		SpanCharArray parts = new(sidString.Length, '-');
-		parts.AddRange(sidString, ['-']);
+		const int MIN_POSITIONS = 16;
 
-		if (parts.Count < 4 || !parts[0].Equals(['S'], StringComparison.OrdinalIgnoreCase) ||
-			!parts[1].Equals(['1'], StringComparison.Ordinal))
+		ReadOnlySpan<char> separator = ['-'];
+
+		using (SpanCharArray parts = new(stackalloc char[SID_CHAR_MAX_LENGTH], stackalloc SpanPosition[MIN_POSITIONS], separator))
 		{
-			bytesWritten = 0;
-			parts.Dispose();
-			return false;
-		}
+			parts.AddRange(sidString, separator);
 
-		int subAuthorityCount = parts.Count - 3;
-		bytesWritten = 0;
-		buffer[bytesWritten++] = 1; // Revision
-		buffer[bytesWritten++] = (byte)subAuthorityCount; // Sub-authority count
-
-		// Authority (next 6 bytes)
-		if (!ulong.TryParse(parts[2], out ulong identifierAuthority))
-		{
-			parts.Dispose();
-			return false;
-		}
-
-		for (int i = 0; i < 6; i++)
-		{
-			buffer[7 - i] = (byte)(identifierAuthority >> (8 * i));
-		}
-
-		bytesWritten += 6;
-		// Sub-authorities (next 4 bytes each)
-		for (int i = 0; i < subAuthorityCount; i++)
-		{
-			uint subAuthority = uint.Parse(parts[i + 3]);
-			for (int j = 0; j < 4; j++)
+			if (parts.Count < 4 || !parts[0].Equals(['S'], StringComparison.OrdinalIgnoreCase) ||
+				!parts[1].Equals(['1'], StringComparison.Ordinal))
 			{
-				buffer[8 + i * 4 + j] = (byte)(subAuthority >> (8 * j));
+				bytesWritten = 0;
+				return false;
 			}
 
-			bytesWritten += 4;
-		}
+			int subAuthorityCount = parts.Count - 3;
+			bytesWritten = 0;
+			buffer[bytesWritten++] = 1; // Revision
+			buffer[bytesWritten++] = (byte)subAuthorityCount; // Sub-authority count
 
-		parts.Dispose();
-		return true;
+			// Authority (next 6 bytes)
+			if (!ulong.TryParse(parts[2], out ulong identifierAuthority))
+			{
+				return false;
+			}
+
+			for (int i = 0; i < 6; i++)
+			{
+				buffer[7 - i] = (byte)(identifierAuthority >> (8 * i));
+			}
+
+			bytesWritten += 6;
+			// Sub-authorities (next 4 bytes each)
+			for (int i = 0; i < subAuthorityCount; i++)
+			{
+				uint subAuthority = uint.Parse(parts[i + 3]);
+				for (int j = 0; j < 4; j++)
+				{
+					buffer[8 + i * 4 + j] = (byte)(subAuthority >> (8 * j));
+				}
+
+				bytesWritten += 4;
+			}
+
+			return true;
+		}
 	}
 
 	/// <summary>

@@ -26,12 +26,11 @@ internal sealed class CreationService
 		this.WellKnownSvc = wellKnowns;
 	}
 
-	internal OneOf<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
+	internal ObjEither<ResultEntry, IActionResult> SendRequest<T>(LdapConnection connection, in DomainQuery target, ICreateRequest request, IReadOnlyDictionary<string, T> attributeValues)
 	{
 		string objClass = request.RequestType.GetObjectClass();
-		bool needsObj = string.Empty.Equals(objClass);
 		bool containsClass = attributeValues.ContainsKey(AttributeConstants.OBJECT_CLASS);
-		if (needsObj && !containsClass)
+		if (string.Empty.Equals(objClass) && !containsClass)
 		{
 			return new ApiBadRequestResult(
 				"Unable to determine the object class for this request - you may have to specify it manually.", ResultCode.ObjectClassViolation);
@@ -40,7 +39,7 @@ internal sealed class CreationService
 		DistinguishedName dn = request.GetDistinguishedName();
 		if (!dn.HasParent && !this.TryUpdateWithWellKnown(ref dn, target.Domain, request.RequestType, out IActionResult? error))
 		{
-			return OneOf<ResultEntry>.FromT1(error);
+			return new(error);
 		}
 
 		AddRequest addRequest = this.CreateAddRequest(dn, attributeValues);
@@ -50,9 +49,9 @@ internal sealed class CreationService
 		}
 
 		var oneOf = this.Requests.SendForResponse<AddResponse>(addRequest, connection);
-		if (oneOf.IsT1)
+		if (oneOf.IsT2)
 		{
-			return OneOf<ResultEntry>.FromT1(oneOf.AsT1);
+			return new(oneOf.AsT2);
 		}
 
 		string filter = CreateFilterFromRequest(in target, request);
@@ -60,18 +59,20 @@ internal sealed class CreationService
 		SearchRequest search = new(dn.ToString(), filter, SearchScope.Base, _searchAttributes);
 
 		var searchOneOf = this.Requests.SendForResponse<SearchResponse>(search, connection);
-		if (searchOneOf.TryGetT1(out error, out var searchSuccess))
+		if (searchOneOf.IsT2)
 		{
-			return OneOf<ResultEntry>.FromT1(error);
+			return new(searchOneOf.AsT2);
 		}
-		else if (searchSuccess.Entries.Count == 0)
+
+		var searchSuccess = searchOneOf.AsT1;
+		if (searchSuccess.Entries.Count == 0)
 		{
 			return new LdapObjectMissingResult(
 				$"The object was seemingly created, but could not be found in the directory: {dn}");
 		}
 
 		var entry = target.GetRequiredService<IPooledItem<ResultEntry>>();
-		entry.Value.AddResult(target.Domain.OrEmpty(), searchSuccess.Entries[0]);
+		entry.Value.AddResult(target.Domain ?? string.Empty, searchSuccess.Entries[0]);
 
 		return entry.Value;
 	}

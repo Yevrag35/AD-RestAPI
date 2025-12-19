@@ -1,7 +1,8 @@
 using AD.Api.Attributes.Services;
+using AD.Api.Collections;
+using AD.Api.Core.Extensions;
 using AD.Api.Core.Ldap.Filters;
 using AD.Api.Core.Settings;
-using AD.Api.Statics;
 using Microsoft.Extensions.ObjectPool;
 
 namespace AD.Api.Core.Ldap;
@@ -11,26 +12,23 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 {
 	private const string DEFAULTS = "defaults";
 
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	private static readonly string _defaultRequestId = Guid.Empty.ToString();
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+	private static readonly string s_defaultRequestId = Guid.Empty.ToString();
 	private readonly IDefaults _defaults;
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 	private readonly SearchRequest _request;
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	private Guid _requestId;
+	private readonly LdapPropertyList _attributes;
 
 	private bool _hasDefaults;
 	protected override DirectoryRequest BackingRequest => _request;
-	protected override string DefaultRequestId => _defaultRequestId;
+	protected override string DefaultRequestId => s_defaultRequestId;
 
+	public LdapPropertyList Attributes => _attributes;
 	public int ControlCount => _request.Controls.Count;
 
 	/// <summary>
 	/// The <see cref="RequestId"/> contains the unique identifier for the LDAP request.
 	/// </summary>
 	/// <remarks>
-	/// Each request will have its own RequestId per scoped-HTTP request.
+	/// Each request will have its own RequestId per scoped request.
 	/// </remarks>
 	/// <returns>
 	/// The requestID for the LDAP request as a <see cref="Guid"/> value.
@@ -38,18 +36,18 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	public Guid RequestId
 	{
 		[DebuggerStepThrough]
-		get => _requestId;
+		get;
 		set
 		{
 			if (value == Guid.Empty)
 			{
-				_request.RequestId = _defaultRequestId;
-				_requestId = Guid.Empty;
+				_request.RequestId = s_defaultRequestId;
+				field = Guid.Empty;
 			}
 			else
 			{
-				_requestId = value;
 				_request.RequestId = value.ToString();
+				field = value;
 			}
 		}
 	}
@@ -86,51 +84,66 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 
 	public LdapSearchRequest(IDefaults defaults)
 	{
-		_requestId = Guid.Empty;
 		_defaults = defaults;
 		_request = new();
+		_attributes = [];
 
-		ref readonly ISearchDefaults globals = ref _defaults[string.Empty];
+		ISearchDefaults globals = _defaults[string.Empty];
+		RequestMarshal.ReplaceAttributes(_request, _attributes);
 
-		ResetRequest(_request, in globals);
-		_hasDefaults = true;
+		this.RequestId = Guid.Empty;
+		ResetRequest(_request, _attributes, globals);
+		_hasDefaults = globals.IsGlobal;
 	}
 
-	public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
-	{
-		if (attributeString.IsWhiteSpace())
-		{
-			this.AddAttributesFromTypes(types);
-			return;
-		}
+	//public void AddAttributes(ReadOnlySpan<char> attributeString, FilteredRequestType? types)
+	//{
+	//	if (attributeString.IsWhiteSpace())
+	//	{
+	//		this.AddAttributesFromTypes(types);
+	//		return;
+	//	}
 
-		bool wantsDefault = false;
-		char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
+	//	bool wantsDefault = false;
+	//	char separator = attributeString.Contains(CharConstants.COMMA) ? CharConstants.COMMA : CharConstants.SPACE;
 
-		foreach (ReadOnlySpan<char> section in attributeString.SpanSplit(in separator))
-		{
-			if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
-				||
-				section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
-			{
-				wantsDefault = true;
-			}
-			else if (!section.IsWhiteSpace())
-			{
-				string s = section.ToString();
-				_ = _request.Attributes.Add(s);
-			}
-		}
+	//	foreach (Range range in attributeString.Split(separator))
+	//	{
+	//		var section = attributeString[range];
+	//		if (section.Equals(DEFAULTS.AsSpan(0, DEFAULTS.Length - 1), StringComparison.OrdinalIgnoreCase)
+	//			||
+	//			section.Equals(DEFAULTS, StringComparison.OrdinalIgnoreCase))
+	//		{
+	//			wantsDefault = true;
+	//		}
+	//		else if (!section.IsWhiteSpace())
+	//		{
+	//			string s = section.ToString();
+	//			_ = _request.Attributes.Add(s);
+	//		}
+	//	}
 
-		if (!wantsDefault)
-		{
-			this.RemoveDefaultAttributes();
-		}
-		else
-		{
-			this.AddAttributesFromTypes(types);
-		}
-	}
+	//	if (!wantsDefault)
+	//	{
+	//		this.RemoveDefaultAttributes();
+	//	}
+	//	else
+	//	{
+	//		this.AddAttributesFromTypes(types);
+	//	}
+	//}
+	/// <summary>
+	/// Adds the specified attribute properties to the current request, optionally including default attributes based on the
+	/// provided values.
+	/// </summary>
+	/// <remarks>If any entry in the <paramref name="attributes"/> span indicates a request for default attributes,
+	/// those defaults are added in addition to any explicitly specified attributes. If no such entry is present, any
+	/// previously added default attributes are removed. Attribute names are added as provided; duplicate or invalid names
+	/// are not filtered by this method.</remarks>
+	/// <param name="attributes">A read-only span of attribute names to add. Each entry should be a non-empty, non-whitespace string. If the span is
+	/// empty, only default attributes are considered.</param>
+	/// <param name="types">An optional value specifying which types of default attributes to include if requested. If null, the method uses
+	/// the default set of types.</param>
 	public void AddAttributes(ReadOnlySpan<string> attributes, FilteredRequestType? types)
 	{
 		if (attributes.IsEmpty)
@@ -160,7 +173,7 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 				}
 			}
 
-			_ = _request.Attributes.Add(att);
+			_attributes.Add(att);
 		}
 
 		if (!wantsDefault)
@@ -179,23 +192,7 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 			return;
 		}
 
-		int count = _defaults.GetAttributeCount(types.Value, includeGlobal: false);
-		if (count <= 0)
-		{
-			return;
-		}
-
-		string[] array = ArrayPool<string>.Shared.Rent(count);
-		Span<string> attributes = array.AsSpan(0, count);
-
-		_defaults.TryGetAllAttributes(types.Value, attributes, includeGlobal: false, out count);
-
-		foreach (string s in attributes.Slice(0, count))
-		{
-			_request.Attributes.Add(s);
-		}
-
-		ArrayPool<string>.Shared.Return(array);
+		_defaults.CopyTo(_attributes, types.Value);
 	}
 	protected override void OnApplyingContext(ConnectionContext context)
 	{
@@ -211,11 +208,12 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 			return;
 		}
 
-		int i = _defaults.TotalGlobalAttributeCount - 1;
-		for (; i >= 0; i--)
-		{
-			_request.Attributes.RemoveAt(i);
-		}
+		_attributes.RemoveAll(_defaults[string.Empty].Attributes);
+		//int i = _defaults.TotalGlobalAttributeCount - 1;
+		//for (; i >= 0; i--)
+		//{
+		//	_request.Attributes.RemoveAt(i);
+		//}
 
 		_hasDefaults = false;
 	}
@@ -225,17 +223,17 @@ public sealed class LdapSearchRequest : LdapRequest, IResettable
 	/// </remarks>
 	protected override void ResetCore()
 	{
-		_requestId = Guid.Empty;
-		ref readonly ISearchDefaults defaults = ref _defaults[string.Empty];
+		this.RequestId = Guid.Empty;
+		ISearchDefaults defaults = _defaults[string.Empty];
 		//_pageSize = 0;
-		ResetRequest(_request, in defaults);
+		ResetRequest(_request, _attributes, defaults);
 		_hasDefaults = true;
 	}
-	private static void ResetRequest(SearchRequest request, ref readonly ISearchDefaults defaults)
+	private static void ResetRequest(SearchRequest request, LdapPropertyList attributes, ISearchDefaults defaults)
 	{
 		request.Aliases = defaults.DereferenceAlias;
-		request.Attributes.Clear();
-		request.Attributes.AddRange(defaults.Attributes);
+		attributes.Clear();
+		attributes.AddRange(defaults.Attributes);
 		request.DistinguishedName = string.Empty;
 		request.Filter = string.Empty;
 		request.Scope = defaults.Scope;

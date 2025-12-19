@@ -1,4 +1,4 @@
-namespace AD.Api.Strings;
+namespace AD.Api.Extensions.Strings;
 
 public interface IStringCreatable
 {
@@ -24,6 +24,10 @@ public interface IStringCreatable<T> : IStringCreatable where T : IStringCreatab
 public static class StringCreatableExtensions
 {
 	public static string CreateString<T>(this T value) where T : IStringCreatable<T>
+	{
+		return T.CreateString(ref value);
+	}
+	public static string CreateRefString<T>(this ref T value) where T : struct, IStringCreatable<T>
 	{
 		return T.CreateString(ref value);
 	}

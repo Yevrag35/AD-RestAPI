@@ -38,7 +38,7 @@ internal sealed class UserUpdateService : IUserUpdateService
 		operation.ApplyToRequest(request);
 
 		var oneOf = _requestSvc.SendForResponse<ModifyResponse>(request, continuation.ActiveConnection);
-		if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
+		if (oneOf.TryGetT2(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
 		{
 			return error ??
 				new ApiBadRequestResult("The update was not successful however no error was generated.", ResultCode.OperationsError);
@@ -57,7 +57,7 @@ internal sealed class UserUpdateService : IUserUpdateService
 		operation.ApplyToRequest(request);
 
 		var oneOf = _requestSvc.SendForResponse<ModifyResponse>(request, continuation.ActiveConnection);
-		if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
+		if (oneOf.TryGetT2(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
 		{
 			return error ??
 				new ApiBadRequestResult("The update was not successful however no error was generated.", ResultCode.OperationsError);

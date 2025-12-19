@@ -17,8 +17,8 @@ internal sealed partial class UserService
 		var oneOf = this.FindOneAndContinue(userSid, in target);
 
 		return oneOf.Match(
-			state: (rdn, renameSvc: _renameSvc),
-			f0: (state, continuation) => state.renameSvc.RenameObject(state.rdn, continuation),
-			f1: (_, error) => error);
+			(rdn, renameSvc: _renameSvc),
+			(state, continuation) => state.renameSvc.RenameObject(state.rdn, continuation),
+			(_, error) => error);
 	}
 }

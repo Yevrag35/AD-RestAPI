@@ -104,7 +104,7 @@ internal static class AuthenticationStartupExtensions
 		IConfigurationSection section = null!;
 		bool flag = false;
 
-		while (enumerator.MoveNext(in flag))
+		while (enumerator.MoveNext(flag))
 		{
 			section = configuration.GetSection(enumerator.Current);
 			flag = section.Exists();
@@ -118,7 +118,7 @@ internal static class AuthenticationStartupExtensions
 		enumerator.Reset();
 		configuration = configuration.GetRequiredSection("Authorization");
 
-		while (enumerator.MoveNext(in flag))
+		while (enumerator.MoveNext(flag))
 		{
 			section = configuration.GetSection(enumerator.Current);
 			flag = section.Exists();

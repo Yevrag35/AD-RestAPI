@@ -1,9 +1,6 @@
 using AD.Api.Core.Ldap;
-using AD.Api.Statics;
 using System.Globalization;
 using System.Text;
-
-using ColEx = AD.Api.Collections.CollectionExtensions;
 
 namespace AD.Api.Core.Serialization.Json.Converters;
 
@@ -32,7 +29,7 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 			&&
 			int.TryParse(chars.Slice(index + 1, 4), NumberStyles.HexNumber, null, out int unicodeHex))
 		{
-			builder = builder.Append((char)unicodeHex);
+			builder.Append((char)unicodeHex);
 			index += 4; // Skip the next 4 characters.
 		}
 		else
@@ -43,126 +40,48 @@ public sealed class DistinguishedNameConverter : JsonConverter<DistinguishedName
 	private static DistinguishedName ParseFromSpan(ref Utf8JsonReader reader)
 	{
 		int length = Encoding.UTF8.GetMaxCharCount(reader.ValueSpan.Length);
-		bool isRented = false;
-		char[]? array = null;
 
-		Span<char> span = length <= 256
-			? stackalloc char[length]
-			: ColEx.RentArray(in length, ref isRented, ref array);
-
-		if (reader.ValueIsEscaped)
+		using (var buffer = RentedBuffer.Rent<char>(
+			length <= MAX_STACKALLOC
+				? stackalloc char[length]
+				: length))
 		{
-			span = UnescapeValue(reader.ValueSpan, span, in length);
-		}
-		else
-		{
-			int written = Encoding.UTF8.GetChars(reader.ValueSpan, span);
-			span = span.Slice(0, written);
-		}
+			int written = reader.CopyString(buffer.Span);
 
-		if (!DistinguishedName.TryCountNumberOfRelativeNames(span, out int count))
-		{
-			return DistinguishedName.Empty;
-		}
-
-		RelativeName[] buffer = ArrayPool<RelativeName>.Shared.Rent(count);
-		if (!DistinguishedName.TrySplit(span, buffer.AsSpan(0, count), out int namesWritten))
-		{
-			ArrayPool<RelativeName>.Shared.Return(buffer);
-			return DistinguishedName.Empty;
-		}
-
-		DistinguishedName result = new(buffer.AsSpan(0, namesWritten));
-		if (isRented)
-		{
-			ArrayPool<char>.Shared.Return(array!);
-		}
-
-		return result;
-	}
-	private static Span<char> UnescapeValue(ReadOnlySpan<byte> value, Span<char> buffer, in int length)
-	{
-		SpanStringBuilder builder = new(buffer);
-		bool escaping = false;
-
-		bool isRented = false;
-		char[]? array = null;
-
-		Span<char> chars = length <= MAX_STACKALLOC
-			? stackalloc char[length]
-			: ColEx.RentArray(in length, ref isRented, ref array);
-
-		int written = Encoding.UTF8.GetChars(value, chars);
-		chars = chars.Slice(0, written);
-
-		for (int i = 0; i < written; i++)
-		{
-			ref char c = ref chars[i];
-			if (escaping)
+			ReadOnlySpan<char> value = buffer[..written];
+			if (!DistinguishedName.TryCountNumberOfRelativeNames(value, out int count))
 			{
-				switch (c)
+				return DistinguishedName.Empty;
+			}
+
+			using (RentedBuffer<RelativeName> names = new(count))
+			{
+				if (!DistinguishedName.TrySplit(value, names.Span, out int namesWritten))
 				{
-					case '"':
-					case '\\':
-					case '/':
-						builder = builder.Append(c);
-						break;
-
-					case 'b':
-						builder = builder.Append('\b');
-						break;
-
-					case 'f':
-						builder = builder.Append('\f');
-						break;
-
-					case 'n':
-						builder = builder.Append('\n');
-						break;
-
-					case 'r':
-						builder = builder.Append('\r');
-						break;
-
-					case 't':
-						builder = builder.Append('\t');
-						break;
-
-					case 'u':
-						HandleHexEscape(ref builder, chars, ref i);
-						break;
-
-					default:
-						throw new JsonException("Invalid escape sequence.");
+					return DistinguishedName.Empty;
 				}
 
-				escaping = false;
-			}
-			else if (CharConstants.BACKSLASH == c)
-			{
-				escaping = true;
-			}
-			else
-			{
-				builder = builder.Append(c);
+				return new(names[..namesWritten]);
 			}
 		}
-
-		if (escaping)
-		{
-			throw new JsonException("Invalid escape sequence at the end of the string.");
-		}
-
-		if (isRented)
-		{
-			ArrayPool<char>.Shared.Return(array!);
-		}
-
-		return builder.AsSpan();
 	}
 
 	public override void Write(Utf8JsonWriter writer, DistinguishedName value, JsonSerializerOptions options)
 	{
-		writer.WriteStringValue(value.ToString());
+		int length = value.Length;
+		if (length == 0)
+		{
+			writer.WriteStringValue(utf8Value: default);
+			return;
+		}
+
+		using (var buffer = RentedBuffer.Rent<char>(
+			length <= MAX_STACKALLOC
+				? stackalloc char[length]
+				: length))
+		{
+			int written = value.CopyTo(buffer.Span);
+			writer.WriteStringValue(buffer[..written]);
+		}
 	}
 }

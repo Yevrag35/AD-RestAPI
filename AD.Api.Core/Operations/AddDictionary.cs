@@ -12,7 +12,7 @@ public sealed class AddDictionary : EditOperationDictionary<DirectoryAttributeMo
 	{
 	}
 
-	public bool Add(string propertyName, in Either<string, byte[], string[]> value)
+	public bool Add(string propertyName, ObjEither<string, byte[], string[]> value)
 	{
 		if (this.ContainsKey(propertyName))
 		{
@@ -20,7 +20,7 @@ public sealed class AddDictionary : EditOperationDictionary<DirectoryAttributeMo
 		}
 
 		DirectoryAttributeModification mod = GetModification(propertyName, DirectoryAttributeOperation.Add);
-		AddValue(mod, in value);
+		AddValue(mod, value);
 
 		return this.TryAdd(propertyName, mod);
 	}

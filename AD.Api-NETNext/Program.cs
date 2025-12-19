@@ -1,5 +1,5 @@
 using AD.Api;
-using AD.Api.Collections;
+using AD.Api.Attributes;
 using AD.Api.Constraints;
 using AD.Api.Core.Ldap;
 using AD.Api.Core.Ldap.Filters;
@@ -8,7 +8,6 @@ using AD.Api.Core.Serialization.Json.Converters;
 using AD.Api.Core.Web;
 using AD.Api.Core.Web.Validation;
 using AD.Api.Expressions;
-using AD.Api.Extensions.Startup;
 using AD.Api.Mapping;
 using AD.Api.Middleware;
 using AD.Api.Serialization.Json;
@@ -22,17 +21,6 @@ using Microsoft.IdentityModel.Logging;
 using NLog;
 using NLog.Web;
 using System.DirectoryServices.ActiveDirectory;
-
-#region EXPLICIT LOADS
-
-Referencer.LoadAll((in Referencer referer) =>
-{
-	referer
-		.Reference<IConnectionService>()
-		.Reference<UnsafeDictionary<int>>();
-});
-
-#endregion
 
 WebApplicationBuilder builder = StartupHelper.CreateWebBuilder(args);
 var logger = LogManager.Setup()
@@ -57,16 +45,29 @@ try
 	IConfigurationSection settingsSection = config.GetRequiredSection("Settings");
 	IServiceCollection services = builder.Services;
 
-	Assembly[] assemblies = AssemblyLoader.GetAppAssemblies(AppDomain.CurrentDomain);
-
+	bool isDev = builder.Environment.IsDevelopment();
 	// Add services to the container.
 	builder.Services
-		.AddResolvedServicesFromAssemblies(config, assemblies, exclude =>
+		.AddResolvedServices(x =>
 		{
-			exclude.Add(typeof(IExpressionCache<,>))
-				   .Add<LambdaComparisonVisitor>()
-				   .Add<LambdaExpressionEqualityComparer>()
-				   .Add<LambdaExpressionHasherVisitor>();
+			x.LoadReferences(x =>
+			{
+				x.Reference<AD.Api.Startup.Services.IServiceTypeExclusions>()
+				 .Reference<IAdApiAttribute>()
+				 .Reference<ApiResult>();
+			});
+
+			x.Configuration = config;
+			x.AllowDuplicateServiceRegistrations = !isDev;
+			x.IgnoreMultipleDynamicRegistrations = !isDev;
+			x.ThrowOnMissingDynamicRegistrationMethod = isDev;
+			x.AddExclusions(e =>
+			{
+				e.Add(typeof(IExpressionCache<,>))
+				 .Add<LambdaComparisonVisitor>()
+				 .Add<LambdaExpressionEqualityComparer>()
+				 .Add<LambdaExpressionHasherVisitor>();
+			});
 		})
 		.AddEnumDictionaryGeneration(x =>
 		{
@@ -96,7 +97,10 @@ try
 		conversions.Add("groupType", AttributeSerialization.WriteEnumValue<GroupType>);
 		conversions.Add("objectSid", AttributeSerialization.WriteObjectSID);
 		conversions.Add("sAMAccountType", AttributeSerialization.WriteEnumValue<SamAccountType>);
-		conversions.Add("userAccountControl", AttributeSerialization.WriteEnumValue<UserAccountControl>);
+		conversions.Add("userAccountControl", (writer, ref readonly context) =>
+		{
+
+		});
 
 		if (section.GetValue("WriteSimpleObjectClass", false))
 		{

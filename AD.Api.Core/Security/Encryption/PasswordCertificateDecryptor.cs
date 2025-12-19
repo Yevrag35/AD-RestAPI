@@ -4,7 +4,7 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Text;
-using Base64 = AD.Api.Strings.Base64Extensions;
+using Base64 = AD.Api.Extensions.Strings.Base64Extensions;
 
 namespace AD.Api.Core.Security.Encryption;
 

@@ -12,7 +12,7 @@ public sealed class RemoveDictionary : EditOperationDictionary<DirectoryAttribut
 	{
 	}
 
-	public bool Add(string propertyName, in Either<string, byte[], string[]> value)
+	public bool Add(string propertyName, ObjEither<string, byte[], string[]> value)
 	{
 		if (this.ContainsKey(propertyName))
 		{

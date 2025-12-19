@@ -1,7 +1,7 @@
 ﻿using AD.Api.Statics;
 using System.Numerics;
 
-namespace AD.Api.Unmanaged;
+namespace AD.Api.Extensions;
 
 /// <summary>
 /// Provides extension methods for unmanaged types.

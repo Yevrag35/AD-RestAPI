@@ -1,5 +1,5 @@
 ﻿using AD.Api.Statics;
-using AD.Api.Unmanaged;
+using AD.Api.Extensions;
 using System.Numerics;
 
 namespace AD.Api.Buffers;
@@ -221,6 +221,11 @@ public ref struct SpanStringBuilder
 	/// <param name="format">An optional format string.</param>
 	/// <param name="provider">An optional format provider.</param>
 	public void Append<T>(T formattable, int maxLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : ISpanFormattable
+	{
+		this.EnsureCapacity(maxLength);
+		_position = formattable.CopyToSlice(_buffer.Span, _position, format, provider);
+	}
+	public void AppendIn<T>(in T formattable, int maxLength, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) where T : struct, ISpanFormattable
 	{
 		this.EnsureCapacity(maxLength);
 		_position = formattable.CopyToSlice(_buffer.Span, _position, format, provider);

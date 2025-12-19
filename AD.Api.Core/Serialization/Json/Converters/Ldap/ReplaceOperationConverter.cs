@@ -1,10 +1,13 @@
 using AD.Api.Components;
 using AD.Api.Core.Operations;
+using AD.Api.Serialization.Json;
 
 namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
 public sealed class ReplaceOperationConverter : EditOperationConverter<ReplaceDictionary, DirectoryAttributeModification[]>
 {
+	public ReplaceOperationConverter(WorkingNamingPolicy policy) : base(policy) { }
+
 	protected override ReplaceDictionary CreateCollection()
 	{
 		return [];

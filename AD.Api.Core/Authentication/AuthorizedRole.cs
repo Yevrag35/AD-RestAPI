@@ -1,9 +1,11 @@
+using AD.Api.Generators;
+
 namespace AD.Api.Core.Authentication;
 
 /// <summary>
 /// Enumeration values for denoting authorized roles for the application.
 /// </summary>
-[Flags]
+[Flags, GenerateEnumToString]
 public enum AuthorizedRole
 {
 	/// <summary>

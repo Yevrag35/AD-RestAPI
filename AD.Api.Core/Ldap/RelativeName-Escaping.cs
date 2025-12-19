@@ -1,4 +1,3 @@
-using AD.Api.Collections.Enumerators;
 using AD.Api.Statics;
 
 namespace AD.Api.Core.Ldap;
@@ -45,10 +44,10 @@ public readonly partial struct RelativeName
 		// Iterate through each character validating each in sequence.
 		for (int i = 0; i < value.Length; i++)
 		{
-			ref readonly char c = ref value[i];
+			char c = value[i];
 
 			// Check if the character is a non-standard escaped character and not properly escaped
-			if (NonStandardEscapedChars.Contains(c) && !value.IsEscapedAt(in i))
+			if (NonStandardEscapedChars.Contains(c) && !value.IsEscapedAt(i))
 			{
 				return false;
 			}
@@ -62,7 +61,7 @@ public readonly partial struct RelativeName
 					// when using their hex value (\3D) so we only check if the previous characters are
 					// valid attribute names.
 					// And there can only be 1.
-					if (equalsIndex >= 0 || !IsProperEquals(value, in i))
+					if (equalsIndex >= 0 || !IsProperEquals(value, i))
 					{
 						return false;
 					}
@@ -74,7 +73,7 @@ public readonly partial struct RelativeName
 				case CharConstants.COMMA:
 				{
 					// Check if the comma is properly escaped
-					if (!value.IsEscapedAt(in i))
+					if (!value.IsEscapedAt(i))
 					{
 						return false;
 					}
@@ -102,7 +101,7 @@ public readonly partial struct RelativeName
 		return true;
 	}
 
-	private static bool IsProperEquals(ReadOnlySpan<char> working, in int index)
+	private static bool IsProperEquals(ReadOnlySpan<char> working, int index)
 	{
 		if (index < 1 || index >= working.Length - 1)
 		{
@@ -113,24 +112,23 @@ public readonly partial struct RelativeName
 	}
 	private static bool IsValidPrefixNoError(ReadOnlySpan<char> working)
 	{
-		ArrayRefEnumerator<string> enumerator = new(_attributeValues.Keys.AsSpan());
-		bool flag = false;
-		while (enumerator.MoveNext(in flag))
+		foreach (ReadOnlySpan<char> attValue in s_attributeValues.Keys.AsSpan())
 		{
-			flag = working.Equals(enumerator.Current.AsSpan(0, enumerator.Current.Length - 1), StringComparison.OrdinalIgnoreCase);
+			if (working.Equals(attValue[..(attValue.Length - 1)], StringComparison.OrdinalIgnoreCase))
+				return true;
 		}
 
-		return flag;
+		return false;
 	}
 	private static bool IsProperBackslash(ReadOnlySpan<char> value, int index)
 	{
 		if (index == value.Length - 1)
 		{
-			return value.IsEscapedAt(in index);
+			return value.IsEscapedAt(index);
 		}
 
 		ref readonly char nextChar = ref value[index + 1];
 
-		return AllEscapedChars.Contains(nextChar) || value.IsEscapedAt(in index);
+		return AllEscapedChars.Contains(nextChar) || value.IsEscapedAt(index);
 	}
 }

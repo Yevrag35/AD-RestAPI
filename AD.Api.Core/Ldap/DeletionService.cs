@@ -24,7 +24,7 @@ internal sealed class DeletionService : IDeletionService
 		DeleteRequest deletion = new(continuation.FoundObject.ToString());
 
 		var oneOf = _requestSvc.SendForResponse<DeleteResponse>(deletion, continuation.ActiveConnection);
-		if (oneOf.TryGetT1(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
+		if (oneOf.TryGetT2(out var error, out var answer) || answer.ResultCode != ResultCode.Success)
 		{
 			return error ?? new ApiBadRequestResult("The delete request was not successful however no error was generated.", ResultCode.OperationsError);
 		}

@@ -61,13 +61,13 @@ public sealed class DistinguishedNameBinder : IModelBinder
 		if (!DistinguishedName.TrySplit(first, array, ref erroredSections, out int written))
 		{
 			bindingContext.Result = ModelBindingResult.Failed();
-			Span<char> chars = erroredSections.AsSpan();
+			ReadOnlySpan<char> chars = erroredSections.AsSpan();
 			if (!chars.IsEmpty)
 			{
 				bindingContext.ActionContext.ModelState.AddModelError(DN_ERROR_KEY, "The following sections are invalid:");
-				foreach (ReadOnlySpan<char> section in chars.SpanSplit(Environment.NewLine))
+				foreach (Range section in chars.Split(Environment.NewLine))
 				{
-					bindingContext.ActionContext.ModelState.AddModelError(DN_ERROR_KEY, section.ToString());
+					bindingContext.ActionContext.ModelState.AddModelError(DN_ERROR_KEY, new(chars[section].Trim()));
 				}
 			}
 			else

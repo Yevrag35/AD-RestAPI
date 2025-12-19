@@ -145,7 +145,7 @@ public readonly partial struct DistinguishedName
 				ReadOnlySpan<char> slice = path.Slice(start, i - start);
 				if (!RelativeName.TryParseOne(slice, out RelativeName rn))
 				{
-					erroredSections = erroredSections.AppendLine(slice);
+					erroredSections.AppendLine(slice);
 					failed = true;
 				}
 
@@ -159,7 +159,7 @@ public readonly partial struct DistinguishedName
 			ReadOnlySpan<char> slice = path.Slice(start);
 			if (!RelativeName.TryParseOne(slice, out RelativeName last))
 			{
-				erroredSections = erroredSections.AppendLine(slice);
+				erroredSections.AppendLine(slice);
 				failed = true;
 			}
 

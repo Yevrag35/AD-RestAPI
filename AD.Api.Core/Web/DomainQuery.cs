@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AD.Api.Core;
 
-public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
+[StructLayout(LayoutKind.Auto)]
+[DebuggerDisplay(@"\{Domain = {Domain}\}")]
+public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider, ISpanFormattable
 {
 	private readonly IServiceProvider? _services;
 
@@ -43,9 +45,9 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
 		int pos = 0;
 		if (!string.IsNullOrWhiteSpace(this.Domain))
 		{
-			DomainModelName.CopyToSlice(destination, ref pos);
+			pos = DomainModelName.CopyToSlice(destination, pos);
 			destination[pos++] = CharConstants.EQUALS;
-			this.Domain.CopyToSlice(destination, ref pos);
+			pos = this.Domain.CopyToSlice(destination, pos);
 		}
 
 		if (!string.IsNullOrWhiteSpace(this.DomainController))
@@ -55,9 +57,9 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
 				destination[pos++] = CharConstants.AMP;
 			}
 
-			DomainControllerModelName.CopyToSlice(destination, ref pos);
+			pos = DomainControllerModelName.CopyToSlice(destination, pos);
 			destination[pos++] = CharConstants.EQUALS;
-			this.DomainController.CopyToSlice(destination, ref pos);
+			pos = this.DomainController.CopyToSlice(destination, pos);
 		}
 
 		charsWritten = pos;
@@ -100,6 +102,16 @@ public readonly struct DomainQuery : IEquatable<DomainQuery>, IServiceProvider
 		});
 
 		return new QueryString(queryString);
+	}
+
+	public string ToString(string? format, IFormatProvider? formatProvider)
+	{
+		return this.ToQueryString().ToString();
+	}
+	public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+	{
+		this.AppendAsQuery(destination, out charsWritten);
+		return true;
 	}
 
 	internal static ModelBindingResult Create(string domain, string? domainController, bool forceSsl, IServiceProvider provider, out DomainQuery result)

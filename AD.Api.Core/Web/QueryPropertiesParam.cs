@@ -42,7 +42,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 		}
 
 		var oneOf = GetValue(bindingContext);
-		if (oneOf.TryGetT1(out var result, out string? propertiesString))
+		if (oneOf.TryGetT2(out var result, out string? propertiesString))
 		{
 			bindingContext.Result = result;
 			return Task.CompletedTask;
@@ -154,13 +154,13 @@ public sealed class QueryPropertiesBinding : IModelBinder
 		}
 
 		ModelBindingResult result = context.ModelState.IsValid
-			? ReadModelIntoSuccessResult(properties, in count)
+			? ReadModelIntoSuccessResult(properties, count)
 			: ReturnErroredSuccess(context);
 
 		ArrayPool<string>.Shared.Return(properties);
 		return result;
 	}
-	private static OneOf<string, ModelBindingResult> GetValue(ModelBindingContext context)
+	private static Either<string, ModelBindingResult> GetValue(ModelBindingContext context)
 	{
 		string? value = context.GetFirstValue();
 		if (value is null)
@@ -179,7 +179,7 @@ public sealed class QueryPropertiesBinding : IModelBinder
 			return value;
 		}
 	}
-	private static ModelBindingResult ReadModelIntoSuccessResult(string[] properties, in int count)
+	private static ModelBindingResult ReadModelIntoSuccessResult(string[] properties, int count)
 	{
 		string[] finalArray = new string[count];
 		Array.Copy(properties, finalArray, count);

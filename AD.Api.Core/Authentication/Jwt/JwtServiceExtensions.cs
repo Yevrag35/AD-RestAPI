@@ -10,8 +10,6 @@ namespace AD.Api.Core.Authentication.Jwt;
 
 public static class JwtServiceExtensions
 {
-	static readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
 	public static IServiceCollection AddJwtAuthentication(this IServiceCollection services,
 		IConfigurationSection authorizationSection, IEnumStrings<AuthorizedRole> roles)
 	{
@@ -29,7 +27,7 @@ public static class JwtServiceExtensions
 					   .AddSingleton<IJwtService, JwtCache>();
 	}
 
-	private static IServiceCollection AddJsonFileAuthorization(this IServiceCollection services, CustomJwtSettings settings, out FrozenDictionary<string, AuthorizedUser> users, out FrozenDictionary<string, AuthorizationScope> scopes)
+	private static IServiceCollection AddJsonFileAuthorization(this IServiceCollection services, CustomJwtSettings settings, out FrozenDictionary<string, AuthorizedUser> users, out FrozenDictionary<string, AuthorizationScope> scopes, ILogger? logger = null)
 	{
 		JsonRoleBasedAccessControl rbac = settings.RBAC;
 		scopes = rbac.Scopes.ToFrozenDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
@@ -46,14 +44,18 @@ public static class JwtServiceExtensions
 			if (set.Count > 0)
 			{
 				hasBadScopes = true;
-				_logger.Error("User {Name} has scopes that are not defined in the RBAC configuration: {Scopes}", user.UserName, string.Join(", ", set.Order()));
+				logger?.LogWarning("User {Name} has scopes that are not defined in the RBAC configuration: {Scopes}", user.UserName, string.Join(", ", set.Order()));
 			}
 		}
 
 		if (hasBadScopes)
 		{
 			var e = new AdApiStartupException(typeof(JwtServiceExtensions), "Defined RBAC users has malformed/undefined authorization scopes set - Check the logs for the exact users/scopes.");
-			_logger.Fatal(e);
+			if (logger is not null)
+			{
+				logger.LogCritical("Defined RBAC users has malformed/undefined authorization scopes set - Check the logs for the exact users/scopes.");
+				logger.LogError(e, "");
+			}
 
 			throw e;
 		}

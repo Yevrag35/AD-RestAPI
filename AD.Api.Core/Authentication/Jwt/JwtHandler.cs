@@ -1,7 +1,7 @@
 using AD.Api.Components;
 using AD.Api.Core.Security.Encryption;
 using AD.Api.Enums;
-using AD.Api.Strings;
+using AD.Api.Extensions.Strings;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

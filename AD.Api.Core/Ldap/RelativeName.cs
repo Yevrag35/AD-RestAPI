@@ -39,7 +39,7 @@ public readonly partial struct RelativeName :
 	/// </remarks>
 	public static readonly IEnumValues<RelativeNameType, BackendValueAttribute, string> AttributeStrings;
 
-	private static readonly FrozenDictionary<string, RelativeNameType> _attributeValues;
+	private static readonly FrozenDictionary<string, RelativeNameType> s_attributeValues;
 	public static readonly RelativeName Empty;
 
 	/// <summary>
@@ -58,11 +58,11 @@ public readonly partial struct RelativeName :
 		Dictionary<string, RelativeNameType> valueDict = AttributeStrings
 			.ToValueDictionary(StringComparer.OrdinalIgnoreCase);
 
-		_attributeValues = FrozenDictionary.ToFrozenDictionary(valueDict, valueDict.Comparer);
+		s_attributeValues = FrozenDictionary.ToFrozenDictionary(valueDict, valueDict.Comparer);
 		Empty = new(RelativeNameType.CommonName, string.Empty, -1);
 		Span<char> chars = stackalloc char[AttributeStrings.ValueCount * 7];
 		int count = 0;
-		foreach (char c in _attributeValues.Keys.SelectMany(x => x).Distinct())
+		foreach (char c in s_attributeValues.Keys.SelectMany(x => x).Distinct())
 		{
 			chars[count++] = c;
 		}
@@ -72,44 +72,40 @@ public readonly partial struct RelativeName :
 
 	private readonly int _nameStartIndex;
 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-	private readonly bool _notEmpty;
-	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 	private readonly string? _value;
 
 	/// <summary>
 	/// Gets the attribute type of the relative name.
 	/// </summary>
-	public readonly RelativeNameType AttributeType { get; }
+	public RelativeNameType AttributeType { get; }
 
 	/// <summary>
 	/// Gets a value indicating whether this instance is empty.
 	/// </summary>
 	[MemberNotNullWhen(false, nameof(_value))]
-	public readonly bool IsEmpty => !_notEmpty;
+	public readonly bool IsEmpty => _nameStartIndex < MINIMUM_NAME_INDEX || string.IsNullOrEmpty(_value);
 
 	/// <summary>
 	/// Gets the string value of the relative name.
 	/// </summary>
 	public readonly string Value => _value ?? string.Empty;
 
-	private RelativeName(RelativeNameType attributeType, string value, in int nameIndex)
+	private RelativeName(RelativeNameType attributeType, string value, int nameIndex)
 	{
 		this.AttributeType = attributeType;
 		if (!string.IsNullOrWhiteSpace(value))
 		{
 			_value = value;
-			_notEmpty = nameIndex >= 2 && nameIndex < value.Length;
 			_nameStartIndex = nameIndex;
 		}
 		else
 		{
 			_value = string.Empty;
 			_nameStartIndex = -1;
-			_notEmpty = false;
 		}
 	}
 
-	private static ReadOnlySpan<char> BuildPrefix(in RelativeNameType nameTypeIfNotPresent, Span<char> buffer, ReadOnlySpan<char> span, ref ReadOnlySpan<char> prefix)
+	private static ReadOnlySpan<char> BuildPrefix(RelativeNameType nameTypeIfNotPresent, Span<char> buffer, ReadOnlySpan<char> span, ref ReadOnlySpan<char> prefix)
 	{
 		prefix = AttributeStrings.GetValue(nameTypeIfNotPresent);
 		prefix.CopyTo(buffer);
@@ -146,14 +142,14 @@ public readonly partial struct RelativeName :
 
 		if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
 		{
-			return new(nameType, value.ToString(), in index);
+			return new(nameType, value.ToString(), index);
 		}
 
 		Span<char> chars = stackalloc char[value.Length + prefix.Length];
 		prefix.CopyTo(chars);
 		value.CopyTo(chars.Slice(prefix.Length));
 
-		return new(nameType, new string(chars), in index);
+		return new(nameType, new string(chars), index);
 	}
 
 	/// <summary>
@@ -162,14 +158,14 @@ public readonly partial struct RelativeName :
 	/// <returns>A read-only span of characters representing the name.</returns>
 	public ReadOnlySpan<char> GetName()
 	{
-		return _notEmpty ? _value.AsSpan(_nameStartIndex) : ReadOnlySpan<char>.Empty;
+		return !this.IsEmpty ? _value.AsSpan(_nameStartIndex) : [];
 	}
 
 	private static RelativeNameType GetRelativeNameType(ReadOnlySpan<char> prefix)
 	{
 		ThrowWhenInvalidPrefix(prefix);
 
-		foreach (var kvp in _attributeValues)
+		foreach (var kvp in s_attributeValues)
 		{
 			if (prefix.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase))
 			{
@@ -201,7 +197,7 @@ public readonly partial struct RelativeName :
 	{
 		if (prefix.Length >= 2 && prefix.Length <= 7 && !prefix.ContainsAnyExcept(UniqueAttributeChars))
 		{
-			foreach (var kvp in _attributeValues)
+			foreach (var kvp in s_attributeValues)
 			{
 				if (prefix.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase))
 				{
@@ -236,7 +232,7 @@ public readonly partial struct RelativeName :
 			prefix.CopyTo(chars);
 			value.CopyTo(chars.Slice(prefixLength));
 
-			relativeName = new(typeToUseWhenNotPresent, new string(chars), in prefixLength);
+			relativeName = new(typeToUseWhenNotPresent, new string(chars), prefixLength);
 			return true;
 		}
 		else if (TryGetRelativeNameType(value.Slice(0, equalsIndex + 1), out var type)
@@ -250,7 +246,7 @@ public readonly partial struct RelativeName :
 				prefix.CopyTo(chars);
 				value.Slice(equalsIndex + 1).CopyTo(chars.Slice(prefixLength));
 
-				relativeName = new(type, new string(chars), in prefixLength);
+				relativeName = new(type, new string(chars), prefixLength);
 			}
 			else
 			{

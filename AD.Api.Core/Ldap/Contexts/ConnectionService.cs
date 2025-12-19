@@ -16,8 +16,8 @@ public interface IConnectionService
 {
 	ContextLibrary RegisteredConnections { get; }
 
-	OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
-	OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null);
+	ObjEither<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound);
+	ObjEither<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null);
 	bool TryGetConnection([NotNullWhen(false)] string? key, [NotNullWhen(true)] out LdapConnection? connection);
 }
 
@@ -26,16 +26,14 @@ internal sealed class ConnectionService : IConnectionService
 {
 	private const string DEFAULT = "Default";
 
-	private readonly IServiceScopeFactory _scopeFactory;
 	public ContextLibrary RegisteredConnections { get; }
 
-	private ConnectionService(Dictionary<string, ConnectionContext> pairs, IServiceScopeFactory scopeFactory)
+	private ConnectionService(Dictionary<string, ConnectionContext> pairs)
 	{
 		this.RegisteredConnections = new(pairs);
-		_scopeFactory = scopeFactory;
 	}
 
-	public OneOf<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
+	public ObjEither<LdapConnection, IStatedCallback<TOutput>> GetConnection<TState, TOutput>(string? key, TState state, Func<TState, TOutput> onNotFound)
 	{
 		if (!this.TryGetConnection(key, out LdapConnection? connection))
 		{
@@ -56,7 +54,7 @@ internal sealed class ConnectionService : IConnectionService
 		connection.Bind();
 		return true;
 	}
-	public OneOf<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
+	public ObjEither<LdapConnection, IActionResult> GetConnection(in DomainQuery target, bool? forceSsl = null)
 	{
 		if (!this.RegisteredConnections.TryGetValue(target.Domain, out ConnectionContext? context))
 		{
@@ -73,18 +71,18 @@ internal sealed class ConnectionService : IConnectionService
 		}
 	}
 
-	[DynamicDependencyRegistrationMethod]
 	[EditorBrowsable(EditorBrowsableState.Never)]
+	[DynamicDependencyRegistrationMethod, SuppressMessage("Style", "IDE0051")]
 	private static void AddToServices(IServiceCollection services)
 	{
 		services.AddSingleton<IConnectionService>(provider =>
 		{
 			IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
+
 			IConfigurationSection domains = configuration.GetSection("Domains");
 			IEncryptionService encSvc = provider.GetRequiredService<IEncryptionService>();
-			IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
 			var dict = ReadCredentialsFromConfig(domains, encSvc, provider);
-			return new ConnectionService(dict, scopeFactory);
+			return new ConnectionService(dict);
 		});
 	}
 	private static void AddDefaultContext(ConnectionContext? defaultContext, Dictionary<string, ConnectionContext> contexts)
@@ -108,10 +106,14 @@ internal sealed class ConnectionService : IConnectionService
 			throw new AdApiStartupException(typeof(ConnectionService), e);
 		}
 	}
-	private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(IConfigurationSection domainsSection, IEncryptionService encryptionService, IServiceProvider provider)
+	private static Dictionary<string, ConnectionContext> ReadCredentialsFromConfig(
+		IConfigurationSection domainsSection,
+		IEncryptionService encryptionService,
+		IServiceProvider provider)
 	{
 		Dictionary<string, ConnectionContext> dict = new(1, StringComparer.OrdinalIgnoreCase);
 		ConnectionContext? defaultContext = null;
+		var logger = provider.GetRequiredService<ILogger<ConnectionService>>();
 
 		List<ValidationResult> results = [];
 		if (domainsSection.Exists())
@@ -153,7 +155,7 @@ internal sealed class ConnectionService : IConnectionService
 			}
 
 			using Forest forest = GetForest();
-			defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider);
+			defaultContext = new NegotiateContext(forest, isDefault: true, DEFAULT, provider, logger);
 			_ = dict.TryAdd(forest.Name, defaultContext);
 			_ = dict.TryAdd(forest.RootDomain.Name, defaultContext);
 			using var de = forest.RootDomain.GetDirectoryEntry();
@@ -185,6 +187,7 @@ internal sealed class ConnectionService : IConnectionService
 	private static bool TryCreateContextFromResult(string key, RegisteredDomain domain, IEncryptionResult result, List<ValidationResult> errors, IServiceProvider provider, [NotNullWhen(true)] out ConnectionContext? context)
 	{
 		context = null;
+		var logger = provider.GetRequiredService<ILogger<ConnectionService>>();
 		if (result.Errors.Count > 0)
 		{
 			return false;
@@ -199,13 +202,13 @@ internal sealed class ConnectionService : IConnectionService
 				return false;
 			}
 
-			context = new NegotiateContext(domain, key, provider);
+			context = new NegotiateContext(domain, key, provider, logger);
 			return true;
 		}
 
 		if (result.HasCredential && OperatingSystem.IsWindows())
 		{
-			context = new ChallengeContext(domain, key, result.Credential, provider);
+			context = new ChallengeContext(domain, key, result.Credential, provider, logger);
 			return true;
 		}
 

@@ -14,8 +14,7 @@ public ref struct FlagEnumerator<T> where T : unmanaged, Enum
 	public FlagEnumerator(T flags)
 	{
 		_original = flags;
-		ref int intFlag = ref Unsafe.As<T, int>(ref flags);
-		_flags = intFlag;
+		_flags = Unsafe.As<T, int>(ref flags);
 
 		_count = 0;
 		_current = default;
@@ -40,8 +39,7 @@ public ref struct FlagEnumerator<T> where T : unmanaged, Enum
 
 	public void Reset()
 	{
-		int intFlags = Unsafe.As<T, int>(ref _original);  // Deliberately copying.
-		_flags = intFlags;
+		_flags = Unsafe.As<T, int>(ref _original);
 	}
 }
 

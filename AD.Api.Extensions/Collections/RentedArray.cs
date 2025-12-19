@@ -114,6 +114,7 @@ public sealed class RentedArray<T> : RentedArray, IReadOnlyArray<T>
 	private T[] _array;
 	private int _length;
 	private int _version;
+	private bool _clearOnDispose;
 
 	/// <summary>
 	/// Gets or sets the element at the specified index in the collection.
@@ -133,7 +134,11 @@ public sealed class RentedArray<T> : RentedArray, IReadOnlyArray<T>
 	/// <summary>
 	/// Gets or sets a value indicating whether the internal array should be cleared when this object is disposed.
 	/// </summary>
-	public bool ClearOnDispose { get; set; }
+	public bool ClearOnDispose
+	{
+		get => _clearOnDispose;
+		set => _clearOnDispose = value;
+	}
 	/// <inheritdoc/>
 	private protected override bool Disposed => _disposed;
 	/// <inheritdoc/>
@@ -257,7 +262,6 @@ public sealed class RentedArray<T> : RentedArray, IReadOnlyArray<T>
 	{
 		if (!_disposed)
 		{
-			_disposed = true;
 			_version++;
 			T[]? array = _array;
 			_array = [];
@@ -265,7 +269,7 @@ public sealed class RentedArray<T> : RentedArray, IReadOnlyArray<T>
 
 			if (disposing)
 			{
-				_ = ArrayHelper.ReturnToPool(array, this.ClearOnDispose);
+				Rent.Return(array, this.ClearOnDispose);
 			}
 		}
 	}
@@ -337,8 +341,7 @@ public sealed class RentedArray<T> : RentedArray, IReadOnlyArray<T>
 
 		_array = newArray;
 		_length = newArray.Length;
-		bool returned = ArrayHelper.ReturnToPool(oldArray, this.ClearOnDispose);
-		Debug.Assert(returned, "The old array should have been returned to the pool.");
+		ArrayPool<T>.Shared.Return(oldArray, this.ClearOnDispose);
 
 		return _length;
 	}

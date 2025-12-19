@@ -23,7 +23,7 @@ public interface IComputerSearcher
 	/// an <see cref="IActionResult"/> containing the web response result if the operation failed or was unable to
 	/// find the computer object.
 	/// </returns>
-	OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null);
+	ObjEither<ConnectedResponse, IActionResult> FindOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null);
 }
 
 [DependencyRegistration(typeof(IComputerSearcher), Lifetime = ServiceLifetime.Singleton)]
@@ -47,7 +47,7 @@ internal sealed class ComputerSearcher : IComputerSearcher
 
 		return _requestSvc.FindOne(parameters, provider);
 	}
-	public OneOf<ConnectedResponse, IActionResult> FindOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null)
+	public ObjEither<ConnectedResponse, IActionResult> FindOneAndContinue(SidString computerSid, in DomainQuery target, string[]? extraProperties = null)
 	{
 		string filter = _filterSvc.GetFilter(computerSid, FilteredRequestType.Computer);
 		SearchFilterLite searchFilter = SearchFilterLite.Create(filter, FilteredRequestType.Computer);

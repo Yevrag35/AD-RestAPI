@@ -1,14 +1,19 @@
 using AD.Api.Components;
 using AD.Api.Core.Operations;
+using AD.Api.Serialization.Converters;
 using AD.Api.Serialization.Json;
 using System.Globalization;
 
 namespace AD.Api.Core.Serialization.Json.Converters.Ldap;
 
-public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
+public abstract class EditOperationConverter<T, TValue> : ByPolicyJsonConverter<T>
 	where T : EditOperationDictionary<TValue>
 	where TValue : notnull
 {
+	protected EditOperationConverter(WorkingNamingPolicy policy) : base(policy)
+	{
+	}
+
 	protected abstract T CreateCollection();
 	protected abstract void Deserialize(ref Utf8JsonReader reader, T collection, JsonSerializerOptions options);
 	protected abstract bool IsProperStartToken(JsonTokenType type);
@@ -81,9 +86,13 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 		}
 
 		ReadOnlySpan<char> value = attributeValue?.ToString();
-		if (TryGetNumber(value, out OneOf<long, decimal> number))
+		if (TryGetNumber(value, out Either<long, decimal> number))
 		{
-			writer.WriteNumberValue(in number);
+			if (number.IsT1)
+				writer.WriteNumberValue(number.AsT1);
+
+			else
+				writer.WriteNumberValue(number.AsT2);
 		}
 		else if (LdapBoolean.TryParseBool(value, out bool result) || bool.TryParse(value, out result))
 		{
@@ -98,7 +107,7 @@ public abstract class EditOperationConverter<T, TValue> : JsonConverter<T>
 			writer.WriteNullValue();
 		}
 	}
-	private static bool TryGetNumber(ReadOnlySpan<char> span, out OneOf<long, decimal> number)
+	private static bool TryGetNumber(ReadOnlySpan<char> span, out Either<long, decimal> number)
 	{
 		if (long.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out long longVal))
 		{
